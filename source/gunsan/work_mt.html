@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0" />
+    <link rel="stylesheet" href="css/default.css">
+    <link rel="stylesheet" href="css/biz_pr.css">
+    <link rel="stylesheet" href="css/mypage_pr.css">
+    <link rel="stylesheet" href="css/work_mt.css">
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard-gov.min.css" />
+    <link  rel="stylesheet" href="https://hangeul.pstatic.net/hangeul_static/css/nanum-square-round.css">
+</head>
+<body>
+    <div id="skip">
+        <a href="#main_content">본문 바로가기</a>
+    </div>
+    <header class="header">
+        <div class="headerTop inner">
+            <div class="headerLogo">
+                <h1>
+                    <a href="/">
+                        <img src="images/logo.png" alt="군산시꿈이음센터">
+                    </a>
+                </h1>
+                <span class="badgeStudent">멘토</span>
+            </div>
+            <div class="utilMenu">
+                <div class="userLinks">
+                    <a href="#">로그인</a>
+                    <a href="#">회원가입</a>
+                    <a href="#" target="_blank" class="btnPortal">꿈이음센터포털 바로가기<img src="images/icon/ico_newtab_20_pr.png" alt="" aria-hidden="true"></a>
+                </div>
+                <button type="button" class="menuOpen" aria-label="메뉴 열기">
+                    <img src="images/icon/ico_menu_32.png" alt="메뉴 열기">
+                </button>
+            </div>
+        </div>
+        <nav class="navPc" aria-label="메인 메뉴">
+            <div class="inner">
+                <ul class="navList">
+                    <li><a href="#" class="mainLink">멘토신청</a></li>
+                    <li><a href="#" class="mainLink">멘토업무</a></li>
+                    <li><a href="#" class="mainLink">사업신청</a></li>
+                    <li><a href="#" class="mainLink">MY PAGE</a></li>
+                </ul>
+            </div>
+        </nav>
+        <div class="moMenu" id="mobileMenu">
+            <div class="moMenuInner">
+                <div class="moMenuHeader">
+                    <div class="logoArea">
+                        <img src="images/logo.png" alt="군산시꿈이음센터" height="32">
+                        <span class="badgeStudent">멘토</span>
+                    </div>
+                    <button type="button" class="menuClose" aria-label="메뉴 닫기">
+                        <img src="images/icon/ico_close_32.png" alt="닫기">
+                    </button>
+                </div>
+                <div class="moMenuContent">
+                    <nav class="moMenuNav">
+                        <ul class="moNavList">
+                            <li class="navItem active"><button type="button" class="moMainLink">멘토신청</button></li>
+                            <li class="navItem"><button type="button" class="moMainLink">멘토업무</button></li>
+                            <li class="navItem"><button type="button" class="moMainLink">사업신청</button></li>
+                            <li class="navItem"><button type="button" class="moMainLink">MY PAGE</button></li>
+                        </ul>
+                        <div class="moMenuFooter">
+                            <a href="#" class="btn-login">로그인</a>
+                            <a href="#" class="btn-portal">꿈이음센터포털 바로가기</a>
+                        </div>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </header>
+    <main id="main_content" class="bizBg">
+        <section class="inner">
+            <div class="mainTitle">멘토업무</div>
+            <div class="mainBg">
+                <div class="bizInput">
+                    <section class="formSection">
+                        <div class="sectionHeader">
+                            <div class="sectionTitle">조회조건</div>
+                        </div>
+                        <div class="formGrid">
+                            <div class="formRow">
+                                <span class="formLabel">사업명</span>
+                                <div class="formControl">
+                                    <div class="inputWithBtn">
+                                        <input type="text" class="inputField bgGray" readonly title="사업명을 입력해주세요">
+                                        <button type="button" class="btnSearch">검색</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="formRow split">
+                                <div class="fieldUnit">
+                                    <label for="askName" class="formLabel">신청자명</label>
+                                    <div class="formControl">
+                                        <input type="text" id="askName" class="inputField" placeholder="신청자명을 입력해주세요">
+                                    </div>
+                                </div>
+                                <div class="fieldUnit">
+                                    <label for="askState" class="formLabel">상태</label>
+                                    <div class="formControl">
+                                        <select id="askState" title="상태 선택" class="input selectInput">
+                                            <option vlaue="배정">배정</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="formBtnWrap">
+                            <button type="button" class="btnPr">조회</button>
+                        </div>
+                    </section>
+                    <div class="certSection">
+                        <div class="sectionHeader mb-0">
+                            <div class="sectionTitle">정보조회</div>
+                        </div>
+                        <div class="tableWrapper">
+                            <table class="certTable work">
+                                <caption class="blind">상태,보호자명,보호자연락처,학교명,학년정보,학생명,학생연락처,주소,관리버튼을 포함한 정보조회목록</caption>
+                                <thead>
+                                    <tr>
+                                        <th scope="col" class="colState">상태</th>
+                                        <th scope="col" class="colPrName">보호자명</th>
+                                        <th scope="col" class="colPrNum">보호자 연락처</th>
+                                        <th scope="col" class="colShName">학교명</th>
+                                        <th scope="col" class="colShNum">학년정보</th>
+                                        <th scope="col" class="colStName">학생명</th>
+                                        <th scope="col" class="colStNum">학생 연락처</th>
+                                        <th scope="col" class="colAdr">주소</th>
+                                        <th scope="col" class="colMng">관리</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td class="cellState blue">배정</td>
+                                        <td class="cellPrName">김아람</td>
+                                        <td class="cellPrNum">01012345678</td>
+                                        <td class="cellShName">군산초등학교</td>
+                                        <td class="cellShNum">1학년</td>
+                                        <td class="cellStName">김아람</td>
+                                        <td class="cellStNum">01012345678</td>
+                                        <td class="cellAdr">
+                                            <div class="ellipsis">전북특별자치도 군산시 나운동 나운1길 105동 904호</div>
+                                        </td>
+                                        <td class="cellMng">
+                                            <div class="btnGroup">
+                                                <button type="button" class="btnInquiry">멘토일지</button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="cellState green">완료</td>
+                                        <td class="cellPrName">김아람</td>
+                                        <td class="cellPrNum">01012345678</td>
+                                        <td class="cellShName">군산초등학교</td>
+                                        <td class="cellShNum">1학년</td>
+                                        <td class="cellStName">김아람</td>
+                                        <td class="cellStNum">01012345678</td>
+                                        <td class="cellAdr">
+                                            <div class="ellipsis">전북특별자치도 군산시 나운동 나운1길 105동 904호</div>
+                                        </td>
+                                        <td class="cellMng">
+                                            <div class="btnGroup">
+                                                <button type="button" class="btnInquiry">멘토일지</button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="cellState purple">검수완료</td>
+                                        <td class="cellPrName">김아람</td>
+                                        <td class="cellPrNum">01012345678</td>
+                                        <td class="cellShName">군산초등학교</td>
+                                        <td class="cellShNum">1학년</td>
+                                        <td class="cellStName">김아람</td>
+                                        <td class="cellStNum">01012345678</td>
+                                        <td class="cellAdr">
+                                            <div class="ellipsis">전북특별자치도 군산시 나운동 나운1길 105동 904호</div>
+                                        </td>
+                                        <td class="cellMng">
+                                            <div class="btnGroup">
+                                                <button type="button" class="btnInquiry">멘토일지</button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="cellState yellow">반려</td>
+                                        <td class="cellPrName">김아람</td>
+                                        <td class="cellPrNum">01012345678</td>
+                                        <td class="cellShName">군산초등학교</td>
+                                        <td class="cellShNum">1학년</td>
+                                        <td class="cellStName">김아람</td>
+                                        <td class="cellStNum">01012345678</td>
+                                        <td class="cellAdr">
+                                            <div class="ellipsis">전북특별자치도 군산시 나운동 나운1길 105동 904호</div>
+                                        </td>
+                                        <td class="cellMng">
+                                            <div class="btnGroup">
+                                                <button type="button" class="btnInquiry">멘토일지</button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="cellState red">중단</td>
+                                        <td class="cellPrName">김아람</td>
+                                        <td class="cellPrNum">01012345678</td>
+                                        <td class="cellShName">군산초등학교</td>
+                                        <td class="cellShNum">1학년</td>
+                                        <td class="cellStName">김아람</td>
+                                        <td class="cellStNum">01012345678</td>
+                                        <td class="cellAdr">
+                                            <div class="ellipsis">전북특별자치도 군산시 나운동 나운1길 105동 904호</div>
+                                        </td>
+                                        <td class="cellMng">
+                                            <div class="btnGroup">
+                                                <button type="button" class="btnInquiry">멘토일지</button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="cellState grey">취소</td>
+                                        <td class="cellPrName">김아람</td>
+                                        <td class="cellPrNum">01012345678</td>
+                                        <td class="cellShName">군산초등학교</td>
+                                        <td class="cellShNum">1학년</td>
+                                        <td class="cellStName">김아람</td>
+                                        <td class="cellStNum">01012345678</td>
+                                        <td class="cellAdr">
+                                            <div class="ellipsis">전북특별자치도 군산시 나운동 나운1길 105동 904호</div>
+                                        </td>
+                                        <td class="cellMng">
+                                            <div class="btnGroup">
+                                                <button type="button" class="btnInquiry">멘토일지</button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <div class="modalOverlay" id="bizModal" aria-hidden="true">
+            <div class="modalContent" role="dialog" aria-labelledby="bizTitle">
+                <div class="modalHeader">
+                    <div id="modalTitle">사업검색</div>
+                    <button type="button" class="closeBtn" id="closebizModal" aria-label="닫기">&times;</button>
+                </div>
+                <div class="modalBody">
+                    <ul class="bizList">
+                        <li class="bizItem active">
+                            <div class="topInfo">
+                                <strong class="bizName">청소년 자기개발 연수지원 [자기신청장학금]</strong>
+                                <!--테이블에서 쓴 상태 색과 동일하게-->
+                                <span class="state blue">배정</span>
+                            </div>
+                            <dl class="infoList">
+                                <dt>ID</dt>
+                                <dd>arami02</dd>
+                                <dt>신청기간</dt>
+                                <dd>2026.03.11 - 2026.03.15</dd>
+                            </dl>
+                        </li>
+                        <li class="bizItem">
+                            <div class="topInfo">
+                                <strong class="bizName">청소년 자기개발 연수지원 [자기신청장학금]</strong>
+                                <!--테이블에서 쓴 상태 색과 동일하게-->
+                                <span class="state green">완료</span>
+                            </div>
+                            <dl class="infoList">
+                                <dt>ID</dt>
+                                <dd>arami02</dd>
+                                <dt>신청기간</dt>
+                                <dd>2026.03.11 - 2026.03.15</dd>
+                            </dl>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </main>
+    <footer class="footer">
+        <div class="innerContainer inner">
+            <div class="footerInfoWrap">
+                <div class="footerLogo">
+                    <img src="images/logo_w.png" alt="군산시 꿈이음센터">
+                </div>
+                <div class="addressArea">
+                    <address>
+                        [54080] 전북특별자치도 군산시 조촌로 22 <span>|</span> 대표전화 : 063)450-2600
+                    </address>
+                    <p class="copyright">Copyright ⓒ 2025 GUNSAN COUNTY. All Rights Reserved.</p>
+                </div>
+            </div>
+            <div class="footerLinkWrap">
+                <div class="siteSelectBox">
+                    <select id="familySite" title="관련 사이트 선택" class="customSelect">
+                        <option value="">개인정보 처리방침</option>
+                        <option value="https://www.gunsan.go.kr">군산시청</option>
+                        <option value="#">교육지원사업</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </footer>
+</body>
+<script>
+/* 모달 */
+const modalOverlay = document.getElementById('bizModal');
+const openModalBtn = document.querySelector('.btnSearch');
+const closeModalBtn = document.getElementById('closebizModal');
+const bizItems = document.querySelectorAll('.bizItem');
+
+const openModal = () => {
+    modalOverlay.classList.add('active');
+    modalOverlay.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+};
+
+const closeModal = () => {
+    modalOverlay.classList.remove('active');
+    modalOverlay.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = 'auto';
+};
+
+openModalBtn.addEventListener('click', openModal);
+closeModalBtn.addEventListener('click', closeModal);
+
+modalOverlay.addEventListener('click', (e) => {
+    if (e.target === modalOverlay) closeModal();
+});
+
+window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && modalOverlay.classList.contains('active')) {
+        closeModal();
+    }
+});
+
+bizItems.forEach(item => {
+    item.addEventListener('click', () => {
+        bizItems.forEach(el => el.classList.remove('active'));
+        item.classList.add('active');
+    });
+});
+
+
+/* 탭 조작 */
+document.addEventListener('DOMContentLoaded', () => {
+const tabInputs = document.querySelectorAll('.tabInput');
+const tabContents = document.querySelectorAll('.tabContent');
+
+    tabInputs.forEach(input => {
+        input.addEventListener('change', (e) => {
+            const targetValue = e.target.value;
+
+            tabContents.forEach(content => {
+                content.classList.remove('active');
+            });
+
+            const targetContent = document.getElementById(`content_${targetValue}`);
+            if (targetContent) {
+                targetContent.classList.add('active');
+            }
+        });
+    });
+});
+/* 신청분야 체크관리 */
+const checkboxes = document.querySelectorAll('.customInput');
+checkboxes.forEach((checkbox) => {
+    checkbox.addEventListener('change', function() {
+        const targetInput = this.closest('.fieldRow').querySelector('.inputField');
+        
+        if (this.checked) {
+            targetInput.disabled = false;
+            targetInput.readOnly = false; 
+            targetInput.style.backgroundColor = "#fff";
+        } else {
+            targetInput.disabled = true;
+            targetInput.value = ""; 
+            targetInput.style.backgroundColor = "#f9f9f9";
+        }
+    });
+});
+/* 헤더 조작 */
+document.addEventListener('DOMContentLoaded', () => {
+    const menuOpen = document.querySelector('.menuOpen');
+    const menuClose = document.querySelector('.menuClose');
+    const moMenu = document.querySelector('.moMenu');
+    const moMenuBg = document.querySelector('.moMenuBg'); 
+
+    menuOpen.addEventListener('click', () => {
+        moMenu.classList.add('active');
+        document.body.style.overflow = 'hidden'; 
+        setTimeout(() => menuClose.focus(), 100); 
+    });
+
+    const closeMobileMenu = () => {
+        moMenu.classList.remove('active');
+        document.body.style.overflow = ''; 
+        menuOpen.focus();
+    };
+    menuClose.addEventListener('click', closeMobileMenu);
+    moMenuBg.addEventListener('click', closeMobileMenu);
+});
+
+/* 모바일 메뉴 접근성  */
+document.addEventListener('DOMContentLoaded', () => {
+    const navItems = document.querySelectorAll('.navItem');
+    const menuOpen = document.querySelector('.menuOpen');
+    const menuClose = document.querySelector('.menuClose');
+    const moMenu = document.querySelector('.moMenu');
+
+    menuOpen?.addEventListener('click', () => moMenu.classList.add('active'));
+    menuClose?.addEventListener('click', () => moMenu.classList.remove('active'));
+
+    navItems.forEach(item => {
+        const btn = item.querySelector('.moMainLink');
+        btn.addEventListener('click', () => {
+            navItems.forEach(li => li.classList.remove('active'));
+            item.classList.add('active');
+        });
+    });
+});
+</script>
+</html>

@@ -1,0 +1,5 @@
+/* gunsan index.html 순서: default, index 먼저 → 그 다음 폰트 */
+@import "./default.css";
+@import "./index.css";
+@import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard-gov.min.css");
+@import url("https://hangeul.pstatic.net/hangeul_static/css/nanum-square-round.css");

@@ -1,0 +1,150 @@
+.sidebar-header {
+  @apply py-5 px-4 border-b border-gray-300 text-center relative transition-all duration-300;
+}
+
+.sidebar.collapsed .sidebar-header {
+  @apply px-0;
+}
+
+.sidebar-logo {
+  @apply flex items-center justify-center gap-3 transition-all duration-300;
+}
+
+.sidebar.collapsed .sidebar-logo {
+  @apply flex-col gap-0;
+}
+
+.sidebar-logo img {
+  @apply h-9 w-auto transition-all duration-300;
+}
+
+.sidebar.collapsed .sidebar-logo img {
+  @apply h-8 w-8;
+}
+
+.sidebar-logo span {
+  @apply text-lg font-semibold text-gray-800 transition-all duration-300;
+}
+
+.sidebar.collapsed .sidebar-logo-text {
+  @apply hidden;
+}
+
+.sidebar-title {
+  @apply text-lg font-semibold text-gray-800;
+}
+
+.sidebar-close-btn {
+  @apply hidden absolute right-4 top-1/2 -translate-y-1/2 bg-transparent border-none text-2xl text-gray-500 cursor-pointer p-1 leading-none transition-colors;
+}
+
+.sidebar-close-btn:hover {
+  @apply text-gray-800;
+}
+
+@media (max-width: 768px) {
+  .sidebar-close-btn {
+    @apply block;
+  }
+
+  .sidebar-logo span {
+    @apply text-base;
+  }
+}
+
+.sidebar-menu {
+  @apply py-4 px-0;
+}
+
+.menu-item {
+  @apply mb-1;
+}
+
+.menu-button {
+  @apply w-full py-3 px-4 border-none bg-transparent text-left cursor-pointer flex items-center justify-between text-gray-600 font-medium transition-all duration-300;
+  font-size: 15px;
+}
+
+.sidebar.collapsed .menu-button {
+  @apply justify-center px-0;
+}
+
+.menu-button:hover {
+  @apply bg-gray-100 text-gray-800;
+}
+
+.menu-button.active {
+  @apply bg-indigo-100 text-indigo-600;
+}
+
+.menu-icon {
+  @apply mr-3 w-5 h-5 flex items-center justify-center transition-all duration-300;
+  font-size: 18px;
+}
+
+.sidebar.collapsed .menu-icon {
+  @apply mr-0;
+  font-size: 24px;
+}
+
+.menu-label {
+  @apply flex-1 font-bold transition-all duration-300;
+  font-size: 15px;
+}
+
+.sidebar.collapsed .menu-label {
+  @apply hidden;
+}
+
+.menu-arrow {
+  @apply transition-transform text-xs;
+}
+
+.sidebar.collapsed .menu-arrow {
+  @apply hidden;
+}
+
+.menu-arrow.expanded {
+  @apply rotate-90;
+}
+
+.submenu {
+  @apply max-h-0 overflow-hidden transition-all duration-300 bg-gray-50 flex flex-col;
+}
+
+.sidebar.collapsed .submenu {
+  @apply hidden;
+}
+
+.submenu.expanded {
+  max-height: 500px;
+}
+
+.submenu-item {
+  @apply block w-full py-2.5 px-4 cursor-pointer text-gray-500 no-underline transition-all relative;
+  font-size: 14px;
+  padding-left: 2.6rem;
+}
+
+.submenu-item::before {
+  content: '•';
+  @apply absolute text-gray-400;
+  left: 1.6rem;
+  font-size: 15px;
+}
+
+.submenu-item:hover {
+  @apply bg-gray-100 text-gray-800;
+}
+
+.submenu-item:hover::before {
+  @apply text-gray-500;
+}
+
+.submenu-item.active {
+  @apply bg-blue-100 text-blue-800 font-medium;
+}
+
+.submenu-item.active::before {
+  @apply text-blue-800;
+}

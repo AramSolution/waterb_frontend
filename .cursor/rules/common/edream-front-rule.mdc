@@ -1,0 +1,1728 @@
+---
+alwaysApply: true
+---
+
+# edream_frontend Project Rules
+
+## 🎯 Project Overview
+
+This is a **Next.js 14** project using **TypeScript**, **Tailwind CSS**, and **Feature-Sliced Design (FSD)** architecture pattern. The project includes both admin web pages (`/adminWeb/*`) and user web pages (`/userWeb/*`).
+
+**Tech Stack:**
+
+- Framework: Next.js 14 (App Router)
+- Language: TypeScript (strict mode)
+- Styling: Tailwind CSS
+- Build: Static Export (`output: 'export'`)
+- Architecture: Feature-Sliced Design (FSD)
+
+---
+
+## 🏗️ Architecture Pattern: Feature-Sliced Design (FSD)
+
+### Directory Structure
+
+```
+src/
+├── app/              # Next.js App Router (routing layer)
+│   ├── adminWeb/     # Admin web pages
+│   └── userWeb/      # User web pages
+├── entities/         # Business entities (reusable domain logic)
+├── features/         # Feature units (business features)
+├── widgets/          # Composite UI components
+└── shared/           # Shared resources
+    ├── config/       # Configuration
+    ├── hooks/        # Custom hooks
+    ├── lib/          # Utilities
+    ├── styles/       # Styles
+    └── ui/           # Common UI components
+```
+
+### Layer Responsibilities
+
+1. **app/**: Next.js page routing only
+
+   - `page.tsx`: Page components
+   - `layout.tsx`: Layout wrappers
+   - **CRITICAL**: Must contain ONLY routing logic, NO UI markup
+
+2. **entities/**: Domain entities
+
+   - `api/`: Entity-specific API services
+   - `model/`: Business logic/state management
+   - `ui/`: Entity-related UI components
+
+3. **features/**: Feature units
+
+   - Structure: `{featureName}/{action}/`
+   - Example: `adminWeb/member/list/`
+   - Contains: `api/`, `model/`, `ui/`
+
+4. **widgets/**: Composite components
+
+   - Examples: `AdminLayout`, `Header`, `Sidebar`
+
+5. **shared/**: Shared resources
+   - Reusable utilities, hooks, UI, styles
+
+### ⚠️ CRITICAL: Dependency Rules
+
+**MUST follow this dependency flow:**
+
+```
+app → widgets → features → entities → shared
+```
+
+**MUST NOT:**
+
+- ❌ Import from upper layers (e.g., `features` importing from `widgets`)
+- ❌ Create circular dependencies
+- ❌ Import directly from `app/` in `features/` or `entities/`
+- ❌ Mix concerns between layers
+
+**MUST:**
+
+- ✅ Only import from same layer or lower layers
+- ✅ Use absolute paths with `@/` prefix
+- ✅ Re-export through `index.ts` files
+
+### ⚠️ CRITICAL: App Layer Purity Rule
+
+**MUST ALWAYS verify `app/` layer contains ONLY routing logic when:**
+
+- ✅ Creating new pages in `app/` directory
+- ✅ Refactoring existing pages to FSD structure
+- ✅ Copying code patterns from existing pages
+- ✅ Migrating legacy code to FSD architecture
+
+**MUST ensure `app/` pages contain ONLY:**
+
+- ✅ Layout wrapper (`<AdminLayout>`)
+- ✅ Feature/widget component import and rendering
+- ✅ Route parameter handling (query params, path params)
+- ✅ Suspense boundaries for async operations
+
+**MUST NOT include in `app/` layer:**
+
+- ❌ **NEVER** include UI markup (page headers, breadcrumbs, cards, containers)
+- ❌ **NEVER** include form elements, buttons, inputs
+- ❌ **NEVER** include styling classes or inline styles
+- ❌ **NEVER** include business logic or state management
+- ❌ **NEVER** include API calls or data fetching
+- ❌ **NEVER** copy UI markup from existing pages without verification
+
+**Why this is CRITICAL:**
+
+The `app/` layer is Next.js's routing layer. Violating this rule breaks FSD architecture and creates:
+
+1. ❌ Mixing concerns between routing and presentation
+2. ❌ Duplicate UI code across pages
+3. ❌ Harder maintenance and refactoring
+4. ❌ Violation of single responsibility principle
+
+**Real-world example of the mistake:**
+
+```typescript
+// ❌ WRONG: UI markup in app/ layer
+// src/app/adminWeb/member/register/page.tsx
+export default function MemberRegisterPage() {
+  return (
+    <AdminLayout>
+      <div className="page-header">
+        {" "}
+        {/* ❌ UI markup */}
+        <h1 className="page-title">관리자회원등록</h1>
+        <nav className="breadcrumb">
+          {" "}
+          {/* ❌ UI markup */}
+          <span>홈</span> &gt; <span>관리자</span>
+        </nav>
+      </div>
+      <div className="bg-white rounded-lg shadow">
+        {" "}
+        {/* ❌ UI markup */}
+        <div className="px-6 py-4 border-b border-gray-200">
+          <h5 className="text-lg font-semibold mb-0">회원 정보 입력</h5>
+        </div>
+        <div className="p-0">
+          <MemberRegisterForm />
+        </div>
+      </div>
+    </AdminLayout>
+  );
+}
+```
+
+**Correct FSD-compliant pattern:**
+
+```typescript
+// ✅ CORRECT: Only routing in app/ layer
+// src/app/adminWeb/member/register/page.tsx
+export default function MemberRegisterPage() {
+  return (
+    <AdminLayout>
+      <MemberRegisterPageView />{" "}
+      {/* ✅ Feature/widget component handles all UI */}
+    </AdminLayout>
+  );
+}
+
+// ✅ CORRECT: UI markup in features/ui/ or widgets/
+// src/features/adminWeb/member/register/ui/MemberRegisterPageView.tsx
+export const MemberRegisterPageView: React.FC = () => {
+  return (
+    <>
+      <div className="page-header">
+        <h1 className="page-title">관리자회원등록</h1>
+        <nav className="breadcrumb">
+          <span>홈</span> &gt; <span>관리자</span>
+        </nav>
+      </div>
+      <div className="bg-white rounded-lg shadow">
+        <div className="px-6 py-4 border-b border-gray-200">
+          <h5 className="text-lg font-semibold mb-0">회원 정보 입력</h5>
+        </div>
+        <div className="p-0">
+          <MemberRegisterForm />
+        </div>
+      </div>
+    </>
+  );
+};
+```
+
+**Reference pattern (CORRECT example in codebase):**
+
+```typescript
+// ✅ CORRECT: src/app/adminWeb/login/page.tsx (reference implementation)
+"use client";
+
+import { LoginForm } from "@/features/adminWeb/auth/login/ui";
+
+export default function LoginPage() {
+  return <LoginForm />; // ✅ Only routing, no UI markup
+}
+```
+
+**Prevention Checklist (MUST verify before creating/modifying app/ pages):**
+
+- [ ] `app/` page contains ONLY `<AdminLayout>` wrapper and component import
+- [ ] NO `<div>`, `<nav>`, `<header>`, or other HTML elements with classes
+- [ ] NO Tailwind classes in `app/` layer files
+- [ ] NO inline styles in `app/` layer files
+- [ ] All UI markup is in `features/ui/` or `widgets/` layers
+- [ ] Reference `src/app/adminWeb/login/page.tsx` as the correct pattern
+- [ ] Verify existing code before copying patterns (some may violate FSD)
+
+**When refactoring existing pages:**
+
+1. **First step**: Identify all UI markup in `app/` layer
+2. **Second step**: Extract UI markup to `features/ui/{featureName}PageView.tsx` or `widgets/`
+3. **Third step**: Update `app/` page to import and render only the extracted component
+4. **Fourth step**: Verify no UI markup remains in `app/` layer
+
+**Common patterns to avoid:**
+
+```typescript
+// ❌ WRONG: Don't do this
+<div className="page-header">...</div>
+<div className="bg-white rounded-lg shadow">...</div>
+<nav className="breadcrumb">...</nav>
+
+// ✅ CORRECT: Do this instead
+<PageViewComponent />  // Component in features/ui/ or widgets/
+```
+
+**Decision tree for page structure:**
+
+```
+Creating new page?
+├─ Does it need routing only?
+│  └─ YES → Put in app/ (NO UI markup)
+└─ Does it need UI structure?
+   └─ YES → Create in features/ui/ or widgets/
+      └─ Import and render from app/
+```
+
+---
+
+## 🛣️ Routing Rules (Static Export Mode)
+
+### ⚠️ CRITICAL: Dynamic Routes vs Query Parameters
+
+**MUST ALWAYS use query parameters for detail pages when using `output: 'export'` mode.**
+
+**Root Cause Analysis of Common Mistakes:**
+
+1. **Pattern Ignorance**: Not checking existing codebase patterns before implementation
+2. **Static Export Constraints**: Not understanding `output: 'export'` mode limitations
+3. **Default Next.js Pattern**: Following standard Next.js dynamic route pattern without considering project constraints
+
+**Why This Rule Exists:**
+
+This project uses `output: 'export'` mode, which requires **all routes to be statically generated at build time**. Dynamic routes (`[id]`, `[bbsid]`) have severe limitations in this mode:
+
+- ❌ Requires `generateStaticParams()` to pre-generate all possible paths
+- ❌ Cannot generate routes at runtime
+- ❌ Causes build errors: `"Page is missing param in generateStaticParams()"`
+- ❌ Incompatible with `"use client"` and `generateStaticParams()` together
+
+**MUST:**
+
+- ✅ **ALWAYS** check existing routing patterns before creating new detail pages
+- ✅ **ALWAYS** use query parameters for detail pages: `/adminWeb/board/detail?bbsid=...`
+- ✅ **ALWAYS** use static routes for list/register pages: `/adminWeb/board/list`, `/adminWeb/board/register`
+- ✅ **ALWAYS** read query parameters with `useSearchParams()` wrapped in Suspense
+- ✅ **ALWAYS** verify `next.config.js` has `output: 'export'` before implementing routing
+
+**MUST NOT:**
+
+- ❌ **NEVER** use dynamic routes (`[id]`, `[bbsid]`, `[esntlId]`) with `output: 'export'` mode
+- ❌ **NEVER** create `generateStaticParams()` without understanding static export implications
+- ❌ **NEVER** mix dynamic routes and query parameters inconsistently
+- ❌ **NEVER** assume standard Next.js patterns work with static export
+- ❌ **NEVER** implement routing without checking existing codebase patterns first
+
+### Pattern Verification Process
+
+**MUST follow this process BEFORE creating any detail page:**
+
+1. **Step 1: Check Existing Patterns**
+
+   ```bash
+   # Search for existing detail pages
+   grep -r "detail" src/app/adminWeb/
+   # Check how they handle IDs (query params vs dynamic routes)
+   ```
+
+2. **Step 2: Verify Build Configuration**
+
+   ```javascript
+   // next.config.js
+   output: "export"; // ✅ If this exists, use query parameters
+   ```
+
+3. **Step 3: Check Reference Implementation**
+
+   ```typescript
+   // ✅ CORRECT: Reference pattern
+   // src/app/adminWeb/member/detail/page.tsx
+   // Uses query parameter: ?esntlId=...
+   ```
+
+4. **Step 4: Implement Following Pattern**
+   - Use static route: `/adminWeb/{entity}/detail/page.tsx`
+   - Read ID from query parameter: `useSearchParams().get("id")`
+   - Wrap in Suspense for `useSearchParams()`
+
+### ⚠️ CRITICAL: Suspense Fallback Pattern
+
+**What is Suspense Fallback?**
+
+`Suspense` is a React feature that allows you to "suspend" rendering while waiting for asynchronous operations (like reading URL search parameters). The `fallback` prop specifies what UI to show while waiting.
+
+**Why it's needed:**
+
+- `useSearchParams()` in Next.js requires `Suspense` because it reads from the URL, which is an async operation
+- Without `Suspense`, you'll get errors: `"useSearchParams() should be wrapped in a suspense boundary"`
+- The fallback UI provides user feedback during the brief loading moment
+
+**MUST:**
+
+- ✅ **ALWAYS** wrap components using `useSearchParams()` with `Suspense`
+- ✅ **ALWAYS** use `LoadingFallback` component from `@/shared/ui/adminWeb` for consistency
+- ✅ **ALWAYS** keep fallback UI simple and fast-loading
+
+**MUST NOT:**
+
+- ❌ **NEVER** use inline JSX in `fallback` prop (violates FSD app layer purity)
+- ❌ **NEVER** forget to wrap `useSearchParams()` usage
+- ❌ **NEVER** use complex components in fallback (keep it lightweight)
+
+**Correct Pattern:**
+
+```typescript
+// ✅ CORRECT: Use LoadingFallback component
+import { Suspense } from "react";
+import { LoadingFallback } from "@/shared/ui/adminWeb";
+
+export default function DetailPage() {
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <DetailContent />
+    </Suspense>
+  );
+}
+```
+
+**Wrong Pattern:**
+
+```typescript
+// ❌ WRONG: Inline UI markup in app layer
+export default function DetailPage() {
+  return (
+    <Suspense fallback={<div className="p-6 text-center">로딩 중...</div>}>
+      {/* ❌ UI markup in app layer violates FSD */}
+      <DetailContent />
+    </Suspense>
+  );
+}
+```
+
+### Implementation Pattern
+
+**✅ CORRECT: Query Parameter Approach**
+
+```typescript
+// src/app/adminWeb/board/detail/page.tsx
+"use client";
+
+import { Suspense } from "react";
+import { AdminLayout } from "@/widgets/admin/layout";
+import { BoardDetailPageView } from "@/features/adminWeb/board/detail/ui";
+import { LoadingFallback } from "@/shared/ui/adminWeb";
+
+function BoardDetailContent() {
+  return (
+    <AdminLayout>
+      <BoardDetailPageView />
+    </AdminLayout>
+  );
+}
+
+export default function BoardDetailPage() {
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <BoardDetailContent />
+    </Suspense>
+  );
+}
+
+// src/features/adminWeb/board/detail/ui/BoardDetailPageView.tsx
+("use client");
+
+import { useSearchParams } from "next/navigation";
+import { BoardDetailForm } from "./BoardDetailForm";
+
+export const BoardDetailPageView: React.FC = () => {
+  const searchParams = useSearchParams();
+  const bbsid = searchParams?.get("bbsid") || "";
+
+  if (!bbsid) {
+    return (
+      <div className="p-6 text-center text-red-600">
+        게시판 ID가 필요합니다.
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <div className="page-header">
+        <h1 className="page-title">게시판상세</h1>
+        {/* ... rest of UI ... */}
+      </div>
+      <BoardDetailForm bbsid={bbsid} />
+    </>
+  );
+};
+```
+
+**Navigation Pattern:**
+
+```typescript
+// ✅ CORRECT: Navigate with query parameters
+const handleDetailClick = (bbsId: string) => {
+  const params = new URLSearchParams({
+    bbsid: bbsId,
+    searchCondition: searchCondition || "1",
+    searchKeyword: searchKeyword || "",
+    targetGbn: targetGbn || "",
+    page: currentPage.toString(),
+  });
+  router.push(`/adminWeb/board/detail?${params.toString()}`);
+};
+```
+
+**❌ WRONG: Dynamic Route Approach**
+
+```typescript
+// ❌ DON'T DO THIS with output: 'export'
+// src/app/adminWeb/board/detail/[bbsid]/page.tsx
+export function generateStaticParams() {
+  return []; // ❌ This causes errors in static export mode!
+}
+
+export default function BoardDetailPage({
+  params,
+}: {
+  params: { bbsid: string };
+}) {
+  // ❌ This will fail with: "Page is missing param in generateStaticParams()"
+}
+```
+
+### Why Query Parameters Work Better
+
+**Benefits of Query Parameter Approach:**
+
+1. **Static Export Compatible**: Works perfectly with `output: 'export'` mode
+2. **No Build-Time Knowledge Required**: Don't need to know all IDs at build time
+3. **State Persistence**: Easily preserve list page state (search, filters, pagination)
+4. **Consistency**: Matches existing codebase pattern (`/adminWeb/member/detail?esntlId=...`)
+5. **Flexibility**: Can add multiple query parameters without route changes
+
+**Comparison:**
+
+| Aspect            | Dynamic Routes `[id]`                | Query Parameters `?id=...`        |
+| ----------------- | ------------------------------------ | --------------------------------- |
+| Static Export     | ❌ Requires `generateStaticParams()` | ✅ Works natively                 |
+| Build Time        | ❌ Must know all IDs                 | ✅ No build-time knowledge needed |
+| State Persistence | ❌ Complex                           | ✅ Simple (URL params)            |
+| Consistency       | ❌ Different from existing code      | ✅ Matches existing pattern       |
+
+### Prevention Checklist
+
+**MUST verify ALL items before creating detail pages:**
+
+- [ ] **Checked existing detail page patterns** (e.g., `/adminWeb/member/detail/page.tsx`)
+- [ ] **Verified `next.config.js` has `output: 'export'`**
+- [ ] **Using query parameters** (`?id=...`) not dynamic routes (`[id]`)
+- [ ] **Page component wrapped with Suspense** when using `useSearchParams()`
+- [ ] **Navigation includes state preservation** (search conditions, pagination)
+- [ ] **Follows existing pattern** (`/adminWeb/member/detail?esntlId=...`)
+- [ ] **No `generateStaticParams()` function** in detail pages
+- [ ] **No dynamic route folders** (`[id]`, `[bbsid]`) in detail pages
+
+### Common Mistakes to Avoid
+
+**Mistake 1: Not Checking Existing Patterns**
+
+```typescript
+// ❌ WRONG: Assumed dynamic routes work
+// Created: src/app/adminWeb/board/detail/[bbsid]/page.tsx
+// Should have checked: src/app/adminWeb/member/detail/page.tsx (uses query params)
+```
+
+**Mistake 2: Ignoring Static Export Constraints**
+
+```typescript
+// ❌ WRONG: Tried to use dynamic routes with static export
+export function generateStaticParams() {
+  return []; // ❌ Empty array causes runtime errors
+}
+```
+
+**Mistake 3: Mixing Patterns**
+
+```typescript
+// ❌ WRONG: Inconsistent routing
+// Some pages use: /detail/[id]
+// Other pages use: /detail?id=...
+// Should be consistent: ALL use query parameters
+```
+
+### Decision Tree for Routing
+
+```
+Creating detail page?
+├─ Does project use output: 'export'?
+│  ├─ YES → Use query parameters (?id=...)
+│  │  └─ Check existing pattern first
+│  └─ NO → Can use dynamic routes ([id])
+│     └─ Still check existing pattern for consistency
+└─ Does it need to preserve list state?
+   └─ YES → Query parameters (better for state persistence)
+```
+
+### Reference Implementation
+
+**✅ CORRECT: Existing pattern in codebase**
+
+```typescript
+// src/app/adminWeb/member/detail/page.tsx
+"use client";
+
+import { AdminLayout } from "@/widgets/admin/layout";
+import { MemberDetailPageView } from "@/features/adminWeb/member/detail/ui/MemberDetailPageView";
+
+export default function MemberDetailPage() {
+  return (
+    <AdminLayout>
+      <MemberDetailPageView /> {/* Reads esntlId from query params */}
+    </AdminLayout>
+  );
+}
+
+// src/features/adminWeb/member/detail/ui/MemberDetailPageView.tsx
+// Uses useSearchParams() to read esntlId from ?esntlId=...
+```
+
+**When to Use Each Approach:**
+
+- **Query Parameters** (`?id=...`): ✅ **ALWAYS** for detail pages with `output: 'export'`
+- **Dynamic Routes** (`[id]`): ❌ **NEVER** with `output: 'export'` mode
+- **Static Routes**: ✅ For list, register, and other non-dynamic pages
+
+---
+
+## 📝 Naming Conventions
+
+### File Naming
+
+**MUST:**
+
+- ✅ Components: **PascalCase** (`Header.tsx`, `LoginForm.tsx`)
+- ✅ Utilities/Hooks: **camelCase** (`apiClient.ts`, `useMemberList.ts`)
+- ✅ Constants/Config: **UPPER_SNAKE_CASE** (`API_CONFIG`, `API_ENDPOINTS`)
+- ✅ Index files: `index.ts` for re-exports
+
+**MUST NOT:**
+
+- ❌ Use kebab-case for component files
+- ❌ Mix naming conventions within same directory
+- ❌ Use abbreviations without clear meaning
+
+### Code Naming
+
+**MUST:**
+
+- ✅ Interfaces: **PascalCase** (`HeaderProps`, `LoginRequest`)
+- ✅ Types: **PascalCase** (`FilterType`, `MemberListParams`)
+- ✅ Classes: **PascalCase** (`ApiError`, `AuthService`)
+- ✅ Functions: **camelCase** (`useMemberList`, `handlePageChange`)
+- ✅ Variables: **camelCase** (`currentPage`, `showDialog`)
+- ✅ Constants: **UPPER_SNAKE_CASE** (`API_BASE_URL`)
+
+**MUST NOT:**
+
+- ❌ Use `any` type (use `unknown` or proper types)
+- ❌ Use Hungarian notation
+- ❌ Abbreviate unnecessarily
+
+---
+
+## 🔧 TypeScript Rules
+
+### Type Safety
+
+**MUST:**
+
+- ✅ Use strict TypeScript mode
+- ✅ Define interfaces for all props
+- ✅ Use explicit return types for functions
+- ✅ Use `React.FC<Props>` or explicit function types
+- ✅ Handle `null` and `undefined` explicitly
+
+**MUST NOT:**
+
+- ❌ Use `any` type
+- ❌ Suppress TypeScript errors with `@ts-ignore` without justification
+- ❌ Use `as` type assertions without proper validation
+- ❌ Leave implicit `any` types
+
+---
+
+## 🏗️ Build / Typecheck Guardrails (MUST READ)
+
+This project uses **Next.js 14 + TypeScript + Static Export (`output: 'export'`)**.
+Because of that, **`npm run build` performs stricter checks** than `npm run dev`:
+
+- It runs **full typechecking** across the project
+- It **generates static pages for all routes** (so pages you never opened in dev can fail the build)
+
+### ✅ MUST: Always verify build before merging
+
+- **MUST**: Run `npm run build` before merge/release (type errors must be 0)
+- **MUST**: Fix TypeScript errors at the source (do not hide with `any` / `ts-ignore`)
+
+### ✅ MUST: API params must match the typed request interface
+
+- **MUST**: When calling services like `XxxService.getXxxList(params)`, `params` MUST satisfy the request type (e.g., `ProgramListParams`)
+- **MUST**: If the request type requires server-side pagination fields (commonly `length`, `start`), they MUST be provided
+- **MUST NOT**: Pass partial objects that “work in dev” but violate the type (build will fail)
+
+### ✅ MUST: Form errors type must include every UI-referenced field
+
+- **MUST**: If UI references `errors.someField`, then the errors type/interface MUST include `someField?: string`
+- **MUST NOT**: Reference `errors.xxx` in UI unless it exists in the errors type
+
+### ✅ MUST: Lucide icon props (build-only type failures)
+
+Lucide React icons often **do not accept `title` prop** (TypeScript build fails).
+
+- **MUST NOT**: `<SomeLucideIcon title="..."/>`
+- **MUST**: Use one of:
+  - `aria-label="..."` on the icon
+  - Wrap the icon: `<span title="..."><Icon ... /></span>`
+
+### Component Types
+
+**MUST:**
+
+```typescript
+// Option 1: React.FC
+export const Header: React.FC<HeaderProps> = ({ onToggleSidebar }) => {
+  // ...
+};
+
+// Option 2: Explicit function
+export function LoginForm() {
+  // ...
+}
+
+// Option 3: Arrow function with explicit return type
+export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
+  // ...
+};
+```
+
+**MUST NOT:**
+
+```typescript
+// ❌ Missing type annotation
+export const Header = ({ onToggleSidebar }) => {};
+
+// ❌ Using any
+export const Component: React.FC<any> = (props) => {};
+```
+
+---
+
+## 📦 Import Rules
+
+### Import Order (MUST follow this exact order)
+
+**MUST:**
+
+```typescript
+// 1. React and Next.js imports
+import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+
+// 2. Third-party libraries
+import { someLibrary } from "some-library";
+
+// 3. Internal modules (absolute paths with @/)
+import { AuthService } from "@/entities/auth/api";
+import { AdminLayout } from "@/widgets/admin/layout";
+import { useMemberList } from "@/features/adminWeb/member/list/model";
+
+// 4. Relative imports (only if necessary)
+import { LocalComponent } from "./LocalComponent";
+
+// 5. Styles (always last)
+// Note: Custom CSS imports are specific to admin pages (see admin-web-rules.mdc)
+// User pages use Tailwind CSS only (see user-web-rules.mdc)
+```
+
+**MUST NOT:**
+
+- ❌ Mix import orders
+- ❌ Use relative paths when absolute paths are available
+- ❌ Import styles before code imports
+- ❌ Use wildcard imports (`import * as`)
+
+### Import Path Rules
+
+**MUST:**
+
+- ✅ Use `@/` prefix for all internal imports
+- ✅ Import from `index.ts` when available
+- ✅ Group imports by category (React, libraries, internal, styles)
+
+**MUST NOT:**
+
+- ❌ Use relative paths like `../../../` (use `@/` instead)
+- ❌ Import from implementation files when `index.ts` exists
+
+---
+
+## 🎨 Styling Rules
+
+### ⚠️ CRITICAL: Tailwind CSS Configuration
+
+**MUST ALWAYS verify `tailwind.config.js` content paths when:**
+
+- ✅ Creating new FSD layers (app, entities, features, widgets, shared)
+- ✅ Moving files between FSD layers
+- ✅ Restructuring project directories
+- ✅ Adding new component directories
+- ✅ Converting from non-FSD to FSD architecture
+
+**MUST ensure ALL FSD layers are included in `content` array:**
+
+```javascript
+// tailwind.config.js
+module.exports = {
+  content: [
+    "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
+    "./src/app/**/*.{js,ts,jsx,tsx,mdx}", // ✅ App Router pages
+    "./src/shared/**/*.{js,ts,jsx,tsx,mdx}", // ✅ Shared resources
+    "./src/entities/**/*.{js,ts,jsx,tsx,mdx}", // ✅ Business entities
+    "./src/widgets/**/*.{js,ts,jsx,tsx,mdx}", // ✅ Composite components
+    "./src/features/**/*.{js,ts,jsx,tsx,mdx}", // ✅ Feature units (CRITICAL!)
+  ],
+  // ...
+};
+```
+
+**MUST NOT:**
+
+- ❌ **NEVER** forget to add `features` path when using FSD architecture
+- ❌ **NEVER** assume Tailwind will auto-detect new directories
+- ❌ **NEVER** skip updating `tailwind.config.js` after directory restructuring
+- ❌ **NEVER** ignore missing CSS without checking Tailwind config first
+
+**Why this is CRITICAL:**
+
+Tailwind CSS uses **purge/content scanning** to generate CSS. It ONLY scans files in the `content` array. If a directory is missing:
+
+1. ❌ Tailwind classes in that directory won't be detected
+2. ❌ CSS won't be generated for those classes
+3. ❌ Styles will appear broken/missing in the browser
+4. ❌ No build errors will occur (silent failure)
+
+**Real-world example of the mistake:**
+
+```javascript
+// ❌ WRONG: Missing 'features' path
+content: [
+  "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
+  "./src/shared/**/*.{js,ts,jsx,tsx,mdx}",
+  "./src/entities/**/*.{js,ts,jsx,tsx,mdx}",
+  "./src/widgets/**/*.{js,ts,jsx,tsx,mdx}",
+  // ❌ Missing: './src/features/**/*.{js,ts,jsx,tsx,mdx}'
+];
+
+// Result: LoginForm.tsx in features/adminWeb/auth/login/ui/
+// uses classes like 'bg-gradient-to-r', 'from-blue-500', 'to-indigo-500'
+// but these classes are NOT in the generated CSS because the file wasn't scanned!
+```
+
+**Prevention Checklist (MUST verify before considering CSS issues resolved):**
+
+- [ ] All FSD layers (app, entities, features, widgets, shared) are in `content` array
+- [ ] Path patterns match actual directory structure
+- [ ] File extensions match project file types (`.tsx`, `.ts`, `.jsx`, `.js`, `.mdx`)
+- [ ] After adding new directories, `tailwind.config.js` is updated
+- [ ] After restructuring, `tailwind.config.js` is verified
+- [ ] Build cache is cleared after config changes (`.next` folder)
+
+**Debugging missing CSS:**
+
+1. **First check**: Verify `tailwind.config.js` content paths include the file's directory
+2. **Second check**: Clear build cache (`.next` folder) and restart dev server
+3. **Third check**: Verify Tailwind classes are actually used in the component
+4. **Fourth check**: Check browser DevTools to see if CSS classes exist in generated stylesheet
+
+### Tailwind CSS Usage
+
+**MUST:**
+
+- ✅ Use Tailwind utility classes as primary styling method
+- ✅ Use responsive prefixes: `sm:`, `md:`, `lg:`
+- ✅ Use custom colors from `tailwind.config.js`
+- ✅ Follow mobile-first approach
+
+**Example:**
+
+```tsx
+<button className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+  Button
+</button>
+
+<div className="w-full md:w-1/2 lg:w-1/3">
+  <span className="text-[13px] sm:text-[11px] md:text-[13px]">
+    Responsive text
+  </span>
+</div>
+```
+
+**MUST NOT:**
+
+- ❌ Use inline styles (except for dynamic values)
+- ❌ Mix Tailwind classes with inline styles unnecessarily
+- ❌ Create custom CSS when Tailwind utilities exist
+- ❌ Use arbitrary values when standard utilities exist
+
+### Color System
+
+**MUST use these colors:**
+
+- Primary: `#0d6efd` (use `primary` or `bg-primary`)
+- Success: `#198754` (use `success` or `bg-success`)
+- Warning: `#ffc107` (use `warning` or `bg-warning`)
+- Danger: `#dc3545` (use `danger` or `bg-danger`)
+- Background: `#f5f7fa` (use `bg-gray`)
+- Border: `#dee2e6` (use `border-gray`)
+
+**MUST NOT:**
+
+- ❌ Use hardcoded hex colors (use Tailwind config colors)
+- ❌ Create new colors without updating `tailwind.config.js`
+
+---
+
+## 🧩 Component Rules
+
+### Component Structure
+
+**MUST:**
+
+```typescript
+'use client'; // For client components
+
+import React, { useState } from 'react';
+// ... other imports
+
+interface ComponentProps {
+  // Props definition
+}
+
+export const Component: React.FC<ComponentProps> = ({ prop1, prop2 }) => {
+  // Hooks
+  const [state, setState] = useState();
+
+  // Effects
+  useEffect(() => {
+    // ...
+  }, []);
+
+  // Handlers
+  const handleClick = () => {
+    // ...
+  };
+
+  // Render
+  return (
+    // JSX
+  );
+};
+```
+
+**MUST NOT:**
+
+- ❌ Mix server and client components without proper separation
+- ❌ Use `'use client'` in server components
+- ❌ Place hooks after conditional returns
+- ❌ Mix logic and JSX without clear separation
+
+### State Management
+
+**MUST:**
+
+- ✅ Use `useState` for local component state
+- ✅ Use custom hooks for complex state logic
+- ✅ Use `sessionStorage` for authentication state
+- ✅ Extract state logic to custom hooks (e.g., `useMemberList`)
+
+**MUST NOT:**
+
+- ❌ Use global state management libraries (Redux, Zustand) without justification
+- ❌ Store sensitive data in `localStorage`
+- ❌ Mix server and client state management
+
+### Dialog & Message Rules
+
+#### ⚠️ CRITICAL: 등록/수정 성공 메시지 표시 규칙
+
+**MUST ALWAYS use `success` type for ConfirmDialog when:**
+
+- ✅ Registration (등록) 작업이 성공적으로 완료되었을 때
+- ✅ Update (수정) 작업이 성공적으로 완료되었을 때
+- ✅ 사용자에게 성공적인 작업 완료를 알려야 할 때
+
+**MUST ensure all registration and update success messages use `type="success"`:**
+
+**타입 정의:**
+
+```typescript
+const [messageDialogType, setMessageDialogType] = useState<
+  "danger" | "warning" | "success"
+>("success");
+```
+
+**등록 성공 패턴:**
+
+```typescript
+if (response.resultCode === "00") {
+  setMessageDialogTitle("등록 완료");
+  setMessageDialogMessage(
+    response.resultMessage || "정상적으로 등록되었습니다."
+  );
+  setMessageDialogType("success"); // ✅ 필수
+  setShowMessageDialog(true);
+}
+```
+
+**수정 성공 패턴:**
+
+```typescript
+if (response.resultCode === "00") {
+  setMessageDialogTitle("수정 완료");
+  setMessageDialogMessage(
+    response.resultMessage || "정상적으로 수정되었습니다."
+  );
+  setMessageDialogType("success"); // ✅ 필수
+  setShowMessageDialog(true);
+}
+```
+
+**MUST:**
+
+- ✅ 등록 성공 시: `setMessageDialogType("success")` 사용
+- ✅ 수정 성공 시: `setMessageDialogType("success")` 사용
+- ✅ 제목: `"등록 완료"` 또는 `"수정 완료"` 사용
+- ✅ API 응답 메시지 우선 사용, 없으면 기본 메시지 사용
+- ✅ `ConfirmDialog` 컴포넌트에 `type={messageDialogType}` 전달
+
+**MUST NOT:**
+
+- ❌ 등록/수정 성공 시 `"danger"` 타입 사용
+- ❌ 등록/수정 성공 시 `"warning"` 타입 사용
+- ❌ 등록/수정 성공 시 `"info"` 타입 사용 (제거됨)
+- ❌ 성공 메시지 없이 진행
+- ❌ 일관성 없는 제목 사용
+
+**성공 다이얼로그의 특징:**
+
+- 아이콘: 파란색 배경, 검정 테두리, 흰색 체크 마크 (네모 형태)
+- 버튼: 파란색 (`bg-primary`)
+- 의미: 작업 성공을 명확하게 전달
+
+**적용 범위:**
+
+- ✅ 데이터 등록 (Create/Register)
+- ✅ 데이터 수정 (Update)
+- ❌ 삭제 (Delete) - 별도 규칙 필요
+- ❌ 조회 (Read) - 성공 메시지 불필요
+
+**실패 시 타입:**
+
+- 일반 에러: `setMessageDialogType("danger")`
+- 경고 (예: 중복): `setMessageDialogType("warning")`
+
+**체크리스트 (새로운 등록/수정 기능 추가 시):**
+
+- [ ] `messageDialogType` 타입 정의에 `"success"` 포함
+- [ ] 등록 성공 시 `setMessageDialogType("success")` 사용
+- [ ] 수정 성공 시 `setMessageDialogType("success")` 사용
+- [ ] 제목: `"등록 완료"` 또는 `"수정 완료"` 사용
+- [ ] API 응답 메시지 또는 기본 메시지 사용
+- [ ] `ConfirmDialog` 컴포넌트에 `type={messageDialogType}` 전달
+- [ ] 실패 시 `"danger"` 또는 `"warning"` 사용
+
+---
+
+## 🌐 API & Data Fetching Rules
+
+### API Service Pattern
+
+**MUST:**
+
+```typescript
+// Use class-based services
+export class AuthService {
+  static async login(credentials: LoginRequest): Promise<LoginResponse> {
+    const response = await apiClient.post<LoginResponse>(
+      API_ENDPOINTS.AUTH.LOGIN,
+      credentials
+    );
+    return response;
+  }
+}
+```
+
+**MUST NOT:**
+
+- ❌ Create API calls directly in components
+- ❌ Use `fetch` directly (use `apiClient` instead)
+- ❌ Skip error handling
+- ❌ Hardcode API endpoints (use `API_ENDPOINTS`)
+
+### Error Handling
+
+**MUST:**
+
+```typescript
+try {
+  const response = await MemberService.getMembers(params);
+  setMembers(response.content);
+} catch (err) {
+  if (err instanceof ApiError) {
+    if (err.status === 401) {
+      // Handle authentication error
+      router.push("/adminWeb/login");
+    } else {
+      setError(err.message);
+    }
+  } else {
+    setError("An error occurred");
+  }
+}
+```
+
+**MUST NOT:**
+
+- ❌ Swallow errors silently
+- ❌ Use generic error messages without context
+- ❌ Skip 401 error handling
+
+### API Client Usage
+
+**MUST:**
+
+- ✅ Always use `apiClient` from `@/shared/lib/apiClient`
+- ✅ Use typed responses: `apiClient.post<ResponseType>(...)`
+- ✅ Handle `ApiError` instances properly
+
+**MUST NOT:**
+
+- ❌ Use `fetch` directly
+- ❌ Manually construct Authorization headers (handled by `apiClient`)
+- ❌ Skip timeout handling
+
+### Field Naming Consistency
+
+**CRITICAL:** Use API field names directly throughout the codebase for consistency and maintainability.
+
+**MUST:**
+
+- ✅ Use API field names directly in all code (filters, sorting, display)
+- ✅ Keep filter state keys identical to API field names
+- ✅ Use API field names for sort keys
+- ✅ Map filter state → API fields directly (1:1 mapping, no transformation)
+
+**Field Name Mapping Pattern:**
+
+```
+API Field Name → Filter State Key → Sort Key → Display Field
+userId          → filters.userId   → "userId" → member.userId
+userNm          → filters.userNm   → "userNm" → member.userNm
+emailAdres      → filters.emailAdres → "emailAdres" → member.emailAdres
+```
+
+**Example - Filter State:**
+
+```typescript
+// ✅ CORRECT: Filter state key = API field name
+const [filters, setFilters] = useState({
+  userId: "", // Same as member.userId
+  userNm: "", // Same as member.userNm
+  emailAdres: "", // Same as member.emailAdres
+  sbscrbDe: "", // Same as member.sbscrbDe
+  mberSttus: "", // Same as member.mberSttus
+});
+
+// ❌ WRONG: Different names for filter state
+const [filters, setFilters] = useState({
+  id: "", // ❌ Should be userId
+  name: "", // ❌ Should be userNm
+  email: "", // ❌ Should be emailAdres
+});
+```
+
+**Example - Sorting:**
+
+```typescript
+// ✅ CORRECT: Sort key = API field name
+onClick={() => handleSort("userId")}      // Same as member.userId
+onClick={() => handleSort("userNm")}      // Same as member.userNm
+onClick={() => handleSort("emailAdres")}  // Same as member.emailAdres
+
+// ❌ WRONG: Different names for sort keys
+onClick={() => handleSort("id")}          // ❌ Should be userId
+onClick={() => handleSort("name")}        // ❌ Should be userNm
+```
+
+**Example - Filtering Logic:**
+
+```typescript
+// ✅ CORRECT: Filter state key = API field name
+if (filters.userId) {
+  filtered = filtered.filter(
+    (member) => (member.userId || "").includes(filters.userId)
+    // ✅ Direct mapping: filters.userId → member.userId
+  );
+}
+
+// ❌ WRONG: Mismatched field names
+if (filters.id) {
+  filtered = filtered.filter(
+    (member) => (member.userId || "").includes(filters.id)
+    // ❌ Mismatch: filters.id → member.userId
+  );
+}
+```
+
+**Example - Filter Input Fields:**
+
+```typescript
+// ✅ CORRECT: Use API field name in handleFilterChange
+<input
+  value={filters.userId}
+  onChange={(e) => handleFilterChange("userId", e.target.value)}
+  // ✅ Field name matches API field name
+/>
+
+// ❌ WRONG: Use different name
+<input
+  value={filters.id}
+  onChange={(e) => handleFilterChange("id", e.target.value)}
+  // ❌ Field name doesn't match API field name
+/>
+```
+
+**Benefits:**
+
+1. **Maintainability**: Single source of truth (API field names)
+2. **Type Safety**: TypeScript can catch field name typos
+3. **Readability**: Code clearly shows which API fields are used
+4. **Consistency**: Same field names used throughout the codebase
+
+**MUST NOT:**
+
+- ❌ Use different names for filter state keys and API fields
+- ❌ Create mapping objects between UI names and API names
+- ❌ Use abbreviated or shortened field names
+- ❌ Mix naming conventions (e.g., `id` vs `userId`)
+
+**Special Cases:**
+
+- **Virtual fields**: Use descriptive names (e.g., `"number"` for row index, not sortable)
+- **Composite fields**: Handle in sorting logic (e.g., `mbtlnum || usrTelNo` for contact)
+- **Computed fields**: Use API field names for source data, compute in display logic
+
+---
+
+## 🎣 Custom Hooks Rules
+
+### Hook Naming
+
+**MUST:**
+
+- ✅ Start with `use` prefix: `useMemberList`, `useInputFilter`
+- ✅ Return object with named properties
+- ✅ Export from `index.ts` when in shared folder
+
+**Example:**
+
+```typescript
+export function useMemberList() {
+  const [members, setMembers] = useState<Member[]>([]);
+
+  return {
+    members,
+    loading,
+    error,
+    handlePageChange,
+    // ... other properties
+  };
+}
+```
+
+**MUST NOT:**
+
+- ❌ Return arrays from hooks (use objects for clarity)
+- ❌ Mix multiple concerns in one hook
+- ❌ Create hooks without `use` prefix
+
+---
+
+## 📱 Responsive Design Rules
+
+### Mobile-First Approach
+
+**MUST:**
+
+- ✅ Design for mobile first, then enhance for desktop
+- ✅ Use Tailwind responsive prefixes: `sm:`, `md:`, `lg:`
+- ✅ Test on mobile devices
+- ✅ Hide/show elements appropriately for different screen sizes
+
+**Example:**
+
+```tsx
+<div className="w-full md:w-1/2 lg:w-1/3">
+  <span className="hidden sm:inline">Desktop text</span>
+  <span className="sm:hidden">Mobile text</span>
+</div>
+```
+
+**MUST NOT:**
+
+- ❌ Design desktop-first and then shrink
+- ❌ Use fixed pixel widths without responsive alternatives
+- ❌ Ignore mobile usability
+
+### Sidebar Behavior
+
+**MUST:**
+
+- ✅ Overlay on mobile (< 768px)
+- ✅ Always visible on desktop (>= 768px)
+- ✅ Collapsible on desktop, toggleable on mobile
+
+**MUST NOT:**
+
+- ❌ Use same behavior for mobile and desktop
+- ❌ Block content on mobile without close option
+
+---
+
+## 🔐 Authentication & Session Rules
+
+### Authentication Flow
+
+**MUST:**
+
+- ✅ Use `AuthService` for all authentication operations
+- ✅ Check authentication in `AuthGuard` component
+- ✅ Store tokens in `sessionStorage` (not `localStorage`)
+- ✅ Use `TokenUtils` for token validation
+
+**MUST NOT:**
+
+- ❌ Store tokens in `localStorage`
+- ❌ Skip authentication checks
+- ❌ Hardcode authentication logic in components
+
+### Session Management
+
+**MUST:**
+
+- ✅ Use `SessionManager` for session timing
+- ✅ Use `DuplicateLoginManager` for duplicate login detection
+- ✅ Clear session on logout
+- ✅ Handle session expiration gracefully
+
+**MUST NOT:**
+
+- ❌ Create custom session management without using `SessionManager`
+- ❌ Ignore session expiration
+- ❌ Skip cleanup on component unmount
+
+---
+
+## 🚫 Anti-Patterns (MUST NOT Do)
+
+### Architecture Anti-Patterns
+
+**MUST NOT:**
+
+- ❌ Import from upper layers (violates FSD)
+- ❌ Create circular dependencies
+- ❌ Mix server and client components incorrectly
+- ❌ Put business logic in `app/` directory
+- ❌ **NEVER** put UI markup in `app/` layer (page headers, breadcrumbs, cards, containers)
+- ❌ **NEVER** copy existing page patterns without verifying FSD compliance
+- ❌ Create global state without justification
+
+### ⚠️ CRITICAL: Backend Modification Restriction
+
+**MUST ALWAYS verify request scope and restrict modifications to frontend-only when:**
+
+- ✅ User requests frontend changes (e.g., "프론트 쪽을 수정해줘", "프론트엔드에서 변경해줘")
+- ✅ Working on UI/UX improvements
+- ✅ Modifying React components, hooks, or TypeScript files in `src/` directory
+- ✅ Changing API request/response handling in frontend code
+- ✅ Updating frontend date format conversions or parameter transformations
+
+**MUST ensure modifications are LIMITED to frontend codebase:**
+
+**Frontend Code (✅ ALLOWED to modify):**
+- ✅ Files in `src/` directory (app, entities, features, widgets, shared)
+- ✅ TypeScript/TSX files (`.ts`, `.tsx`)
+- ✅ CSS files (`.css`) in `src/shared/styles/`
+- ✅ Configuration files in frontend root (`next.config.js`, `tailwind.config.js`, `tsconfig.json`)
+- ✅ Frontend API client code (`src/shared/lib/apiClient.ts`)
+- ✅ Frontend entity API definitions (`src/entities/**/api/*.ts`)
+
+**Backend Code (❌ FORBIDDEN to modify):**
+- ❌ **NEVER** modify files in `edream_backend/` workspace
+- ❌ **NEVER** modify SQL files (`.xml`, `.sql`) in backend resources
+- ❌ **NEVER** modify Java files (`.java`) in backend source
+- ❌ **NEVER** modify backend configuration files (`application.yml`, `application.properties`)
+- ❌ **NEVER** modify backend mapper XML files (`**/mapper/**/*.xml`)
+- ❌ **NEVER** change backend API contracts or database schemas
+- ❌ **NEVER** modify backend build files (`build.gradle`, `pom.xml`)
+
+**MUST:**
+
+- ✅ **ALWAYS** verify request scope before making any changes
+- ✅ **ALWAYS** ask for clarification if request scope is ambiguous
+- ✅ **ALWAYS** work only within frontend workspace when frontend changes are requested
+- ✅ **ALWAYS** restore backend files to original state if accidentally modified
+- ✅ **ALWAYS** verify file paths before editing (check workspace root)
+- ✅ **ALWAYS** use frontend-side solutions for date format conversions, parameter transformations, etc.
+
+**MUST NOT:**
+
+- ❌ **NEVER** assume backend needs changes when frontend changes are requested
+- ❌ **NEVER** modify backend SQL queries to fix frontend issues
+- ❌ **NEVER** change backend date format handling when frontend can handle conversion
+- ❌ **NEVER** modify backend API parameters when frontend can transform data
+- ❌ **NEVER** touch any files outside `edream_frontend/` workspace without explicit request
+- ❌ **NEVER** make "helpful" backend changes "just in case"
+
+**Why this is CRITICAL:**
+
+Modifying backend code without explicit request causes:
+
+1. ❌ **Separation of Concerns Violation**: Breaks clear frontend/backend boundaries
+2. ❌ **Unexpected Side Effects**: Backend changes can break existing functionality
+3. ❌ **Review Process Issues**: Backend changes require backend team review and approval
+4. ❌ **Deployment Risks**: Backend changes may require separate deployment process
+5. ❌ **Architecture Violation**: Violates project's clear separation between frontend and backend workspaces
+6. ❌ **Maintenance Burden**: Creates confusion about which team owns which changes
+
+**Real-world example of the mistake:**
+
+```
+User Request: "프론트 쪽을 요구했는데, 너가 백엔드를 마음대로 수정했지? 
+프론트 관련된거를 말할때는 프론트만 수정하는거야"
+
+AI Action: 
+- Modified backend SQL file: edream_backend/src/main/resources/.../ArtpromManage_SQL_mysql.xml
+- Changed DATE_FORMAT to STR_TO_DATE in SQL queries
+- User had to explicitly request restoration: "아니 백엔드는 절대로 건드리면 안돼. 다시 원상복구해놓고 프론트쪽에서 변경해"
+
+Result: 
+- Backend changes needed to be reverted
+- Frontend solution was implemented instead (date format conversion in frontend)
+- Wasted time and created confusion
+```
+
+**Root Cause Analysis - Why This Mistake Happens:**
+
+1. **Assumption-Based Changes:**
+   - AI sees backend SQL uses `DATE_FORMAT` function
+   - Assumes backend needs modification to accept different date format
+   - Doesn't verify if frontend can handle format conversion instead
+
+2. **Incomplete Scope Verification:**
+   - AI doesn't explicitly verify which workspace/files are in scope
+   - Assumes "fix the issue" means "fix everywhere it might be related"
+   - Doesn't ask for clarification about modification boundaries
+
+3. **Solution-First Thinking:**
+   - AI identifies a potential solution (change backend SQL)
+   - Implements solution without considering scope restrictions
+   - Doesn't explore frontend-only solutions first
+
+4. **Missing Workspace Awareness:**
+   - AI doesn't check workspace boundaries before editing
+   - Edits files in `edream_backend/` when only `edream_frontend/` is in scope
+   - Doesn't verify file paths against request scope
+
+5. **Pattern Matching Without Context:**
+   - AI sees SQL date format issue
+   - Matches pattern to "backend SQL needs fixing"
+   - Doesn't consider that frontend can transform data before sending
+
+**Prevention Checklist (MUST verify before making ANY code changes):**
+
+- [ ] **Request Scope Verification**
+  - [ ] Identified explicit request scope (frontend-only vs full-stack)
+  - [ ] Checked user's exact words for scope indicators ("프론트 쪽", "프론트엔드에서", etc.)
+  - [ ] Asked for clarification if scope is ambiguous
+
+- [ ] **Workspace Verification**
+  - [ ] Verified target files are in `edream_frontend/` workspace
+  - [ ] Confirmed no files in `edream_backend/` workspace need modification
+  - [ ] Checked file paths against workspace roots
+
+- [ ] **File Type Verification**
+  - [ ] Target files are frontend code (`.ts`, `.tsx`, `.css`, frontend config files)
+  - [ ] No backend files (`.java`, `.xml`, `.sql`, backend config) are being modified
+  - [ ] No backend resources are being touched
+
+- [ ] **Solution Approach Verification**
+  - [ ] Explored frontend-only solutions first
+  - [ ] Verified frontend can handle required transformations (date formats, parameter conversions)
+  - [ ] Confirmed backend changes are not necessary for the requested functionality
+
+- [ ] **Restoration Plan (if backend was modified)**
+  - [ ] Identified all backend files that were modified
+  - [ ] Restored backend files to original state
+  - [ ] Verified restoration is complete
+  - [ ] Implemented frontend-only solution instead
+
+**Decision Tree for Modification Scope:**
+
+```
+User requests code changes?
+├─ Does request explicitly mention "frontend" or "프론트"?
+│  ├─ YES → Work ONLY in edream_frontend/ workspace
+│  │  ├─ Verify file is in src/ directory
+│  │  ├─ Verify file extension is .ts, .tsx, .css, or frontend config
+│  │  └─ If unsure, ask for clarification
+│  │
+│  └─ NO → Ask for clarification about scope
+│
+├─ Does request mention "backend" or "백엔드"?
+│  └─ YES → Can modify backend (but still verify specific files)
+│
+└─ Is request ambiguous?
+   └─ YES → Ask: "Should I modify frontend only, or both frontend and backend?"
+```
+
+**Step-by-Step Verification Process:**
+
+1. **Step 1: Parse Request for Scope Indicators**
+   ```
+   User: "프론트 쪽을 수정해줘"
+   → Scope: Frontend only
+   → Workspace: edream_frontend/
+   ```
+
+2. **Step 2: Verify Target Files**
+   ```
+   Target: src/features/adminWeb/support/list/model/useSupportList.ts
+   → Check: Is this in edream_frontend/ workspace? ✅ YES
+   → Check: Is this a frontend file (.ts)? ✅ YES
+   → Action: ALLOW modification
+   ```
+
+3. **Step 3: Check for Backend Dependencies**
+   ```
+   Issue: Date format conversion needed
+   → Option 1: Modify backend SQL ❌ FORBIDDEN (backend file)
+   → Option 2: Convert in frontend before sending ✅ ALLOWED (frontend file)
+   → Action: Choose Option 2
+   ```
+
+4. **Step 4: If Backend Was Modified (Mistake)**
+   ```
+   Detected: Backend file was modified
+   → Action 1: Restore backend file to original state
+   → Action 2: Implement frontend-only solution
+   → Action 3: Verify no backend changes remain
+   ```
+
+**Reference Implementation (Frontend-Only Date Format Conversion):**
+
+```typescript
+// ✅ CORRECT: Frontend handles date format conversion
+// src/features/adminWeb/support/list/model/useSupportList.ts
+
+// Convert YYYY-MM-DD to YYYYMMDD in frontend before sending to API
+const convertDateToYYYYMMDD = (dateStr: string | null | undefined): string | undefined => {
+  if (!dateStr || dateStr.trim() === "") return undefined;
+  return dateStr.replace(/-/g, ""); // Frontend-side conversion
+};
+
+const params: SupportListParams = {
+  searchRecFromDd: convertDateToYYYYMMDD(startDateRef.current), // ✅ Frontend conversion
+  searchRecToDd: convertDateToYYYYMMDD(endDateRef.current), // ✅ Frontend conversion
+};
+```
+
+```sql
+-- ❌ WRONG: Don't modify backend SQL
+-- edream_backend/src/main/resources/.../ArtpromManage_SQL_mysql.xml
+-- Changed DATE_FORMAT to STR_TO_DATE ❌ FORBIDDEN
+
+-- ✅ CORRECT: Backend SQL remains unchanged
+-- Frontend sends data in format backend expects
+```
+
+**Common Mistakes to Avoid:**
+
+1. **Mistake: Modifying Backend SQL for Frontend Date Format Issues**
+   ```typescript
+   // ❌ WRONG: Modified backend SQL to accept YYYY-MM-DD
+   // Backend: DATE_FORMAT(#{searchRecToDd}, '%Y-%m-%d')
+   // Changed to: STR_TO_DATE(#{searchRecToDd}, '%Y%m%d')
+   
+   // ✅ CORRECT: Frontend converts before sending
+   // Frontend: convertDateToYYYYMMDD(startDate) → "20260204"
+   // Backend: Receives "20260204" (unchanged SQL)
+   ```
+
+2. **Mistake: Assuming Backend Needs Changes When Frontend Can Handle It**
+   ```typescript
+   // ❌ WRONG: Changed backend to accept different parameter format
+   // Assumption: "Backend SQL uses DATE_FORMAT, so backend must be wrong"
+   
+   // ✅ CORRECT: Frontend transforms data to match backend expectations
+   // Solution: "Frontend can convert date format before API call"
+   ```
+
+3. **Mistake: Not Verifying Workspace Before Editing**
+   ```bash
+   # ❌ WRONG: Edited file without checking workspace
+   # File: edream_backend/src/main/resources/.../ArtpromManage_SQL_mysql.xml
+   # Should have checked: Is this in edream_frontend/ workspace? NO
+   
+   # ✅ CORRECT: Verify workspace first
+   # Check: File path contains "edream_backend" → STOP, don't modify
+   ```
+
+**Prevention Strategy:**
+
+1. **Always Check Workspace First**: Before editing any file, verify it's in the correct workspace
+2. **Parse Request for Scope**: Look for explicit scope indicators in user request
+3. **Frontend-First Solutions**: Always explore frontend-only solutions before considering backend changes
+4. **Ask When Unsure**: If scope is ambiguous, ask for clarification rather than assuming
+5. **Verify File Types**: Check file extensions and paths to confirm they're frontend files
+6. **Restore Immediately**: If backend was modified by mistake, restore it immediately
+
+**Remember**: When user says "프론트 쪽" or "frontend", that means **ONLY** frontend. Backend is off-limits unless explicitly requested. Always verify workspace and file paths before making changes.
+
+### Code Quality Anti-Patterns
+
+**MUST NOT:**
+
+- ❌ Use `any` type
+- ❌ Suppress TypeScript errors without fixing
+- ❌ Leave console.log in production code (use proper logging)
+- ❌ Create duplicate code (extract to shared)
+- ❌ Use magic numbers (use named constants)
+
+### Styling Anti-Patterns
+
+**MUST NOT:**
+
+- ❌ Use inline styles for static styling (except for dynamic values)
+- ❌ Ignore responsive design
+- ❌ Use arbitrary values when standard utilities exist
+
+**Note:** For admin-specific styling rules (Custom CSS usage), see `admin-web-rules.mdc`. For user-specific styling rules (Tailwind only), see `user-web-rules.mdc`.
+
+### Performance Anti-Patterns
+
+**MUST NOT:**
+
+- ❌ Create unnecessary re-renders
+- ❌ Load all data at once (use pagination)
+- ❌ Skip loading states
+- ❌ Ignore error boundaries
+
+---
+
+## ✅ Best Practices (MUST Do)
+
+### Code Organization
+
+**MUST:**
+
+- ✅ Follow FSD architecture strictly
+- ✅ Keep components small and focused
+- ✅ Extract reusable logic to hooks
+- ✅ Use `index.ts` for clean imports
+- ✅ Group related files together
+
+### Type Safety
+
+**MUST:**
+
+- ✅ Define interfaces for all props
+- ✅ Use explicit return types
+- ✅ Handle null/undefined explicitly
+- ✅ Use discriminated unions for complex types
+
+### Error Handling
+
+**MUST:**
+
+- ✅ Always handle errors
+- ✅ Provide user-friendly error messages
+- ✅ Log errors appropriately
+- ✅ Handle edge cases
+
+### Testing Considerations
+
+**MUST:**
+
+- ✅ Write testable code (pure functions, isolated logic)
+- ✅ Keep components simple enough to test
+- ✅ Avoid side effects in render functions
+
+---
+
+## 📚 File Structure Examples
+
+### Feature Structure
+
+```
+features/adminWeb/member/list/
+├── api/
+│   └── index.ts          # Re-exports from entities
+├── model/
+│   ├── index.ts          # Re-exports
+│   └── useMemberList.ts  # Custom hook
+└── ui/                   # Optional UI components
+    └── index.ts
+```
+
+### Entity Structure
+
+```
+entities/auth/
+├── api/
+│   ├── index.ts
+│   └── authApi.ts        # AuthService class
+├── model/
+│   ├── index.ts
+│   └── roleGuard.ts      # Business logic
+└── ui/
+    ├── index.ts
+    ├── AuthGuard.tsx
+    └── RoleGuard.tsx
+```
+
+### Widget Structure
+
+```
+widgets/admin/layout/
+├── index.ts
+└── AdminLayout.tsx
+```
+
+---
+
+## 🎯 Quick Reference Checklist
+
+### Before Writing Code
+
+- [ ] Is this the right layer? (app/widgets/features/entities/shared)
+- [ ] **If in app/ layer: Does it contain ONLY routing? (NO UI markup)**
+- [ ] **Before copying existing page: Verified it follows FSD rules?**
+- [ ] Are imports in correct order?
+- [ ] Are types properly defined?
+- [ ] Is error handling included?
+- [ ] Is it responsive?
+
+### Before Committing
+
+- [ ] No `any` types
+- [ ] No console.log (or properly handled)
+- [ ] No hardcoded values
+- [ ] Follows naming conventions
+- [ ] Uses Tailwind utilities where possible
+- [ ] No circular dependencies
+- [ ] Proper error handling
+- [ ] Responsive design implemented
+
+---
+
+## 🔍 Code Review Checklist
+
+When reviewing code, check:
+
+1. **Architecture**: Follows FSD pattern?
+   - **CRITICAL**: `app/` layer contains ONLY routing (no UI markup)?
+   - Reference `src/app/adminWeb/login/page.tsx` for correct pattern?
+2. **Types**: No `any`, proper interfaces?
+3. **Imports**: Correct order and paths?
+4. **Styling**: Uses Tailwind, responsive?
+5. **Error Handling**: Proper try/catch?
+6. **Naming**: Follows conventions?
+7. **Performance**: No unnecessary re-renders?
+8. **Security**: No sensitive data exposure?
+
+---
+
+**Remember**: Consistency is key. When in doubt, follow existing patterns in the codebase.

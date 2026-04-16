@@ -1,0 +1,31 @@
+# TypeScript incremental build cache
+*.tsbuildinfo
+/tmp
+/out-tsc
+
+/node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+/.pnp
+.pnp.js
+
+.vscode/*
+.claude/
+
+.idea/
+
+.next/
+/dist/
+/build/
+/coverage/
+/.cache/
+.eslintcache
+/.vercel/
+
+out/
+
+.DS_Store
+.env
+.env.*
+public/images/userWeb/군산 교육발전특구 시범사업 홍보 영상.mp4

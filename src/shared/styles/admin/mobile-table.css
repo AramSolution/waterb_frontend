@@ -1,0 +1,49 @@
+/* 모바일 카드 레이아웃 스타일 */
+.mobile-card-view {
+  /* hidden 클래스는 컴포넌트에서 직접 적용 */
+}
+
+.mobile-card {
+  @apply bg-white border border-gray-300 rounded-lg p-4 mb-3 shadow-sm;
+}
+
+.mobile-card-header {
+  @apply flex justify-between items-center mb-3 pb-3 border-b border-gray-300;
+}
+
+.mobile-card-id {
+  @apply font-semibold text-gray-800 text-[13px];
+}
+
+.mobile-card-checkbox {
+  @apply m-0;
+}
+
+.mobile-card-body {
+  @apply flex flex-col gap-2 mb-3;
+}
+
+.mobile-card-row {
+  @apply flex justify-between items-center text-[13px];
+}
+
+.mobile-card-label {
+  @apply text-gray-500 font-medium min-w-[70px];
+}
+
+.mobile-card-value {
+  @apply text-gray-800 flex-1 text-right;
+}
+
+.mobile-card-footer {
+  @apply flex gap-2 pt-3 border-t border-gray-300;
+}
+
+.mobile-card-footer button {
+  @apply flex-1;
+}
+
+/* 모바일 카드뷰 패딩 */
+.mobile-card-view {
+  @apply p-4;
+}

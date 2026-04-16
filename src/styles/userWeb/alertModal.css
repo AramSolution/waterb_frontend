@@ -1,0 +1,140 @@
+@charset "UTF-8";
+
+/* 사용자웹 알림 모달 (저장 완료, 삭제 완료, 오류 등) */
+.userWebAlertModal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10000;
+  padding: 20px;
+  box-sizing: border-box;
+  animation: userWebAlertModalFadeIn 0.2s ease-out;
+}
+
+.userWebAlertModal-container {
+  position: relative;
+  background: #fff;
+  width: 100%;
+  max-width: 400px;
+  border-radius: 12px;
+  padding: 28px 24px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  box-sizing: border-box;
+  animation: userWebAlertModalSlideIn 0.25s ease-out;
+}
+
+.userWebAlertModal-iconWrap {
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.userWebAlertModal-iconWrap svg {
+  display: inline-block;
+  width: 48px;
+  height: 48px;
+  vertical-align: middle;
+}
+
+.userWebAlertModal-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #111;
+  margin: 0 0 10px;
+  text-align: center;
+}
+
+.userWebAlertModal-message {
+  font-size: 14px;
+  color: #555;
+  line-height: 1.5;
+  margin: 0 0 24px;
+  text-align: center;
+}
+
+.userWebAlertModal-footer {
+  display: flex;
+  justify-content: center;
+}
+
+.userWebAlertModal-footer .userWebAlertModal-btnConfirm {
+  min-width: 100px;
+  padding: 10px 24px;
+  font-size: 15px;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.userWebAlertModal-footer .userWebAlertModal-btnConfirm:hover {
+  opacity: 0.9;
+}
+
+.userWebAlertModal-footer .userWebAlertModal-btnConfirm:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
+/* type: success (파란색, 관리자 primary와 동일) */
+.userWebAlertModal-container.userWebAlertModal-success {
+  border-top: 4px solid #0d6efd;
+}
+
+.userWebAlertModal-container.userWebAlertModal-success
+  .userWebAlertModal-btnConfirm {
+  background-color: #0d6efd;
+  color: #fff;
+}
+
+/* type: danger (빨간색) */
+.userWebAlertModal-container.userWebAlertModal-danger {
+  border-top: 4px solid #d63a3a;
+}
+
+.userWebAlertModal-container.userWebAlertModal-danger
+  .userWebAlertModal-btnConfirm {
+  background-color: #d63a3a;
+  color: #fff;
+}
+
+@keyframes userWebAlertModalFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes userWebAlertModalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 480px) {
+  .userWebAlertModal-container {
+    padding: 24px 20px;
+    border-radius: 10px;
+  }
+
+  .userWebAlertModal-title {
+    font-size: 17px;
+  }
+
+  .userWebAlertModal-message {
+    font-size: 13px;
+  }
+}

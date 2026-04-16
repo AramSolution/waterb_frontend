@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0" />
+    <link rel="stylesheet" href="css/default.css">
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/join_ac.css">
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard-gov.min.css" />
+    <link  rel="stylesheet" href="https://hangeul.pstatic.net/hangeul_static/css/nanum-square-round.css">
+</head>
+<body>
+    <div id="skip">
+        <a href="#main_content">본문 바로가기</a>
+    </div>
+    <header class="header">
+        <div class="headerTop inner">
+            <div class="headerLogo">
+                <h1>
+                    <a href="/">
+                        <img src="images/logo.png" alt="군산시꿈이음센터">
+                    </a>
+                </h1>
+                <span class="badgeAcademy">학원</span>
+            </div>
+            <div class="utilMenu">
+                <div class="userLinks">
+                    <a href="#">로그인</a>
+                    <a href="#">회원가입</a>
+                    <a href="#" target="_blank" class="btnPortal">꿈이음센터포털 바로가기<img src="images/icon/ico_newtab_20_pr.png" alt="" aria-hidden="true"></a>
+                </div>
+                <button type="button" class="menuOpen" aria-label="메뉴 열기">
+                    <img src="images/icon/ico_menu_32.png" alt="메뉴 열기">
+                </button>
+            </div>
+        </div>
+        <nav class="navPc" aria-label="메인 메뉴">
+            <div class="inner">
+                <ul class="navList">
+                    <li><a href="#" class="mainLink">학원소개</a></li>
+                    <li><a href="#" class="mainLink">교육소개</a></li>
+                    <li><a href="#" class="mainLink">참여관리</a></li>
+                    <li><a href="#" class="mainLink">통계</a></li>
+                    <li><a href="#" class="mainLink">MY PAGE</a></li>
+                </ul>
+            </div>
+        </nav>
+        <div class="moMenu" id="mobileMenu">
+            <div class="moMenuInner">
+                <div class="moMenuHeader">
+                    <div class="logoArea">
+                        <img src="images/logo.png" alt="군산시꿈이음센터" height="32">
+                        <span class="badgeAcademy">학생</span>
+                    </div>
+                    <button type="button" class="menuClose" aria-label="메뉴 닫기">
+                        <img src="images/icon/ico_close_32.png" alt="닫기">
+                    </button>
+                </div>
+                <div class="moMenuContent">
+                    <nav class="moMenuNav">
+                        <ul class="moNavList">
+                            <li class="navItem active"><button type="button" class="moMainLink">학원소개</button></li>
+                            <li class="navItem"><button type="button" class="moMainLink">교육소개</button></li>
+                            <li class="navItem"><button type="button" class="moMainLink">참여관리</button></li>
+                            <li class="navItem"><button type="button" class="moMainLink">통계</button></li>
+                            <li class="navItem"><button type="button" class="moMainLink">MY PAGE</button></li>
+                        </ul>
+                        <div class="moMenuFooter">
+                            <a href="#" class="btn-login">로그인</a>
+                            <a href="#" class="btn-portal">꿈이음센터포털 바로가기</a>
+                        </div>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </header>
+    <main id="main_content" class="joinBg">
+    <section class="inner">
+        <div class="mainTitle">회원가입</div>
+        <div class="mainBg">
+            <div class="termsContainer">
+                <form id="termsForm">
+                    <div class="allCheckWrapper">
+                        <input type="checkbox" id="allAgree" class="checkInput">
+                        <label for="allAgree" class="checkLabel">전체 약관동의</label>
+                    </div>
+                    <hr class="divider">
+                    <ul class="termsList">
+                        <li class="termsItem">
+                            <div class="termsHeader flex-sb">
+                                <div class="checkGroup">
+                                    <input type="checkbox" id="termService" class="checkInput essential">
+                                    <label for="termService" class="checkLabel"><span class="point">(필수)</span> 이용 약관 동의</label>
+                                </div>
+                                <button type="button" class="toggleBtn" aria-expanded="false" aria-controls="contentService">더보기</button>
+                            </div>
+                            <div id="contentService" class="termsContent" hidden>
+                                <div class="innerBox">
+                                    약관에 대한 내용이 들어감 padding 24px 최대높이 350px로 막것은.. (예시 텍스트)
+                                </div>
+                            </div>
+                        </li>
+                        <li class="termsItem">
+                            <div class="termsHeader flex-sb">
+                                <div class="checkGroup">
+                                    <input type="checkbox" id="termPrivacy" class="checkInput essential">
+                                    <label for="termPrivacy" class="checkLabel"><span class="point">(필수)</span> 개인정보 수집 동의</label>
+                                </div>
+                                <button type="button" class="toggleBtn" aria-expanded="false" aria-controls="contentPrivacy">더보기</button>
+                            </div>
+                            <div id="contentPrivacy" class="termsContent" hidden>
+                                <div class="innerBox">개인정보 수집 및 이용에 대한 상세 내용입니다.</div>
+                            </div>
+                        </li>
+                        <li class="termsItem">
+                            <div class="termsHeader flex-sb">
+                                <div class="checkGroup">
+                                    <input type="checkbox" id="termFinance" class="checkInput essential">
+                                    <label for="termFinance" class="checkLabel"><span class="point">(필수)</span> 전금 금융 거래 이용 약관 동의</label>
+                                </div>
+                                <button type="button" class="toggleBtn" aria-expanded="false" aria-controls="contentFinance">더보기</button>
+                            </div>
+                            <div id="contentFinance" class="termsContent" hidden>
+                                <div class="innerBox">전자금융거래 이용약관 상세 내용입니다.</div>
+                            </div>
+                        </li>
+                        <li class="termsItem">
+                            <div class="termsHeader flex-sb">
+                                <div class="checkGroup">
+                                    <input type="checkbox" id="termMarketing" class="checkInput">
+                                    <label for="termMarketing" class="checkLabel"><span class="gray">(선택)</span> 이벤트 및 마케팅 이용 약관 동의</label>
+                                </div>
+                                <button type="button" class="toggleBtn" aria-expanded="false" aria-controls="contentMarketing">더보기</button>
+                            </div>
+                            <div id="contentMarketing" class="termsContent" hidden>
+                                <div class="innerBox">마케팅 정보 수신 동의 상세 내용입니다.</div>
+                            </div>
+                        </li>
+                    </ul>
+                    <div class="submitWrapper">
+                        <button type="submit" class="submitBtn" id="authBtn" disabled>본인인증</button>
+                    </div>
+                </form>
+                </div>
+        </div>   
+    </section>
+    </main>
+    <footer class="footer">
+        <div class="innerContainer inner">
+            <div class="footerInfoWrap">
+                <div class="footerLogo">
+                    <img src="images/logo_w.png" alt="군산시 꿈이음센터">
+                </div>
+                <div class="addressArea">
+                    <address>
+                        [54080] 전북특별자치도 군산시 조촌로 22 <span>|</span> 대표전화 : 063)450-2600
+                    </address>
+                    <p class="copyright">Copyright ⓒ 2025 GUNSAN COUNTY. All Rights Reserved.</p>
+                </div>
+            </div>
+            <div class="footerLinkWrap">
+                <div class="siteSelectBox">
+                    <select id="familySite" title="관련 사이트 선택" class="customSelect">
+                        <option value="">개인정보 처리방침</option>
+                        <option value="https://www.gunsan.go.kr">군산시청</option>
+                        <option value="#">교육지원사업</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </footer>
+</body>
+<script>
+/* 헤더 조작 */
+document.addEventListener('DOMContentLoaded', () => {
+    const menuOpen = document.querySelector('.menuOpen');
+    const menuClose = document.querySelector('.menuClose');
+    const moMenu = document.querySelector('.moMenu');
+    const moMenuBg = document.querySelector('.moMenuBg'); 
+
+    menuOpen.addEventListener('click', () => {
+        moMenu.classList.add('active');
+        document.body.style.overflow = 'hidden'; 
+        setTimeout(() => menuClose.focus(), 100); 
+    });
+
+    const closeMobileMenu = () => {
+        moMenu.classList.remove('active');
+        document.body.style.overflow = ''; 
+        menuOpen.focus();
+    };
+    menuClose.addEventListener('click', closeMobileMenu);
+    moMenuBg.addEventListener('click', closeMobileMenu);
+});
+
+/* 모바일 메뉴 접근성  */
+document.addEventListener('DOMContentLoaded', () => {
+    const navItems = document.querySelectorAll('.navItem');
+    const menuOpen = document.querySelector('.menuOpen');
+    const menuClose = document.querySelector('.menuClose');
+    const moMenu = document.querySelector('.moMenu');
+
+    menuOpen?.addEventListener('click', () => moMenu.classList.add('active'));
+    menuClose?.addEventListener('click', () => moMenu.classList.remove('active'));
+
+    navItems.forEach(item => {
+        const btn = item.querySelector('.moMainLink');
+        btn.addEventListener('click', () => {
+            navItems.forEach(li => li.classList.remove('active'));
+            item.classList.add('active');
+        });
+    });
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+    const allAgree = document.getElementById('allAgree');
+    const allCheckWrapper = document.querySelector('.allCheckWrapper'); // 래퍼 요소 선택
+    const items = document.querySelectorAll('.termsList .checkInput');
+    const essentialItems = document.querySelectorAll('.termsList .checkInput.essential');
+    const toggleBtns = document.querySelectorAll('.toggleBtn');
+    const authBtn = document.getElementById('authBtn');
+
+    // 스타일 업데이트 함수
+    function updateWrapperStyle() {
+        if (allAgree.checked) {
+            allCheckWrapper.classList.add('active');
+        } else {
+            allCheckWrapper.classList.remove('active');
+        }
+    }
+
+    // 1. 전체 동의 기능
+    allAgree.addEventListener('change', (e) => {
+        items.forEach(item => {
+            item.checked = e.target.checked;
+        });
+        updateWrapperStyle(); // 스타일 업데이트
+        checkEssential();
+    });
+
+    // 2. 개별 체크박스 조작 시 전체 동의 상태 반영
+    items.forEach(item => {
+        item.addEventListener('change', () => {
+            const isAllChecked = Array.from(items).every(i => i.checked);
+            allAgree.checked = isAllChecked;
+            updateWrapperStyle(); // 스타일 업데이트
+            checkEssential();
+        });
+    });
+
+    // 3. 필수 약관 체크 시 버튼 활성화 (기존 동일)
+    function checkEssential() {
+        const allEssentialChecked = Array.from(essentialItems).every(i => i.checked);
+        if (allEssentialChecked) {
+            authBtn.disabled = false;
+            authBtn.classList.add('active');
+        } else {
+            authBtn.disabled = true;
+            authBtn.classList.remove('active');
+        }
+    }
+
+    // 4. 더보기/닫기 토글 기능 (기존 동일)
+    toggleBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const targetId = btn.getAttribute('aria-controls');
+            const content = document.getElementById(targetId);
+            const isExpanded = btn.getAttribute('aria-expanded') === 'true';
+
+            if (isExpanded) {
+                content.hidden = true;
+                btn.setAttribute('aria-expanded', 'false');
+                btn.textContent = '더보기';
+            } else {
+                content.hidden = false;
+                btn.setAttribute('aria-expanded', 'true');
+                btn.textContent = '닫기';
+            }
+        });
+    });
+});
+</script>
+</html>

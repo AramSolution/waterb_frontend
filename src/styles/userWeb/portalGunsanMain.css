@@ -1,0 +1,657 @@
+@charset "UTF-8";
+/*
+ * 포털 랜딩(/userWeb) 전용. 셀렉터는 .portalGunsanShell 아래로 한정해
+ * 클라이언트 이동 후에도 /userWeb/main 의 MainHeader(header.css)가 덮어쓰이지 않게 한다.
+ */
+.portalGunsanShell {
+	/* main color */
+	--primary: #D63A3A !important;
+    --primary-light:#FFF4F4 !important
+}
+.portalGunsanShell .header .headerTop {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    height: 80px;
+}
+.portalGunsanShell .header .headerLogo {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+.portalGunsanShell .header .headerLogo h1 img {
+    height: 32px;
+    display: block;
+}
+.portalGunsanShell .header .badgeStudent,
+.portalGunsanShell .header .badgeAcademy {
+    width: 70px;
+    height: 30px;
+    line-height: 30px;
+    text-align: center;
+    background-color: var(--primary);
+    color: #fff;
+    border-radius: 4px;
+    font-size: 18px;
+    font-weight: bold;
+}
+.portalGunsanShell .header .utilMenu {
+    position: absolute;
+    right: 0;
+}
+.portalGunsanShell .header .utilMenu .userLinks {
+    display: flex;
+    gap: 24px;
+    align-items: center;
+    font-size: 18px;
+    font-weight: bold;
+}
+.portalGunsanShell .header .utilMenu .btnPortal {
+    border: 1px solid #2D3890;
+    color: #2D3890;
+    padding: 6px 8px;
+    border-radius: 6px;
+    font-weight: bold;
+}
+.portalGunsanShell .header .utilMenu .btnPortal img{
+    vertical-align: middle;
+    margin-left: 4px;
+}
+.portalGunsanShell .header .navPc {
+    border-top: 1px solid #eee;
+    border-bottom: 1px solid #eee;
+    position: relative;
+    background: #fff;
+}
+.portalGunsanShell .header .navPc > .inner {
+    position: static; 
+}
+.portalGunsanShell .header .navPc .navList {
+    display: flex;
+    justify-content: space-evenly;
+    margin: 0 auto;
+}
+.portalGunsanShell .header .navPc .navList > li {
+    position: static; 
+    flex: 1;
+}
+.portalGunsanShell .header .navPc .mainLink {
+    font-weight: bold;
+    font-size: 20px;
+    height: 60px;
+    line-height: 60px;
+    display: inline-block;
+    width: 100%;
+    text-align: center;
+}
+.portalGunsanShell .header .navPc .navList > li:hover .mainLink,
+.portalGunsanShell .header .navPc .navList > li:focus-within .mainLink{
+    border-bottom: 4px solid var(--primary);
+    color: var(--primary);
+} 
+.portalGunsanShell .header .navPc .subMenu {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%; 
+    background-color: #ffffff;
+    border-bottom: 1px solid #eee;
+    box-shadow: 0 10px 15px rgba(0,0,0,0.05);
+    z-index: 100;
+}
+.portalGunsanShell .header .navPc .subMenu::before {
+    content: '';
+    position: absolute;
+    top: -30px;
+    left: 0;
+    width: 100%;
+    height: 30px;
+}
+.portalGunsanShell .header .navPc .navList > li:hover .subMenu,
+.portalGunsanShell .header .navPc .navList > li:focus-within .subMenu {
+    display: block;
+}
+.portalGunsanShell .header .navPc .subList {
+    display: flex;
+    gap: 32px;
+    height: 80px;
+    align-items: center;
+}
+.portalGunsanShell .header .navPc .subList a {
+    display: block;
+    width: 120px;
+    height: 48px;
+    text-align: center;
+    line-height: 48px;
+    background-color: #eeeeee;
+    border-radius: 4px;
+    font-weight: bold;
+    font-size: 18px;
+    transition: 0.2s;
+}
+.portalGunsanShell .header .navPc .subList a.active,
+.portalGunsanShell .header .navPc .subList a:hover,
+.portalGunsanShell .header .navPc .subList a:focus {
+    background-color: var(--primary);
+    color: #fff;
+}
+@media (max-width: 1024px) {
+    .portalGunsanShell .header .headerTop {
+        justify-content: space-between;
+    }
+    .portalGunsanShell .header .utilMenu {
+        position: static;
+    }
+    .portalGunsanShell .header .utilMenu .userLinks,
+    .portalGunsanShell .header .navPc {
+        display: none !important; 
+    }
+    .portalGunsanShell .header .menuOpen {
+        display: block !important;
+    }
+}
+.portalGunsanShell .header .menuOpen {
+    display: none;
+    width: 32px;
+    height: 32px;
+    /* margin-right: 16px; */
+}
+
+/* 모바일 메뉴 */
+.portalGunsanShell .header .moMenu {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 9999;
+    visibility: hidden;
+}
+.portalGunsanShell .header .moMenu.active {
+    visibility: visible;
+}
+.portalGunsanShell .header .moMenu.active .moMenuBg {
+    opacity: 1;
+}
+.portalGunsanShell .header .moMenuInner {
+    position: absolute;
+    right: -100%;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+    transition: right 0.3s ease-in-out;
+}
+.portalGunsanShell .header .moMenu.active .moMenuInner {
+    right: 0;
+}
+.portalGunsanShell .header .moMenuHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 80px;
+    padding: 0 16px;
+    border-bottom: 1px solid #eeeeee;
+}
+.portalGunsanShell .header .logoArea {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+.portalGunsanShell .header .moMenuContent {
+    flex: 1;
+    position: relative; 
+    display: flex;
+    overflow: hidden;
+}
+.portalGunsanShell .header .moMenuNav {
+    width: 35%;
+    height: 100%;
+    background: #fafafa;
+    border-right: 1px solid #cccccc;
+    overflow-y: auto;
+}
+.portalGunsanShell .header .navItem {
+    border-bottom: 1px solid #cccccc;
+}
+.portalGunsanShell .header .moMainLink {
+    width: 100%;
+    padding: 24px 16px;
+    text-align: left;
+    background: none;
+    border: none;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+}
+.portalGunsanShell .header .navItem.active {
+    background: #fff;
+}
+.portalGunsanShell .header .navItem.active .moMainLink {
+    color: var(--primary);
+}
+.portalGunsanShell .header .moSubMenuPane {
+    display: none;
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 65%;
+    height: 100%;
+    background: #fff;
+    overflow-y: auto;
+}
+.portalGunsanShell .header .navItem.active .moSubMenuPane {
+    display: block;
+}
+.portalGunsanShell .header .moSubList {
+    padding: 0;
+    margin: 0;
+    list-style: none;
+}
+.portalGunsanShell .header .moSubList li a {
+    display: block;
+    padding: 24px;
+    font-size: 18px;
+    font-weight: bold;
+    color: #333;
+    text-decoration: none;
+    border-bottom: 1px solid #cccccc;
+    background: url("/images/userWeb/icon/ico_go_24.png") no-repeat  95% / 24px auto;
+}
+.portalGunsanShell .header .moSubList li a::before{
+    content: '•';
+    width: 4px;
+    height: 4px;
+    display: inline-block;
+    margin-right: 16px;
+}
+.portalGunsanShell .header .moMenuFooter {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.portalGunsanShell .header .btn-login {
+    display: block;
+    padding: 16px;
+    background: var(--primary);
+    color: #fff;
+    text-align: center;
+    border-radius: 6px;
+    font-weight: bold;
+    text-decoration: none;
+}
+.portalGunsanShell .header .btn-portal {
+    display: block;
+    padding: 16px;
+    border: 1px solid var(--primary);
+    color: var(--primary);
+    text-align: center;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+/* 교육리스트 */
+.portalGunsanShell .eduListWrap{
+    padding: 40px 0 0;
+    /* background: url("/images/userWeb/img_bg_main.png") no-repeat top center / 100% auto; */
+}
+.portalGunsanShell .eduListWrap .visual{
+    width: 100%;
+    height: 375px;
+    background: 
+        url("/images/userWeb/img_bg_info2.png") no-repeat bottom center / 100% auto,
+        linear-gradient(0deg, var(--primary-light) 0%, #FFFFFF 100%);
+}
+.portalGunsanShell .eduListWrap .tit{
+    font-size: 24px;
+    font-weight: bold;
+}
+.portalGunsanShell .eduListWrap .tit::before{
+    content: '';
+    width: 40px;
+    height: 40px;
+    display: inline-block;
+    vertical-align: middle;
+    margin:-2px 4px 0 0;
+    background: url("/images/userWeb/icon/ico_tit1.png") no-repeat center / 40px auto;
+}
+.portalGunsanShell .eduListWrap .cardSection {
+    margin-top: 24px;
+}
+/* .cardGrid {
+    display: grid;
+    gap: 24px;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+} */
+.portalGunsanShell .eduListWrap .cardGrid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr); 
+    gap: 24px;
+}
+.portalGunsanShell .eduListWrap .cardItem {
+    background: #ffffff;
+    border-radius: 20px;
+    padding:40px 32px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 16%);
+    border: 1px solid #fafafa;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.portalGunsanShell .cardItem.is-hidden {
+    display: none !important;
+}
+.portalGunsanShell .eduListWrap .cardItem.empty{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 339px;
+}
+.portalGunsanShell .eduListWrap .cardItem:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
+}
+.portalGunsanShell .eduListWrap .badge {
+    display: inline-block;
+    width: 24px;
+    height: 24px;
+    text-align: center;
+    line-height: 24px;
+    border-radius: 4px;
+    font-weight: bold;
+    color: #fff;
+    margin-bottom: 16px;
+    /* text-shadow: 0.5px 0.5px 1px rgba(0, 0, 0, 0.3); */
+}
+.portalGunsanShell .eduListWrap .badge.elementary { background-color: #6B85E8; }
+.portalGunsanShell .eduListWrap .badge.middle { background-color: #3BA97E; }
+.portalGunsanShell .eduListWrap .badge.high { background-color: #A56AE6; }
+.portalGunsanShell .eduListWrap .badge.kids { background-color: #E26A6A; }
+.portalGunsanShell .eduListWrap .badge.usual { background-color: #C6942D; }
+
+/* 웹접근성 통과용 명도대비 대응 */
+/* .portalGunsanShell .eduListWrap .badge.elementary { background-color: #425AC2; }
+.portalGunsanShell .eduListWrap .badge.middle { background-color: #218559; }
+.portalGunsanShell .eduListWrap .badge.high { background-color: #8040B8; }
+.portalGunsanShell .eduListWrap .badge.kids { background-color: #C93A3A; }
+.portalGunsanShell .eduListWrap .badge.usual { background-color: #A86815; } */
+
+.portalGunsanShell .eduListWrap .cardTitle {
+    width: 100%;
+    line-height: 1.5; 
+}
+.portalGunsanShell .eduListWrap .cardTitle::after {
+    content: "";
+    display: block;
+    clear: both;
+}
+.portalGunsanShell .eduListWrap .badgeArea {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-bottom: 8px;
+}
+.portalGunsanShell .eduListWrap .badge { margin-bottom: 0; } 
+.portalGunsanShell .eduListWrap .cardCategory {
+    font-size: 14px;
+    font-weight: bold;
+    color: #5D50D3; 
+}
+.portalGunsanShell .eduListWrap .cardCategory.education { color: #DE6C6E; }
+.portalGunsanShell .eduListWrap .cardCategory.biz { color: #3A6ECE; }
+.portalGunsanShell .eduListWrap .cardTitle .state{
+    float: left; 
+    margin-right: 8px;
+    font-weight: 800;
+    display: inline-block;
+    font-size: 20px;
+    line-height: 28px;
+}
+.portalGunsanShell .eduListWrap .cardTitle .ing{color: #0077FF;}
+.portalGunsanShell .eduListWrap .cardTitle .plan{color: #30AE17;}
+.portalGunsanShell .eduListWrap .cardTitle .end{color: #D2585A;}
+.portalGunsanShell .eduListWrap .cardTitle .promo{color: #9c27b0;}
+.portalGunsanShell .eduListWrap .cardTitle .bizend{color: #7E7E7E;}
+.portalGunsanShell .eduListWrap .cardTitle a {
+    display: block;
+    font-weight: bold;
+    font-size: 1rem;
+    text-decoration: none;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    word-break: break-all;
+    font-size: 20px;
+    line-height: 28px;
+}
+.portalGunsanShell .eduListWrap .cardTitle a:focus {
+    text-decoration: underline;
+    color: #000;
+}
+.portalGunsanShell .eduListWrap .infoList {
+    padding: 16px 0;
+}
+.portalGunsanShell .eduListWrap .infoList li {
+    color: #616161;
+    margin-bottom: 8px;
+}
+.portalGunsanShell .eduListWrap .infoList li::before {
+    content: '';
+    width: 24px;
+    height: 24px;
+    display: inline-block;
+    margin: -3px 4px 0 0;
+    vertical-align: middle;
+}
+.portalGunsanShell .eduListWrap .infoDate::before { background: url('/images/userWeb/icon/ico_date.png') no-repeat center / 24px auto ; }
+.portalGunsanShell .eduListWrap .infoLoc::before { background: url('/images/userWeb/icon/ico_loc.png') no-repeat center / 24px auto; }
+.portalGunsanShell .eduListWrap .infoName::before { background: url('/images/userWeb/icon/ico_name.png') no-repeat center / 24px auto; }
+.portalGunsanShell .eduListWrap .infoList li .result{
+    font-weight: 800;
+    margin-left: 4px;
+}
+.portalGunsanShell .eduListWrap .infoList li .result.select{
+    color: #04AD64;
+}
+.portalGunsanShell .eduListWrap .infoList li .result.unselect{
+    color: #FF0000;
+}
+.portalGunsanShell .eduListWrap .infoList li .result.wait{
+    color: #BF9A4A;
+}
+.portalGunsanShell .eduListWrap .cardDesc {
+    font-weight: bold;
+    color: #424242;
+    line-height: 1.5;
+    padding-top: 16px;
+    border-top: 1px dashed #e1e1e1;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    height: 70px;
+}
+.portalGunsanShell .eduListWrap .moreArea {
+    margin-top: 48px;
+    text-align: center;
+}
+.portalGunsanShell .eduListWrap .btnMore {
+    background: #fff;
+    border: 1px solid #616161;
+    padding: 12px 40px;
+    border-radius: 30px;
+    font-size: 16px;
+    color: #616161;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-weight: bold;
+}
+.portalGunsanShell .eduListWrap .btnMore span{
+    color: #212121;
+}
+.portalGunsanShell .eduListWrap .btnMore:hover {
+    background: #f9f9f9;
+    border-color: #bbb;
+}
+.portalGunsanShell .eduListWrap .blind {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0,0,0,0);
+    margin: -1px;
+}
+.portalGunsanShell .eduListWrap .cardGrid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr); 
+    gap: 40px;
+}
+@media (max-width: 1024px) {
+    .portalGunsanShell .eduListWrap .cardGrid {
+        grid-template-columns: repeat(1, 1fr) !important; 
+    }
+    .portalGunsanShell .eduListWrap .visual{
+        display: none;
+    }
+    .portalGunsanShell .eduListWrap{
+        padding: 40px 0;
+    }
+}
+
+/* 정보영역 (보드 섹션) */
+.portalGunsanShell .boardSection {
+    padding: 80px 0 24vw;
+    background: var(--primary-light) url("/images/userWeb/img_bg_info.png") no-repeat bottom center / 100% auto;
+    width: 100%;
+}
+.portalGunsanShell .boardSection .boardHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+.portalGunsanShell .boardSection .boardHeader .tit .icon{
+    width: 32px;
+    height: 32px;
+}
+.portalGunsanShell .boardSection .boardHeader .tit {
+    font-size: 24px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.portalGunsanShell .boardSection .btnMore {
+    background: #D63A3A;
+    color: #fff;
+    padding: 5px 16px;
+    border-radius: 20px;
+    font-size: 14px;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-weight: bold;
+    display: inline-block;
+}
+.portalGunsanShell .boardSection .btnMore img{
+    width: 20px;
+    height: 20px;
+    vertical-align: sub;
+}
+.portalGunsanShell .boardSection .inner {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr); 
+    gap: 40px;
+    width: 100%;
+}
+.portalGunsanShell .boardSection .boardCard {
+    background: #fff;
+    border-radius: 20px;
+    padding: 10px 24px; 
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    min-height: 310px;
+}
+.portalGunsanShell .boardSection .boardList li {
+    border-bottom: 1px solid #eeeeee;
+    min-height: 60px;
+    display: flex;
+    align-items: center;
+}
+.portalGunsanShell .boardSection .boardList li:last-child {
+    border-bottom: none;
+}
+.portalGunsanShell .boardSection .boardList li a {
+    display: flex;
+    flex-wrap: wrap; 
+    align-items: center;
+    width: 100%;
+    padding: 12px 0;
+    text-decoration: none;
+    color: inherit;
+}
+.portalGunsanShell .boardSection .boardList .badge {
+    font-size: 13px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 3px 6px;
+    border-radius: 4px;
+    font-weight: 600;
+    min-width: 66px;
+    border: 1px solid;
+    flex-shrink: 0;
+    margin-right: 12px;
+}
+.portalGunsanShell .boardSection .boardList .subject {
+    flex: 1; 
+    font-weight: bold;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 150px;
+}
+.portalGunsanShell .boardSection .boardList .date {
+    font-weight: bold;
+    margin-left: auto;
+    padding-left: 15px;
+    flex-shrink: 0;
+}
+.portalGunsanShell .boardSection .boardList .badge.complete { 
+    color: #10A64E; 
+    border-color: #10A64E; 
+}
+.portalGunsanShell .boardSection .boardList .badge.wait { 
+    color: #EF3737; 
+    border-color: #EF3737; 
+}
+
+@media (max-width: 1024px) {
+    .portalGunsanShell .boardSection .inner {
+        grid-template-columns: 1fr !important;
+        gap: 40px;
+        width: 100% !important;
+    }
+}
+@media (max-width: 640px) {
+    .portalGunsanShell .boardSection .boardList li a {
+        align-items: flex-start;
+    }
+    .portalGunsanShell .boardSection .boardList .subject {
+        width: calc(100% - 80px);
+        margin-right: 0;
+        margin-bottom: 4px; 
+    }
+    .portalGunsanShell .boardSection .boardList .date {
+        width: 100%;
+        color: #888;
+        padding-left: 0 !important;
+    }
+}

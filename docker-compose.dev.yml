@@ -1,0 +1,41 @@
+services:
+  frontend:
+    container_name: edream_frontend_dev
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    restart: unless-stopped
+    expose:
+      - "3000"
+    environment:
+      - NODE_ENV=development
+      - WATCHPACK_POLLING=1000
+      - CHOKIDAR_USEPOLLING=true
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/.next
+    networks:
+      - app-network
+    # .env.local 파일이 있다면 아래 주석을 해제하여 환경변수를 주입할 수 있습니다.
+    # env_file:
+    #   - .env.local
+
+  nginx:
+    image: nginx:alpine
+    container_name: edream_nginx_dev
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - frontend
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge

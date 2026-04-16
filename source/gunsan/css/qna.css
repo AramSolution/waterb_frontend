@@ -1,0 +1,125 @@
+@charset "UTF-8";
+
+.titleContainer {
+    display: flex;
+    align-items: center;
+    gap: 10px; 
+    width: 100%;
+}
+.badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0; 
+    width: 76px;
+    height: 30px;
+    font-weight: 700;
+    border-radius: 4px;
+    font-size: 14px;
+}
+.statusComplete { color: #10A64E; border: 1px solid #10A64E; }
+.statusWaiting { color: #EF3737; border: 1px solid #EF3737; }
+
+.cellDataName .ellipsis {
+    flex: 1; /* 남은 공간 모두 차지 */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: block;
+    text-align: left;
+    color: #333;
+    text-decoration: none;
+}
+
+@media screen and (max-width: 640px) {
+    .badge {
+        width: 64px; 
+        height: 26px;
+        font-size: 11px;
+    }
+    .colNum { width: 50px; }
+    .colDate { width: 90px; }
+}
+
+.headerSide{
+    margin-bottom: 16px;
+}
+.viewContainer {
+    background: #fff;
+}
+.viewHeader {
+    border-bottom: 1px solid #ccc;
+    padding-bottom: 20px;
+    margin-bottom: 20px;
+}
+.viewTitle {
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+.viewInfo {
+    display: flex;
+    gap: 20px;
+    color: #616161;
+}
+.viewContent {
+    min-height: 200px;
+    word-break: break-all;
+}
+.viewContainer .bizFile .title{
+    font-size: 18px !important;
+}
+.replyBox {
+    margin-top: 40px;
+    padding: 40px;
+    border: 2px solid var(--primary);
+    border-radius: 12px;
+}
+
+.replyHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    border-bottom: 1px solid #ccc;
+    padding-bottom: 10px;
+}
+.adminLabel {
+    font-weight: 800;
+}
+.replyDate {
+    font-size: 14px;
+    color: #616161;
+}
+.replyContent {
+    line-height: 1.7;
+    color: #333;
+}
+.viewFooter {
+    margin-top: 40px;
+    text-align: center;
+}
+.btnList {
+    padding: 12px 40px;
+    background: var(--primary);
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+/* 반응형 모바일 */
+@media screen and (max-width: 640px) {
+    .viewTitle { font-size: 1.25rem; }
+    .viewInfo { flex-direction: column; gap: 5px; }
+    .replyBox { padding: 20px; }
+}
+
+.qnaPwWrap .bd-18{
+    color: #616161;
+}
+.qnaPwWrap .formControl{
+    width: 70%;
+    margin: 0 auto;
+}

@@ -1,0 +1,35 @@
+/* 조회 폼 레이블 스타일 */
+.search-form-label {
+  @apply justify-end pr-4 font-bold;
+}
+
+/* 모바일에서 왼쪽 정렬 및 배경 제거 */
+@media (max-width: 768px) {
+  .search-form-label {
+    @apply justify-start pl-4 pr-2 font-bold bg-transparent border-0;
+  }
+
+  /* 조회조건 슬라이드 애니메이션 */
+  .search-form-container {
+    @apply max-h-0 overflow-hidden mb-0;
+    transition: max-height 0.3s ease-out;
+  }
+
+  .search-form-container.show {
+    max-height: 2000px;
+    @apply mb-4;
+    transition: max-height 0.5s ease-in;
+  }
+}
+
+/* 데스크톱에서는 항상 보이기 */
+@media (min-width: 769px) {
+  .search-form-container {
+    max-height: none !important;
+    @apply overflow-visible;
+  }
+
+  .search-form-label {
+    @apply border-0;
+  }
+}

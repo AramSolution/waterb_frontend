@@ -1,0 +1,745 @@
+@charset "UTF-8";
+
+/* 본문 전용: eduListWrap, boardSection 등. 헤더 스타일은 header.css */
+:root {
+  --primary: #d63a3a !important;
+  --primary-light: #fff4f4 !important;
+}
+
+/* gunsan default: 본문 기준 16px·행간 — 메인 영역 가독 통일 */
+#main_content {
+  font-size: 16px;
+  line-height: 1.5;
+  color: #212121;
+}
+
+/* 교육리스트 */
+.eduListWrap {
+  padding: 80px 0;
+  background: url("/images/userWeb/img_bg_main.png") no-repeat top center / 100%
+    auto;
+}
+.eduListWrap .tit {
+  font-size: 24px;
+  font-weight: 800;
+}
+.eduListWrap .tit::before {
+  content: "";
+  width: 40px;
+  height: 40px;
+  display: inline-block;
+  vertical-align: middle;
+  margin: -2px 4px 0 0;
+  background: url("/images/userWeb/icon/ico_tit1.png") no-repeat center / 40px
+    auto;
+}
+.eduListWrap .cardSection {
+  margin-top: 24px;
+}
+/* source/gunsan main.html — 제목 행 + 유형 필터(전체·지원사업·교육사업·홍보) */
+.eduListWrap .flex-sb .tit {
+  margin: 0;
+}
+.eduListWrap .optionWrap {
+  flex-shrink: 0;
+}
+.eduListWrap .optBtnWrap {
+}
+.eduListWrap .optBtnWrap button {
+  padding: 6px 20px;
+  background: #eee;
+  color: #616161;
+  font-size: 18px;
+  font-weight: 800;
+  border-radius: 20px;
+  margin-left: 4px;
+  border: none;
+  cursor: pointer;
+}
+.eduListWrap .optBtnWrap button:hover,
+.eduListWrap .optBtnWrap button:focus {
+  background-color: var(--primary-light);
+  outline: 1px solid var(--primary);
+}
+.eduListWrap .optBtnWrap button[aria-pressed="true"] {
+  background-color: var(--primary);
+  color: #fff;
+}
+.eduListWrap .optBtnWrap button[aria-pressed="true"]:hover {
+  background-color: var(--primary);
+}
+.eduListWrap .eduListFilterEmpty {
+  margin: 24px 0 0;
+  padding: 40px 16px;
+  text-align: center;
+  font-size: 18px;
+  font-weight: 800;
+  color: #616161;
+  line-height: 1.5;
+}
+.eduListWrap .cardGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
+}
+.eduListWrap .cardItem {
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 24px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 16%);
+  border: 1px solid #fafafa;
+  display: flex;
+  flex-direction: column;
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
+}
+.eduListWrap .cardItem:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
+}
+.eduListWrap .cardItem.is-clickable {
+  cursor: pointer;
+}
+/* 빈 칸용 카드: gunsan main.html + css/main.css .cardItem.empty와 동일 (배경/테두리/그림자 상속, min-height 339px) */
+.eduListWrap .cardItem.empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 339px;
+}
+.eduListWrap .cardItem.empty > div {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.eduListWrap .cardItem.empty img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  object-fit: contain;
+}
+.eduListWrap .cardHeader {
+  display: flex;
+  flex-direction: column;
+}
+.eduListWrap .cardHeader .badgeArea {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 16px;
+}
+/* 교육 카드 대상 배지: 포털·메인·라우트 전환 후 main.css 잔존 시에도 62×26과 충돌하지 않도록 24×24 통일 (한 글자: 초·중·고·영·일 등) */
+.eduListWrap .badge {
+  display: inline-block;
+  width: 24px;
+  height: 24px;
+  text-align: center;
+  line-height: 24px;
+  border-radius: 4px;
+  font-size: 15px;
+  font-weight: 800;
+  color: #fff;
+}
+.eduListWrap .badge.elementary {
+  background-color: #eb8b03;
+}
+.eduListWrap .badge.middle {
+  background-color: #19aa39;
+}
+.eduListWrap .badge.high {
+  background-color: #5d50d3;
+}
+.eduListWrap .badge.university {
+  background-color: #7e57c2;
+}
+.eduListWrap .badge.other {
+  background-color: #78909c;
+}
+.eduListWrap .badge.kids {
+  background-color: #e26a6a;
+}
+.eduListWrap .badge.usual {
+  background-color: #c6942d;
+}
+/* 영·일도 초·중·고와 동일 24×24; 3글자 라벨은 잘리지 않도록 letter-spacing만 조정 */
+.eduListWrap .badge.kids,
+.eduListWrap .badge.usual {
+  box-sizing: border-box;
+  width: 24px;
+  min-width: 24px;
+  max-width: 24px;
+  padding: 0;
+  font-size: 15px;
+  letter-spacing: -0.05em;
+  line-height: 24px;
+  overflow: hidden;
+  text-overflow: clip;
+  white-space: nowrap;
+}
+/* 메인 카드 카테고리(교육/지원사업/홍보) - mypagePr 신청현황과 동일 위치 */
+.eduListWrap .cardCategory {
+  font-size: 16px;
+  font-weight: 700;
+  color: #5d50d3;
+}
+.eduListWrap .cardCategory.education {
+  color: #de6c6e;
+}
+.eduListWrap .cardCategory.biz {
+  color: #3a6ece;
+}
+.eduListWrap .cardCategory.promo {
+  color: #9c27b0;
+}
+/* 메인 카드 진행상태(공고/접수중/검토중/진행/완료/취소) - 지원사업명 앞 표시 */
+.eduListWrap .cardTitle .state {
+  font-size: 20px;
+  line-height: 28px;
+  font-weight: 800;
+  display: inline-block;
+  margin-right: 4px;
+}
+.eduListWrap .cardTitle .state.announce {
+  color: #5d50d3;
+}
+.eduListWrap .cardTitle .state.accepting {
+  color: #30ae17;
+}
+.eduListWrap .cardTitle .state.review {
+  color: #007bff;
+}
+.eduListWrap .cardTitle .state.progress {
+  color: #ff8000;
+}
+.eduListWrap .cardTitle .state.complete {
+  color: #04ad64;
+}
+.eduListWrap .cardTitle .state.cancel {
+  color: #afafaf;
+}
+.eduListWrap .cardTitle .state.promo {
+  color: #9c27b0;
+}
+.eduListWrap .cardTitle {
+  line-height: 1.4;
+  word-break: keep-all;
+  height: 48px;
+}
+.eduListWrap .cardTitle a {
+  font-size: 20px;
+  line-height: 26px;
+  font-weight: 800;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.eduListWrap .cardTitle a:focus {
+  text-decoration: underline;
+  color: #000;
+}
+.eduListWrap .infoList {
+  padding: 16px 0;
+}
+.eduListWrap .infoList li {
+  font-size: 16px;
+  color: #616161;
+  margin-bottom: 8px;
+}
+.eduListWrap .infoList li::before {
+  content: "";
+  width: 24px;
+  height: 24px;
+  display: inline-block;
+  margin: -1px 4px 0 0;
+  vertical-align: middle;
+}
+.eduListWrap .infoDate::before {
+  background: url("/images/userWeb/icon/ico_date.png") no-repeat center /
+    24px auto;
+}
+.eduListWrap .infoLoc::before {
+  background: url("/images/userWeb/icon/ico_loc.png") no-repeat center /
+    24px auto;
+}
+/* gunsan main.css: 2줄 클램프·본문 16px */
+.eduListWrap .cardDesc {
+  font-size: 16px;
+  font-weight: 700;
+  color: #424242;
+  line-height: 1.5;
+  padding-top: 16px;
+  border-top: 1px dashed #e1e1e1;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.eduListWrap .moreArea {
+  margin-top: 48px;
+  text-align: center;
+}
+.eduListWrap .btnMore {
+  background: #fff;
+  border: 1px solid #616161;
+  padding: 12px 40px;
+  border-radius: 30px;
+  font-size: 16px;
+  color: #616161;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-weight: 700;
+}
+.eduListWrap .btnMore span {
+  color: #212121;
+}
+.eduListWrap .btnMore:hover {
+  background: #f9f9f9;
+  border-color: #bbb;
+}
+.eduListWrap .blind {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  margin: -1px;
+}
+.eduListWrap .cardGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+}
+@media (max-width: 1024px) {
+  .cardGrid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+.cardItem.is-hidden {
+  display: none;
+}
+
+/* 정보영역 (보드 섹션) */
+.boardSection {
+  padding: 80px 0 24vw;
+  background: var(--primary-light) url("/images/userWeb/img_bg_info.png")
+    no-repeat bottom center / 100% auto;
+  width: 100%;
+}
+.boardSection .boardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+.boardSection .boardHeader .tit .icon {
+  width: 32px;
+  height: 32px;
+}
+.boardSection .boardHeader .tit {
+  font-size: 24px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.boardSection .btnMore {
+  background: var(--primary);
+  color: #fff;
+  padding: 5px 16px;
+  border-radius: 20px;
+  font-size: 14px;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 800;
+  display: inline-block;
+}
+.boardSection .btnMore img {
+  width: 20px;
+  height: 20px;
+  vertical-align: sub;
+}
+.boardSection .inner {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 40px;
+  width: 100%;
+}
+.boardSection .boardCard {
+  background: #fff;
+  border-radius: 20px;
+  padding: 10px 24px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+  min-height: 310px;
+}
+.boardSection .boardList li {
+  border-bottom: 1px solid #eeeeee;
+  min-height: 60px;
+  display: flex;
+  align-items: center;
+}
+.boardSection .boardList li:last-child {
+  border-bottom: none;
+}
+.boardSection .boardList li a {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  width: 100%;
+  padding: 12px 0;
+  text-decoration: none;
+  color: inherit;
+}
+.boardSection .boardList .badge {
+  font-size: 13px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3px 6px;
+  border-radius: 4px;
+  font-weight: 600;
+  min-width: 66px;
+  border: 1px solid;
+  flex-shrink: 0;
+  margin-right: 12px;
+}
+.boardSection .boardList .subject {
+  flex: 1;
+  font-weight: 800;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 150px;
+}
+.boardSection .boardList .date {
+  font-weight: 800;
+  margin-left: auto;
+  padding-left: 15px;
+  flex-shrink: 0;
+}
+.boardSection .boardList .badge.complete {
+  color: #10a64e;
+  border-color: #10a64e;
+}
+.boardSection .boardList .badge.wait {
+  color: #ef3737;
+  border-color: #ef3737;
+}
+
+@media (max-width: 1024px) {
+  .boardSection .inner {
+    grid-template-columns: 1fr !important;
+    gap: 40px;
+    width: 100% !important;
+  }
+}
+@media (max-width: 640px) {
+  .boardSection .boardList li a {
+    align-items: flex-start;
+  }
+  .boardSection .boardList .subject {
+    width: calc(100% - 80px);
+    margin-right: 0;
+    margin-bottom: 4px;
+  }
+  .boardSection .boardList .date {
+    width: 100%;
+    color: #888;
+    padding-left: 0 !important;
+  }
+}
+
+/* source/gunsan main.html — 학생 메인(reqGbPosition=1 등) */
+.eduListWrap--mainHtml {
+  padding: 40px 0 0;
+  background: none;
+}
+/* gunsan main.css — 프로그램 목록 제목(아이콘 40px 동일 계열) */
+.eduListWrap--mainHtml .flex-sb .tit {
+  font-size: 24px;
+  font-weight: 700;
+}
+.eduListWrap--mainHtml .cardSection {
+  margin-top: 40px;
+}
+.eduListWrap--mainHtml .loading,
+.eduListWrap--mainHtml .error {
+  font-size: 18px;
+  line-height: 1.5;
+  font-weight: 700;
+}
+/* source/gunsan/main.html — visual은 main 직계 자식(#main_content > .visual), eduListWrap 밖 */
+#main_content > .visual {
+  width: 100%;
+  height: 375px;
+  background:
+    url("/images/userWeb/img_bg_info2.png") no-repeat bottom center / 100% auto,
+    linear-gradient(0deg, var(--primary-light) 0%, #ffffff 100%);
+}
+@media (max-width: 1024px) {
+  #main_content > .visual {
+    display: none;
+  }
+}
+/* gunsan main.css 최종: 카드 3열, gap 40px (앞선 4열 규칙 덮어씀) */
+.eduListWrap--mainHtml .cardGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 40px;
+}
+@media (max-width: 1024px) {
+  .eduListWrap--mainHtml .cardGrid {
+    grid-template-columns: repeat(1, 1fr) !important;
+  }
+  .eduListWrap--mainHtml .flex-sb {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+  .eduListWrap--mainHtml .optBtnWrap button {
+    font-size: 14px;
+    padding: 6px 12px;
+  }
+}
+/* gunsan main.css — 카드 패딩·최소 높이 */
+.eduListWrap--mainHtml .cardItem {
+  min-height: 354px;
+  padding: 24px;
+}
+/*
+ * gunsan .cardHeader: 가로 한 줄(headLeft | 별). 기본 .eduListWrap .cardHeader 는 column(배지+제목용)이라
+ * flex-direction 을 덮어쓰지 않으면 별 버튼이 headLeft 아래로 내려감.
+ */
+.eduListWrap--mainHtml .cardHeader {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 16px;
+}
+.eduListWrap--mainHtml .cardHeader .headLeft {
+  display: inline-flex;
+  flex: 1;
+  min-width: 0;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.eduListWrap--mainHtml .cardHeader .bizType {
+  padding: 6px 10px;
+  font-size: 16px;
+  font-weight: 700;
+  color: #424242;
+  background: #eee;
+  border-radius: 20px;
+}
+.eduListWrap--mainHtml .cardHeader .status {
+  padding: 6px 10px;
+  font-size: 16px;
+  font-weight: 700;
+  border-radius: 20px;
+}
+.eduListWrap--mainHtml .cardHeader .status.statusIng {
+  background: #e5f0ff;
+  color: #124891;
+}
+.eduListWrap--mainHtml .cardHeader .status.statusReady {
+  background: #e7ffe5;
+  color: #0a7800;
+}
+.eduListWrap--mainHtml .cardHeader .status.statusEnd {
+  background: #7e7e7e;
+  color: #fff;
+}
+.eduListWrap--mainHtml .btnWish {
+  flex-shrink: 0;
+  align-self: flex-start;
+  width: 32px;
+  height: 32px;
+  background: none;
+  border: none;
+  padding: 0;
+  margin-left: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.eduListWrap--mainHtml .btnWish .icoStar {
+  display: block;
+  width: 32px;
+  height: 32px;
+  background: url("/images/userWeb/icon/ico_star_off.png") no-repeat center /
+    contain;
+}
+.eduListWrap--mainHtml .btnWish.isFavorite .icoStar,
+.eduListWrap--mainHtml .btnWish[aria-pressed="true"] .icoStar {
+  background-image: url("/images/userWeb/icon/ico_star_on.png");
+}
+.eduListWrap--mainHtml .btnWish:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+.eduListWrap--mainHtml .badge {
+  width: 24px;
+  height: 24px;
+  line-height: 24px;
+  font-size: 15px;
+  font-weight: 800;
+}
+.eduListWrap--mainHtml .badge.elementary {
+  background-color: #6b85e8;
+}
+.eduListWrap--mainHtml .badge.middle {
+  background-color: #3ba97e;
+}
+.eduListWrap--mainHtml .badge.high {
+  background-color: #a56ae6;
+}
+.eduListWrap--mainHtml .badge.university {
+  background-color: #7e57c2;
+}
+.eduListWrap--mainHtml .badge.other {
+  background-color: #78909c;
+}
+.eduListWrap--mainHtml .badge.kids {
+  background-color: #e26a6a;
+}
+.eduListWrap--mainHtml .badge.usual {
+  background-color: #c6942d;
+}
+/* .eduListWrap .badge.kids 가 width:auto 로 덮이지 않도록: 영·일도 초·중·고와 동일 24×24 */
+.eduListWrap.eduListWrap--mainHtml .badge.kids,
+.eduListWrap.eduListWrap--mainHtml .badge.usual {
+  box-sizing: border-box;
+  width: 24px;
+  min-width: 24px;
+  max-width: 24px;
+  height: 24px;
+  padding: 0;
+  font-size: 15px;
+  letter-spacing: -0.05em;
+  line-height: 24px;
+  overflow: hidden;
+  text-overflow: clip;
+  white-space: nowrap;
+}
+.eduListWrap--mainHtml .cardTitle {
+  width: 100%;
+  height: auto;
+  min-height: 56px;
+  line-height: 1.5;
+}
+.eduListWrap--mainHtml .cardTitle::after {
+  content: "";
+  display: block;
+  clear: both;
+}
+.eduListWrap--mainHtml .cardTitle .state {
+  float: left;
+  font-size: 20px;
+  line-height: 26px;
+  margin-right: 8px;
+}
+/* gunsan main.html 상태색에 맞춤 */
+.eduListWrap--mainHtml .cardTitle .state.accepting {
+  color: #0077ff;
+}
+.eduListWrap--mainHtml .cardTitle .state.announce {
+  color: #30ae17;
+}
+.eduListWrap--mainHtml .cardTitle .state.review {
+  color: #007bff;
+}
+.eduListWrap--mainHtml .cardTitle .state.progress {
+  color: #ff8000;
+}
+.eduListWrap--mainHtml .cardTitle .state.complete {
+  color: #d2585a;
+}
+.eduListWrap--mainHtml .cardTitle .state.cancel {
+  color: #7e7e7e;
+}
+.eduListWrap--mainHtml .cardTitle .state.promo {
+  color: #9c27b0;
+}
+.eduListWrap--mainHtml .cardTitle a {
+  display: block;
+  font-size: 20px;
+  line-height: 26px;
+  font-weight: 700;
+  word-break: break-all;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.eduListWrap--mainHtml .infoList li {
+  position: relative;
+  font-size: 16px;
+  line-height: 1.5;
+}
+.eduListWrap--mainHtml .infoList li::before {
+  width: 24px;
+  height: 24px;
+  margin: -3px 4px 0 0;
+}
+.eduListWrap--mainHtml .infoDate::before {
+  background: url("/images/userWeb/icon/ico_date.png") no-repeat center /
+    24px auto;
+}
+.eduListWrap--mainHtml .infoPeople::before {
+  background: url("/images/userWeb/icon/ico_people.png") no-repeat center /
+    24px auto;
+}
+.eduListWrap--mainHtml .infoCompany::before {
+  background: url("/images/userWeb/icon/ico_company.png") no-repeat center /
+    24px auto;
+}
+.eduListWrap--mainHtml .infoList li > span {
+  color: #212121;
+  margin-right: 4px;
+}
+.eduListWrap--mainHtml .infoList .infoPeople .badgeArea.age {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+.eduListWrap--mainHtml .infoList .infoPeople .moreInfo {
+  margin-left: 60px;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  word-break: break-all;
+  color: #616161;
+}
+.eduListWrap--mainHtml .cardDesc {
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.5;
+  color: #424242;
+  padding-top: 16px;
+  border-top: 1px dashed #e1e1e1;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.eduListWrap--mainHtml .cardItem.empty img {
+  width: auto;
+  max-width: 100%;
+  height: auto;
+  max-height: 140px;
+  object-fit: contain;
+}
+
+/* 학부모 진입 시 /userWeb/main 테마 (index에서 학부모 클릭 후 이동) */
+[data-entry-type="parent"] {
+  --primary: #774adf !important;
+  --primary-light: #f7f3ff !important;
+}

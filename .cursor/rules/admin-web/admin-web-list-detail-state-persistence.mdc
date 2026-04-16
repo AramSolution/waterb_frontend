@@ -1,0 +1,501 @@
+---
+alwaysApply: false
+---
+
+# List-Detail State Persistence Pattern
+
+## 🎯 Purpose
+
+**MUST ALWAYS** use this pattern when implementing list-detail navigation flows. This pattern ensures that when users navigate from a **list page** to a **detail page** and then return to the list page, all search conditions, filters, and pagination state are preserved. This provides a seamless user experience and follows web standard practices used by major platforms (Google, Amazon, GitHub, etc.).
+
+## 📋 When to Use
+
+**MUST use this pattern when:**
+
+- ✅ List page has search/filter conditions
+- ✅ List page has pagination
+- ✅ Users can navigate from list → detail → back to list
+- ✅ Preserving user's search context is important for UX
+
+**DO NOT use this pattern when:**
+
+- ❌ List page has no search/filter functionality
+- ❌ Detail page is a modal/overlay (not a separate route)
+- ❌ State should be reset on navigation (explicit requirement)
+
+---
+
+## 🏗️ Architecture Overview
+
+**MUST** use **URL query parameters** to persist state across navigation:
+
+```
+List Page (with filters)
+  → Navigate to Detail (URL: /detail?esntlId=123&searchCondition=1&searchKeyword=test&page=2)
+  → User clicks "Close/Back"
+  → Returns to List (URL: /list?searchCondition=1&searchKeyword=test&page=2)
+  → List page reads URL params and restores state
+```
+
+### Key Components
+
+1. **List Page Hook** (`useXxxList`): **MUST** read URL params on mount, **MUST** update state when params change
+2. **List Page Component**: **MUST** pass current state as query params when navigating to detail
+3. **Detail Page Hook** (`useXxxDetail`): **MUST** read query params from URL, **MUST** pass them back when returning to list
+
+---
+
+## 📝 Implementation Guide
+
+### Step 1: List Page Hook - Read URL Parameters
+
+**Location**: `src/features/{domain}/{entity}/list/model/useXxxList.ts`
+
+**MUST:**
+
+```typescript
+import { useSearchParams } from "next/navigation";
+
+export function useXxxList() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // 1. MUST: Read URL query parameters
+  const urlSearchCondition = searchParams.get("searchCondition");
+  const urlSearchKeyword = searchParams.get("searchKeyword");
+  const urlJoGunMberSta = searchParams.get("joGunMberSta");
+  const urlPage = searchParams.get("page");
+
+  // 2. MUST: Initialize state with URL params (fallback to defaults)
+  const [searchCondition, setSearchCondition] = useState<string>(
+    urlSearchCondition || "1" // Default value
+  );
+  const [searchKeyword, setSearchKeyword] = useState<string>(
+    urlSearchKeyword || ""
+  );
+  const [joGunMberSta, setJoGunMberSta] = useState<string>(
+    urlJoGunMberSta || ""
+  );
+  const [currentPage, setCurrentPage] = useState(
+    urlPage ? parseInt(urlPage, 10) : 1
+  );
+
+  // 3. MUST: Sync state when URL params change (handles browser back/forward)
+  useEffect(() => {
+    if (urlSearchCondition !== null) {
+      setSearchCondition(urlSearchCondition || "1");
+    }
+    if (urlSearchKeyword !== null) {
+      setSearchKeyword(urlSearchKeyword || "");
+    }
+    if (urlJoGunMberSta !== null) {
+      setJoGunMberSta(urlJoGunMberSta || "");
+    }
+    if (urlPage !== null) {
+      const pageNum = parseInt(urlPage, 10);
+      if (!isNaN(pageNum) && pageNum > 0) {
+        setCurrentPage(pageNum);
+      }
+    }
+  }, [urlSearchCondition, urlSearchKeyword, urlJoGunMberSta, urlPage]);
+
+  // ... rest of hook logic
+}
+```
+
+**MUST NOT:**
+
+```typescript
+// ❌ WRONG: Don't ignore URL params
+const [searchCondition, setSearchCondition] = useState<string>("1");
+
+// ❌ WRONG: Don't forget to sync on URL param changes
+// Missing useEffect to sync state with URL params
+
+// ❌ WRONG: Don't use sessionStorage for this pattern
+sessionStorage.setItem('state', JSON.stringify({ ... }));
+```
+
+---
+
+### Step 2: List Page Component - Pass State to Detail
+
+**Location**: `src/app/{domain}/{entity}/list/page.tsx`
+
+**MUST:**
+
+```typescript
+"use client";
+
+import { Suspense } from "react";
+import { useRouter } from "next/navigation";
+
+function XxxListContent() {
+  const router = useRouter();
+  const {
+    searchCondition,
+    searchKeyword,
+    joGunMberSta,
+    currentPage,
+    // ... other state
+  } = useXxxList();
+
+  // MUST: When navigating to detail, include current state as query params
+  const handleDetailClick = (id: string) => {
+    const params = new URLSearchParams({
+      esntlId: id, // Detail page identifier
+      searchCondition: searchCondition || "1",
+      searchKeyword: searchKeyword || "",
+      joGunMberSta: joGunMberSta || "",
+      page: currentPage.toString(),
+    });
+    router.push(`/adminWeb/xxx/detail?${params.toString()}`);
+  };
+
+  return (
+    <AdminLayout>
+      {/* ... list UI ... */}
+      <button onClick={() => handleDetailClick(item.id)}>상세</button>
+    </AdminLayout>
+  );
+}
+
+// MUST: Wrap with Suspense when using useSearchParams
+// MUST: Use LoadingFallback component (not inline UI markup)
+import { LoadingFallback } from "@/shared/ui/adminWeb";
+
+export default function XxxListPage() {
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <XxxListContent />
+    </Suspense>
+  );
+}
+```
+
+**MUST NOT:**
+
+```typescript
+// ❌ WRONG: Don't navigate without query params
+router.push(`/adminWeb/xxx/detail?esntlId=${id}`);
+
+// ❌ WRONG: Don't forget Suspense wrapper
+export default function XxxListPage() {
+  return <XxxListContent />; // Missing Suspense
+}
+
+// ❌ WRONG: Don't hardcode values
+const params = new URLSearchParams({
+  esntlId: id,
+  searchCondition: "1", // Should use actual state value
+});
+```
+
+---
+
+### Step 3: Detail Page Hook - Return State to List
+
+**Location**: `src/features/{domain}/{entity}/detail/model/useXxxDetail.ts`
+
+**MUST:**
+
+```typescript
+import { useRouter } from "next/navigation";
+
+export function useXxxDetail(id: string | null) {
+  const router = useRouter();
+
+  const handleList = () => {
+    // MUST: Read query params from current URL
+    if (typeof window !== "undefined") {
+      const searchParams = new URLSearchParams(window.location.search);
+      const searchCondition = searchParams.get("searchCondition") || "";
+      const searchKeyword = searchParams.get("searchKeyword") || "";
+      const joGunMberSta = searchParams.get("joGunMberSta") || "";
+      const page = searchParams.get("page") || "1";
+
+      // MUST: Build query params (only include non-empty values)
+      const params = new URLSearchParams();
+      if (searchCondition) params.set("searchCondition", searchCondition);
+      if (searchKeyword) params.set("searchKeyword", searchKeyword);
+      if (joGunMberSta) params.set("joGunMberSta", joGunMberSta);
+      if (page) params.set("page", page);
+
+      // MUST: Navigate back to list with preserved state
+      const queryString = params.toString();
+      router.push(
+        queryString ? `/adminWeb/xxx/list?${queryString}` : "/adminWeb/xxx/list"
+      );
+    } else {
+      // SSR fallback
+      router.push("/adminWeb/xxx/list");
+    }
+  };
+
+  return {
+    // ... other returns
+    handleList,
+  };
+}
+```
+
+**MUST NOT:**
+
+```typescript
+// ❌ WRONG: Don't navigate without preserving params
+const handleList = () => {
+  router.push("/adminWeb/xxx/list"); // Lost state!
+};
+
+// ❌ WRONG: Don't forget window check for SSR
+const searchParams = new URLSearchParams(window.location.search);
+// Should check typeof window !== "undefined"
+
+// ❌ WRONG: Don't include empty values in URL
+params.set("searchKeyword", searchKeyword); // Should check if not empty
+```
+
+---
+
+## ✅ Best Practices
+
+### 1. Parameter Naming
+
+**MUST:**
+
+- ✅ Use **descriptive, consistent names** matching state variable names
+- ✅ Use **camelCase** for parameter names (e.g., `searchCondition`, `joGunMberSta`)
+- ✅ Use **lowercase** for common params (e.g., `page`, `id`)
+
+**MUST NOT:**
+
+- ❌ Use abbreviations without context (e.g., `sc`, `sk`)
+- ❌ Mix naming conventions (e.g., `search_condition` vs `searchCondition`)
+
+### 2. Default Values
+
+**MUST:**
+
+- ✅ Always provide **fallback default values** when reading URL params
+- ✅ Use **empty string** for optional string params
+- ✅ Use **sensible defaults** (e.g., `page: 1`, `searchCondition: "1"`)
+
+```typescript
+// ✅ CORRECT
+const [searchCondition, setSearchCondition] = useState<string>(
+  urlSearchCondition || "1" // Default to first option
+);
+const [searchKeyword, setSearchKeyword] = useState<string>(
+  urlSearchKeyword || "" // Default to empty
+);
+```
+
+### 3. Type Safety
+
+**MUST:**
+
+- ✅ **Parse numeric values** with validation
+- ✅ **Handle null/undefined** explicitly
+- ✅ **Validate ranges** (e.g., page > 0)
+
+```typescript
+// ✅ CORRECT
+if (urlPage !== null) {
+  const pageNum = parseInt(urlPage, 10);
+  if (!isNaN(pageNum) && pageNum > 0) {
+    setCurrentPage(pageNum);
+  }
+}
+```
+
+### 4. URL Cleanliness
+
+**MUST:**
+
+- ✅ **Only include non-empty params** in URL (except for required defaults)
+- ✅ **Remove empty string params** before navigation
+
+```typescript
+// ✅ CORRECT
+const params = new URLSearchParams();
+if (searchCondition) params.set("searchCondition", searchCondition);
+if (searchKeyword) params.set("searchKeyword", searchKeyword);
+// Empty values are not added
+```
+
+### 5. Suspense Boundary
+
+**MUST:**
+
+- ✅ **Wrap list page component** with `Suspense` when using `useSearchParams`
+- ✅ **Use `LoadingFallback` component** from `@/shared/ui/adminWeb` (not inline UI markup)
+- ✅ **Provide loading fallback** for better UX
+
+```typescript
+// ✅ CORRECT: Use LoadingFallback component
+import { LoadingFallback } from "@/shared/ui/adminWeb";
+
+export default function XxxListPage() {
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <XxxListContent />
+    </Suspense>
+  );
+}
+```
+
+---
+
+## 🔍 Edge Cases & Considerations
+
+### 1. Browser Back/Forward Navigation
+
+**Behavior**: URL params automatically sync with browser history
+
+**Implementation**: The `useEffect` in Step 1 handles this automatically when URL params change.
+
+```typescript
+// This effect runs when user clicks browser back/forward
+useEffect(() => {
+  // State updates automatically from URL params
+}, [urlSearchCondition, urlSearchKeyword, urlJoGunMberSta, urlPage]);
+```
+
+### 2. Direct URL Access
+
+**Scenario**: User bookmarks or shares URL with query params
+
+**Behavior**: List page **MUST** restore state from URL params on initial load
+
+**Implementation**: Already handled by initializing state with URL params in Step 1.
+
+### 3. Invalid Parameter Values
+
+**MUST:**
+
+- ✅ **Validate and sanitize** parameter values
+- ✅ **Fallback to defaults** for invalid values
+
+```typescript
+// ✅ CORRECT: Validate page number
+if (urlPage !== null) {
+  const pageNum = parseInt(urlPage, 10);
+  if (!isNaN(pageNum) && pageNum > 0) {
+    setCurrentPage(pageNum);
+  } else {
+    setCurrentPage(1); // Fallback to page 1
+  }
+}
+```
+
+### 4. SSR Compatibility
+
+**MUST:**
+
+- ✅ **Check `typeof window !== "undefined"`** before accessing `window.location`
+- ✅ **Provide SSR fallback** for server-side rendering
+
+```typescript
+// ✅ CORRECT
+if (typeof window !== "undefined") {
+  const searchParams = new URLSearchParams(window.location.search);
+  // ... use params
+} else {
+  // SSR fallback
+  router.push("/adminWeb/xxx/list");
+}
+```
+
+### 5. Multiple Navigation Paths
+
+**Scenario**: User can navigate to detail from multiple places (list, search results, etc.)
+
+**MUST:**
+
+- ✅ **Always include state params** when navigating to detail
+- ✅ **Preserve params** regardless of navigation source
+
+---
+
+## 📚 Reference Implementation
+
+**Complete example**: See `src/features/adminWeb/member/list/model/useMemberList.ts` and `src/app/adminWeb/member/list/page.tsx`
+
+**Key files:**
+
+- List Hook: `src/features/adminWeb/member/list/model/useMemberList.ts`
+- List Page: `src/app/adminWeb/member/list/page.tsx`
+- Detail Hook: `src/features/adminWeb/member/detail/model/useMemberDetail.ts`
+
+---
+
+## 🚫 Anti-Patterns
+
+### ❌ Anti-Pattern 1: Using sessionStorage
+
+```typescript
+// ❌ WRONG: Don't use sessionStorage for this pattern
+sessionStorage.setItem('listState', JSON.stringify({ ... }));
+```
+
+**Why**: URL params are better for sharing, bookmarking, and browser navigation.
+
+### ❌ Anti-Pattern 2: Not Syncing with URL
+
+```typescript
+// ❌ WRONG: State doesn't sync with URL changes
+const [searchCondition, setSearchCondition] = useState("1");
+// Missing useEffect to sync with URL params
+```
+
+**Why**: Browser back/forward won't work correctly.
+
+### ❌ Anti-Pattern 3: Hardcoding Values
+
+```typescript
+// ❌ WRONG: Hardcoded values instead of using state
+router.push(`/detail?esntlId=${id}&searchCondition=1&page=1`);
+```
+
+**Why**: Doesn't preserve actual user's search state.
+
+### ❌ Anti-Pattern 4: Missing Suspense
+
+```typescript
+// ❌ WRONG: Missing Suspense wrapper
+export default function XxxListPage() {
+  return <XxxListContent />;
+}
+```
+
+**Why**: `useSearchParams` requires Suspense boundary in Next.js App Router.
+
+---
+
+## ✅ Checklist
+
+**MUST verify before implementing this pattern:**
+
+- [ ] List page hook reads URL params on mount
+- [ ] List page hook syncs state when URL params change
+- [ ] List page passes current state when navigating to detail
+- [ ] Detail page reads query params from URL
+- [ ] Detail page passes params back when returning to list
+- [ ] List page is wrapped with Suspense
+- [ ] Default values are provided for all params
+- [ ] Numeric values are validated and parsed
+- [ ] Empty params are not included in URL
+- [ ] SSR compatibility is handled (window check)
+
+---
+
+## 🎓 Summary
+
+**MUST ALWAYS** use this pattern for list-detail navigation flows. It ensures a **seamless user experience** by preserving search and pagination state across navigation. It follows **web standard practices** and provides benefits like:
+
+- ✅ **Shareable URLs**: Users can bookmark or share filtered list views
+- ✅ **Browser Navigation**: Back/forward buttons work correctly
+- ✅ **State Persistence**: No data loss when navigating
+- ✅ **Standard Practice**: Aligns with major web platforms
+
+**Remember**: **MUST** use URL query parameters (not sessionStorage) for this pattern, and **MUST** ensure proper synchronization between URL and component state.

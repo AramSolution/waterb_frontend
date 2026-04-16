@@ -1,0 +1,139 @@
+.dialog-overlay {
+  @apply fixed top-0 left-0 right-0 bottom-0 bg-black/50 z-[9998];
+  animation: fadeIn 0.2s ease-in-out;
+}
+
+.dialog-container {
+  @apply fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[9999] w-[90%] max-w-[450px];
+  animation: slideIn 0.3s ease-out;
+}
+
+.dialog-content {
+  @apply bg-white rounded-lg shadow-2xl p-8 text-center;
+}
+
+.dialog-icon {
+  @apply text-5xl mb-4 flex items-center justify-center;
+}
+
+.dialog-icon svg {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  vertical-align: middle;
+}
+
+.dialog-header {
+  @apply mb-4;
+}
+
+.dialog-title {
+  @apply text-xl font-semibold text-gray-800 m-0;
+}
+
+.dialog-body {
+  @apply mb-6;
+}
+
+.dialog-message {
+  @apply text-sm text-gray-500 m-0 leading-relaxed;
+  font-size: 13px;
+}
+
+.dialog-footer {
+  @apply flex gap-3 justify-center;
+}
+
+.dialog-footer button {
+  @apply min-w-[100px] text-sm px-6 py-2;
+  font-size: 13px;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -60%);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%);
+  }
+}
+
+/* Modal 전용 스타일 (ConfirmDialog와 분리) */
+.modal-container {
+  @apply fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[9999] w-[90%];
+  animation: slideIn 0.3s ease-out;
+}
+
+.modal-content {
+  @apply bg-white rounded-lg shadow-2xl p-8;
+}
+
+@media (max-width: 576px) {
+  .dialog-container {
+    @apply w-[95%];
+  }
+
+  .dialog-content {
+    @apply p-6;
+  }
+
+  .dialog-icon svg {
+    width: 1em;
+    height: 1em;
+  }
+
+  .dialog-title {
+    @apply text-lg;
+  }
+
+  .dialog-footer {
+    @apply flex-col;
+  }
+
+  .dialog-footer button {
+    @apply w-full;
+  }
+
+  .modal-container {
+    @apply w-[95%];
+  }
+
+  .modal-content {
+    @apply p-6;
+  }
+}
+
+/* 선정 진행 팝업: 세로 스크롤바 공간·트랙을 처음부터 보이게 (행이 늘어날 때 레이아웃이 밀리지 않도록) */
+.selection-popup-vscroll {
+  scrollbar-color: #94a3b8 #e2e8f0;
+  scrollbar-width: thin;
+}
+
+.selection-popup-vscroll::-webkit-scrollbar {
+  width: 10px;
+}
+
+.selection-popup-vscroll::-webkit-scrollbar-track {
+  background: #e2e8f0;
+  border-radius: 4px;
+}
+
+.selection-popup-vscroll::-webkit-scrollbar-thumb {
+  background: #94a3b8;
+  border-radius: 4px;
+}
+
+.selection-popup-vscroll::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}

@@ -1,0 +1,510 @@
+@charset "UTF-8";
+
+/* 헤더 전용: MainHeader / AcademyHeader / mypage(학부모) 등. 본문 스타일은 main.css 또는 라우트별 CSS. */
+/* 테마는 로그인 사용자 구분(SNR/PNR/ANR/MNR) 기준. LayoutWrapper data-theme 적용 시 헤더·본문 전반 색상 통일 */
+/* 기본(포털·공지·커뮤니티 등 data-theme 없음): default.css :root --primary #0b8e41 (gunsan HTML). 여기서 :root 덮어쓰지 않음. */
+
+[data-theme="student"] {
+  --primary: #d63a3a !important;
+  --primary-light: #fff4f4 !important;
+}
+[data-theme="student"] .bizInfo .hakwonButton {
+  background-color: #fff4f4;
+  color: #d63a3a;
+  border: 2px solid #d63a3a;
+}
+[data-theme="student"] .bizInfo .hakwonButton:hover,
+[data-theme="student"] .bizInfo .hakwonButton:focus {
+  outline: 3px solid #d63a3a;
+}
+[data-theme="student"] .bizInfo .submitButton {
+  background-color: #d63a3a;
+  color: #ffffff;
+}
+[data-theme="student"] .bizInfo .submitButton:hover,
+[data-theme="student"] .bizInfo .submitButton:focus {
+  background-color: #b82e2e;
+  outline: 3px solid #d63a3a;
+}
+
+[data-theme="student"] .bizInput .ico_radio_check_on,
+[data-theme="student"] .bizInput .tabInput:checked + .tabButton .iconCheck,
+[data-theme="student"] .bizInput .customInput:checked + .customBox .customIcon {
+  background-image: url("/images/userWeb/icon/ico_radio_check_on_st.png");
+}
+
+[data-theme="school"] {
+  --primary: #ff8000 !important;
+  --primary-light: #fff7ef !important;
+}
+
+[data-theme="school"] .bizInput .ico_radio_check_on,
+[data-theme="school"] .bizInput .tabInput:checked + .tabButton .iconCheck,
+[data-theme="school"] .bizInput .customInput:checked + .customBox .customIcon {
+  background-image: url("/images/userWeb/icon/ico_radio_check_on_sh.png");
+}
+
+[data-theme="school"] .bizInfo .submitButton:hover,
+[data-theme="school"] .bizInfo .submitButton:focus {
+  background-color: #e06e00;
+  outline: 3px solid #ffb366;
+}
+
+[data-theme="parent"] {
+  --primary: #774adf !important;
+  --primary-light: #f7f3ff !important;
+}
+[data-theme="parent"] .bizInfo .submitButton:hover,
+[data-theme="parent"] .bizInfo .submitButton:focus {
+  background-color: #4e23b2;
+  outline: 3px solid #a592cf;
+}
+
+[data-theme="parent"] .bizInput .ico_radio_check_on,
+[data-theme="parent"] .bizInput .tabInput:checked + .tabButton .iconCheck,
+[data-theme="parent"] .bizInput .customInput:checked + .customBox .customIcon {
+  background-image: url("/images/userWeb/icon/ico_radio_check_on_pr.png");
+}
+
+[data-theme="academy"] {
+  --primary: #00b187 !important;
+  --primary-light: #e6f7f4 !important;
+}
+
+[data-theme="academy"] .bizInput .ico_radio_check_on,
+[data-theme="academy"] .bizInput .tabInput:checked + .tabButton .iconCheck,
+[data-theme="academy"] .bizInput .customInput:checked + .customBox .customIcon {
+  background-image: url("/images/userWeb/icon/ico_radio_check_on_ac.png");
+}
+
+[data-theme="academy"] .bizInfo .submitButton:hover,
+[data-theme="academy"] .bizInfo .submitButton:focus {
+  background-color: #009672;
+  outline: 3px solid #7dd4c4;
+}
+
+[data-theme="mentor"] {
+  --primary: #0063c0 !important;
+  --primary-light: #eef7ff !important;
+}
+
+[data-theme="mentor"] .bizInfo .submitButton:hover,
+[data-theme="mentor"] .bizInfo .submitButton:focus {
+  background-color: #004a99;
+  outline: 3px solid #7eb8f0;
+}
+
+[data-theme="mentor"] .bizInput .ico_radio_check_on,
+[data-theme="mentor"] .bizInput .tabInput:checked + .tabButton .iconCheck,
+[data-theme="mentor"] .bizInput .customInput:checked + .customBox .customIcon {
+  background-image: url("/images/userWeb/icon/ico_radio_check_on_mt.png");
+}
+.header .headerTop {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  height: 80px;
+}
+/* source/gunsan/main.html — 좌측 포털 바로가기 */
+.header .portalWrap {
+  position: absolute;
+  left: 0;
+  display: flex;
+  align-items: center;
+}
+.header .portalWrap .btnPortal {
+  border: 1px solid #594498;
+  color: #2d3890;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  text-decoration: none;
+}
+.header .portalWrap .btnPortal img {
+  width: 20px;
+  height: 20px;
+  vertical-align: middle;
+  flex-shrink: 0;
+  object-fit: contain;
+}
+.header .headerLogo {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.header .headerLogo h1 img {
+  height: 58px;
+  display: block;
+}
+.header .badgeStudent,
+.header .badgeParent,
+.header .badgeSchool,
+.header .badgeAcademy,
+.header .badgeMentor {
+  min-width: 70px;
+    height: 30px;
+    line-height: 30px;
+    text-align: center;
+    background-color: var(--primary);
+    color: #fff;
+    border-radius: 4px;
+    font-size: 18px;
+    font-weight: bold;
+    padding: 0 13px
+}
+.header .utilMenu {
+  position: absolute;
+  right: 0;
+}
+.header .utilMenu .userLinks {
+  display: flex;
+  gap: 24px;
+  align-items: center;
+  font-size: 18px;
+  line-height: 1.5;
+}
+.header .utilMenu .userLinks a {
+  font-weight: 800;
+}
+.header .utilMenu .btnPortal {
+  border: 1px solid #2d3890;
+  color: #2d3890;
+  padding: 6px 8px;
+  border-radius: 6px;
+  font-weight: 800;
+}
+.header .utilMenu .btnPortal img {
+  width: 20px;
+  height: 20px;
+  vertical-align: middle;
+  margin-left: 4px;
+  object-fit: contain;
+}
+.header .navPc {
+  border-top: 1px solid #eee;
+  border-bottom: 1px solid #eee;
+  position: relative;
+  background: #fff;
+}
+.header .navPc > .inner {
+  position: static;
+}
+.header .navPc .navList {
+  display: flex;
+  justify-content: space-evenly;
+  margin: 0 auto;
+}
+.header .navPc .navList > li {
+  position: relative;
+  flex: 1;
+}
+/* source/gunsan/common.css — 메인 메뉴 항목 사이 구분 점 */
+.header .navPc .navList > li::after {
+  content: "";
+  width: 6px;
+  height: 6px;
+  display: inline-block;
+  background: #ccc;
+  border-radius: 100%;
+  position: absolute;
+  top: 28px;
+  right: 0;
+  transform: translateX(50%);
+  pointer-events: none;
+}
+.header .navPc .navList > li:last-child::after {
+  display: none;
+}
+.header .navPc .mainLink {
+  font-weight: 700;
+  font-size: 20px;
+  height: 60px;
+  line-height: 60px;
+  display: inline-block;
+  width: 100%;
+  text-align: center;
+  color: #111;
+}
+.header .navPc .mainLink.navLinkDisabled {
+  cursor: not-allowed;
+  pointer-events: none;
+}
+.header .navPc .navList > li:hover .mainLink.navLinkDisabled,
+.header .navPc .navList > li:focus-within .mainLink.navLinkDisabled {
+  border-bottom-color: transparent;
+  color: #111;
+}
+.header .navPc .navList > li:hover .mainLink,
+.header .navPc .navList > li:focus-within .mainLink {
+  border-bottom: 4px solid var(--primary);
+  color: var(--primary);
+}
+/* source/gunsan/common.css — 서브메뉴 세로 패널·200px·학년 글자 크기 */
+.header .navPc .subMenu {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 200px;
+  background-color: #ffffff;
+  border: 1px solid #e1e1e1;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  z-index: 100;
+}
+.header .navPc .subMenu .inner {
+  padding: 0;
+}
+.header .navPc .subMenu::before {
+  content: "";
+  position: absolute;
+  top: -30px;
+  left: 0;
+  width: 100%;
+  height: 30px;
+}
+.header .navPc .navList > li:hover .subMenu,
+.header .navPc .navList > li:focus-within .subMenu {
+  display: block;
+}
+.header .navPc .subList {
+  display: block;
+  height: auto;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+.header .navPc .subList li {
+  border-bottom: 1px solid #eee;
+}
+.header .navPc .subList li:last-child {
+  border-bottom: none;
+}
+.header .navPc .subList a {
+  display: block;
+  width: 100%;
+  height: 54px;
+  line-height: 54px;
+  text-align: center;
+  background-color: #fff;
+  border-radius: 0;
+  font-weight: 800;
+  font-size: 20px;
+  color: #111;
+  text-decoration: none;
+  transition: 0.2s;
+}
+.header .navPc .subList a.active,
+.header .navPc .subList a:hover,
+.header .navPc .subList a:focus {
+  background-color: #fff5f5;
+  color: var(--primary);
+}
+@media (max-width: 1024px) {
+  .header .headerTop {
+    justify-content: space-between;
+  }
+  .utilMenu {
+    position: static;
+  }
+  .header .portalWrap {
+    display: none !important;
+  }
+  .userLinks,
+  .navPc {
+    display: none !important;
+  }
+  .menuOpen {
+    display: block !important;
+  }
+}
+.menuOpen {
+  display: none;
+  width: 32px;
+  height: 32px;
+  margin-right: 16px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+}
+.menuOpen img {
+  width: 32px;
+  height: 32px;
+  display: block;
+  object-fit: contain;
+}
+.header .menuClose {
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+}
+.header .menuClose img {
+  width: 32px;
+  height: 32px;
+  display: block;
+  object-fit: contain;
+}
+
+/* 모바일 메뉴 */
+.header .moMenu {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 9999;
+  visibility: hidden;
+}
+.header .moMenu.active {
+  visibility: visible;
+}
+.header .moMenu .moMenuBg {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.3);
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
+}
+.header .moMenu.active .moMenuBg {
+  opacity: 1;
+  pointer-events: auto;
+}
+.header .moMenuInner {
+  position: absolute;
+  right: -100%;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  transition: right 0.3s ease-in-out;
+}
+.header .moMenu.active .moMenuInner {
+  right: 0;
+}
+.header .moMenuHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 80px;
+  padding: 0 16px;
+  border-bottom: 1px solid #eeeeee;
+}
+.header .logoArea {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.header .moMenuContent {
+  flex: 1;
+  position: relative;
+  display: flex;
+  overflow: hidden;
+}
+.header .moMenuNav {
+  width: 35%;
+  height: 100%;
+  background: #fafafa;
+  border-right: 1px solid #cccccc;
+  overflow-y: auto;
+}
+.header .navItem {
+  border-bottom: 1px solid #cccccc;
+}
+.header .moMainLink {
+  width: 100%;
+  padding: 24px 16px;
+  text-align: left;
+  background: none;
+  border: none;
+  font-size: 18px;
+  font-weight: 800;
+  cursor: pointer;
+  color: #111;
+}
+.header .moMainLink.navLinkDisabled {
+  cursor: not-allowed;
+  pointer-events: none;
+}
+.header .navItem.active {
+  background: #fff;
+}
+.header .navItem.active .moMainLink {
+  color: var(--primary);
+}
+.header .moSubMenuPane {
+  display: none;
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 65%;
+  height: 100%;
+  background: #fff;
+  overflow-y: auto;
+}
+.header .navItem.active .moSubMenuPane {
+  display: block;
+}
+.header .moSubList {
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+.header .moSubList li a {
+  display: block;
+  padding: 24px;
+  font-size: 18px;
+  font-weight: 800;
+  color: #333;
+  text-decoration: none;
+  border-bottom: 1px solid #cccccc;
+  background: url("/images/userWeb/icon/ico_go_24.png") no-repeat 95% / 24px
+    auto;
+}
+.header .moSubList li a::before {
+  content: "•";
+  width: 4px;
+  height: 4px;
+  display: inline-block;
+  margin-right: 16px;
+}
+.header .moMenuFooter {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.header .btn-login {
+  display: block;
+  padding: 16px;
+  background: var(--primary);
+  color: #fff;
+  text-align: center;
+  border-radius: 6px;
+  font-weight: 800;
+  text-decoration: none;
+}
+.header .btn-portal {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 16px;
+  border: 1px solid #2d3890;
+  color: #2d3890;
+  text-align: center;
+  border-radius: 6px;
+  text-decoration: none;
+  font-weight: 800;
+}
+.header .btn-portal img {
+  flex-shrink: 0;
+}

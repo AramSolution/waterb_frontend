@@ -1,0 +1,693 @@
+@charset "UTF-8";
+
+.blind {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0,0,0,0);
+    margin: -1px;
+}
+
+.mainViewContainer {
+    
+}
+
+.mainViewVisual {
+    height: 290px;
+    background-color: #FFFCE6; 
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+@media (min-width: 1024px) {
+    .mainViewVisual {
+        background-image: url('../images/img_community_main.png');
+        background-repeat: no-repeat;
+        background-position: center bottom;
+        background-size: 100% auto;
+    }
+}
+
+.mainViewVisualEng {
+    font-size: 40px;
+    font-weight: 800;
+    margin: 0 0 16px;
+}
+.mainViewVisualKor {
+    font-size: 20px;
+    font-weight: 800;
+}
+
+/* 탭 메뉴 스타일 */
+.communityTabs{
+    display: none;
+}
+.mainViewTabs {
+    margin: 70px auto;
+    position: relative;
+    z-index: 10;
+    display: flex;
+    justify-content: center;
+}
+.mainViewTabs ul {
+    display: flex;
+    align-items: center;
+    background-color: #f7f7f7; 
+    padding: 12px 48px;
+    border-radius: 60px; 
+    list-style: none;
+    margin: 0;
+}
+.mainViewTabs li {
+    display: flex;
+    align-items: center;
+    position: relative;
+}
+.mainViewTabs li:not(:last-child)::after {
+    content: "";
+    display: block;
+    width: 1px;
+    height: 14px; 
+    background-color: #c6c6c6; 
+    margin: 0 32px; 
+}
+.mainViewTabs a {
+    text-decoration: none;
+    color: #666; 
+    font-size:18px;
+    font-weight: 700;
+    padding: 10px 5px;
+    transition: all 0.2s ease;
+}
+.mainViewTabs a.active {
+    color: #000;
+    font-weight: 800;
+}
+.mainViewTabs a:hover {
+    color: #333;
+}
+.mainViewTabPanel {
+    display: none;
+    animation: fadeIn 0.4s ease; 
+}
+.mainViewTabPanel.active {
+    display: block;
+}
+.mainViewEmpty {
+    padding: 100px 0;
+    text-align: center;
+    color: #999;
+    border-top: 1px solid #eee;
+}
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+@media (max-width: 1024px) {
+    .communityTabs{display: block !important;}
+}
+@media (max-width: 768px) {
+    .mainViewTabs ul {
+        padding: 8px 20px;
+    }
+    .mainViewTabs li:not(:last-child)::after {
+        margin: 0 10px; 
+    }
+    .mainViewTabs a {
+        font-size: 0.9rem;
+    }
+}
+
+.mainViewContent {
+    padding: 0 0 120px;
+}
+.mainViewContentTitle {
+    font-size: 32px;
+    font-weight: 800;
+    margin-bottom: 40px;
+}
+
+.mainViewTable {
+    width: 100%;
+    border-collapse: collapse;
+    border-top: 2px solid #212121;
+}
+.mainViewTable th {
+    padding: 18px 10px;
+    border-bottom: 1px solid #ddd;
+    color: #555;
+    font-weight: 600;
+    font-size: 18px;
+    text-align: center !important;
+}
+.mainViewTable td {
+    padding: 16px 8px;
+    border-bottom: 1px solid #eee;
+    text-align: center;
+    color: #444;
+    /* font-size: 18px; */
+}
+.cellTitle {
+    text-align: left !important;
+    padding-left: 20px !important;
+}
+.cellTitle a {
+    text-decoration: none;
+    transition: color 0.2s;
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    word-break: break-all;
+}
+.cellTitle a:hover {
+    text-decoration: underline;
+}
+.cellFile .fileIcon{
+    margin: 0 auto;
+    width: 24px;
+    height: 24px;
+    background: url(../images/icon/ico_file.png) no-repeat center / 24px auto;
+}
+
+/* 고정 공지 강조 */
+.isNotice .cellTitle a,
+.isNotice .cellDate,
+.isNotice .cellView,
+.isNotice .cellFile,
+.isNotice .cellName {
+    font-weight: 700;
+}
+.badgeNotice { 
+    border: 1px solid #D63A3A;
+    color: #D63A3A; 
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: 700;
+    font-size: 14px;
+}
+
+
+@media (max-width: 768px) {
+    .mainViewTable thead {
+        display: none;
+    } 
+    .mainViewTable tr {
+        display: block;
+        padding: 20px 16px;
+        border-bottom: 1px solid #eee;
+        position: relative;
+    }
+    .mainViewTable td { 
+        display: block; 
+        text-align: left; 
+        padding: 3px 0; 
+        border: none; 
+    }
+    .colNum { 
+        margin-bottom: 5px; 
+    }
+    .colTitle {
+        padding-left: 0 !important; 
+    }
+    .colDate, .colView { 
+        display: inline-block !important; 
+        color: #999; 
+        margin-right: 15px; 
+    }
+    .colView::before { 
+        content: "조회 "; 
+    }
+    .inner{
+        padding:24px 16px !important
+    }
+}
+
+
+/* 상세 페이지 헤더 스타일 */
+.mainViewDetailHeader {
+    padding: 40px 0 24px;
+    border-bottom: 1px solid #212121;
+}
+.mainViewDetailBadge {
+    margin-bottom: 16px;
+}
+.mainViewDetailTitle {
+    font-size: 24px;
+    font-weight: 800;
+    margin-bottom: 8px;
+}
+.mainViewDetailInfo dl {
+    display: flex;
+    gap: 8px;
+}
+.mainViewDetailInfo dt{
+    font-weight: 800;
+    color: #616161;
+}
+.mainViewDetailInfo dd {
+}
+/* .mainViewDetailInfo .infoView::before {
+    content: "";
+    display: inline-block;
+    width: 1px;
+    height: 12px;
+    background: #757575;
+    margin-right: 20px;
+    vertical-align: middle;
+} */
+
+/* 본문 스타일 */
+.mainViewDetailBody {
+    padding: 24px 0;
+    border-bottom: 1px solid #eee;
+}
+.mainViewDetailText {
+    line-height: 1.8;
+    margin-top: 24px;
+}
+.mainViewDetailImage {
+    margin: 30px 0;
+    text-align: center;
+}
+.mainViewDetailImage img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+}
+
+/* 이전/다음글 네비게이션 */
+.mainViewDetailNav {
+    border-top: 1px solid #eee;
+    margin-top: 0;
+}
+.navRow {
+    display: flex;
+    align-items: center;
+    padding: 20px;
+    border-bottom: 1px solid #eee;
+    gap: 30px;
+}
+.navLabel {
+    font-weight: 700;
+    color: #616161;
+    width: 60px;
+    flex-shrink: 0;
+    position: relative;
+}
+.navTitle {
+    text-decoration: none;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.navTitle:hover {
+    text-decoration: underline;
+}
+.mainViewBtnArea {
+    display: flex;
+    justify-content: center;
+    margin-top: 50px; 
+}
+.btnList, .qnaBtn {
+    display: inline-block; 
+    padding: 15px 60px; 
+    background: #10A64E; 
+    color: #fff; 
+    border-radius: 8px; 
+    font-weight: 600; 
+    transition: background 0.3s;
+}
+
+
+/* 모바일 대응 */
+@media (max-width: 768px) {
+    .mainViewDetailTitle { font-size: 1.4rem; }
+    .navRow { gap: 15px; padding: 15px; }
+    .navLabel { width: 50px; font-size: 0.9rem; }
+    .btnList { width: 100%; text-align: center; }
+}
+
+.titleContainer {
+    display: flex;
+    align-items: center;
+    gap: 10px; 
+    width: 100%;
+}
+.badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0; 
+    width: 76px;
+    height: 30px;
+    font-weight: 700;
+    border-radius: 4px;
+    font-size: 14px;
+}
+.statusComplete { color: #10A64E; border: 1px solid #10A64E; }
+.statusWaiting { color: #EF3737; border: 1px solid #EF3737; }
+
+.cellDataName .ellipsis {
+    flex: 1; 
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: block;
+    text-align: left;
+    color: #333;
+    text-decoration: none;
+}
+
+.bizFile{
+    /* margin-top: 40px; */
+}
+.bizFile .title{
+    font-size: 18px;
+    font-weight: 900;
+    margin-bottom: 16px;
+}
+.bizFile .fileWrap{
+    width: 100%;
+    border-radius: 16px;
+    background: #fafafa;
+    width: 100%;
+    padding: 20px;
+}
+.bizFile .file {
+    display: inline-flex;
+    align-items: center;
+    text-decoration: none;
+    color: #333;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+}
+.bizFile .file:hover {
+    background-color: #f5f5f5;
+    text-decoration: underline;
+}
+.bizFile .file:focus-visible {
+    outline: 2px solid #e74c3c; 
+    outline-offset: 2px;
+    background-color: #fff1f2;
+}
+.file{
+    display: block;
+    margin-bottom: 8px;
+}
+.file:last-child{
+    margin-bottom: 0 !important;
+}
+.file:hover, .file:focus{
+    text-decoration: underline;
+    cursor: pointer;
+    font-weight: bold;
+}
+.file::before{
+    content: '';
+    width: 24px;
+    height: 24px;
+    display: inline-block;
+    margin:-2px 8px 0 0;
+    vertical-align: middle;
+}
+.file.hwp::before{
+    background: url("../images/icon/ico_file_hwp.png") no-repeat center / 24px auto;
+}
+.file.img::before{
+    background: url("../images/icon/ico_file_img.png") no-repeat center / 24px auto;
+}
+.file.pdf::before{
+    background: url("../images/icon/ico_file_pdf.png") no-repeat center / 24px auto;
+}
+.file.ppt::before{
+    background: url("../images/icon/ico_file_ppt.png") no-repeat center / 24px auto;
+}
+.file.xls::before{
+    background: url("../images/icon/ico_file_xls.png") no-repeat center / 24px auto;
+}
+.file.zip::before{
+    background: url("../images/icon/ico_file_zip.png") no-repeat center / 24px auto;
+}
+.file .btnFileDel{
+    vertical-align: middle;
+    width: 24px;
+    height: 24px;
+    margin-left: 16px;
+}
+.replyBox {
+    margin-top: 40px;
+    padding: 40px;
+    border: 2px solid var(--primary);
+    border-radius: 12px;
+}
+
+.replyHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    border-bottom: 1px solid #ccc;
+    padding-bottom: 10px;
+}
+.adminLabel {
+    font-weight: 800;
+}
+.replyDate {
+    font-size: 14px;
+    color: #616161;
+}
+.replyContent {
+    line-height: 1.7;
+    color: #333;
+}
+.viewFooter {
+    margin-top: 40px;
+    text-align: center;
+}
+.btnList {
+    padding: 12px 40px;
+    background: var(--primary);
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+@media screen and (max-width: 640px) {
+    .viewTitle { font-size: 1.25rem; }
+    .viewInfo { flex-direction: column; gap: 5px; }
+    .replyBox { padding: 20px; }
+}
+
+.qnaRegister{
+    margin: 70px auto;
+}
+.qnaPwWrap{
+    background: #f7f7f7;
+    padding: 50px 50px 0;
+    border-radius: 24px;
+}
+.qnaPwWrap .bd-18{
+    color: #616161;
+}
+.qnaPwWrap .formControl{
+    width: 70%;
+    margin: 0 auto;
+}
+
+#main_content .flex-content .rightContent .filterBar{
+    background-color: #fafafa !important;
+}
+#main_content .flex-content.communityContainer{
+    padding: 60px 0 120px;
+}
+.communitySidebar .menuItem.active .menuButton {
+    background-color: #FFFFF3;
+}
+.headInfo .count, .headInfo .count b{
+    font-size: 18px;
+    color: #616161;
+}
+.headInfo .count b{
+    color: #212121;
+}
+.headInfo .listCountWrap select{
+    width: 90px;
+    height: 40px;
+}
+.archiveContainer {
+    width: 100%;
+    padding: 20px 0;
+}
+.archiveContainer .archiveList {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 60px 40px;
+}
+.archiveContainer .archiveItem {
+    width: 100%;
+}
+.archiveContainer .archiveLink {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+    transition: transform 0.3s ease;
+}
+.archiveContainer .archiveLink:hover, .archiveContainer .archiveLink:focus {
+    transform: translateY(-5px);
+}
+.archiveContainer .thumbBox {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    background-color: #f5f5f5;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid rgba(0,0,0,0.05);
+}
+.archiveContainer .archiveThumb {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; 
+    display: block;
+}
+.archiveContainer .infoBox {
+    padding: 24px 0 0;
+    text-align: center;
+}
+.archiveContainer .archiveTitle {
+    font-size: 18px;
+    font-weight: 700;
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+@media (max-width: 1024px) {
+    .archiveContainer .archiveList {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 30px 20px;
+    }
+}
+@media (max-width: 640px) {
+    .archiveContainer .archiveList {
+        grid-template-columns: repeat(1, 1fr);
+        gap: 25px;
+    }
+    .archiveContainer .archiveTitle {
+        font-size: 16px;
+    }
+}
+.archiveContainer .archiveLink:focus-visible {
+    outline: 3px solid var(--primary);
+    border-radius: 12px;
+}
+
+
+.archiveDetail {
+    margin: 40px auto;
+    width: 100%;
+}
+.archiveDetail .detailTop {
+    display: flex;
+    gap: 24px;
+}
+.archiveDetail .sliderArea {
+    flex: 1;
+    min-width: 0;
+}
+.archiveDetail .archiveSwiper {
+    width: 100%;
+    background-color: #fafafa;
+    border-radius: 12px;
+    border: 1px solid #eee;
+}
+.archiveDetail .archiveSwiper .swiper-wrapper{
+    max-width: 430px;
+    height: 260px;
+    width: 100%;
+}
+.archiveDetail .archiveSwiper img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+.archiveDetail .archiveSwiper .swiper-button-prev,
+.archiveDetail .archiveSwiper .swiper-button-next {
+    width: 32px;  
+    height: 32px;
+    background-color: rgba(255, 255, 255, 0.8); 
+    border-radius: 50%;
+    transition: all 0.2s ease;
+}
+.archiveDetail .archiveSwiper .swiper-button-prev::after,
+.archiveDetail .archiveSwiper .swiper-button-next::after {
+    display: none;
+}
+.archiveDetail .archiveSwiper .swiper-button-prev {
+    background-image: url('../images/icon/ico_go_24.png');
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 24px; 
+    left: 20px; 
+    transform: rotate(180deg);
+}
+.archiveDetail .archiveSwiper .swiper-button-next {
+    background-image: url('../images/icon/ico_go_24.png'); 
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 24px;
+    right: 20px; 
+}
+
+.archiveDetail .infoArea {
+    flex: 1;
+}
+.archiveDetail .infoTable {
+    width: 100%;
+    border-collapse: collapse;
+}
+.archiveDetail .infoTable th, .archiveDetail .infoTable td {
+    padding: 20px;
+    border: 1px solid #eee;
+    line-height: 1.6;
+}
+.archiveDetail .infoTable tr:nth-child(2){
+    height: 130px;
+}
+.archiveDetail .infoTable th {
+    background-color: #fafafa;
+    font-weight: 800;
+    text-align: center;
+}
+
+.archiveDetail .detailContent {
+    padding-top: 40px;
+}
+.archiveDetail .contentTitle {
+    font-size: 24px;
+    font-weight: 800;
+    padding-bottom: 24px;
+    border-bottom: 2px solid #212121;
+}
+.archiveDetail .contentText {
+    font-size: 18px;
+    line-height: 1.8;
+    margin-top: 24px;
+    min-height: 150px;
+}
+
+@media (max-width: 1024px) {
+    .archiveDetail .detailTop {
+        flex-direction: column;
+    }
+    .archiveDetail .sliderArea, .infoArea {
+        width: 100%;
+    }
+}

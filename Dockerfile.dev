@@ -1,0 +1,47 @@
+# 개발 환경용 Dockerfile (nodemon 파일 감시 + Next.js 자동 재시작)
+FROM node:20-alpine
+
+# 한글 locale / 시간대 설정
+RUN apk add --no-cache tzdata
+ENV TZ=Asia/Seoul
+ENV LANG=ko_KR.UTF-8
+ENV LANGUAGE=ko_KR:ko
+ENV LC_ALL=ko_KR.UTF-8
+
+WORKDIR /app
+
+# 의존성 파일만 먼저 복사 (레이어 캐시 활용)
+COPY package.json package-lock.json ./
+
+# 의존성 설치
+RUN npm ci
+
+# nodemon 전역 설치
+# --legacy-watch 플래그로 polling 모드 사용 → Windows Docker bind mount에서도 파일 변경 감지
+RUN npm install -g nodemon
+
+# 소스 코드는 docker-compose volumes로 마운트됨
+# COPY . .  ← 하지 않음 (volumes로 실시간 반영)
+
+# Next.js 텔레메트리 비활성화
+ENV NEXT_TELEMETRY_DISABLED=1
+
+# 컨테이너 내부의 모든 인터페이스에 바인딩
+ENV HOSTNAME=0.0.0.0
+ENV PORT=3000
+
+# 포트 노출
+EXPOSE 3000
+
+# nodemon으로 파일 변경 감지 후 Next.js 개발 서버 재시작
+# --legacy-watch : polling 모드 (inotify 미지원 환경 대응)
+# --watch        : 감시할 디렉토리
+# --ext          : 감시할 파일 확장자
+# --delay 1      : 마지막 변경 감지 후 1초 대기 후 재시작 (연속 저장 배치 처리)
+# --exec         : 재시작 시 실행할 명령
+CMD ["nodemon", "--legacy-watch", \
+     "--watch", "/app/src", \
+     "--watch", "/app/public", \
+     "--ext", "ts,tsx,js,jsx,css,scss,sass,json,mdx", \
+     "--delay", "1", \
+     "--exec", "next dev"]

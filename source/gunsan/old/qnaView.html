@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0" />
+    <link rel="stylesheet" href="css/default.css">
+    <link rel="stylesheet" href="css/biz_pr.css">
+    <link rel="stylesheet" href="css/mypage_ac.css">
+    <link rel="stylesheet" href="css/qna.css">
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard-gov.min.css" />
+    <link  rel="stylesheet" href="https://hangeul.pstatic.net/hangeul_static/css/nanum-square-round.css">
+</head>
+<body>
+    <div id="skip">
+        <a href="#main_content">본문 바로가기</a>
+    </div>
+    <header class="header">
+        <div class="headerTop inner">
+            <div class="headerLogo">
+                <h1>
+                    <a href="/">
+                        <img src="images/logo.png" alt="군산시꿈이음센터">
+                    </a>
+                </h1>
+                <span class="badgeStudent">학생</span>
+            </div>
+            <div class="utilMenu">
+                <div class="userLinks">
+                    <a href="#">로그인</a>
+                    <a href="#">회원가입</a>
+                    <!-- 로그인 후 : 로그인->로그아웃 회원가입 : MY PAGE 로 바뀌게 -->
+                    <!-- <a href="#" target="_blank" class="btnPortal">꿈이음센터포털 바로가기<img src="images/icon/ico_newtab_20_pr.png" alt="" aria-hidden="true"></a> -->
+                </div>
+                <button type="button" class="menuOpen" aria-label="메뉴 열기">
+                    <img src="images/icon/ico_menu_32.png" alt="메뉴 열기">
+                </button>
+            </div>
+        </div>
+        <nav class="navPc" aria-label="메인 메뉴">
+            <div class="inner">
+                <ul class="navList">
+                    <li><a href="#" class="mainLink">영유아</a></li>
+                    <li>
+                        <a href="#" class="mainLink">초등</a>
+                        <div class="subMenu">
+                            <div class="inner">
+                                <ul class="subList">
+                                    <li><a href="#">1학년</a></li>
+                                    <li><a href="#">2학년</a></li>
+                                    <li><a href="#">3학년</a></li>
+                                    <li><a href="#">4학년</a></li>
+                                    <li><a href="#">5학년</a></li>
+                                    <li><a href="#">6학년</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </li>
+                    <li>
+                        <a href="#" class="mainLink">중등</a>
+                        <div class="subMenu">
+                            <div class="inner">
+                                <ul class="subList">
+                                    <li><a href="#">1학년</a></li>
+                                    <li><a href="#">2학년</a></li>
+                                    <li><a href="#">3학년</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </li>
+                    <li>
+                        <a href="#" class="mainLink">고등</a>
+                        <div class="subMenu">
+                            <div class="inner">
+                                <ul class="subList">
+                                    <li><a href="#">1학년</a></li>
+                                    <li><a href="#">2학년</a></li>
+                                    <li><a href="#">3학년</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </li>
+                    <li><a href="#" class="mainLink">일반</a></li>
+                    <li>
+                        <a href="#" class="mainLink">커뮤니티</a>
+                        <div class="subMenu">
+                            <div class="inner">
+                                <ul class="subList">
+                                    <li><a href="#">공지사항</a></li>
+                                    <li><a href="#">자료실</a></li>
+                                    <li><a href="#">학원조회</a></li>
+                                    <li><a href="#">문의하기</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+        <div class="moMenu" id="mobileMenu">
+            <div class="moMenuInner">
+                <div class="moMenuHeader">
+                    <div class="logoArea">
+                        <img src="images/logo.png" alt="군산시꿈이음센터" height="32">
+                        <span class="badgeStudent">학생</span>
+                    </div>
+                    <button type="button" class="menuClose" aria-label="메뉴 닫기">
+                        <img src="images/icon/ico_close_32.png" alt="닫기">
+                    </button>
+                </div>
+                <div class="moMenuContent">
+                    <nav class="moMenuNav">
+                        <ul class="moNavList">
+                            <li class="navItem"><button type="button" class="moMainLink">영유아</button></li>
+                            <li class="navItem active">
+                                <button type="button" class="moMainLink">초등</button>
+                                <div class="moSubMenuPane">
+                                    <ul class="moSubList">
+                                        <li><a href="#">1학년</a></li>
+                                        <li><a href="#">2학년</a></li>
+                                        <li><a href="#">3학년</a></li>
+                                        <li><a href="#">4학년</a></li>
+                                        <li><a href="#">5학년</a></li>
+                                        <li><a href="#">6학년</a></li>
+                                    </ul>
+                                </div>
+                            </li>
+                            <li class="navItem">
+                                <button type="button" class="moMainLink">중등</button>
+                                <div class="moSubMenuPane">
+                                    <ul class="moSubList">
+                                        <li><a href="#">1학년</a></li>
+                                        <li><a href="#">2학년</a></li>
+                                        <li><a href="#">3학년</a></li>
+                                    </ul>
+                                </div>
+                            </li>
+                            <li class="navItem">
+                                <button type="button" class="moMainLink">고등</button>
+                                <div class="moSubMenuPane">
+                                    <ul class="moSubList">
+                                        <li><a href="#">1학년</a></li>
+                                        <li><a href="#">2학년</a></li>
+                                        <li><a href="#">3학년</a></li>
+                                    </ul>
+                                </div>
+                            </li>
+                            <li class="navItem"><button type="button" class="moMainLink">일반</button></li>
+                            <li class="navItem">
+                                <button type="button" class="moMainLink">커뮤니티</button>
+                                <div class="moSubMenuPane">
+                                    <ul class="moSubList">
+                                        <li><a href="#">공지사항</a></li>
+                                        <li><a href="#">자료실</a></li>
+                                        <li><a href="#">학원조회</a></li>
+                                        <li><a href="#">문의하기</a></li>
+                                    </ul>
+                                </div>
+                            </li>
+                        </ul>
+                        <div class="moMenuFooter">
+                            <a href="#" class="btn-login">로그인</a>
+                            <a href="#" class="btn-portal">꿈이음센터포털 바로가기</a>
+                        </div>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </header>
+    <main id="main_content" class="bizBg">
+        <section class="inner">
+            <div class="mainBg">
+                <div class="bizInput">
+                    <!--자료실에선 display none-->
+                    <div class="headerSide">
+                        <span class="badge statusComplete">답변완료</span>
+                    </div>
+                    <div class="viewContainer">
+                        <div class="viewHeader">
+                            <div class="viewTitle">수업 신청은 어떻게 하는건가요?</div>
+                            <div class="viewInfo">
+                                <span>작성자: 김아람</span>
+                                <span>등록일: 2026-02-05</span>
+                            </div>
+                        </div>
+                        <div class="viewContent">
+                            군산시 꿈이음센터에서 진행하는 초등학교 3학년 대상 수업을 신청하고 싶습니다.<br>
+                            홈페이지 어디에서 신청해야 하는지, 그리고 준비물이 따로 있는지 궁금합니다.
+                        </div>
+                        <div class="bizFile">
+                            <div class="title" id="fileDownloadTitle">첨부파일</div>
+                            <ul class="fileWrap" aria-labelledby="fileDownloadTitle">
+                                <li class="fileList">
+                                    <a href="../downloads/plan_sample.hwp" class="file hwp" download title="탐구계획 작성 예시 hwp 파일 다운로드">
+                                        <span class="fileIcon" aria-hidden="true"></span>
+                                        <span class="fileName">탐구계획 작성 예시.hwp</span>
+                                        <span class="sr-only">(다운로드)</span>
+                                    </a>
+                                </li>
+                                <li class="fileList">
+                                    <a href="../downloads/plan_sample.xls" class="file xls" download title="탐구계획 작성 예시 xls 파일 다운로드">
+                                        <span class="fileIcon" aria-hidden="true"></span>
+                                        <span class="fileName">탐구계획 작성 예시.xls</span>
+                                        <span class="sr-only">(다운로드)</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    <!--자료실에서 display none-->
+                    <div class="replyBox">
+                        <div class="replyHeader">
+                            <div class="adminLabel">관리자 답변</div>
+                            <div class="replyDate">2026-02-06 14:30</div>
+                        </div>
+                        <div class="replyContent">
+                            안녕하세요, 김아람 학생님. 군산시 꿈이음센터입니다.<br><br>
+                            수업 신청은 상단 메뉴의 <strong>[교육지원사업 신청/결과]</strong> 메뉴를 통해 가능합니다.<br>
+                            현재 신청 중인 프로그램의 경우 각 상세 페이지 내에 준비물 안내가 포함되어 있으니 확인 부탁드립니다.<br><br>
+                            추가 문의 사항이 있으시면 언제든 글 남겨주세요. 감사합니다.
+                        </div>
+                    </div>
+                    <div class="viewFooter">
+                        <button type="button" class="btnList" onclick="location.href='list.html'">목록으로</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+    <footer class="footer">
+        <div class="innerContainer inner">
+            <div class="footerInfoWrap">
+                <div class="footerLogo">
+                    <img src="images/logo_w.png" alt="군산시 꿈이음센터">
+                </div>
+                <div class="addressArea">
+                    <address>
+                        [54080] 전북특별자치도 군산시 조촌로 22 <span>|</span> 대표전화 : 063)450-2600
+                    </address>
+                    <p class="copyright">Copyright ⓒ 2025 GUNSAN COUNTY. All Rights Reserved.</p>
+                </div>
+            </div>
+            <div class="footerLinkWrap">
+                <div class="siteSelectBox">
+                    <select id="familySite" title="관련 사이트 선택" class="customSelect">
+                        <option value="">개인정보 처리방침</option>
+                        <option value="https://www.gunsan.go.kr">군산시청</option>
+                        <option value="#">교육지원사업</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </footer>
+</body>
+<script>
+/* 탭 조작 */
+document.addEventListener('DOMContentLoaded', () => {
+const tabInputs = document.querySelectorAll('.tabInput');
+const tabContents = document.querySelectorAll('.tabContent');
+
+    tabInputs.forEach(input => {
+        input.addEventListener('change', (e) => {
+            const targetValue = e.target.value;
+
+            tabContents.forEach(content => {
+                content.classList.remove('active');
+            });
+
+            const targetContent = document.getElementById(`content_${targetValue}`);
+            if (targetContent) {
+                targetContent.classList.add('active');
+            }
+        });
+    });
+});
+
+/* 헤더 조작 */
+document.addEventListener('DOMContentLoaded', () => {
+    const menuOpen = document.querySelector('.menuOpen');
+    const menuClose = document.querySelector('.menuClose');
+    const moMenu = document.querySelector('.moMenu');
+    const moMenuBg = document.querySelector('.moMenuBg'); 
+
+    menuOpen.addEventListener('click', () => {
+        moMenu.classList.add('active');
+        document.body.style.overflow = 'hidden'; 
+        setTimeout(() => menuClose.focus(), 100); 
+    });
+
+    const closeMobileMenu = () => {
+        moMenu.classList.remove('active');
+        document.body.style.overflow = ''; 
+        menuOpen.focus();
+    };
+    menuClose.addEventListener('click', closeMobileMenu);
+    moMenuBg.addEventListener('click', closeMobileMenu);
+});
+
+/* 모바일 메뉴 접근성  */
+document.addEventListener('DOMContentLoaded', () => {
+    const navItems = document.querySelectorAll('.navItem');
+    const menuOpen = document.querySelector('.menuOpen');
+    const menuClose = document.querySelector('.menuClose');
+    const moMenu = document.querySelector('.moMenu');
+
+    menuOpen?.addEventListener('click', () => moMenu.classList.add('active'));
+    menuClose?.addEventListener('click', () => moMenu.classList.remove('active'));
+
+    navItems.forEach(item => {
+        const btn = item.querySelector('.moMainLink');
+        btn.addEventListener('click', () => {
+            navItems.forEach(li => li.classList.remove('active'));
+            item.classList.add('active');
+        });
+    });
+});
+</script>
+</html>

@@ -1,0 +1,370 @@
+@charset "UTF-8";
+
+:root {
+    --color-elem: #a5b4fc;   /* 초등 (연보라 블루) */
+    --color-middle: #6ee7b7; /* 중등 (그린) */
+    --color-high: #d8b4fe;   /* 고등 (퍼플) */
+    --bg-light: #f9fafb;
+    --border-color: #f1f5f9;
+}
+.portalTxtBox{
+    text-align: center;
+    margin: 60px auto;
+}
+.portalTxtBox .txt1{
+    font-size: 24px;
+    font-weight: 800;
+    margin-bottom: 16px;
+}
+.portalTxtBox .txt2{
+    font-size: 40px;
+    font-weight: 900;
+}
+.portalTxtBox .txt2 b{
+    font-size: 40px;
+    font-weight: 900;
+    color: #2D3890;
+}
+.roadmapContainer {
+    background: #FFFFF3 url("../images/img_schedule_bg.png") no-repeat center / 95% auto;
+    padding: 60px 0 130px;
+}
+.roadmapContainer .scheduleImg{
+    text-align: center;
+    margin-bottom: -10px;
+    width: 100%;
+    max-width: 1000px;
+    margin: 0 auto;
+}
+.roadmapContainer .scheduleImg img{
+    width: 100%;
+}
+.roadmapWrapper {
+    overflow-x: auto;
+    border: 1px solid #e1e1e1;
+    border-radius: 12px;
+    background: #fff;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+.roadmapHeader {
+    display: grid;
+    grid-template-columns: 270px 1fr;
+    border-bottom: 1px solid var(--border-color);
+    /* background: var(--bg-light); */
+    background: #33B17E;
+}
+.headerTitle {
+    padding: 16px;
+    font-weight: 800;
+    text-align: center;
+    border-right: 1px solid var(--border-color);
+    color: #fff;
+}
+.headerGrades {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    text-align: center;
+    align-items: center;
+    font-weight: 800;
+}
+.headerGrades span {
+    padding: 16px 0;
+    /* color: #4F5571; */
+    color: #fff;
+    border-right: 1px solid var(--border-color);
+}
+.headerGrades .middleGrade {
+    /* color: #059669; */
+    color: #fff;
+}
+.headerGrades .highGrade {
+    /* color: #7c3aed; */
+    color: #fff;
+}
+.roadmapRow {
+    display: grid;
+    grid-template-columns: 270px 1fr;
+    border-bottom: 1px solid var(--border-color);
+}
+.projectName {
+    padding: 16px;
+    line-height: 1.8;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    border-right: 1px solid var(--border-color);
+    font-size: 18px;
+}
+.projectTimeline {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    align-items: center;
+    /* padding: 0 10px; */
+    position: relative;
+}
+
+/* Timeline 배경 그리드 라인 (선택 사항) */
+.projectTimeline::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-image: linear-gradient(to right, var(--border-color) 1px, transparent 1px);
+    background-size: calc(100% / 12) 100%;
+    pointer-events: none;
+}
+
+.bar {
+    height: 16px;
+    border-radius: 8px;
+    margin: 0 8px;
+    z-index: 1;
+}
+.barElem { background-color: var(--color-elem); }
+.barMiddle { background-color: var(--color-middle); }
+.barHigh { background-color: var(--color-high); }
+
+/* 범례(Legend) */
+.roadmapLegend {
+    display: flex;
+    gap: 20px;
+    padding: 1rem;
+    background-color: var(--bg-light);
+}
+.legendItem {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 800;
+}
+.dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+}
+.dotElem { background-color: var(--color-elem); }
+.dotMiddle { background-color: var(--color-middle); }
+.dotHigh { background-color: var(--color-high); }
+
+@media (max-width: 1024px) {
+    .roadmapWrapper {
+        margin: 0 20px;
+    }
+    .roadmapHeader, 
+    .roadmapRow {
+        grid-template-columns: 160px 1fr; 
+    }
+    .projectName {
+        font-size: 15px; 
+        padding: 10px;
+    }
+    .headerTitle, 
+    .headerGrades span {
+        padding: 12px 0;
+        font-size: 14px;
+    }
+    .roadmapContainer .scheduleImg img{
+        width: 80%;
+    }
+}
+@media (max-width: 768px) {
+    .roadmapWrapper {
+        overflow-x: auto; 
+        -webkit-overflow-scrolling: touch;
+    }
+    .roadmapWrapper > div {
+        min-width: 800px; 
+    }
+    .portalTxtBox .txt1 {
+        font-size: 18px;
+    }
+    .portalTxtBox .txt2, 
+    .portalTxtBox .txt2 b {
+        font-size: 28px;
+    }
+}
+
+/* 꿈이음 소개 */
+.introContainer {
+    width: 100%;
+    background-color: #33B17E;
+    padding: 80px 0 70px;
+    overflow: hidden;
+}
+.introContainer .introTop {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    position: relative;
+    margin-bottom: 40px;
+}
+.introContainer .subTitle {
+    font-size: 24px;
+    font-weight: 800;
+    margin-bottom: 16px;
+    color: #fff;
+}
+.introContainer .mainTitle {
+    font-size: 36px;
+    font-weight: 900;
+    margin-bottom: 12px;
+    color: #fff;
+}
+.introContainer .desc {
+    font-size: 26px;
+    font-weight: 800;
+    opacity: 0.8;
+    color: #fff;
+}
+.introContainer .illustWrap{
+    margin-bottom: -47px;
+}
+.introContainer .illustWrap img {
+    max-width: 100%;
+    height: auto;
+}
+.introContainer .introBottom {
+    width: 100%;
+}
+.introContainer .mainImgWrap {
+    width: 100%;
+    border-radius: 24px; 
+    overflow: hidden;
+}
+.introContainer .mainImgWrap img {
+    width: 100%;
+    display: block;
+    object-fit: cover;
+}
+
+@media (max-width: 1024px) {
+    .introContainer {
+        padding: 40px 0;
+    }
+    .introContainer .introTop {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .introContainer .illustWrap {
+        align-self: flex-end; 
+        margin-top: -20px;
+        max-width: 180px;
+    }
+    .introContainer .mainTitle {
+        font-size: 28px;
+    }
+    .introContainer .desc {
+        font-size: 16px;
+    }
+    .introContainer .mainImgWrap {
+        border-radius: 20px;
+    }
+}
+
+@media (max-width: 768px) {
+    .introContainer .mainTitle {
+        font-size: 24px;
+        word-break: keep-all; /* 한글 줄바꿈 최적화 */
+    }
+    
+    .introContainer .illustWrap {
+        max-width: 140px;
+    }
+}
+
+.serviceContainer {
+    padding: 80px 0 120px;
+}
+
+.serviceContainer .serviceHeader {
+    margin-bottom: 40px;
+}
+.serviceContainer .subTitle {
+    font-size: 24px;
+    color: #616161;
+    margin-bottom: 16px;
+    font-weight: 800;
+}
+.serviceContainer .mainTitle {
+    font-size: 32px;
+    font-weight: 900;
+}
+.serviceContainer .serviceGrid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr); 
+    gap: 40px;
+}
+.serviceContainer .serviceCard {
+    display: flex;
+    align-items: center;
+    background-color: #EFF8FF; 
+    border-radius: 20px;
+    padding: 24px 50px;
+    transition: transform 0.3s ease;
+}
+.serviceContainer .serviceCard:hover {
+    transform: translateY(-5px);
+}
+.serviceContainer .cardIcon {
+    flex-shrink: 0;
+    width: 120px;
+    margin-right: 24px;
+}
+.serviceContainer .cardIcon img {
+    width: 100%;
+}
+.serviceContainer .titleArea {
+    display: flex;
+    align-items: center;
+    margin-bottom: 16px;
+}
+.serviceContainer .cardTitle {
+    font-size: 24px;
+    font-weight: 900;
+    margin-right: 8px;
+}
+.serviceContainer .serviceBadge {
+    font-weight: 800;
+    width: 60px;
+    height: 24px;
+    text-align: center;
+    line-height: 24px;
+    border-radius: 4px;
+    color: #fff;
+    text-transform: capitalize;
+}
+
+.serviceContainer .serviceBadge.blue { background-color: #249AF2; }
+.serviceContainer .serviceBadge.orange { background-color: #FF8E00; }
+.serviceContainer .serviceBadge.purple { background-color: #B124F2; }
+.serviceContainer .serviceBadge.green { background-color: #0CC422; }
+
+.serviceContainer .cardDesc {
+    font-size: 18px;
+    line-height: 1.5;
+    font-weight: 600;
+}
+
+@media (max-width: 1024px) {
+    .serviceContainer .serviceGrid {
+        grid-template-columns: 1fr; 
+    }
+    .serviceContainer .mainTitle {
+        font-size: 26px;
+    }
+}
+@media (max-width: 640px) {
+    .serviceContainer .serviceCard {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 30px;
+    }
+    .serviceContainer .cardIcon {
+        width: 80px;
+        margin-right: 0;
+        margin-bottom: 20px;
+    }
+    .serviceContainer .cardTitle {
+        font-size: 20px;
+    }
+}

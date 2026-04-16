@@ -1,0 +1,61 @@
+/* 테이블 필터 스타일 */
+.table-filter-row th {
+  @apply p-[5px] align-middle bg-gray-50;
+}
+
+.table-filter-input {
+  @apply w-full border border-gray-300 rounded-none px-2 py-1 text-sm;
+}
+
+.table-filter-input:focus {
+  @apply outline-none border-primary;
+  box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.1);
+}
+
+.table-filter-select {
+  @apply w-full border border-gray-300 rounded-none px-2 py-1 text-sm bg-white;
+}
+
+.table-filter-select:focus {
+  @apply outline-none border-primary;
+  box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.1);
+}
+
+/* 필터 아이콘 */
+.filter-icon {
+  @apply cursor-pointer text-gray-600 text-sm ml-[5px];
+}
+
+.filter-icon:hover {
+  @apply text-primary;
+}
+
+.filter-icon.active {
+  @apply text-primary;
+}
+
+/* 정렬 가능한 헤더 */
+.sortable-header {
+  @apply cursor-pointer select-none relative pr-5;
+}
+
+.sortable-header:hover {
+  @apply bg-gray-200;
+}
+
+.sort-icon {
+  @apply absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-600 inline-flex flex-col;
+  line-height: 0.5;
+}
+
+.sort-icon.active {
+  @apply text-primary;
+}
+
+.sort-arrow {
+  @apply opacity-30;
+}
+
+.sort-arrow.active {
+  @apply opacity-100;
+}

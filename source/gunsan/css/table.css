@@ -1,0 +1,531 @@
+@charset "UTF-8";
+
+/* 그리드 시스템 */
+.bizInput .formGrid {
+    border: 1px solid #eee;
+}
+.bizInput .formGrid .formRow:last-child{
+    border-bottom: none !important;
+}
+.bizInput .formRow {
+    display: flex;
+    border-bottom: 1px solid #eee;
+    width: 100%;
+}
+.bizInput .formLabel { 
+    width: 180px;
+    background: #fafafa;
+    padding: 0 15px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    justify-content: center;
+    min-height: 64px;
+}
+.bizInput .formControl {
+    flex: 1;
+    padding:8px 14px;
+    display: flex;
+    gap: 8px;
+    box-sizing: border-box;
+}
+.bizInput .inputField, .bizInput .selectField{
+    width: 100%;
+    height: 48px;
+}
+.bizInput .btnPr {
+    background: var(--primary);
+    color: #fff;
+    cursor: pointer;
+    min-width: 160px;
+    border-radius: 6px;
+    font-weight: bold;
+    height: 48px;
+}
+.bizInput .btnSearch { 
+    background: var(--primary); 
+    height: 48px;
+    font-weight: bold;
+    color: #fff; 
+    cursor: pointer; 
+    width: 100px; 
+    border-radius: 6px; 
+}
+.bizInput .customGroup {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+.bizInput .customItem {
+    cursor: pointer;
+    display: inline-block;
+}
+.bizInput .customItem .customInput {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+.bizInput .customBox {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 110px; 
+    height: 36px; 
+    border: 1px solid #ccc;
+    border-radius: 18px; 
+    background-color: #f7f7f7;
+    transition: all 0.2s ease;
+}
+.bizInput .customBox .customText{
+    color: #757575;
+    font-weight: bold;
+}
+.bizInput .customBox .customIcon {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    margin-right: 6px;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-image: url('../images/icon/ico_radio_check_off.png');
+}
+.bizInput .customInput:checked + .customBox {
+    border: 1px solid var(--primary);
+    background-color: var(--primary-light);
+}
+.bizInput .customInput:checked + .customBox .customText{
+    color: var(--primary) !important;
+}
+.bizInput .customInput:checked + .customBox .customIcon {
+    background-image: url('../images/icon/ico_radio_check_on_pr.png');
+}
+.bizInput .customInput:focus-visible + .customBox {
+    outline: 2px solid #000;
+    outline-offset: 2px; 
+    border-radius: 24px;
+    z-index: 1; 
+}
+.bizInput .addressContainer {
+    flex-direction: column;
+}
+.bizInput .inputWithBtn {
+    display: flex;
+    gap: 8px; width:
+    100%;
+}
+@media (min-width: 769px) {
+    .formRow.split { display: flex; }
+    .fieldUnit { display: flex; flex: 1; }
+    .fieldUnit:first-child { border-right: 1px solid #ddd; }
+    .accountGroup { display: flex; width: 100%; }
+    .accountGroup .selectField { width: 180px; flex-shrink: 0; }
+    .accountGroup .inputField { flex: 1; }
+}
+@media (max-width: 768px) {
+    .bizInput .tabLabel{width: 40% !important;}
+    .formRow { flex-direction: column; }
+    .formRow.split { flex-direction: column; }
+    .formLabel {
+        width: 100% !important;
+        height: 40px;
+        text-align: center;
+        background: #eee;
+    }
+    .formControl { width: 100%; }
+    .formControl.group, .accountGroup { flex-direction: column; }
+    .fieldUnit { border-right: none; width: 100%; }
+}
+.bizInput .formGrid {
+    border: 1px solid #eee;
+}
+.bizInput .formGrid .formRow:last-child{
+    border-bottom: none !important;
+}
+.bizInput .formRow {
+    display: flex;
+    border-bottom: 1px solid #eee;
+    width: 100%;
+}
+.bizInput .formLabel { 
+    width: 180px;
+    background: #fafafa;
+    padding: 0 15px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    justify-content: center;
+    min-height: 64px;
+}
+.bizInput .formControl {
+    flex: 1;
+    padding:8px 14px;
+    display: flex;
+    gap: 8px;
+    box-sizing: border-box;
+}
+.bizInput .inputField, .bizInput .selectField{
+    width: 100%;
+    height: 48px;
+}
+.bizInput .btnPr {
+    background: var(--primary);
+    color: #fff;
+    cursor: pointer;
+    min-width: 160px;
+    border-radius: 6px;
+    font-weight: bold;
+    height: 48px;
+}
+.bizInput .btnSearch { 
+    background: var(--primary); 
+    height: 48px;
+    font-weight: bold;
+    color: #fff; 
+    cursor: pointer; 
+    width: 100px; 
+    border-radius: 6px; 
+}
+.bizInput .customGroup {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+.bizInput .customItem {
+    cursor: pointer;
+    display: inline-block;
+}
+.bizInput .customItem .customInput {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+.bizInput .customBox {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 110px; 
+    height: 36px; 
+    border: 1px solid #ccc;
+    border-radius: 18px; 
+    background-color: #f7f7f7;
+    transition: all 0.2s ease;
+}
+.bizInput .customBox .customText{
+    color: #757575;
+    font-weight: bold;
+}
+.bizInput .customBox .customIcon {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    margin-right: 6px;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-image: url('../images/icon/ico_radio_check_off.png');
+}
+.bizInput .customInput:checked + .customBox {
+    border: 1px solid var(--primary);
+    background-color: var(--primary-light);
+}
+.bizInput .customInput:checked + .customBox .customText{
+    color: var(--primary) !important;
+}
+.bizInput .customInput:checked + .customBox .customIcon {
+    background-image: url('../images/icon/ico_radio_check_on_pr.png');
+}
+.bizInput .customInput:focus-visible + .customBox {
+    outline: 2px solid #000;
+    outline-offset: 2px; 
+    border-radius: 24px;
+    z-index: 1; 
+}
+.bizInput .addressContainer {
+    flex-direction: column;
+}
+.bizInput .inputWithBtn {
+    display: flex;
+    gap: 8px; width:
+    100%;
+}
+@media (min-width: 769px) {
+    .formRow.split { display: flex; }
+    .fieldUnit { display: flex; flex: 1; }
+    .fieldUnit:first-child { border-right: 1px solid #ddd; }
+    .accountGroup { display: flex; width: 100%; }
+    .accountGroup .selectField { width: 180px; flex-shrink: 0; }
+    .accountGroup .inputField { flex: 1; }
+}
+@media (max-width: 768px) {
+    .bizInput .tabLabel{width: 40% !important;}
+    .formRow { flex-direction: column; }
+    .formRow.split { flex-direction: column; }
+    .formLabel {
+        width: 100% !important;
+        height: 40px;
+        text-align: center;
+        background: #eee;
+    }
+    .formControl { width: 100%; }
+    .formControl.group, .accountGroup { flex-direction: column; }
+    .fieldUnit { border-right: none; width: 100%; }
+}
+.titleWrapper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.subTextBlue {
+    font-size: 14px;
+    color: #007bff;
+}
+.fieldSelectGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+}
+.fieldRow {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.fieldRow .inputField {
+    flex: 1;
+    color: #888;
+}
+@media (max-width: 768px) {
+    .fieldRow {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 5px;
+        padding-bottom: 10px;
+        border-bottom: 1px dashed #eee;
+        height: 100px;
+    }
+    .fieldRow .inputField {
+        width: 100%;
+    }
+}
+.hiddenInput {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0,0,0,0);
+    border: 0;
+}
+.bizInput .hiddenInput:focus-visible + .btnFileAdd {
+    outline: 2px solid #000; 
+    outline-offset: 2px;  
+    border-radius: 4px;
+    z-index: 1;
+}
+.btnFileAdd:hover {
+    opacity: 0.8;
+}
+.btnFileAdd {
+    margin-left: 8px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+}
+.fileListContainer{
+    display: unset !important;
+}
+.btnFileDel {
+    cursor: pointer;
+    display: inline-block;
+}
+.formActions {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 50px;
+    padding-bottom: 50px;
+}
+.btnWhite, .btnSubmit {
+    min-width: 160px;
+    height: 54px;
+    border-radius: 8px;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.btnWhite {
+    background: var(--primary-light);
+    border: 1px solid var(--primary);
+    color: var(--primary);
+}
+.btnSubmit {
+    background: var(--primary);
+    color: #fff;
+}
+@media (max-width: 768px) {
+    .formActions {
+        flex-direction: column;
+    }
+    .btnWhite, .btnSubmit {
+        width: 100%;
+    }
+}
+
+.historyHeader {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 8px;
+    font-weight: bold;
+}
+.historyHeader::before {
+    content: '';
+    display: inline-block;
+    width: 24px;
+    height: 24px;
+    background: url('../images/icon/ico_calendar.png') no-repeat center / contain; 
+}
+.historyHeader .historyDate{
+    font-size: 18px;
+}
+.historyHeader .historyUser{
+    font-size: 16px;
+    color: #616161;
+    font-weight: 500;
+}
+.historyContent {
+    line-height: 1.5; 
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-weight: 500;
+}
+.historyContent::before {
+    content: '';
+    display: inline-block;
+    width: 24px;
+    height: 24px;
+    margin-top: 2px;
+    flex-shrink: 0;
+    background: url('../images/icon/ico_edit.png') no-repeat center / contain; 
+}
+.certSection { padding: 40px 0; }
+.certSection .sectionHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #333;
+}
+.tableWrapper {
+    width: 100%;
+    overflow-x: auto; 
+}
+.certTable {
+    width: 100%;
+    table-layout: fixed; 
+    border-collapse: collapse;
+}
+.certTable .cellContent {
+    text-align: left;
+    overflow: hidden; 
+}
+.certTable .ellipsis {
+    display: block;
+    width: 100%; 
+    white-space: nowrap; 
+    overflow: hidden; 
+    text-overflow: ellipsis; 
+}
+.certTable th{
+    padding: 18px 0;
+    font-weight: bold;
+    border-bottom: 1px solid #e5e5e5;
+    color: #616161;
+}
+.certTable td {
+    padding: 24px 0;
+    text-align: center;
+    border-bottom: 1px solid #e5e5e5;
+    font-weight: 500;
+}
+.kidsCertTable td{
+    padding: 16px 0 !important;
+}
+.colNum { width: 110px; }
+.colDate { width: 140px; }
+.colView { width: 140px; }
+.colName { width: 140px; }
+.colState { width: 210px; }
+.cellContent, .cellDataName { text-align: left !important; }
+.colAcademyName,
+.colContact { width: 207px;}
+.colAddress{width: 465px;}
+.ellipsis {
+    display: block;
+    width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.btnGroup {
+    display: flex;
+    justify-content: center;
+    gap: 4px;
+}
+.btnGroup button {
+    width: 52px;
+    height: 28px;
+    text-align: center;
+    line-height: 28px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-weight: bold;
+}
+.btnInquiry { color: #37983C; background-color: #E2F8E3; }
+.btnModify { color: #FA620E; background-color: #F8F2E2; }
+.btnDelete { color: #FB0E0E;  background-color: #F8E2E2; }
+.btnInquiry:hover { background-color: #37983C; color: #fff !important; }
+.btnModify:hover { background-color: #FA620E; color: #fff !important; }
+.btnDelete:hover { background-color: #FB0E0E; color: #fff !important; }
+.tableWrapper::-webkit-scrollbar { height: 6px; }
+.tableWrapper::-webkit-scrollbar-thumb { background: #ddd; border-radius: 10px; }
+
+#regCertModal .modalBody,
+#academyModal .modalBody{
+    container-type: inline-size;
+    container-name: modalLayout; 
+    width: 100%;
+}
+.modalBody .formGrid {
+    border: 1px solid #eee;
+    margin-bottom: 50px;
+}
+@container modalLayout (max-width: 600px) {
+    .formRow {
+        flex-direction: column !important;
+    }
+    .formLabel {
+        width: 100% !important;
+        min-height: 40px !important;
+        justify-content: flex-start;
+        padding-left: 15px;
+    }
+    .formControl {
+        width: 100% !important;
+    }
+}
+
+#academyModal .academyLogo div,
+#academyModal .academyLogo div img{
+    width: 100%;
+    height: 100%;
+}

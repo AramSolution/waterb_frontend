@@ -1,0 +1,11 @@
+import "@/styles/userWeb/default.css";
+import "@/styles/userWeb/portalContent.css";
+import "@/styles/userWeb/community.css";
+
+export default function UserWebPortalScheduleLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return children;
+}

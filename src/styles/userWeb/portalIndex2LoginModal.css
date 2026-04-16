@@ -1,0 +1,255 @@
+@charset "UTF-8";
+
+/* gunsan index.css「로그인 팝업」만 분리 — index2 포털에서 전체 index.css 로드 없이 동일 UI 유지 (#loginModal로 스코프) */
+
+#loginModal.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  padding: 20px;
+}
+
+#loginModal .modalContent {
+  position: relative;
+  background: #fff;
+  width: 100%;
+  max-width: 480px;
+  border-radius: 30px;
+  padding: 60px;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+  box-sizing: border-box;
+}
+
+#loginModal .modalContent .btnClose {
+  position: absolute;
+  top: 24px;
+  right: 24px;
+  cursor: pointer;
+  padding: 5px;
+}
+
+#loginModal .modalContent .btnClose img {
+  width: 32px;
+  height: 32px;
+}
+
+#loginModal .modalContent .modalHeader {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+#loginModal .modalContent .modalHeader .logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-bottom: 10px;
+}
+
+#loginModal .modalContent .modalHeader .logo img {
+  height: 32px;
+}
+
+#loginModal .modalContent .modalHeader .badgeStudent,
+#loginModal .modalContent .modalHeader .badgeParent,
+#loginModal .modalContent .modalHeader .badgeAcademy,
+#loginModal .modalContent .modalHeader .badgeMentor {
+  color: #fff;
+  font-size: 18px;
+  min-width: 70px;
+  height: 30px;
+  line-height: 30px;
+  border-radius: 4px;
+  font-weight: 800;
+  text-align: center;
+  display: inline-block;
+  padding: 0 13px;
+  box-sizing: border-box;
+  white-space: nowrap;
+}
+
+#loginModal .modalContent .modalHeader .badgeStudent {
+  background: #d63a3a;
+}
+
+#loginModal .modalContent .modalHeader .badgeParent {
+  background: #774adf;
+}
+
+#loginModal .modalContent .modalHeader .badgeAcademy {
+  background: #11a34d;
+}
+
+#loginModal .modalContent .modalHeader .badgeMentor {
+  background: #0063c0;
+}
+
+#loginModal .modalContent .modalHeader .modalTitle {
+  font-size: 26px;
+  font-weight: 800;
+  color: #111;
+}
+
+#loginModal .loginForm .inputGroup {
+  margin-bottom: 16px;
+  text-align: left;
+}
+
+#loginModal .loginForm .inputGroup label {
+  display: block;
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: #333;
+}
+
+#loginModal .loginForm .inputGroup .input {
+  border-radius: 10px;
+  height: 60px;
+}
+
+#loginModal .loginForm .inputGroup input:focus {
+  border-color: #2b3a8d;
+}
+
+#loginModal .loginForm .formOptions {
+  margin-bottom: 25px;
+}
+
+#loginModal .loginForm .checkContainer {
+  font-size: 14px;
+  color: #666;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+#loginModal .loginForm .btnLogin {
+  width: 100%;
+  height: 60px;
+  background-color: #2d3890;
+  color: #fff;
+  border-radius: 10px;
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+#loginModal .loginForm .formFooter {
+  text-align: center;
+  font-size: 14px;
+  color: #616161;
+}
+
+#loginModal .loginForm .formFooter a {
+  color: #616161;
+  font-weight: bold;
+}
+
+#loginModal .loginForm .formFooter .divider {
+  margin: 0 16px;
+  color: #616161;
+}
+
+#loginModal .snsLoginArea {
+  margin-top: 40px;
+}
+
+#loginModal .snsLoginArea .snsDivider {
+  position: relative;
+  text-align: center;
+  margin-bottom: 25px;
+}
+
+#loginModal .snsLoginArea .snsDivider::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  background-color: #ccc;
+  z-index: 1;
+}
+
+#loginModal .snsLoginArea .snsDivider span {
+  position: relative;
+  background-color: #fff;
+  padding: 0 16px;
+  z-index: 2;
+  font-weight: bold;
+}
+
+#loginModal .snsLoginArea .snsButtons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+#loginModal .snsLoginArea .btnSns {
+  display: flex;
+  align-items: center;
+  justify-content: left;
+  gap: 10px;
+  width: 100%;
+  height: 54px;
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+#loginModal .snsLoginArea .btnSns img {
+  width: 40px;
+  margin: 10px;
+}
+
+#loginModal .snsLoginArea .btnNaver {
+  background-color: #00c73c;
+  color: #fff;
+}
+
+#loginModal .snsLoginArea .btnKakao {
+  background-color: #ffea00;
+  color: #3b1e1d;
+}
+
+#loginModal .snsLoginArea .btnGoogle {
+  background-color: #fff;
+  border: 1px solid #ccc;
+}
+
+@media (max-width: 480px) {
+  #loginModal .modalContent {
+    padding: 45px 20px 35px;
+    border-radius: 20px;
+  }
+
+  #loginModal .modalHeader .modalTitle {
+    font-size: 22px;
+  }
+
+  #loginModal .loginForm .inputGroup label {
+    font-size: 14px;
+  }
+
+  #loginModal .loginForm .btnLogin {
+    font-size: 16px;
+    padding: 14px;
+  }
+
+  #loginModal .snsLoginArea {
+    margin-top: 30px;
+  }
+
+  #loginModal .snsLoginArea .btnSns {
+    height: 48px;
+    font-size: 14px;
+  }
+}

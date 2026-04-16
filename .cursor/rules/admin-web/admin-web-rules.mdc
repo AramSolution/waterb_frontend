@@ -1,0 +1,2878 @@
+---
+alwaysApply: false
+---
+
+# Admin Web Rules
+
+## 🎯 Purpose
+
+This rule defines styling and UI patterns specific to **admin web pages** (`/adminWeb/*`). Admin pages use **Tailwind CSS + Custom CSS** for styling.
+
+**Key Differences from User Web:**
+
+- ✅ Uses Custom CSS files (imported from `@/shared/styles/admin/`)
+- ✅ Uses Custom CSS classes (e.g., `search-form-label`, `table-cell`)
+- ✅ More complex UI components with custom styling
+
+---
+
+## ⚠️ CRITICAL: Admin App Route (page.tsx) Layout Structure
+
+**MUST ALWAYS wrap page content in `AdminLayout` when:**
+
+- ✅ Creating a new route under `src/app/adminWeb/**/page.tsx`
+- ✅ Adding a new admin page (list, detail, register, or any sub-route)
+- ✅ Copying or referencing another admin feature to create a new one
+
+**MUST ensure the app route file uses this structure so the sidebar and admin chrome are applied:**
+
+```typescript
+// ✅ CORRECT: Admin route with layout and suspense
+"use client";
+
+import { Suspense } from "react";
+import { AdminLayout } from "@/widgets/adminWeb/layout";
+import { YourPageView } from "@/features/adminWeb/.../ui";
+import { LoadingFallback } from "@/shared/ui/adminWeb";
+
+function YourPageContent() {
+  return (
+    <AdminLayout>
+      <YourPageView />
+    </AdminLayout>
+  );
+}
+
+export default function YourPage() {
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <YourPageContent />
+    </Suspense>
+  );
+}
+```
+
+**MUST NOT:**
+
+- ❌ **NEVER** export only the PageView component from `page.tsx` without wrapping it in `AdminLayout`
+- ❌ **NEVER** assume the root `app/adminWeb/layout.tsx` provides the sidebar (it does not; each page must use `AdminLayout` from `@/widgets/adminWeb/layout`)
+- ❌ **NEVER** create a new admin route without checking an existing admin page's `page.tsx` structure first
+
+**Why this is CRITICAL:**
+
+Without `AdminLayout`:
+
+1. ❌ The sidebar does not appear; the page looks like a different product.
+2. ❌ Layout and navigation are inconsistent with other admin pages.
+3. ❌ No build or runtime error occurs (silent failure).
+
+**⚠️ Rule Verification Process (Prompt Engineering Technique)**
+
+**MUST ALWAYS follow this process BEFORE creating or finalizing any new `app/adminWeb/**/page.tsx`:**
+
+1. **Step 1: Identify a reference route**
+   - ✅ **ALWAYS** pick an existing admin page in the same area (e.g. `support/study/application/register/page.tsx` when adding `support/careerConsulting/application/register/page.tsx`).
+   - ✅ **ALWAYS** open that reference `page.tsx` and confirm it uses `AdminLayout` and `Suspense`.
+
+2. **Step 2: Implement the new route**
+   - ✅ **ALWAYS** copy the route structure (imports, `AdminLayout` wrapper, `Suspense`, `LoadingFallback`) from the reference.
+   - ✅ **ALWAYS** replace only the feature component (e.g. `StudyApplicationRegisterPageView` → `CareerConsultingApplicationRegisterPageView`).
+   - ✅ **NEVER** create a minimal `page.tsx` that only returns `<FeaturePageView />`.
+
+3. **Step 3: Verify before completing**
+   - ✅ **ALWAYS** confirm the new file contains: `"use client"`, `AdminLayout` from `@/widgets/adminWeb/layout`, `Suspense`, and `LoadingFallback`.
+   - ✅ **ALWAYS** run or open the new route and confirm the sidebar is visible.
+
+**Real-world example of the mistake:**
+
+```typescript
+// ❌ WRONG: No AdminLayout — sidebar and admin layout are missing
+import { CareerConsultingApplicationRegisterPageView } from "@/features/.../ui";
+
+export default function CareerConsultingApplicationRegisterPage() {
+  return <CareerConsultingApplicationRegisterPageView />;
+}
+```
+
+**Correct fix:**
+
+```typescript
+// ✅ CORRECT: Same structure as other admin pages
+"use client";
+
+import { Suspense } from "react";
+import { AdminLayout } from "@/widgets/adminWeb/layout";
+import { CareerConsultingApplicationRegisterPageView } from "@/features/.../ui";
+import { LoadingFallback } from "@/shared/ui/adminWeb";
+
+function CareerConsultingApplicationRegisterContent() {
+  return (
+    <AdminLayout>
+      <CareerConsultingApplicationRegisterPageView />
+    </AdminLayout>
+  );
+}
+
+export default function CareerConsultingApplicationRegisterPage() {
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <CareerConsultingApplicationRegisterContent />
+    </Suspense>
+  );
+}
+```
+
+**Prevention Checklist (MUST verify when creating a new admin route):**
+
+- [ ] **Checked a reference** `app/adminWeb/**/page.tsx` (e.g. same feature area or Study equivalent).
+- [ ] **`AdminLayout`** is imported from `@/widgets/adminWeb/layout` and wraps the PageView.
+- [ ] **`Suspense`** wraps the content component with `fallback={<LoadingFallback />}`.
+- [ ] **`LoadingFallback`** is imported from `@/shared/ui/adminWeb`.
+- [ ] **`"use client"`** is at the top when using client components.
+- [ ] **Verified in browser** that the new route shows the sidebar and matches other admin pages.
+
+**Decision tree:**
+
+```
+Creating or editing app/adminWeb/**/page.tsx?
+├─ Does the default export render a PageView (or similar)?
+│  └─ YES → Is it wrapped in <AdminLayout>?
+│     ├─ NO  → ❌ ADD AdminLayout (and Suspense + LoadingFallback). Copy from reference page.
+│     └─ YES → ✅ Confirm Suspense + LoadingFallback are present; then correct.
+└─ Copy structure from: src/app/adminWeb/support/study/application/register/page.tsx
+```
+
+**Reference implementation:**
+
+- ✅ `src/app/adminWeb/support/study/application/register/page.tsx`
+- ✅ `src/app/adminWeb/support/careerConsulting/register/page.tsx`
+- ✅ `src/app/adminWeb/support/careerConsulting/schedule/page.tsx`
+
+---
+
+## ⚠️ CRITICAL: URL path segments vs query-only identity (Sidebar & navigation)
+
+### 🎯 Purpose
+
+The admin **Sidebar** (`src/widgets/adminWeb/sidebar/Sidebar.tsx`) determines the active menu item using **`usePathname()` only**. It matches menu `path` values with:
+
+- `pathname === basePath` **OR**
+- `pathname.startsWith(basePath + "/")` (see `isPathMatch` in `Sidebar.tsx`)
+
+**Query strings are not used** for submenu highlighting. Therefore, **which support program or admin feature the user is in MUST be reflected in the URL path**, not only in query parameters (e.g. `?proId=`).
+
+---
+
+### MUST (routing design)
+
+**MUST** structure admin routes so that **each distinct program/feature area has its own path prefix** under `src/app/adminWeb/**`, for example:
+
+- ✅ `/adminWeb/support/careerConsulting/detail`
+- ✅ `/adminWeb/support/careerConsulting/update`
+- ✅ `/adminWeb/support/list/detail`
+
+**MUST** align **Sidebar** `menuItems[].submenu[].path` values with those **base prefixes** (see `Sidebar.tsx`) so that list, detail, register, and update routes under the same feature still match the same menu entry via `startsWith`.
+
+**MUST** when adding a new admin screen in an existing feature area:
+
+- ✅ **ALWAYS** place it under the same path segment as sibling routes (e.g. `.../careerConsulting/register`, `.../careerConsulting/detail`), not under a new generic `/adminWeb/support/update` unless it is truly shared across all programs by design.
+
+---
+
+### MUST NOT (anti-patterns)
+
+**MUST NOT** use a **single shared pathname** for multiple logical programs or features and rely **only** on query parameters to distinguish them, for example:
+
+- ❌ `/adminWeb/support/update?proId=PRO_0000000000000001` as the **only** way to know “which” program’s update screen is shown (path does not distinguish features; Sidebar cannot infer the correct submenu from `pathname` alone).
+
+**MUST NOT** assume that `?proId=`, `?id=`, or similar query params will fix Sidebar active state — **they will not**, unless you also extend the Sidebar implementation to read search params (not the current pattern).
+
+---
+
+### Relationship to other rules (do not confuse)
+
+**List ↔ detail state persistence** (`admin-web-list-detail-state-persistence.mdc`) **still uses URL query parameters** to restore **list search, filters, and pagination** when returning from detail. That is **correct** for UX.
+
+**This rule does not forbid query params.** It forbids **using query params as the sole substitute for feature/program identity in the path** when different Sidebar entries correspond to different path prefixes.
+
+| Concern | Belongs in URL path | May use query string |
+|--------|---------------------|----------------------|
+| Which program/feature section (Sidebar) | ✅ Yes | ❌ Not only |
+| List search / page / return-from-detail | Optional in path | ✅ Yes (per list-detail rule) |
+
+---
+
+### ⚠️ Rule Verification Process (Prompt Engineering Technique)
+
+**MUST ALWAYS follow this process BEFORE adding or changing a route under `app/adminWeb/**`:**
+
+1. **Step 1: Identify the Sidebar base path**
+   - ✅ **ALWAYS** open `src/widgets/adminWeb/sidebar/Sidebar.tsx` and find the `path` for the menu entry that should be active on the new screen.
+   - ✅ **ALWAYS** confirm the new route’s `pathname` equals that `path` **or** starts with `${path}/` (same segment hierarchy).
+
+2. **Step 2: Reject query-only identity**
+   - ✅ **ALWAYS** ask: “If I strip the query string, does `pathname` still identify the correct Sidebar section?”
+   - ❌ If **NO** → **MUST** change the route to include the correct path segments; **MUST NOT** ship query-only discrimination for Sidebar-bound features.
+
+3. **Step 3: Cross-check navigation links**
+   - ✅ **ALWAYS** grep or search for `router.push`, `<Link href=`, and string URLs that navigate to this screen.
+   - ✅ **ALWAYS** update links to use the new path-based URLs consistently.
+
+4. **Step 4: Manual verification**
+   - ✅ **ALWAYS** open the page in the browser and confirm the expected Sidebar item is **active** (highlighted) and parent menus behave consistently with neighboring routes in the same feature.
+
+---
+
+### Real-world example of the mistake
+
+```text
+❌ WRONG: One pathname for many programs — Sidebar cannot map pathname to one submenu
+URL: /adminWeb/support/update?proId=PRO_0000000000000001
+pathname: /adminWeb/support/update  (same for every program)
+```
+
+```text
+✅ CORRECT: Path identifies the feature; queries may still carry list-return state per list-detail rule
+URL: /adminWeb/support/careerConsulting/update?proId=PRO_0000000000000001
+pathname: /adminWeb/support/careerConsulting/update  (matches /adminWeb/support/careerConsulting via startsWith)
+```
+
+---
+
+### Prevention Checklist (MUST verify when adding or changing admin URLs)
+
+- [ ] **Sidebar** `path` for this feature is known and documented in `Sidebar.tsx`.
+- [ ] New route **`pathname`** matches that base path or is a **child path** under it (`${basePath}/...`).
+- [ ] **No** reliance on **query-only** identity for “which Sidebar section” when multiple sections exist.
+- [ ] **Navigation** (`Link` / `router.push`) uses the path-based URL consistently.
+- [ ] **Browser check**: Sidebar shows the correct active item on list, detail, register, and update for this feature.
+
+---
+
+### Decision tree
+
+```
+Adding or changing app/adminWeb/** routes?
+├─ Does more than one Sidebar submenu correspond to different “programs” or features?
+│  └─ YES → Does each use a distinct path prefix (not only ?proId / ?xxx)?
+│     ├─ NO  → ❌ Fix path structure; align with Sidebar base paths.
+│     └─ YES → ✅ Confirm pathname matches isPathMatch logic in Sidebar.tsx.
+└─ Using query params only for list filters / pagination / return state?
+   └─ ✅ OK — see admin-web-list-detail-state-persistence.mdc (orthogonal to this rule).
+```
+
+### Reference implementation (Sidebar pathname logic)
+
+- ✅ `src/widgets/adminWeb/sidebar/Sidebar.tsx` — `isPathMatch`, `isSubmenuActive`
+
+---
+
+## 🎨 Styling Rules (Admin Web)
+
+### ⚠️ CRITICAL: Custom CSS Import
+
+**MUST ALWAYS import required Custom CSS files when:**
+
+- ✅ Creating new admin list pages (with search forms)
+- ✅ Creating new admin pages with tables
+- ✅ Referencing existing admin pages as patterns
+- ✅ Using custom CSS classes (e.g., `search-form-label`, etc.)
+
+**MUST ensure required CSS files are imported:**
+
+```typescript
+// ✅ CORRECT: Import required CSS files
+'use client';
+
+import React from 'react';
+import { useProgramList } from '../model';
+import '@/shared/styles/admin/search-form.css'; // ✅ For search forms
+import '@/shared/styles/admin/mobile-table.css'; // ✅ For tables
+import '@/shared/styles/admin/resizable-table.css'; // ✅ For resizable tables
+// ❌ REMOVED: import "@/shared/styles/admin/table-filter.css"; // Table filters are NOT used (all filtering is server-side only)
+```
+
+**Common CSS Files for Admin Pages:**
+
+- `@/shared/styles/admin/search-form.css` - Search form styles (required for search forms)
+- `@/shared/styles/admin/mobile-table.css` - Mobile table styles
+- `@/shared/styles/admin/resizable-table.css` - Resizable table styles
+- ❌ `@/shared/styles/admin/table-filter.css` - NOT USED (table filters are not used; all filtering is server-side only)
+- `@/shared/styles/admin/dialog.css` - Dialog styles
+- `@/shared/styles/admin/sidebar.css` - Sidebar styles
+- `@/shared/styles/admin/layout.css` - Layout styles
+
+**MUST NOT:**
+
+- ❌ **NEVER** forget to import required CSS files
+- ❌ **NEVER** assume CSS will work without import
+- ❌ **NEVER** copy admin page code without copying CSS imports
+- ❌ **NEVER** skip CSS import verification when referencing existing pages
+
+**Why this is CRITICAL:**
+
+Custom CSS files must be imported to apply styles. Without imports:
+
+1. ❌ Custom CSS classes won't have styles applied
+2. ❌ UI elements will appear unstyled or broken
+3. ❌ Text alignment, spacing, and layout will be incorrect
+4. ❌ No build errors will occur (silent failure)
+
+**Real-world example of the mistake:**
+
+```typescript
+// ❌ WRONG: Missing CSS import
+"use client";
+
+import React from "react";
+import { useMenuMakeList } from "../model";
+// ❌ Missing: import "@/shared/styles/admin/search-form.css";
+
+export const MenuMakePageView: React.FC = () => {
+  return (
+    <label className="search-form-label">검색구분</label>
+    // ❌ search-form-label class has no styles without CSS import!
+  );
+};
+```
+
+**Prevention Checklist (MUST verify when creating/modifying admin pages):**
+
+- [ ] **Checked existing admin pages** for required CSS imports
+- [ ] **All required CSS files are imported** (search-form.css, mobile-table.css, etc.)
+- [ ] **CSS imports are placed at the top** after React imports
+- [ ] **Referenced existing admin page** (e.g., ProgramListPageView) as pattern
+- [ ] **Verified CSS files exist** in `src/shared/styles/admin/`
+- [ ] **Tested the page** to ensure styles are applied
+
+**Reference Implementation:**
+
+```typescript
+// ✅ CORRECT: src/features/adminWeb/program/list/ui/ProgramListPageView.tsx
+'use client';
+
+import React from 'react';
+import { useRouter } from 'next/navigation';
+import { Pagination } from '@/shared/ui/adminWeb';
+import { ConfirmDialog } from '@/shared/ui/adminWeb';
+import { useProgramList } from '../model';
+import '@/shared/styles/admin/mobile-table.css';
+import '@/shared/styles/admin/resizable-table.css';
+// ❌ REMOVED: import "@/shared/styles/admin/table-filter.css"; // Table filters are NOT used (all filtering is server-side only)
+import '@/shared/styles/admin/search-form.css'; // ✅ Required for search forms
+```
+
+---
+
+## 🎨 Custom CSS Usage (Admin Web)
+
+### Custom CSS Rules
+
+**MUST:**
+
+- ✅ Place custom CSS in `shared/styles/admin/`
+- ✅ Use `@layer components` for component styles
+- ✅ Use `@apply` directive to extend Tailwind
+- ✅ Follow BEM-like naming for custom classes
+- ✅ Import CSS files at the top of component files
+
+**Example:**
+
+```css
+/* src/shared/styles/admin/search-form.css */
+.search-form-label {
+  @apply justify-end pr-4 font-bold;
+}
+```
+
+**MUST NOT:**
+
+- ❌ Create global styles without `@layer`
+- ❌ Use `!important` without justification
+- ❌ Duplicate Tailwind functionality in custom CSS
+- ❌ Forget to import CSS files in components
+
+---
+
+## 📋 Search Form Structure (Admin Web)
+
+### ⚠️ CRITICAL: 조회조건 폼 구조 패턴
+
+**MUST ALWAYS use this structure for search forms in admin list pages:**
+
+**Structure Pattern:**
+
+```typescript
+{
+  /* 모바일 조회조건 토글 버튼 */
+}
+<div className="md:hidden mb-2">
+  <button onClick={() => setShowSearchForm(!showSearchForm)}>
+    {showSearchForm ? "▲ 조회조건 닫기" : "▼ 조회조건 열기"}
+  </button>
+</div>;
+
+{
+  /* 조회조건 폼 컨테이너 */
+}
+<div
+  className={`bg-white mb-3 rounded-lg shadow search-form-container ${
+    showSearchForm ? "show" : ""
+  }`}
+>
+  <div className="border border-gray-300">
+    {/* 검색구분 + 검색어 입력 필드만 */}
+    <div className="flex flex-wrap">
+      <div className="w-full md:w-1/2">
+        <div className="flex flex-col border-b md:flex-row items-stretch">
+          <label className="w-full md:w-1/4 bg-gray-100 flex items-center m-0 px-3 py-2 search-form-label border-b border-r border-gray-300">
+            검색구분
+          </label>
+          <div className="w-full md:w-3/4 flex p-2">{/* SELECT + INPUT */}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>;
+
+{
+  /* 조회 버튼은 폼 밖에 별도 배치 */
+}
+<div className="flex justify-end mb-3 gap-2">
+  <button onClick={handleSearch}>🔍 조회</button>
+</div>;
+```
+
+**MUST:**
+
+- ✅ Search form container: Contains only search fields (select + input)
+- ✅ Action buttons (조회): Placed OUTSIDE the form container, in a separate `div` with `flex justify-end mb-3 gap-2`
+- ✅ Import `@/shared/styles/admin/search-form.css` for `search-form-label` styles
+
+**MUST NOT:**
+
+- ❌ Place action buttons inside the search form container
+- ❌ Create inconsistent structures across different admin list pages
+- ❌ Forget to import `search-form.css` (causes text alignment issues)
+
+**Reference Implementation:**
+
+- ✅ `src/features/adminWeb/program/list/ui/ProgramListPageView.tsx` (reference implementation)
+
+**Common Mistakes:**
+
+1. **Placing buttons inside form container:**
+
+   ```typescript
+   // ❌ WRONG: Button inside form container
+   <div className="search-form-container">
+     {/* fields */}
+     <div className="flex justify-end p-2 border-t">
+       <button>조회</button>  {/* ❌ Wrong location */}
+     </div>
+   </div>
+
+   // ✅ CORRECT: Button outside form container
+   <div className="search-form-container">
+     {/* fields only */}
+   </div>
+   <div className="flex justify-end mb-3 gap-2">
+     <button>조회</button>  {/* ✅ Correct location */}
+   </div>
+   ```
+
+2. **Missing CSS import:**
+
+   ```typescript
+   // ❌ WRONG: Missing CSS import
+   import { useMenuMakeList } from '../model';
+   // Missing: import "@/shared/styles/admin/search-form.css";
+
+   // ✅ CORRECT: CSS import present
+   import { useMenuMakeList } from '../model';
+   import '@/shared/styles/admin/search-form.css';
+   ```
+
+---
+
+## 🎨 Color System (Admin Web)
+
+**MUST use these colors:**
+
+- Primary: `#0d6efd` (use `primary` or `bg-primary`)
+- Success: `#198754` (use `success` or `bg-success`)
+- Warning: `#ffc107` (use `warning` or `bg-warning`)
+- Danger: `#dc3545` (use `danger` or `bg-danger`)
+- Background: `#f5f7fa` (use `bg-gray`)
+- Border: `#dee2e6` (use `border-gray`)
+
+**MUST NOT:**
+
+- ❌ Use hardcoded hex colors (use Tailwind config colors)
+- ❌ Create new colors without updating `tailwind.config.js`
+
+---
+
+## 🎨 UI Component Consistency Rules
+
+### ⚠️ CRITICAL: Status Badge/Button Size Consistency
+
+**MUST ALWAYS verify status badge/button sizes match existing admin pages when:**
+
+- ✅ Creating status indicators (사용여부, 상태, etc.)
+- ✅ Implementing badge components for table cells
+- ✅ Adding status labels with colored backgrounds
+- ✅ Copying code from other pages for similar functionality
+
+**MUST ensure status badges/buttons use consistent sizing across all admin pages:**
+
+**Correct Pattern (Reference Implementation):**
+
+```typescript
+// ✅ CORRECT: Status badge with consistent sizing
+<span
+  className={`inline-flex items-center px-2.5 py-0.5 rounded-[5px] text-[13px] font-medium ${
+    status === "Y" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+  }`}
+>
+  {status === "Y" ? "사용" : "미사용"}
+</span>
+```
+
+**Key Requirements:**
+
+1. **Text Size**: `text-[13px]` (NOT `text-xs` which is 12px)
+2. **Padding**: `px-2.5 py-0.5` (NOT `px-2 py-1`)
+3. **Layout**: `inline-flex items-center` (NOT `inline-block`)
+4. **Border Radius**: `rounded-[5px]` (NOT `rounded`)
+5. **Font Weight**: `font-medium` (required)
+
+**Common Mistake - Inconsistent Badge Sizing:**
+
+```typescript
+// ❌ WRONG: Smaller badge size
+<span
+  className={`inline-block px-2 py-1 text-xs font-medium rounded ${
+    useAt === "Y" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+  }`}
+>
+  {useAt === "Y" ? "사용" : "미사용"}
+</span>
+```
+
+**Why this is WRONG:**
+
+- ❌ `text-xs` (12px) is smaller than standard `text-[13px]` (13px)
+- ❌ `px-2 py-1` creates different visual proportions
+- ❌ `inline-block` doesn't provide proper vertical alignment
+- ❌ `rounded` uses default border radius, not consistent `rounded-[5px]`
+- ❌ Creates visual inconsistency with other admin pages (MemberList, ProgramList, etc.)
+
+**Root Cause Analysis - Why Developers Make This Mistake:**
+
+1. **Copying Incomplete Patterns:**
+   - Developers copy badge code from other projects or examples
+   - They use generic "small badge" patterns (`text-xs`, `px-2 py-1`)
+   - They don't verify against existing admin pages in the same project
+
+2. **Missing Reference Check:**
+   - Developers don't check existing admin pages (MemberList, ProgramList) for status badge patterns
+   - They assume "badge = small" without verifying project standards
+   - They implement functionality first, then forget to verify UI consistency
+
+3. **Tailwind Class Misunderstanding:**
+   - Developers choose `text-xs` thinking it's "standard small text"
+   - They don't realize project uses `text-[13px]` as standard
+   - They don't understand the difference between `inline-block` and `inline-flex items-center`
+
+4. **Visual Verification Gap:**
+   - Developers don't visually compare their implementation with existing pages
+   - They don't test side-by-side with MemberList or ProgramList pages
+   - They assume "it looks fine" without cross-referencing
+
+5. **Incomplete Pattern Recognition:**
+   - Developers see "badge" and think "small component"
+   - They don't recognize that status badges need to be readable and consistent
+   - They prioritize "small" over "consistent"
+
+6. **Development Process Issues:**
+   - No visual comparison step in development workflow
+   - No checklist to verify UI consistency
+   - No reference implementation verification step
+
+7. **Cognitive Bias:**
+   - "Badges should be small" assumption
+   - Focus on functionality over UI/UX consistency
+   - "Good enough" mentality instead of "matches existing pattern"
+
+**Verification Checklist:**
+
+Before implementing any status badge/button, verify:
+
+- [ ] **Reference Check**
+  - [ ] Checked MemberListPageView for status badge implementation
+  - [ ] Checked ProgramListPageView for status badge implementation
+  - [ ] Verified badge size matches existing admin pages
+  - [ ] Compared visually with existing status badges
+
+- [ ] **Text Size**
+  - [ ] Using `text-[13px]` (NOT `text-xs`)
+  - [ ] Text size matches other admin pages
+
+- [ ] **Padding**
+  - [ ] Using `px-2.5 py-0.5` (NOT `px-2 py-1`)
+  - [ ] Padding creates consistent visual proportions
+
+- [ ] **Layout**
+  - [ ] Using `inline-flex items-center` (NOT `inline-block`)
+  - [ ] Proper vertical alignment with text
+
+- [ ] **Border Radius**
+  - [ ] Using `rounded-[5px]` (NOT `rounded`)
+  - [ ] Consistent rounded corners
+
+- [ ] **Font Weight**
+  - [ ] Using `font-medium`
+  - [ ] Consistent font weight across badges
+
+- [ ] **Visual Comparison**
+  - [ ] Opened MemberList page and compared badge sizes
+  - [ ] Opened ProgramList page and compared badge sizes
+  - [ ] Verified badges look identical in size and style
+  - [ ] Tested on different screen sizes
+
+**Reference Implementation Files:**
+
+Check these files for correct status badge implementation:
+
+- `src/features/adminWeb/member/list/ui/MemberListPageView.tsx` (line ~671)
+- `src/features/adminWeb/program/list/ui/ProgramListPageView.tsx` (if applicable)
+- `src/features/adminWeb/article/list/ui/ArticleListPageView.tsx` (if applicable)
+
+**All status badges in admin pages MUST use this exact pattern:**
+
+```typescript
+<span
+  className={`inline-flex items-center px-2.5 py-0.5 rounded-[5px] text-[13px] font-medium ${
+    // Status-specific classes
+  }`}
+>
+  {/* Status label */}
+</span>
+```
+
+**MUST NOT:**
+
+- ❌ Use `text-xs` for status badges (use `text-[13px]`)
+- ❌ Use `px-2 py-1` for status badges (use `px-2.5 py-0.5`)
+- ❌ Use `inline-block` for status badges (use `inline-flex items-center`)
+- ❌ Use `rounded` for status badges (use `rounded-[5px]`)
+- ❌ Create different badge sizes for similar status indicators
+- ❌ Skip visual comparison with existing admin pages
+- ❌ Assume "badge = small" without verifying project standards
+
+**Prevention Strategy:**
+
+1. **Always Check Reference**: Before implementing status badges, open MemberListPageView and check the exact classes used
+2. **Visual Comparison**: After implementation, open both pages side-by-side and compare badge sizes
+3. **Copy Exact Pattern**: Copy the exact className string from reference implementation
+4. **Verify Checklist**: Use the verification checklist above before marking as complete
+5. **Code Review**: Include UI consistency check in code review process
+
+**Remember**: UI consistency is more important than "making it small". Always match existing patterns, not generic examples.
+
+---
+
+### ⚠️ CRITICAL: List Table Status & Action Button Sizing (Admin List/Detail Pages)
+
+**When this rule applies:**
+
+- You are building or editing an **admin list page** (table with status column and action column).
+- You are building or editing an **admin detail list page** (e.g. 신청목록 상세 with status and 상세/삭제 buttons).
+- You need status badges or action buttons (보기, 상세, 삭제) to look **identical** across Support list, Study list, and Support detail list.
+
+**Goal:** Same visual size and proportions for status badges and row action buttons across all such tables. Use **fixed pixel minimum width** so sizes do not vary by font or container (avoid `em` for width).
+
+---
+
+#### 1. Status badge in list/detail tables
+
+**MUST:**
+
+- Use **fixed minimum width** so all status cells have the same width regardless of label length:
+  - `min-w-[72px]` (not `min-w-[4.5em]` or `min-w-[3.5em]`).
+- Use: `inline-flex items-center justify-center min-w-[72px] px-2.5 py-0.5 rounded-[5px] text-[13px] font-medium` plus status-specific color classes.
+- Apply the same pattern in **desktop table** and **mobile card** views.
+
+**MUST NOT:**
+
+- Use `min-w-[*em]` for list/detail table status badges (renders inconsistently across contexts).
+- Use different padding or text size than above for status in list tables.
+
+**Correct pattern:**
+
+```tsx
+<span
+  className={`inline-flex items-center justify-center min-w-[72px] px-2.5 py-0.5 rounded-[5px] text-[13px] font-medium ${getStatusClass(status)}`}
+>
+  {getStatusLabel(status)}
+</span>
+```
+
+---
+
+#### 2. Action buttons in list/detail tables
+
+**MUST:**
+
+- **“보기” (applicant/list link) button:**  
+  `className="px-2 py-1 text-[12px] text-blue-600 border border-blue-600 rounded hover:bg-blue-50 transition-colors"`
+- **“상세” / “삭제” (detail/delete) buttons:**  
+  `className="px-3 py-1 text-[13px] text-blue-600 border border-blue-600 rounded hover:bg-blue-50 ..."` (and same for red for 삭제, with `disabled:opacity-50 disabled:cursor-not-allowed` where needed).
+- Keep these classes **identical** across Support list, Study list, and Support detail list so row heights and button sizes match.
+
+**MUST NOT:**
+
+- Use `min-w-[*em]` or different padding (e.g. `px-2.5 py-0.5`) for these list-row action buttons.
+- Use different font size for the same button role (e.g. 보기 must stay `text-[12px]`, 상세/삭제 `text-[13px]`).
+
+---
+
+#### 3. Skeleton placeholders (loading state)
+
+**MUST:**
+
+- **Status column skeleton:** width `72px` (or `50px` where layout matches other lists), height `22px`, `borderRadius: "5px"` or `"4px"` to match real badge.
+- **Action column skeletons (보기, 상세, 삭제):** use same proportions as real buttons; e.g. `60px`×`28px` for single “보기” cell, `45px`×`28px` per button in 관리 column, `borderRadius: "4px"`.
+
+**Purpose:** Loading state should approximate final layout so the table does not “jump” when data loads.
+
+---
+
+#### 4. Reference implementations (copy from these)
+
+- **Support list (청소년 자기계발 연수지원 목록):**  
+  `src/features/adminWeb/support/list/ui/SupportListPageView.tsx`  
+  → Status badge `min-w-[72px]`, 보기 `px-2 py-1 text-[12px]`, 상세/삭제 `px-3 py-1 text-[13px]`.  
+  → **사업 진행상태(RUN_STA):** 01 모집예정, 02 모집중, 04 모집마감, 99 취소 — 스터디·공공형 진로진학 컨설팅·1:1 원어민 화상영어·지역연계 진로체험·꿈탐험·글로벌 문화탐방·청소년 자기계발 연수지원 등 **동일**. 구현·라벨·배지색은 `@/entities/adminWeb/support/lib/runStaAdmin` (`getRunStaLabel`, `RUN_STA_BASE_OPTIONS`, …) 단일 참조.
+- **Study list (스터디사업 목록):**  
+  `src/features/adminWeb/support/study/list/ui/StudyListPageView.tsx`  
+  → Same as above.
+- **Support detail list (신청목록 상세):**  
+  `src/features/adminWeb/support/detail/ui/SupportDetailListPageView.tsx`  
+  → Status `min-w-[72px]`, 상세/삭제 `px-3 py-1 text-[13px]` (no 보기 in same row).
+
+---
+
+#### 5. Verification checklist (list/detail tables only)
+
+Before shipping a list or detail list page:
+
+- [ ] Status badge uses `min-w-[72px]` (no `em`).
+- [ ] Status badge uses `inline-flex items-center justify-center`, `px-2.5 py-0.5`, `rounded-[5px]`, `text-[13px]`, `font-medium`.
+- [ ] 보기 button uses `px-2 py-1 text-[12px]` (if present).
+- [ ] 상세/삭제 buttons use `px-3 py-1 text-[13px]`.
+- [ ] Skeleton for status and action columns uses the sizes above (72px or 50px for status; 45px/60px for buttons as applicable).
+- [ ] Compared visually with SupportListPageView or SupportDetailListPageView so status and buttons look the same size.
+
+---
+
+#### 6. Decision cue
+
+```
+Implementing or changing a list/detail table?
+├─ Does it have a status column?
+│  └─ YES → Use min-w-[72px] + px-2.5 py-0.5 rounded-[5px] text-[13px] font-medium for badge.
+├─ Does it have "보기" / "상세" / "삭제" in a row?
+│  └─ YES → Use px-2 py-1 text-[12px] for 보기; px-3 py-1 text-[13px] for 상세/삭제.
+└─ Copy exact class names from SupportListPageView or SupportDetailListPageView.
+```
+
+---
+
+### ⚠️ CRITICAL: Action Button Consistency (Register/Edit/Delete Buttons)
+
+**MUST ALWAYS use consistent button styles and icons for action buttons across all admin list pages when:**
+
+- ✅ Creating register buttons (등록)
+- ✅ Creating edit buttons (수정)
+- ✅ Creating delete buttons (삭제)
+- ✅ Copying button code from other pages
+- ✅ Refactoring existing buttons
+- ✅ Adding new action buttons to list pages
+
+**MUST ensure ALL action buttons use consistent styling, colors, and icons across all admin pages.**
+
+---
+
+## ✅ CORRECT: Register Button Template
+
+**MUST use this exact template for ALL register buttons in admin list pages:**
+
+```tsx
+<button
+  className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors text-[13px]"
+  style={{ minWidth: '100px' }}
+  onClick={handleRegister}
+>
+  ✏️ 등록
+</button>
+```
+
+**Required Properties (MUST use exactly):**
+
+- ✅ **Background color**: `bg-green-600` (NOT `bg-blue-600`, `bg-gray-600`, etc.)
+- ✅ **Hover color**: `hover:bg-green-700` (NOT `hover:bg-green-800`, etc.)
+- ✅ **Text color**: `text-white` (required)
+- ✅ **Border radius**: `rounded` (NOT `rounded-lg`, `rounded-md`, etc.)
+- ✅ **Padding**: `px-4 py-2` (NOT `px-3 py-1`, `px-5 py-3`, etc.)
+- ✅ **Font size**: `text-[13px]` (NOT `text-sm`, `text-base`, etc.)
+- ✅ **Min width**: `minWidth: "100px"` (inline style, required)
+- ✅ **Icon**: `✏️` (pencil emoji, NOT `📄`, `➕`, `✍️`, etc.)
+- ✅ **Text**: `등록` (exact Korean text)
+- ✅ **Transition**: `transition-colors` (for smooth hover effect)
+
+**Structure Pattern:**
+
+```tsx
+<div className="flex justify-end mb-3 gap-2">
+  <button
+    className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors text-[13px]"
+    style={{ minWidth: '100px' }}
+    onClick={handleSearch}
+  >
+    🔍 조회
+  </button>
+  <button
+    className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors text-[13px]"
+    style={{ minWidth: '100px' }}
+    onClick={handleRegister}
+  >
+    ✏️ 등록
+  </button>
+</div>
+```
+
+---
+
+## ❌ WRONG: Inconsistent Register Buttons
+
+### Wrong Example 1: Different Icon
+
+```tsx
+// ❌ WRONG: Using document icon instead of pencil
+<button
+  className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors text-[13px]"
+  style={{ minWidth: '100px' }}
+  onClick={handleRegister}
+>
+  📄 등록 {/* ❌ Wrong icon */}
+</button>
+```
+
+**Why this is WRONG:**
+
+- ❌ Inconsistent icon breaks visual recognition across pages
+- ❌ Users expect consistent icon for same action
+- ❌ Creates confusion when navigating between admin pages
+
+### Wrong Example 2: Different Icon (Plus)
+
+```tsx
+// ❌ WRONG: Using plus icon instead of pencil
+<button
+  className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors text-[13px]"
+  style={{ minWidth: '100px' }}
+  onClick={handleRegister}
+>
+  ➕ 등록 {/* ❌ Wrong icon */}
+</button>
+```
+
+**Why this is WRONG:**
+
+- ❌ Plus icon suggests "add" not "register/edit"
+- ❌ Inconsistent with other admin pages
+- ❌ Breaks visual consistency
+
+### Wrong Example 3: Missing Icon
+
+```tsx
+// ❌ WRONG: No icon at all
+<button
+  className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors text-[13px]"
+  style={{ minWidth: '100px' }}
+  onClick={handleRegister}
+>
+  등록 {/* ❌ Missing icon */}
+</button>
+```
+
+**Why this is WRONG:**
+
+- ❌ Missing visual indicator reduces button recognition
+- ❌ Inconsistent with other admin pages that have icons
+- ❌ Less professional appearance
+
+### Wrong Example 4: Different Color
+
+```tsx
+// ❌ WRONG: Using blue instead of green
+<button
+  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors text-[13px]"
+  style={{ minWidth: '100px' }}
+  onClick={handleRegister}
+>
+  ✏️ 등록 {/* ✅ Icon is correct, but color is wrong */}
+</button>
+```
+
+**Why this is WRONG:**
+
+- ❌ Blue is reserved for "조회" (search) buttons
+- ❌ Green is the standard color for "등록" (register) buttons
+- ❌ Color inconsistency breaks visual hierarchy
+
+### Wrong Example 5: Different Size/Padding
+
+```tsx
+// ❌ WRONG: Different padding and size
+<button
+  className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 transition-colors text-sm"
+  onClick={handleRegister}
+>
+  ✏️ 등록 {/* ❌ Missing minWidth, wrong padding, wrong text size */}
+</button>
+```
+
+**Why this is WRONG:**
+
+- ❌ Different padding creates inconsistent button sizes
+- ❌ Missing `minWidth` causes buttons to have different widths
+- ❌ Different text size breaks visual consistency
+
+---
+
+## 🔍 Root Cause Analysis: Why Developers Make This Mistake
+
+### 1. **Copy-Paste from Different Sources**
+
+**Problem:**
+
+- Developers copy button code from different pages or projects
+- Each source uses different icons or styles
+- No verification against project standards
+
+**Example:**
+
+```tsx
+// Developer copies from MemberList (uses 📄)
+// Then copies from BoardList (uses ✏️)
+// Result: Inconsistent icons across pages
+```
+
+**Solution:**
+
+- Always check existing admin pages for button patterns
+- Use reference implementation as single source of truth
+- Verify icon consistency before implementing
+
+### 2. **Icon Selection Based on Personal Preference**
+
+**Problem:**
+
+- Developers choose icons based on what "makes sense" to them
+- No standardized icon mapping for actions
+- Different interpretations of same action
+
+**Example:**
+
+- Register action: Some use `📄` (document), others use `➕` (plus), others use `✏️` (pencil)
+- Each developer thinks their choice is "logical"
+
+**Solution:**
+
+- Use standardized icon mapping: `✏️` for register/edit actions
+- Document icon choices in project rules
+- Enforce consistency through code review
+
+### 3. **Missing Reference Check**
+
+**Problem:**
+
+- Developers don't check existing admin pages before implementing
+- They assume their implementation is correct
+- No visual comparison step in workflow
+
+**Example:**
+
+```tsx
+// Developer creates new page
+// Implements register button with ➕ icon
+// Never checks MemberList, BoardList, ProgramList
+// Result: Inconsistent icon
+```
+
+**Solution:**
+
+- Always check at least 2-3 existing admin pages before implementing
+- Compare visually side-by-side
+- Use checklist to verify consistency
+
+### 4. **Incremental Development Without Consistency Review**
+
+**Problem:**
+
+- Pages developed at different times by different developers
+- Each page implemented independently
+- No consistency review across all pages
+
+**Example:**
+
+- MemberList created first with `📄` icon
+- BoardList created later with `✏️` icon
+- ProgramList created later with `✏️` icon
+- CodeList created later with `➕` icon
+- No one noticed the inconsistency until user feedback
+
+**Solution:**
+
+- Regular consistency audits across all admin pages
+- Code review checklist includes UI consistency check
+- Update existing pages when standard changes
+
+### 5. **Lack of Standardized Button Component**
+
+**Problem:**
+
+- No reusable button component with enforced styling
+- Each developer implements buttons from scratch
+- No enforced consistency through components
+
+**Example:**
+
+```tsx
+// Each page implements button differently
+// No shared component to enforce consistency
+// Result: Inconsistent implementations
+```
+
+**Solution:**
+
+- Create shared button components (if applicable)
+- Document exact button template in rules
+- Enforce through code review and linting
+
+### 6. **Visual Testing Gap**
+
+**Problem:**
+
+- Developers test functionality, not visual consistency
+- No side-by-side comparison with existing pages
+- Visual differences not caught during development
+
+**Example:**
+
+- Developer implements button
+- Tests that onClick works
+- Never opens other admin pages to compare appearance
+- Result: Functional but visually inconsistent
+
+**Solution:**
+
+- Include visual comparison in testing checklist
+- Open multiple admin pages side-by-side
+- Verify buttons look identical
+
+### 7. **No Documentation of Standards**
+
+**Problem:**
+
+- Button standards not documented
+- Developers have no reference for correct implementation
+- Each developer guesses what's correct
+
+**Example:**
+
+- No rule file mentions button icons
+- Developer searches codebase, finds different icons
+- Chooses one randomly
+- Result: Inconsistent choice
+
+**Solution:**
+
+- Document button standards in rules (this rule)
+- Provide exact templates
+- Include in onboarding documentation
+
+---
+
+## 📋 Verification Checklist for Register Buttons
+
+**MUST verify ALL items when creating/modifying register buttons:**
+
+### Pre-Implementation Checklist
+
+- [ ] **Checked existing admin pages** (MemberList, BoardList, ProgramList, CodeList)
+- [ ] **Identified standard icon** (`✏️` for register buttons)
+- [ ] **Identified standard color** (`bg-green-600` for register buttons)
+- [ ] **Reviewed button template** from reference implementation
+
+### Implementation Checklist
+
+- [ ] **Background color**: Using `bg-green-600` (NOT blue, gray, etc.)
+- [ ] **Hover color**: Using `hover:bg-green-700`
+- [ ] **Text color**: Using `text-white`
+- [ ] **Border radius**: Using `rounded`
+- [ ] **Padding**: Using `px-4 py-2`
+- [ ] **Font size**: Using `text-[13px]`
+- [ ] **Min width**: Using `minWidth: "100px"` (inline style)
+- [ ] **Icon**: Using `✏️` (pencil emoji, NOT `📄`, `➕`, etc.)
+- [ ] **Text**: Using `등록` (exact Korean text)
+- [ ] **Transition**: Using `transition-colors`
+- [ ] **Button placement**: In `flex justify-end mb-3 gap-2` container
+
+### Post-Implementation Checklist
+
+- [ ] **Visual comparison**: Opened other admin pages and compared button appearance
+- [ ] **Icon consistency**: Verified icon matches other register buttons
+- [ ] **Color consistency**: Verified color matches other register buttons
+- [ ] **Size consistency**: Verified button size matches other register buttons
+- [ ] **Functionality test**: Verified onClick handler works correctly
+- [ ] **Responsive test**: Verified button appearance on mobile and desktop
+
+### Code Review Checklist
+
+- [ ] **Every register button uses exact template** from this rule
+- [ ] **Icon is `✏️`** (pencil emoji) for all register buttons
+- [ ] **Color is `bg-green-600`** for all register buttons
+- [ ] **No register buttons use different icons** (`📄`, `➕`, etc.)
+- [ ] **No register buttons use different colors** (blue, gray, etc.)
+- [ ] **All register buttons have `minWidth: "100px"`** style
+- [ ] **All register buttons use `text-[13px]`** font size
+
+---
+
+## 🔄 Step-by-Step Implementation Guide
+
+### Step 1: Check Existing Pages
+
+```tsx
+// Before implementing, check these files:
+// 1. src/features/adminWeb/member/list/ui/MemberListPageView.tsx
+// 2. src/features/adminWeb/board/list/ui/BoardListPageView.tsx
+// 3. src/features/adminWeb/program/list/ui/ProgramListPageView.tsx
+// 4. src/features/adminWeb/code/manage/ui/CmmCodeManagePageView.tsx
+
+// Verify: All use ✏️ icon and bg-green-600 color
+```
+
+### Step 2: Copy Exact Template
+
+```tsx
+// ✅ CORRECT: Copy exact template
+<button
+  className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors text-[13px]"
+  style={{ minWidth: '100px' }}
+  onClick={handleRegister}
+>
+  ✏️ 등록
+</button>
+```
+
+### Step 3: Verify Icon
+
+```tsx
+// ✅ CORRECT: Use pencil icon
+✏️ 등록
+
+// ❌ WRONG: Don't use other icons
+📄 등록  // ❌ Document icon
+➕ 등록  // ❌ Plus icon
+✍️ 등록  // ❌ Writing hand icon
+```
+
+### Step 4: Verify Color
+
+```tsx
+// ✅ CORRECT: Use green for register
+className = '... bg-green-600 ... hover:bg-green-700 ...';
+
+// ❌ WRONG: Don't use other colors
+className = '... bg-blue-600 ...'; // ❌ Blue is for search buttons
+className = '... bg-gray-600 ...'; // ❌ Gray is not standard
+```
+
+### Step 5: Verify Placement
+
+```tsx
+// ✅ CORRECT: Place in flex container with search button
+<div className="flex justify-end mb-3 gap-2">
+  <button className="... bg-blue-600 ...">🔍 조회</button>
+  <button className="... bg-green-600 ...">✏️ 등록</button>
+</div>
+```
+
+### Step 6: Visual Comparison
+
+```
+1. Open your new page in browser
+2. Open MemberList page in another tab
+3. Compare register buttons side-by-side
+4. Verify they look identical
+5. If different, fix to match exactly
+```
+
+---
+
+## 🚫 Common Mistakes to Avoid
+
+### Mistake 1: Using Different Icons
+
+```tsx
+// ❌ WRONG: Different icons for same action
+<button>📄 등록</button>  // MemberList (old)
+<button>✏️ 등록</button>  // BoardList
+<button>➕ 등록</button>  // CodeList (old)
+```
+
+**Fix:**
+
+```tsx
+// ✅ CORRECT: Same icon for all register buttons
+<button>✏️ 등록</button> // All pages
+```
+
+### Mistake 2: Using Different Colors
+
+```tsx
+// ❌ WRONG: Different colors for register buttons
+<button className="bg-blue-600">✏️ 등록</button>
+<button className="bg-green-600">✏️ 등록</button>
+```
+
+**Fix:**
+
+```tsx
+// ✅ CORRECT: Same color for all register buttons
+<button className="bg-green-600">✏️ 등록</button>
+```
+
+### Mistake 3: Missing MinWidth
+
+```tsx
+// ❌ WRONG: No minWidth, buttons have different widths
+<button className="px-4 py-2 bg-green-600">✏️ 등록</button>
+```
+
+**Fix:**
+
+```tsx
+// ✅ CORRECT: Include minWidth for consistent button sizes
+<button className="px-4 py-2 bg-green-600" style={{ minWidth: '100px' }}>
+  ✏️ 등록
+</button>
+```
+
+### Mistake 4: Different Text Sizes
+
+```tsx
+// ❌ WRONG: Different text sizes
+<button className="text-sm">✏️ 등록</button>
+<button className="text-[13px]">✏️ 등록</button>
+```
+
+**Fix:**
+
+```tsx
+// ✅ CORRECT: Same text size for all buttons
+<button className="text-[13px]">✏️ 등록</button>
+```
+
+---
+
+## 💡 Key Principles
+
+1. **Consistency First**: ALL register buttons MUST look identical across all admin pages
+2. **Visual Recognition**: Consistent icons help users quickly identify action buttons
+3. **Professional Appearance**: Inconsistent buttons look unprofessional and untested
+4. **Maintainability**: Standardized buttons are easier to maintain and update
+5. **User Experience**: Users expect consistent UI patterns across the application
+
+---
+
+## 🔍 Decision Tree
+
+```
+Creating register button?
+├─ Does it use ✏️ icon?
+│  ├─ YES → Does it use bg-green-600?
+│  │  ├─ YES → Does it have minWidth: "100px"?
+│  │  │  ├─ YES → Does it use text-[13px]?
+│  │  │  │  ├─ YES → ✅ Correct implementation
+│  │  │  │  └─ NO → ❌ Fix text size
+│  │  │  └─ NO → ❌ Add minWidth style
+│  │  └─ NO → ❌ Fix color to bg-green-600
+│  └─ NO → ❌ Fix icon to ✏️
+└─ Reviewing existing buttons?
+   ├─ Check all register buttons across admin pages
+   ├─ Verify each uses ✏️ icon
+   ├─ Verify each uses bg-green-600 color
+   └─ Fix any inconsistencies
+```
+
+---
+
+## 📚 Reference Implementation
+
+**Files that correctly implement this rule:**
+
+- ✅ `src/features/adminWeb/member/list/ui/MemberListPageView.tsx` (line ~151)
+- ✅ `src/features/adminWeb/board/list/ui/BoardListPageView.tsx` (line ~156)
+- ✅ `src/features/adminWeb/program/list/ui/ProgramListPageView.tsx` (line ~135)
+- ✅ `src/features/adminWeb/code/manage/ui/CmmCodeManagePageView.tsx` (line ~1895, ~2393)
+
+**All register buttons in admin pages MUST use this exact pattern:**
+
+```tsx
+<button
+  className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors text-[13px]"
+  style={{ minWidth: '100px' }}
+  onClick={handleRegister}
+>
+  ✏️ 등록
+</button>
+```
+
+---
+
+## 🚫 MUST NOT
+
+**MUST NOT:**
+
+- ❌ **NEVER** use different icons for register buttons (`📄`, `➕`, `✍️`, etc.)
+- ❌ **NEVER** use different colors for register buttons (`bg-blue-600`, `bg-gray-600`, etc.)
+- ❌ **NEVER** omit the icon from register buttons
+- ❌ **NEVER** use different text sizes (`text-sm`, `text-base`, etc.)
+- ❌ **NEVER** skip `minWidth: "100px"` style
+- ❌ **NEVER** create register buttons without checking existing admin pages
+- ❌ **NEVER** assume your icon/color choice is correct without verification
+- ❌ **NEVER** skip visual comparison with other admin pages
+
+---
+
+## 🔄 Migration Guide
+
+**If you find existing register buttons with wrong icons/colors:**
+
+### Step 1: Identify All Register Buttons
+
+```bash
+# Search for register buttons
+grep -r "등록" src/features/adminWeb/*/list/ui/
+```
+
+### Step 2: Check Each Button
+
+```tsx
+// For each register button, verify:
+// 1. Icon is ✏️
+// 2. Color is bg-green-600
+// 3. Has minWidth: "100px"
+// 4. Uses text-[13px]
+```
+
+### Step 3: Fix Inconsistencies
+
+```tsx
+// ❌ Before: Wrong icon
+<button className="... bg-green-600 ...">
+  📄 등록  // ❌ Wrong icon
+</button>
+
+// ✅ After: Correct icon
+<button className="... bg-green-600 ...">
+  ✏️ 등록  // ✅ Correct icon
+</button>
+```
+
+### Step 4: Verify All Buttons
+
+```
+1. Open all admin list pages
+2. Compare register buttons visually
+3. Verify they all look identical
+4. Test functionality after changes
+```
+
+---
+
+**Remember**: UI consistency is critical for professional applications. Always verify register buttons match the exact template from this rule. When in doubt, check existing admin pages (MemberList, BoardList, ProgramList) as reference implementations.
+
+---
+
+**Remember**: Always check existing admin pages (e.g., `ProgramListPageView.tsx`) as reference patterns when creating new admin pages.
+
+---
+
+## 🔘 Two-Option Toggle (Yes/No or Option A | Option B Style)
+
+### ⚠️ CRITICAL: When to Use This Pattern
+
+**MUST ALWAYS use the two-option toggle pattern (two adjacent buttons, one selected) when:**
+
+- ✅ Implementing a form field where **exactly one of two values** must be chosen (e.g., Yes/No, Option A / Option B)
+- ✅ Replacing radio buttons or checkboxes for a **binary or two-choice** field in admin registration/edit forms
+- ✅ Building fields such as: 기초생활수급자 (Yes/No), 차상위계층 (Yes/No), 한부모가족 (Yes/No), 사업구분 (마중물/희망)
+
+**MUST NOT:**
+
+- ❌ Use radio buttons or checkboxes for two-option fields when this rule applies (use the toggle button pattern instead)
+- ❌ Use a different visual style (e.g., different colors, padding, or layout) for the same pattern
+- ❌ Omit `type="button"` on the buttons (prevents accidental form submit)
+
+**Why This Rule is CRITICAL:**
+
+1. **Consistency**: All two-option fields look and behave the same across admin forms.
+2. **Recognition**: Users quickly recognize "pick one of two" without reading labels.
+3. **Accessibility**: Clear selected state (blue background) and hover states.
+
+---
+
+### ✅ CORRECT: Two-Option Toggle Structure
+
+**MUST use this exact structure inside a `FormField`:**
+
+```tsx
+<FormField label="Field Label" fullWidth error={errors.fieldName}>
+  <div className="flex items-center gap-0 py-2">
+    <button
+      type="button"
+      onClick={() => {
+        const event = {
+          target: { name: 'fieldName', value: 'valueA' },
+        } as React.ChangeEvent<HTMLInputElement>;
+        handleInputChange(event);
+      }}
+      className={`flex-1 px-4 py-2 text-[13px] font-medium rounded-l border border-gray-300 transition-colors ${
+        formData.fieldName === 'valueA'
+          ? 'bg-blue-600 text-white border-blue-600'
+          : 'bg-white text-gray-700 hover:bg-gray-50'
+      }`}
+      style={{ minWidth: '80px' }}
+    >
+      Option A Label
+    </button>
+    <button
+      type="button"
+      onClick={() => {
+        const event = {
+          target: { name: 'fieldName', value: 'valueB' },
+        } as React.ChangeEvent<HTMLInputElement>;
+        handleInputChange(event);
+      }}
+      className={`flex-1 px-4 py-2 text-[13px] font-medium rounded-r border-t border-r border-b border-gray-300 transition-colors ${
+        formData.fieldName === 'valueB'
+          ? 'bg-blue-600 text-white border-blue-600'
+          : 'bg-white text-gray-700 hover:bg-gray-50'
+      }`}
+      style={{ minWidth: '80px' }}
+    >
+      Option B Label
+    </button>
+  </div>
+</FormField>
+```
+
+**Required properties (MUST use exactly):**
+
+- ✅ **Container**: `div` with `className="flex items-center gap-0 py-2"` (no gap between buttons)
+- ✅ **Buttons**: `type="button"` on both
+- ✅ **Left button**: `rounded-l` and full `border border-gray-300`
+- ✅ **Right button**: `rounded-r` and `border-t border-r border-b border-gray-300` (shared left border with first button)
+- ✅ **Selected state**: `bg-blue-600 text-white border-blue-600`
+- ✅ **Unselected state**: `bg-white text-gray-700 hover:bg-gray-50`
+- ✅ **Sizing**: `flex-1`, `px-4 py-2`, `text-[13px]`, `font-medium`, `style={{ minWidth: "80px" }}`
+- ✅ **Change handler**: Use existing form `handleInputChange` with synthetic event `{ target: { name, value } }`
+
+---
+
+### ❌ WRONG: Common Mistakes
+
+**Wrong 1: Using radio or checkbox instead of toggle buttons**
+
+```tsx
+// ❌ WRONG: Radio/checkbox for two-option field
+<FormField label="기초생활수급자">
+  <label>
+    <input type="radio" name="basicYn" value="Y" /> 예
+  </label>
+  <label>
+    <input type="radio" name="basicYn" value="N" /> 아니요
+  </label>
+</FormField>
+```
+
+**Why WRONG:** Inconsistent with the standard two-option toggle pattern used elsewhere (기초생활수급자, 사업구분). Use the button-style toggle.
+
+**Wrong 2: Different colors or padding**
+
+```tsx
+// ❌ WRONG: Different selected color or padding
+className = 'px-3 py-1 ... bg-indigo-600 ...'; // ❌ Use px-4 py-2, bg-blue-600
+```
+
+**Wrong 3: Missing type="button"**
+
+```tsx
+// ❌ WRONG: Omitting type="button" can submit the form on click
+<button onClick={() => { ... }}>
+```
+
+**Fix:** Always use `type="button"` for toggle buttons inside forms.
+
+---
+
+### 📋 Verification Checklist
+
+Before implementing or changing a two-option field:
+
+- [ ] **Pattern**: Field is exactly two mutually exclusive options (not multi-select)
+- [ ] **Container**: `flex items-center gap-0 py-2` wrapper present
+- [ ] **Left button**: `rounded-l`, `border border-gray-300`, selected `bg-blue-600 text-white border-blue-600`
+- [ ] **Right button**: `rounded-r`, `border-t border-r border-b border-gray-300`, same selected/unselected classes
+- [ ] **Handler**: `handleInputChange` called with `{ target: { name, value } }` (no custom setState for this field if form already has handleInputChange)
+- [ ] **Button type**: Both buttons have `type="button"`
+- [ ] **Reference**: Checked `StudyRegisterForm.tsx` (기초생활수급자, 차상위계층, 한부모가족, 사업구분) for exact markup
+
+---
+
+### 🔍 Decision Tree
+
+```
+Adding a form field that has exactly two choices (e.g. Yes/No, A/B)?
+├─ Is it mutually exclusive (user must pick one)?
+│  └─ YES → Use the two-option toggle pattern (two buttons, same row)
+│     ├─ Wrap in FormField with label (and optional fullWidth, required, error)
+│     ├─ Inner div: flex items-center gap-0 py-2
+│     ├─ Left button: rounded-l, value A, handleInputChange with name/value
+│     └─ Right button: rounded-r, value B, same classes as left (selected: bg-blue-600, unselected: bg-white hover:bg-gray-50)
+└─ Is it multi-select or more than two options?
+   └─ NO → Do not use this pattern (use checkboxes or FormSelect instead)
+```
+
+---
+
+### 📚 Reference Implementation
+
+**File:** `src/features/adminWeb/support/study/register/ui/StudyRegisterForm.tsx`
+
+- **기초생활수급자 (basicYn)**: Yes/No toggle — lines ~176–214
+- **차상위계층 (poorYn)**: Yes/No toggle — lines ~217–255
+- **한부모가족 (singleYn)**: Yes/No toggle — lines ~258–296
+- **사업구분 (programType)**: 마중물 / 희망 toggle — lines ~413–454
+
+Copy the exact structure and class names from these blocks when adding new two-option fields.
+
+---
+
+### 🚫 MUST NOT
+
+- ❌ Use radio buttons or checkboxes for two-option fields where this pattern is specified
+- ❌ Use different colors (e.g. `bg-indigo-600`) or padding (`px-3 py-1`) for the toggle buttons
+- ❌ Omit `type="button"` on the toggle buttons
+- ❌ Use a different container structure (e.g. `gap-4` between buttons or separate rows)
+- ❌ Implement a custom change handler if the form already has `handleInputChange` that supports `name`/`value`; use synthetic event instead
+
+---
+
+## 📎 Attachment File UI (Admin Web)
+
+### ⚠️ CRITICAL: Attachment File Row Structure
+
+**MUST ALWAYS use this structure for attachment file UI in admin registration/edit forms when:**
+
+- ✅ Adding file upload to registration forms (e.g., article, board)
+- ✅ Displaying a list of selected files with remove action
+- ✅ Using extension-based file type icons
+- ✅ Referencing existing admin forms as patterns
+
+**MUST ensure the attachment block uses the same row/label/field pattern as other form fields and the standard icon set.**
+
+---
+
+### ✅ CORRECT: Attachment File Structure Pattern
+
+**Row container (only when attachment is enabled, e.g. `atchFileCnt > 0`):**
+
+```tsx
+{atchFileCnt > 0 && (
+  <div className="w-full register-form-mobile-row">
+    <div
+      className="register-form-mobile-wrapper md:flex md:items-stretch"
+      style={{ minHeight: "45px" }}
+    >
+      {/* Label cell: "첨부파일" + hidden file input + trigger button */}
+      <div
+        className="w-full md:w-[12.5%] flex items-center gap-2 m-0 register-form-label bg-gray-100"
+        style={{
+          border: "1px solid #dee2e6",
+          borderTop: "none",
+          padding: "5px",
+        }}
+      >
+        <span>첨부파일</span>
+        <input
+          ref={fileInputRef}
+          type="file"
+          multiple
+          accept="*/*"
+          className="hidden"
+          aria-hidden
+          onChange={...}
+        />
+        <button
+          type="button"
+          className="flex items-center justify-center w-8 h-8 rounded border border-gray-300 bg-gray-50 hover:bg-gray-100 text-gray-600 cursor-pointer flex-shrink-0"
+          onClick={() => fileInputRef.current?.click()}
+          title="파일 선택"
+          aria-label="파일 선택"
+        >
+          {/* Paperclip/clip SVG icon - 20x20 */}
+        </button>
+      </div>
+      {/* Field cell: list of file items */}
+      <div className="w-full md:flex-1 flex flex-col min-h-[45px]">
+        <div
+          className="register-form-mobile-field w-full flex flex-col gap-2 flex-1 min-h-[45px]"
+          style={{
+            border: "1px solid #dee2e6",
+            borderLeft: "none",
+            borderTop: "none",
+            padding: "5px",
+            minHeight: "45px",
+          }}
+        >
+          {selectedFiles.map((item) => (
+            <div
+              key={item.id}
+              className="attach-file-down flex items-center gap-2 py-2.5 px-2 rounded border border-gray-200 bg-gray-50 min-h-[30px]"
+            >
+              <img src={getFileIconSrc(item.file.name)} alt="" className="w-5 h-5 flex-shrink-0 object-contain" aria-hidden />
+              <div className="flex items-center gap-1.5 min-w-0 flex-1">
+                <span className="text-gray-800 text-sm truncate min-w-0" title={item.file.name}>{item.file.name}</span>
+                <button
+                  type="button"
+                  className="delFileBtn flex-shrink-0 w-5 h-5 bg-transparent border-0 p-0 cursor-pointer bg-center bg-no-repeat bg-contain hover:opacity-80"
+                  style={{ backgroundImage: "url(/images/adminWeb/icon/ico_file_del_new_20.png)" }}
+                  onClick={() => removeFile(item.id)}
+                  title="파일삭제"
+                  aria-label="파일삭제"
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+)}
+```
+
+**MUST:**
+
+- ✅ Use `register-form-mobile-row` for the outer row and `register-form-mobile-wrapper` for the flex wrapper
+- ✅ Use `register-form-label` for the label cell and `register-form-mobile-field` for the file list cell
+- ✅ Use inline border/style `1px solid #dee2e6`, `borderTop: "none"`, `borderLeft: "none"` on the field side to match other form rows
+- ✅ Use hidden `<input type="file">` with a ref and a trigger button (not a visible file input)
+- ✅ Use clip/paperclip SVG (20x20) for the trigger button; button size `w-8 h-8`, classes `rounded border border-gray-300 bg-gray-50 hover:bg-gray-100`
+- ✅ Use extension-based icons from `public/images/adminWeb/icon/` via a `getFileIconSrc(fileName)` helper
+- ✅ Use delete icon `ico_file_del_new_20.png` for the remove button with `delFileBtn` class and `title`/`aria-label` for "파일삭제"
+- ✅ Use `attach-file-down` for each file row; file name with `text-sm truncate min-w-0` and `title={fileName}` for tooltip
+
+**MUST NOT:**
+
+- ❌ Use a visible `<input type="file">` as the main control (use hidden input + trigger button)
+- ❌ Use different CSS classes for the row/label/field (would break alignment with other form rows)
+- ❌ Use file icons from a different path (must use `/images/adminWeb/icon/`)
+- ❌ Omit `aria-label` / `title` on the file select button and delete button
+- ❌ Use a different delete icon or inline SVG for delete (use `ico_file_del_new_20.png`)
+
+---
+
+### 📁 File Type Icon Mapping (Extension → Icon)
+
+**MUST use this mapping for `getFileIconSrc(fileName)` so all admin pages show the same icons:**
+
+| Extension(s)             | Icon file             |
+| ------------------------ | --------------------- |
+| gif, jpg, jpeg, png, bmp | `ico_file_img.png`    |
+| xls, xlsx, xlsm          | `ico_file_xlsx.png`   |
+| pdf                      | `ico_file_pdf.png`    |
+| pptx                     | `ico_file_ppt.png`    |
+| hwp, hwpx                | `ico_file_hwp.png`    |
+| (default)                | `ico_file_new_20.png` |
+
+**Base path:** `/images/adminWeb/icon` (under `public/`).
+
+**Extract extension:** lowercase, strip query string if present (e.g. `file.pdf?x=1` → `pdf`).
+
+**Reference implementation:**
+
+```typescript
+const getFileIconSrc = (fileName: string): string => {
+  const ext =
+    (fileName || '').toLowerCase().match(/\.([a-z0-9]+)(?:\?.*)?$/)?.[1] ?? '';
+  const base = '/images/adminWeb/icon';
+  if (['gif', 'jpg', 'jpeg', 'png', 'bmp'].includes(ext))
+    return `${base}/ico_file_img.png`;
+  if (['xls', 'xlsx', 'xlsm'].includes(ext)) return `${base}/ico_file_xlsx.png`;
+  if (ext === 'pdf') return `${base}/ico_file_pdf.png`;
+  if (ext === 'pptx') return `${base}/ico_file_ppt.png`;
+  if (['hwp', 'hwpx'].includes(ext)) return `${base}/ico_file_hwp.png`;
+  return `${base}/ico_file_new_20.png`;
+};
+```
+
+---
+
+### ❌ WRONG: Common Mistakes
+
+**Wrong 1: Visible file input**
+
+```tsx
+// ❌ WRONG: Visible file input
+<input type="file" className="border p-2" />
+
+// ✅ CORRECT: Hidden input + trigger button
+<input ref={fileInputRef} type="file" className="hidden" aria-hidden onChange={...} />
+<button type="button" onClick={() => fileInputRef.current?.click()} aria-label="파일 선택">...</button>
+```
+
+**Wrong 2: Different row/label classes**
+
+```tsx
+// ❌ WRONG: Custom classes break alignment with other form rows
+<div className="flex border rounded p-4">
+  <label className="font-bold">첨부파일</label>
+  <div className="flex-1">...</div>
+</div>
+
+// ✅ CORRECT: Use register-form-mobile-row / register-form-label / register-form-mobile-field
+<div className="w-full register-form-mobile-row">
+  <div className="register-form-mobile-wrapper md:flex md:items-stretch">...</div>
+</div>
+```
+
+**Wrong 3: Wrong icon path or ad-hoc icons**
+
+```tsx
+// ❌ WRONG: Icons from other path or inline emoji
+<span>📎</span>
+<img src="/assets/icons/file.svg" />
+
+// ✅ CORRECT: Use /images/adminWeb/icon/ and getFileIconSrc()
+<img src={getFileIconSrc(item.file.name)} alt="" className="w-5 h-5 flex-shrink-0 object-contain" aria-hidden />
+```
+
+**Wrong 4: Delete button without accessibility or wrong asset**
+
+```tsx
+// ❌ WRONG: No aria-label/title or wrong icon
+<button onClick={() => removeFile(item.id)}>×</button>
+
+// ✅ CORRECT: Use ico_file_del_new_20.png + title + aria-label
+<button
+  type="button"
+  className="delFileBtn flex-shrink-0 w-5 h-5 ..."
+  style={{ backgroundImage: "url(/images/adminWeb/icon/ico_file_del_new_20.png)" }}
+  onClick={() => removeFile(item.id)}
+  title="파일삭제"
+  aria-label="파일삭제"
+/>
+```
+
+---
+
+### 📋 Verification Checklist
+
+**Before implementing or changing attachment file UI:**
+
+- [ ] **Row structure**: Using `register-form-mobile-row`, `register-form-mobile-wrapper`, `register-form-label`, `register-form-mobile-field`
+- [ ] **Border/style**: Label and field use `1px solid #dee2e6`, field has `borderTop: "none"`, `borderLeft: "none"`
+- [ ] **File input**: Hidden `<input type="file">` with ref; trigger button with clip icon, `aria-label="파일 선택"`, `title="파일 선택"`
+- [ ] **File list**: Each item in a div with `attach-file-down`, icon via `getFileIconSrc(fileName)`, icon from `/images/adminWeb/icon/`
+- [ ] **Icon mapping**: Same extension → icon mapping as in the table above
+- [ ] **Delete button**: Uses `ico_file_del_new_20.png`, `title="파일삭제"`, `aria-label="파일삭제"`
+- [ ] **Reference**: Checked `ArticleRegisterForm.tsx` for the exact structure and classes
+
+---
+
+### 🔍 Decision Tree
+
+```
+Adding attachment file UI to an admin form?
+├─ Is this a registration/edit form with other form rows (label + field)?
+│  └─ YES → Use same row pattern: register-form-mobile-row, register-form-label, register-form-mobile-field
+├─ How is file selection triggered?
+│  └─ Hidden input + ref + button (clip icon) with aria-label/title
+├─ How are file type icons shown?
+│  └─ getFileIconSrc(fileName) → /images/adminWeb/icon/*.png (see mapping table)
+└─ How is remove implemented?
+   └─ Button with ico_file_del_new_20.png, title/aria-label "파일삭제"
+```
+
+---
+
+### 📚 Reference Implementation
+
+**File:** `src/features/adminWeb/article/register/ui/ArticleRegisterForm.tsx`
+
+- Attachment block: same row/label/field structure as above
+- `getFileIconSrc` implementation: extension extraction + base `/images/adminWeb/icon` + mapping table
+- Trigger button: clip SVG 20x20, `w-8 h-8`, `rounded border border-gray-300 bg-gray-50 hover:bg-gray-100`
+- File row: `attach-file-down`, icon `w-5 h-5`, file name `text-sm truncate min-w-0` with `title={fileName}`, delete button with `ico_file_del_new_20.png`
+
+**When adding attachment UI to another admin form, copy the structure and classes from ArticleRegisterForm and keep icon path and mapping consistent.**
+
+---
+
+### ⚠️ CRITICAL: Common File Attachment Patterns (Reusable)
+
+**MUST ALWAYS follow these patterns when implementing file upload in admin registration or edit forms (articles, boards, or any future feature with attachments):**
+
+**Scope:** These rules are domain-agnostic. Feature-specific fields (e.g. `atchFileCnt` for articles) are not part of the generic contract; use the pattern below and plug in the feature’s own limit source.
+
+---
+
+#### 1. State separation (Register vs Edit)
+
+**MUST:**
+
+- **Register form:** Manage only the list of files the user has selected (e.g. `selectedFiles: { id: string; file: File }[]`). There is no “existing” list from the server.
+- **Edit/Detail form:** Keep two lists clearly separated:
+  - **Existing files:** List returned by the detail/GET API (display, per-file delete). Do not resend these as new files on submit.
+  - **Pending/selected files:** Files the user added in this session; send these on submit (e.g. as `articleFiles` or the name your API expects).
+
+**MUST NOT:**
+
+- ❌ Mix “existing” and “pending” in a single list without distinguishing them (causes duplicate display or wrong payloads).
+- ❌ Send existing file identifiers as new uploads; only send newly selected `File` objects.
+
+**Example (edit form):**
+
+```tsx
+// Existing files from API (e.g. fileList)
+const [fileList, setFileList] = useState<ExistingFileItem[]>([]);
+// New files chosen in this session (e.g. selectedFiles)
+const [selectedFiles, setSelectedFiles] = useState<
+  { id: string; file: File }[]
+>([]);
+```
+
+---
+
+#### 2. API contract (FormData and field names)
+
+**MUST:**
+
+- Use **FormData** for any request that includes file(s) (multipart).
+- **On update/edit:** If the backend expects an “existing attachment group id” (e.g. to append new files), send it with the name the API defines (e.g. `atchFileId`). Omit or send empty string when there is no existing group.
+- **New files:** Append each new file under the field name required by the backend (e.g. `articleFiles` for article API). Do not change that field name without aligning with the API.
+
+**MUST NOT:**
+
+- ❌ Send files as JSON body; use FormData for multipart.
+- ❌ Omit the existing group id on update when the API requires it (new files may then be stored without linking to the entity).
+
+**Example (update payload):**
+
+```tsx
+const fd = new FormData();
+fd.append('atchFileId', existingGroupId ?? ''); // from form state / detail API
+selectedFiles.forEach((item) => fd.append('articleFiles', item.file));
+```
+
+---
+
+#### 3. After successful update: clear pending list
+
+**MUST:**
+
+- After a successful **update** that includes file uploads, when you refetch detail (or list), **clear the pending/selected files state** (e.g. `setSelectedFiles([])`).
+- Rely on the refetched “existing files” as the single source of truth for display.
+
+**MUST NOT:**
+
+- ❌ Leave the pending list populated after refetch; that causes the same files to appear twice (once from server, once from local state).
+
+**Why this is CRITICAL:** If the pending list is not cleared, the UI shows “existing + pending” and counts or visuals are wrong until refresh.
+
+**Reference:** `src/features/adminWeb/support/dreamExploration/application/register/ui/DreamExplorationApplicationRegisterForm.tsx` (상세 저장 후 `setSelectedFiles([])`), `src/features/adminWeb/support/nativeVideoEnglish/application/register/ui/NativeVideoEnglishApplicationRegisterForm.tsx` (동일).
+
+---
+
+#### 4. File count limit (generic pattern)
+
+**When the feature enforces a maximum number of attachments:**
+
+- **MUST** compute “remaining slots” as:  
+  `remaining = maxCount - existingCount - selectedCount`  
+  where `maxCount` comes from the feature’s own config or API (e.g. board/article settings). Do not assume a specific column name (e.g. `atchFileCnt` is article-specific).
+- **MUST** cap the number of new files the user can add so that `selectedCount` never exceeds `remaining` (e.g. slice the chosen FileList to `remaining` before appending to state).
+
+**MUST NOT:**
+
+- ❌ Hard-code a global “max files” in the rule; the limit is per feature and per API contract.
+
+---
+
+#### 5. Detail/edit page: deleting an existing attachment (stay on page)
+
+**On admin registration/edit (detail) screens, when the user deletes one existing attachment or promo file (per-file delete API):**
+
+**MUST:**
+
+- ✅ Keep the user on the **same detail/edit page** after success (close the toast/message dialog only; update local “existing files” state).
+- ✅ If a shared `handleMessageDialogClose` navigates to the list on **any** `success` type, distinguish **save success** (navigate to list if that is the product rule) from **inline file-delete success** (do **not** navigate). Use a dedicated flag (e.g. `messageDialogNavigateToList`) or equivalent so only form submit success triggers list navigation.
+- ✅ **Implementation note:** If one close handler covers both 저장 성공 and 첨부 삭제 성공, prefer a **`useRef` (e.g. `messageDialogNavigateToListRef`)** set **synchronously** right before `setShowMessageDialog(true)`. Relying only on `useState` for that flag can mis-fire after `async` delete flows (stale closure: delete 확인 클릭 시에도 목록으로 이동). Reference: `NativeVideoEnglishApplicationRegisterForm.tsx`.
+
+**MUST NOT:**
+
+- ❌ Navigate to the list when the user only deleted an attachment/promo file and confirmed the success message.
+- ❌ Reuse “success → always go to list” for both 저장 완료 and 첨부파일 삭제 완료 without branching.
+
+---
+
+#### 6. Support business registration/update: `MessageDialog` copy (지원사업 등록·수정)
+
+**Applies to:** 지원사업 등록/수정 훅에서 저장 성공·실패 후 띄우는 `MessageDialog` (예: 스터디사업 `useSupportUpdate`, 공공형 진로진학 컨설팅 `useCareerConsultingUpdate` / `useCareerConsultingRegister`).
+
+**MUST:**
+
+- ✅ **제목:** 동작에 맞게 짧게 — `등록 완료`, `수정 완료`, `삭제 완료`, `등록 실패`, `수정 실패` 등. 사업 유형 전체 이름을 제목에 넣지 않는다.
+- ✅ **본문(성공) 기본값:** 서비스·사업명을 반복하지 않는다. 예: `정상적으로 등록되었습니다.`, `정상적으로 수정되었습니다.`  
+  백엔드가 `response.message`를 주면 **그 값을 우선** 표시하고, 없을 때만 위 기본 문구를 쓴다.
+- ✅ **저장 API 응답 처리:** `updateSupport` / `registerSupport` 등은 **`response.result === "00"`일 때만** 성공 다이얼로그를 띄운다. 그 외 코드는 실패 다이얼로그로 처리한다.
+- ✅ **본문(실패) 기본값:** 사업명 장문 없이 짧게 — 예: `등록 중 오류가 발생했습니다.`, `수정 중 오류가 발생했습니다.`  
+  `ApiError` 등이면 `err.message` 우선.
+
+**MUST NOT:**
+
+- ❌ 본문에 `공공형 진로진학 컨설팅 사업이 성공적으로 수정되었습니다.`처럼 **사업 유형 이름을 길게 반복**하는 고정 문구.
+- ❌ HTTP 요청만 성공했다고 **무조건** 성공 다이얼로그 (`result` 미검증).
+
+**Reference:** `src/features/adminWeb/support/update/model/useSupportUpdate.ts`, `src/features/adminWeb/support/careerConsulting/update/model/useCareerConsultingUpdate.ts`, `src/features/adminWeb/support/careerConsulting/register/model/useCareerConsultingRegister.ts`
+
+---
+
+#### 7. Application registration/detail (신청 등록·상세): save & per-file delete feedback
+
+**Applies to:** 관리자 **지원사업 신청** 등록·상세 화면 (예: `useStudyApplicationRegister`, `useCareerConsultingApplicationRegister`). §6은 **사업(ARTPROM) 등록·수정**이고, 본 절은 **신청(ARTAPPM) 건** 저장·첨부 삭제 UI이다.
+
+**Page shell (신청 등록·상세 레이아웃):**
+
+- ✅ 청소년 자기계발 연수지원 `SupportApplicationRegisterPageView`처럼 **`<div className="bg-white rounded-lg shadow">`** 로 본문을 감싸고, 상단에 **`신청 정보`** 제목(`px-6 py-4 border-b`)을 둔다. 저장·닫기는 **동일 흰 카드 안**(필요 시 하단 `border-t` 푸터)에 두어 버튼 뒤가 회색만 보이지 않게 한다. 글로벌 문화탐방(`GlobalCultureTourApplicationRegisterPageView`), 지역연계 진로체험 활동(`RegionalCareerActivityApplicationRegisterPageView`), 공공형 진로진학 컨설팅(`CareerConsultingApplicationRegisterPageView` — 멘토 조회 모드면 제목 **`멘토 조회`**) + 각 폼이 이 패턴을 따른다.
+
+- ✅ **지역연계 진로체험 활동·공공형 진로진학 컨설팅 — 신규 신청 등록 기본 상태:** `useRegionalCareerActivityApplicationRegister` / `useCareerConsultingApplicationRegister`에서 **신규 등록** 시 `formData.status` 초기값 **`03`(승인)** (`STATUS_OPTIONS` 코드와 동일). 기존 신청 상세·수정은 API `sttusCode`로 채움.
+
+**Save success (`insertArtappm` / `updateArtappm` 등):**
+
+- ✅ **제목:** `mode === "detail"`(수정)이면 **`수정 완료`**, 신규 등록이면 **`등록 완료`**. 상세 모드인데 **`저장 완료`만 고정**하지 않는다 (톤이 지원사업 사업 수정·§6과 어긋남).
+- ✅ **본문:** `response.message` 우선, 없으면 예: `정상적으로 수정되었습니다.` / `정상적으로 등록되었습니다.` (사업명·유형 장문 금지 — §6과 동일 원칙).
+- ✅ **`response.result === "00"`** 일 때만 성공 다이얼로그.
+- ✅ **성공 다이얼로그 확인 후 내비게이션 (이 제품 기본):**
+  - **`mode === "detail"`(신청 건 수정):** 사용자가 확인을 누르면 **편집 화면에 머무르지 않고** 해당 사업의 **신청목록 상세**(예: 공공형 진로진학 경로 `/adminWeb/support/careerConsulting/detail?businessId=…&businessNm=…`)로 **이동**한다. 닫기·취소와 동일 목적지를 쓰는 것이 일관적이다.
+  - **신규 신청 등록:** 저장 성공 확인 후에도 동일하게 **사업별 신청목록 상세**로 이동(기존 패턴 유지).
+  - ❌ 신청 상세 **저장** 성공만으로 편집 폼에 남겨 두는 것은 **의도적인 예외가 없으면 하지 않는다** (목록 갱신·업무 흐름상 혼란). 예외가 필요하면 기획·§에 명시.
+
+**Per-file delete of existing application attachment (신청 첨부 개별 삭제 API 성공 시):**
+
+- ✅ **`deleteArtappmFile` 호출 전** 사용자에게 **확인 다이얼로그**를 띄운다 (예: 제목 `첨부파일 삭제`, 본문 `선택한 첨부파일을 삭제하시겠습니까?`, 확인 시에만 API). 삭제 아이콘 클릭 → **즉시 API 호출 금지**.
+- ✅ **§5와 동일:** 성공 후 **목록으로 이동하지 않는다**; 같은 상세 페이지에서 기존 파일 목록만 갱신.
+- ✅ **삭제 API 성공 후** 사용자에게 **성공 안내 다이얼로그**를 띄운다 — 제목 `삭제 완료`, 본문 `정상적으로 삭제되었습니다.` (§6·멘토목록·공공형 진로진학 신청과 동일 톤). 확인 시에만 닫고 **라우터 이동 없음**.
+- ❌ 첨부 삭제 성공만으로 **신청 목록·상세 이탈** 네비게이션을 걸지 않는다.
+- ✅ **같은 컴포넌트에서** 저장 성공과 첨부 삭제 성공이 **동일한** `MessageDialog` 닫기 핸들러를 쓰는 경우, `messageDialogNavigateToListRef` 등으로 **저장 성공일 때만** `router.push`(신청목록)를 실행한다. 삭제 성공 닫기는 이동 없음 (예: `DreamExplorationApplicationRegisterForm.tsx`).
+- ✅ **서로 다른** `ConfirmDialog`로 저장 완료·삭제 완료를 띄우는 경우에도, 저장 완료 닫기에서만 `router.push` 하도록 **`useRef`**(예: `saveSuccessNavigateToDetailRef`)를 쓰고, 첨부 삭제 API 성공 직후 **`setShowSaveSuccessDialog(false)`** 및 `ref = false`로 저장 다이얼로그·이동 의도를 정리한다 (예: `useGlobalCultureTourApplicationRegister.ts`).
+
+**Mentor list row delete (e.g. 공공형 진로진학 멘토목록):**
+
+- ✅ **서버 삭제 API 성공**(`result === "00"`) 또는 **아직 저장되지 않은 행만 로컬에서 제거**한 뒤, **`삭제 완료` / `정상적으로 삭제되었습니다.`** 확인 다이얼로그를 띄운다. 삭제 확인(위험) 다이얼로그만 닫고 끝내지 않는다.
+- ✅ 목록 화면은 그대로이므로 **삭제 성공 후 별도 라우터 이동은 하지 않는다** (신청 첨부 삭제와 동일하게 현재 화면 유지).
+
+**Reference:** `src/features/adminWeb/support/study/application/register/model/useStudyApplicationRegister.ts`, `src/features/adminWeb/support/careerConsulting/application/register/model/useCareerConsultingApplicationRegister.ts`, `src/features/adminWeb/support/regionalCareerActivity/application/register/model/useRegionalCareerActivityApplicationRegister.ts`, `src/features/adminWeb/support/globalCultureTour/application/register/model/useGlobalCultureTourApplicationRegister.ts`, `src/features/adminWeb/support/dreamExploration/application/register/ui/DreamExplorationApplicationRegisterForm.tsx`, `src/features/adminWeb/support/careerConsulting/mentors/model/useCareerConsultingMentorList.ts`
+
+---
+
+#### 📋 Verification checklist (common file patterns)
+
+**Before implementing or changing file upload in an admin form:**
+
+- [ ] **State:** Register form has only a “selected/pending” list; edit form has both “existing” and “selected/pending” and they are not mixed.
+- [ ] **Submit:** FormData is used; existing group id is sent on update when required; new files use the API’s field name.
+- [ ] **After update:** On success, refetch then clear the pending/selected list so the UI does not show duplicates.
+- [ ] **Limit (if applicable):** Remaining count = feature’s max − existing − selected; new selections are capped to remaining.
+- [ ] **Detail/edit per-file delete:** After deleting an existing attachment, the user stays on the same page; success message close does not trigger list navigation unless the product rule is “save success only → list”.
+- [ ] **Support register/update MessageDialog:** Title is short; success body defaults to `정상적으로 등록되었습니다.` / `정상적으로 수정되었습니다.` style without repeating the business type name; `response.result === "00"` before success.
+- [ ] **Application register/detail save dialog:** Detail mode uses `수정 완료` + `정상적으로 수정되었습니다.` (or `response.message`), not only `저장 완료` / `저장되었습니다.`; register mode uses `등록 완료` tone (see §7).
+- [ ] **Application save success confirm:** After OK on success dialog, navigate to **사업별 신청목록 상세** (same as cancel from that screen), not staying on the edit form unless explicitly documented as an exception.
+- [ ] **Application attachment delete:** Confirm dialog before delete API; **delete success dialog** (`삭제 완료` / `정상적으로 삭제되었습니다.`); no list navigation on delete success.
+- [ ] **Mentor list row delete:** After API or local-only remove, show `삭제 완료` / `정상적으로 삭제되었습니다.` success dialog (see §7 Mentor list).
+
+---
+
+#### 🔍 Decision tree (common file patterns)
+
+```
+Implementing file upload in admin?
+├─ Is this a register form?
+│  └─ YES → Single state: selected/pending files only. Submit as FormData with API’s new-files field name.
+├─ Is this an edit/detail form?
+│  └─ YES → Two states: existing (from API) + selected (pending). Submit FormData with existing group id (if API requires) + new files. After success, refetch then clear selected.
+├─ Does the feature have a file count limit?
+│  └─ YES → remaining = featureMax − existing.length − selected.length; allow only remaining new files.
+├─ Per-file delete on detail/edit?
+│  └─ YES → Do not navigate to list on delete success; only close message / update local state (see §5).
+└─ Reference: ArticleRegisterForm (register), ArticleDetailForm + useArticleDetail (edit).
+```
+
+---
+
+#### 📚 Reference (common patterns)
+
+- **Register:** `src/features/adminWeb/article/register/ui/ArticleRegisterForm.tsx`, `useArticleRegister.ts`
+- **Edit/Detail:** `src/features/adminWeb/article/detail/ui/ArticleDetailForm.tsx`, `src/features/adminWeb/article/detail/model/useArticleDetail.ts`
+
+Use these for state shape, FormData construction, and post-update clearing; adapt field names and limits to the feature’s API.
+
+---
+
+## 🖼️ Article / Archive (Admin): Server Image Preview URLs & Browser Cache (Prompt Spec)
+
+Use this when working on **admin article detail/edit** for **archive (BBST03) gallery rows** or any **`<img src>`** that points at `GET /api/v1/files/view?fileId=…&seq=…` (via `resolveArticleImageUrl` / `resolveArticleAttachmentViewUrl` from `@/entities/adminWeb/article/lib`).
+
+### Problem statement (give this to the model)
+
+- Preview URLs are derived from **`fileId` + `seq`** (and optional `thumbSize`). Browsers cache responses **by full URL**.
+- After an admin **replaces** an image or the server **rewrites** the stored file under the same `fileId`/`seq`, the **URL string can stay identical**. Without a cache-busting query, Chrome may keep showing the **old bitmap** until the user does a **hard refresh** (Ctrl+F5).
+- **Product expectation:** the admin UI should reflect server state **without** requiring a hard refresh — same outcome as “hard refresh,” implemented in code.
+
+### Implemented pattern (MUST preserve when editing)
+
+1. **Model layer (`useArticleDetail`)**  
+   When building `archiveImageRows` from the server image list (`imgList`), map each attachment’s **`saveNm`** to a row field **`serverSaveNm`**.  
+   - On initial load and after **successful save + refetch**, rebuild rows from the latest API data so `serverSaveNm` tracks the **current** stored file identity.
+
+2. **View layer (`ArticleDetailForm`)**  
+   For **server-side** archive preview (not `URL.createObjectURL` for a new local file), build the `src` with:
+   - `resolveArticleImageUrl(\`${row.serverFileId}:${row.serverSeq}\`, { … })`
+   - **`thumbSize: ARTICLE_ARCHIVE_LIST_THUMB_SIZE`** for the small grid preview (128px thumb pipeline).
+   - **`cacheBust: row.serverSaveNm`** whenever `serverSaveNm` is present — this appends `&_cb=…` (see `resolveArticleThumbnailUrl.ts`).
+
+### MUST NOT
+
+- ❌ Render server archive preview `<img>` with **only** `fileId:seq` and `thumbSize` **and no** `cacheBust` when **`saveNm` / `serverSaveNm` is available** from the API.
+- ❌ Drop `serverSaveNm` from the row model when refactoring archive rows — it exists specifically for cache invalidation.
+- ❌ Assume “users will hard refresh” after saving — the URL must change when the underlying file identity changes.
+
+### Copy-paste pattern (CORRECT — admin archive grid, server preview)
+
+```typescript
+import {
+  resolveArticleImageUrl,
+  ARTICLE_ARCHIVE_LIST_THUMB_SIZE,
+} from "@/entities/adminWeb/article/lib";
+
+// Row must include serverFileId, serverSeq, serverSaveNm (from API saveNm)
+<img
+  src={resolveArticleImageUrl(`${row.serverFileId}:${row.serverSeq}`, {
+    thumbSize: ARTICLE_ARCHIVE_LIST_THUMB_SIZE,
+    cacheBust: row.serverSaveNm,
+  })}
+  alt=""
+  loading="lazy"
+  decoding="async"
+/>
+```
+
+### Relationship to user-web eum archive
+
+- Same mechanism: **`cacheBust`** → `_cb` query param.  
+- User list may use **`nttImgSaveNm`**; admin detail rows use per-attachment **`saveNm` → `serverSaveNm`**.  
+- If you add **`cacheBust` to admin list thumbnails** (`ArticleListThumbnailCell` or similar), pass a field that changes when the representative image file changes (mirror the user-web rule in `edream-front-rule.mdc`).
+
+### Verification checklist (before merging archive admin changes)
+
+- [ ] `useArticleDetail` still maps **`saveNm` → `serverSaveNm`** for each gallery row when `imgList` is loaded or refreshed.
+- [ ] `ArticleDetailForm` server preview `resolveArticleImageUrl` calls include **`cacheBust: row.serverSaveNm`** where applicable.
+- [ ] New local-file previews still use **`URL.createObjectURL(row.file)`** — no `cacheBust` needed for blobs.
+
+### Reference files
+
+- `src/features/adminWeb/article/detail/model/useArticleDetail.ts` — `archiveImageRows`, `serverSaveNm` from `item.saveNm`
+- `src/features/adminWeb/article/detail/ui/ArticleDetailForm.tsx` — archive grid `<img>` + `resolveArticleImageUrl`
+- `src/entities/adminWeb/article/lib/resolveArticleThumbnailUrl.ts` — `_cb` append logic
+
+---
+
+## 📦 Module System & Import Rules (FSD Architecture)
+
+### ⚠️ CRITICAL: Model Folder Export Pattern
+
+**MUST ALWAYS create `index.ts` file in model folder when:**
+
+- ✅ Creating new feature with model folder
+- ✅ Creating custom hooks in model folder
+- ✅ Exporting hooks from model folder
+- ✅ Referencing existing features as patterns
+
+**MUST ensure model folder has `index.ts` file:**
+
+```typescript
+// ✅ CORRECT: src/features/{feature}/{action}/model/index.ts
+export { useXxxDetail } from './useXxxDetail';
+
+// OR for multiple exports
+export * from './useXxxDetail';
+export * from './useXxxList';
+```
+
+**MUST NOT:**
+
+- ❌ **NEVER** create model folder without `index.ts` file
+- ❌ **NEVER** import directly from hook file (e.g., `from "./useXxxDetail"`)
+- ❌ **NEVER** skip `index.ts` creation "because it's just one file"
+- ❌ **NEVER** assume Node.js will auto-resolve without `index.ts`
+
+**Why this is CRITICAL:**
+
+Node.js module resolution requires `index.ts` (or `index.js`) when importing a folder. Without it:
+
+1. ❌ **Module Resolution Failure**: `import { useXxx } from "../model"` fails with "Module not found"
+2. ❌ **Build Errors**: Next.js compilation fails immediately
+3. ❌ **Silent Failure**: No auto-resolution fallback exists
+4. ❌ **Inconsistent Patterns**: Breaks FSD architecture conventions
+
+**Real-world example of the mistake:**
+
+```typescript
+// ❌ WRONG: Missing index.ts file
+// File structure:
+// src/features/adminWeb/article/detail/
+//   ├── model/
+//   │   └── useArticleDetail.ts  ✅ Created
+//   │   └── index.ts             ❌ MISSING!
+//   └── ui/
+//       └── ArticleDetailForm.tsx
+
+// In ArticleDetailForm.tsx:
+import { useArticleDetail } from '../model';
+// ❌ Error: Module not found: Can't resolve '../model'
+```
+
+**Root Cause Analysis - Why Developers Make This Mistake:**
+
+1. **Incomplete Pattern Recognition:**
+   - Developers see `useArticleDetail.ts` file and think "file exists, import should work"
+   - They don't realize Node.js requires `index.ts` for folder imports
+   - They assume single-file exports don't need `index.ts`
+
+2. **Missing Reference Check:**
+   - Developers don't check existing features (register, list) for `model/index.ts` pattern
+   - They create hook file but forget to create `index.ts`
+   - No verification step in development workflow
+
+3. **Incomplete File Creation:**
+   - Developers focus on hook implementation
+   - They forget the export mechanism (`index.ts`)
+   - They assume "one file = no need for index"
+
+4. **Lack of Understanding Node.js Module Resolution:**
+   - Developers don't understand Node.js requires `index.ts` for folder imports
+   - They think `import from "../model"` automatically resolves to `useArticleDetail.ts`
+   - They don't know the explicit export file is required
+
+5. **Copy-Paste Without Verification:**
+   - Developers copy hook file from another feature
+   - They don't copy the `index.ts` file
+   - They assume the hook file is sufficient
+
+6. **Development Process Gap:**
+   - No checklist to verify `index.ts` creation
+   - No build/compile step immediately after file creation
+   - Errors discovered later, not during development
+
+**Prevention Checklist (MUST verify when creating model folder):**
+
+- [ ] **Checked existing features** for `model/index.ts` pattern
+  - [ ] Checked `register/model/index.ts` ✅
+  - [ ] Checked `list/model/index.ts` ✅
+  - [ ] Checked `detail/model/index.ts` (if exists) ✅
+- [ ] **Created `index.ts` file** in model folder
+- [ ] **Exported hook** from `index.ts` (e.g., `export { useXxx } from "./useXxx"`)
+- [ ] **Verified import works** (`import { useXxx } from "../model"`)
+- [ ] **Tested compilation** (no "Module not found" errors)
+- [ ] **Matched existing pattern** (same export style as other features)
+
+**Reference Implementation:**
+
+```typescript
+// ✅ CORRECT: src/features/adminWeb/article/register/model/index.ts
+export { useArticleRegister } from './useArticleRegister';
+
+// ✅ CORRECT: src/features/adminWeb/article/list/model/index.ts
+export * from './useArticleList';
+
+// ✅ CORRECT: src/features/adminWeb/article/detail/model/index.ts
+export { useArticleDetail } from './useArticleDetail';
+```
+
+**Common Mistakes:**
+
+1. **Missing index.ts file:**
+
+   ```typescript
+   // ❌ WRONG: No index.ts file
+   // src/features/adminWeb/article/detail/model/
+   //   └── useArticleDetail.ts  ✅
+   //   └── index.ts             ❌ MISSING
+
+   // In UI component:
+   import { useArticleDetail } from '../model';
+   // ❌ Error: Module not found: Can't resolve '../model'
+   ```
+
+2. **Importing directly from hook file:**
+
+   ```typescript
+   // ❌ WRONG: Direct import from hook file
+   import { useArticleDetail } from '../model/useArticleDetail';
+
+   // ✅ CORRECT: Import from model folder (uses index.ts)
+   import { useArticleDetail } from '../model';
+   ```
+
+3. **Empty or incorrect index.ts:**
+
+   ```typescript
+   // ❌ WRONG: Empty index.ts
+   // src/features/adminWeb/article/detail/model/index.ts
+   // (empty file)
+
+   // ✅ CORRECT: Export hook
+   export { useArticleDetail } from './useArticleDetail';
+   ```
+
+---
+
+### ⚠️ CRITICAL: Import Path Consistency
+
+**MUST ALWAYS verify import paths match existing patterns when:**
+
+- ✅ Creating new feature files
+- ✅ Importing from entities layer
+- ✅ Importing from shared layer
+- ✅ Importing from same feature
+- ✅ Copying code from other features
+
+**MUST use absolute paths (`@/`) for:**
+
+- ✅ Entities layer imports (`@/entities/admin/{entity}/api`)
+- ✅ Shared layer imports (`@/shared/lib`, `@/shared/ui`)
+- ✅ Cross-feature imports (different feature folders)
+- ✅ Widget imports (`@/widgets/admin/layout`)
+
+**MUST use relative paths for:**
+
+- ✅ Same feature folder imports (`../api`, `../model`, `./Component`)
+- ✅ Same file folder imports (`./LocalComponent`)
+
+**MUST NOT:**
+
+- ❌ **NEVER** use incorrect relative paths (e.g., `../../../entities/...`)
+- ❌ **NEVER** mix absolute and relative paths inconsistently
+- ❌ **NEVER** assume relative path calculation without verification
+- ❌ **NEVER** skip pattern check before writing imports
+
+**Why this is CRITICAL:**
+
+Incorrect import paths cause:
+
+1. ❌ **Module Resolution Failure**: "Module not found" errors
+2. ❌ **Build Errors**: Next.js compilation fails
+3. ❌ **Inconsistent Patterns**: Breaks project conventions
+4. ❌ **Maintenance Issues**: Hard to refactor when paths are inconsistent
+
+**Real-world example of the mistake:**
+
+```typescript
+// ❌ WRONG: Incorrect relative path
+// File: src/features/adminWeb/article/detail/model/useArticleDetail.ts
+import {
+  ArticleService,
+  Article,
+} from '../../../entities/admin/article/api/articleApi';
+// ❌ Error: Module not found: Can't resolve '../../../entities/admin/article/api/articleApi'
+
+// Path calculation:
+// Current: src/features/adminWeb/article/detail/model/
+// ../../../ → src/features/adminWeb/
+// entities/ → src/features/adminWeb/entities/ ❌ (doesn't exist)
+```
+
+**Root Cause Analysis - Why Developers Make This Mistake:**
+
+1. **Incorrect Path Calculation:**
+   - Developers manually count `../` levels
+   - They miscount directory levels
+   - They don't verify the calculated path actually exists
+
+2. **Missing Reference Check:**
+   - Developers don't check existing features for import patterns
+   - They don't verify how other files import from entities layer
+   - They assume their path calculation is correct
+
+3. **Not Using Absolute Paths:**
+   - Developers use relative paths when absolute paths are standard
+   - They don't realize `@/` prefix is configured in `tsconfig.json`
+   - They don't check project conventions for path usage
+
+4. **Copy-Paste from Different Context:**
+   - Developers copy import from different file location
+   - Relative path doesn't match new file location
+   - They don't adjust path for new context
+
+5. **Lack of Understanding FSD Architecture:**
+   - Developers don't understand layer separation (features → entities)
+   - They don't know absolute paths are required for cross-layer imports
+   - They assume relative paths work for all imports
+
+6. **No Verification Step:**
+   - Developers write import without checking if it resolves
+   - They don't test compilation immediately
+   - Errors discovered later in development
+
+**Prevention Checklist (MUST verify when writing imports):**
+
+- [ ] **Checked existing features** for import patterns
+  - [ ] Checked `register/model/useXxxRegister.ts` import pattern ✅
+  - [ ] Checked `list/model/useXxxList.ts` import pattern ✅
+  - [ ] Checked `detail/model/useXxxDetail.ts` import pattern (if exists) ✅
+- [ ] **Used absolute paths (`@/`)** for entities/shared/widgets imports
+- [ ] **Used relative paths** only for same feature folder imports
+- [ ] **Verified import resolves** (no "Module not found" errors)
+- [ ] **Matched existing pattern** (same import style as other features)
+- [ ] **Tested compilation** after writing imports
+
+**Reference Implementation:**
+
+```typescript
+// ✅ CORRECT: src/features/adminWeb/article/register/model/useArticleRegister.ts
+import { ArticleService } from "@/entities/admin/article/api";
+import { ApiError } from "@/shared/lib/apiClient";
+
+// ✅ CORRECT: src/features/adminWeb/article/list/model/useArticleList.ts
+import { ... } from "../api"; // Same feature folder
+import { ApiError, TokenUtils } from "@/shared/lib"; // Absolute path
+
+// ✅ CORRECT: src/features/adminWeb/article/detail/model/useArticleDetail.ts
+import {
+  ArticleService,
+  Article,
+  ArticleDetailParams,
+  ArticleDetailResponse,
+} from "@/entities/admin/article/api"; // Absolute path
+import { ApiError, TokenUtils } from "@/shared/lib/apiClient"; // Absolute path
+```
+
+**Common Mistakes:**
+
+1. **Incorrect relative path for entities:**
+
+   ```typescript
+   // ❌ WRONG: Incorrect relative path
+   import { ArticleService } from '../../../entities/admin/article/api/articleApi';
+
+   // ✅ CORRECT: Absolute path
+   import { ArticleService } from '@/entities/admin/article/api';
+   ```
+
+2. **Mixing absolute and relative inconsistently:**
+
+   ```typescript
+   // ❌ WRONG: Inconsistent path usage
+   import { ArticleService } from '@/entities/admin/article/api'; // Absolute
+   import { ApiError } from '../../../shared/lib/apiClient'; // Relative (wrong)
+
+   // ✅ CORRECT: Consistent absolute paths
+   import { ArticleService } from '@/entities/admin/article/api';
+   import { ApiError } from '@/shared/lib/apiClient';
+   ```
+
+3. **Not checking existing patterns:**
+
+   ```typescript
+   // ❌ WRONG: Assumed path without checking
+   import { ArticleService } from '../../../entities/admin/article/api/articleApi';
+
+   // ✅ CORRECT: Checked existing pattern first
+   // Checked useArticleRegister.ts → uses "@/entities/admin/article/api"
+   import { ArticleService } from '@/entities/admin/article/api';
+   ```
+
+4. **Direct file import instead of folder:**
+
+   ```typescript
+   // ❌ WRONG: Direct file import
+   import { ArticleService } from '@/entities/admin/article/api/articleApi';
+
+   // ✅ CORRECT: Folder import (uses index.ts)
+   import { ArticleService } from '@/entities/admin/article/api';
+   ```
+
+**Decision Tree for Import Paths:**
+
+```
+Writing import statement?
+├─ Importing from entities/shared/widgets?
+│  └─ YES → Use absolute path (@/entities/..., @/shared/...)
+│     └─ Check existing features for exact path pattern
+│
+├─ Importing from same feature folder?
+│  └─ YES → Use relative path (../api, ../model, ./Component)
+│     └─ Verify path matches file structure
+│
+└─ Unsure about path?
+   └─ Check existing feature files (register, list, detail)
+      └─ Copy exact import pattern
+      └─ Verify compilation works
+```
+
+**Step-by-Step Import Verification Process:**
+
+1. **Step 1: Check Existing Patterns**
+
+   ```bash
+   # Check how other features import from entities
+   grep -r "from \"@/entities" src/features/adminWeb/article/
+   # Check how other features import from shared
+   grep -r "from \"@/shared" src/features/adminWeb/article/
+   ```
+
+2. **Step 2: Verify Path Exists**
+
+   ```typescript
+   // Before writing import, verify:
+   // 1. Target file exists: src/entities/admin/article/api/articleApi.ts
+   // 2. Index file exists: src/entities/admin/article/api/index.ts
+   // 3. Export is correct: export * from "./articleApi"
+   ```
+
+3. **Step 3: Write Import**
+
+   ```typescript
+   // ✅ CORRECT: Use absolute path matching existing pattern
+   import { ArticleService } from '@/entities/admin/article/api';
+   ```
+
+4. **Step 4: Test Compilation**
+   ```bash
+   # Run build or check for errors
+   npm run build
+   # Or check IDE for import errors
+   ```
+
+**Prevention Strategy:**
+
+1. **Always Check Reference First**: Before writing any import, check existing feature files (register, list, detail) for import patterns
+2. **Use Absolute Paths for Cross-Layer**: Always use `@/` for entities, shared, widgets imports
+3. **Copy Exact Pattern**: Copy the exact import statement from reference implementation
+4. **Verify Compilation**: Test compilation immediately after writing imports
+5. **Use Checklist**: Follow the prevention checklist above for every import
+
+**Remember**: Import path consistency is critical for maintainability. Always verify imports match existing patterns before writing code. When in doubt, check existing feature files (register, list) as reference implementations.
+
+---
+
+## 🎣 Custom Hooks Rules
+
+### ⚠️ CRITICAL: State Setter Export Pattern
+
+**MUST ALWAYS export state setters from custom hooks when:**
+
+- ✅ Creating new state with `useState` in custom hooks
+- ✅ Adding new state variables to existing hooks
+- ✅ Returning state values from hooks
+- ✅ UI components need to update the state
+
+**MUST ensure ALL state setters are included in return statement:**
+
+```typescript
+// ✅ CORRECT: Export both state value and setter
+export function useXxxHook() {
+  const [showDialog, setShowDialog] = useState(false);
+  const [fileToDelete, setFileToDelete] = useState<FileItem | null>(null);
+
+  // ... other code ...
+
+  return {
+    showDialog,
+    setShowDialog, // ✅ Setter MUST be included
+    fileToDelete,
+    setFileToDelete, // ✅ Setter MUST be included
+    // ... other returns ...
+  };
+}
+```
+
+**MUST NOT:**
+
+- ❌ **NEVER** export state value without its setter when UI needs to update it
+- ❌ **NEVER** forget to include setter in return statement
+- ❌ **NEVER** assume setter is automatically available in UI components
+- ❌ **NEVER** skip setter export "because it's not used yet"
+
+**Why this is CRITICAL:**
+
+When UI components need to update state (e.g., `setShowDialog(false)`, `setFileToDelete(null)`), the setter function must be:
+
+1. Exported from the hook's return statement
+2. Destructured in the UI component
+3. Available in the component's scope
+
+Without exporting the setter:
+
+1. ❌ UI components get `ReferenceError: setXxx is not defined`
+2. ❌ Runtime errors occur when trying to update state
+3. ❌ No build-time errors (TypeScript won't catch missing exports)
+4. ❌ Silent failures until runtime
+
+**Real-world example of the mistake:**
+
+```typescript
+// ❌ WRONG: Setter not exported
+export function useSupportUpdate() {
+  const [showDeleteConfirmDialog, setShowDeleteConfirmDialog] = useState(false);
+  const [fileToDelete, setFileToDelete] = useState<FileItem | null>(null);
+
+  return {
+    showDeleteConfirmDialog,
+    // ❌ Missing: setShowDeleteConfirmDialog
+    fileToDelete,
+    // ❌ Missing: setFileToDelete
+  };
+}
+
+// ❌ WRONG: UI component tries to use setter
+const {
+  showDeleteConfirmDialog,
+  fileToDelete,
+  // ❌ setShowDeleteConfirmDialog, setFileToDelete not destructured
+} = useSupportUpdate();
+
+// ❌ ERROR: ReferenceError: setFileToDelete is not defined
+<ConfirmDialog
+  onCancel={() => {
+    setShowDeleteConfirmDialog(false); // ❌ Error!
+    setFileToDelete(null); // ❌ Error!
+  }}
+/>
+```
+
+**✅ CORRECT: Complete Pattern**
+
+```typescript
+// ✅ CORRECT: Hook exports both value and setter
+export function useSupportUpdate() {
+  const [showDeleteConfirmDialog, setShowDeleteConfirmDialog] = useState(false);
+  const [fileToDelete, setFileToDelete] = useState<FileItem | null>(null);
+
+  return {
+    showDeleteConfirmDialog,
+    setShowDeleteConfirmDialog, // ✅ Setter exported
+    fileToDelete,
+    setFileToDelete, // ✅ Setter exported
+    // ... other returns ...
+  };
+}
+
+// ✅ CORRECT: UI component destructures both value and setter
+const {
+  showDeleteConfirmDialog,
+  setShowDeleteConfirmDialog, // ✅ Setter destructured
+  fileToDelete,
+  setFileToDelete, // ✅ Setter destructured
+} = useSupportUpdate();
+
+// ✅ CORRECT: Setter is available and works
+<ConfirmDialog
+  onCancel={() => {
+    setShowDeleteConfirmDialog(false); // ✅ Works!
+    setFileToDelete(null); // ✅ Works!
+  }}
+/>
+```
+
+**🔍 Root Cause Analysis: Why This Mistake Happens**
+
+1. **Incomplete Return Statement Review**
+   - Developer adds `useState` and exports the value
+   - Forgets to also export the setter function
+   - Assumes "if value is exported, setter is automatically available"
+
+2. **Copy-Paste Without Verification**
+   - Copies state declaration from another hook
+   - Copies return statement but misses setter
+   - Doesn't verify all state pairs are complete
+
+3. **Incremental Development**
+   - Adds state first, exports value
+   - Plans to add setter "later when needed"
+   - Forgets to add setter when UI actually needs it
+
+4. **TypeScript Doesn't Catch It**
+   - TypeScript only checks types, not runtime availability
+   - Missing export doesn't cause compile error
+   - Error only appears at runtime when setter is called
+
+5. **Incomplete Destructuring**
+   - Exports setter from hook correctly
+   - Forgets to destructure setter in UI component
+   - Assumes destructuring value is enough
+
+**📋 Prevention Checklist (MUST verify when creating/modifying hooks):**
+
+- [ ] **All useState declarations**: Every `useState` has both value and setter
+- [ ] **Return statement review**: Every state value exported has its setter also exported
+- [ ] **UI component destructuring**: Every state value destructured has its setter also destructured
+- [ ] **Usage verification**: All setters used in UI components are exported and destructured
+- [ ] **TypeScript check**: No TypeScript errors about missing properties
+- [ ] **Runtime test**: Test state updates in UI to ensure setters work
+- [ ] **Pair verification**: For each `useState`, verify both `[value, setValue]` are handled
+
+**🔄 Step-by-Step Verification Process:**
+
+1. **Step 1: Identify All useState Declarations**
+
+   ```typescript
+   // List all useState in hook
+   const [showDialog, setShowDialog] = useState(false);
+   const [fileToDelete, setFileToDelete] = useState<FileItem | null>(null);
+   ```
+
+2. **Step 2: Check Return Statement**
+
+   ```typescript
+   return {
+     showDialog, // ✅ Value exported
+     setShowDialog, // ✅ Setter exported
+     fileToDelete, // ✅ Value exported
+     setFileToDelete, // ✅ Setter exported
+   };
+   ```
+
+3. **Step 3: Check UI Component Destructuring**
+
+   ```typescript
+   const {
+     showDialog, // ✅ Value destructured
+     setShowDialog, // ✅ Setter destructured
+     fileToDelete, // ✅ Value destructured
+     setFileToDelete, // ✅ Setter destructured
+   } = useXxxHook();
+   ```
+
+4. **Step 4: Verify Setter Usage**
+   ```typescript
+   // Check all places where setter is used
+   onClick={() => setShowDialog(false)} // ✅ Setter available
+   onCancel={() => setFileToDelete(null)} // ✅ Setter available
+   ```
+
+**🔍 Decision Tree:**
+
+```
+Creating/Modifying Custom Hook?
+├─ Does it use useState?
+│  ├─ YES → Does UI component need to update this state?
+│  │  ├─ YES → MUST export both value and setter
+│  │  │  └─ MUST destructure both in UI component
+│  │  └─ NO → Still export setter for consistency and future use
+│  └─ NO → No action needed
+└─ Does UI component use setState?
+   └─ YES → Verify setter is exported and destructured
+```
+
+**🚫 Common Mistakes to Avoid:**
+
+1. **Mistake 1: Exporting state value but forgetting setter**
+
+   ```typescript
+   // ❌ WRONG
+   const [showDialog, setShowDialog] = useState(false);
+   return {
+     showDialog, // ✅ Exported
+     // ❌ Missing: setShowDialog
+   };
+   ```
+
+2. **Mistake 2: Destructuring state value but forgetting setter**
+
+   ```typescript
+   // ❌ WRONG
+   const {
+     showDialog, // ✅ Destructured
+     // ❌ Missing: setShowDialog
+   } = useXxxHook();
+   ```
+
+3. **Mistake 3: Assuming setter is automatically available**
+
+   ```typescript
+   // ❌ WRONG: Setter not exported but used in UI
+   onClick={() => setShowDialog(false)} // ❌ ReferenceError: setShowDialog is not defined
+   ```
+
+4. **Mistake 4: Partial export (only some setters)**
+   ```typescript
+   // ❌ WRONG: Inconsistent export
+   return {
+     showDialog,
+     setShowDialog, // ✅ Exported
+     fileToDelete,
+     // ❌ Missing: setFileToDelete (inconsistent)
+   };
+   ```
+
+**💡 Key Principles:**
+
+1. **Pair Principle**: Every `useState` creates a pair `[value, setter]`. Always treat them as a pair.
+2. **Export Together**: If you export the value, export the setter too (even if not used yet).
+3. **Destructure Together**: If you destructure the value, destructure the setter too.
+4. **Consistency**: Export all setters consistently, not selectively.
+5. **Future-Proof**: Export setters even if not immediately needed (prevents future errors).
+
+**📚 Reference Implementation:**
+
+```typescript
+// ✅ CORRECT: Complete pattern
+// src/features/adminWeb/support/update/model/useSupportUpdate.ts
+
+export function useSupportUpdate() {
+  // State declarations
+  const [showDeleteConfirmDialog, setShowDeleteConfirmDialog] = useState(false);
+  const [fileToDelete, setFileToDelete] = useState<FileItem | null>(null);
+
+  // ... hook logic ...
+
+  // Return statement - ALL setters included
+  return {
+    // ... other returns ...
+    showDeleteConfirmDialog,
+    setShowDeleteConfirmDialog, // ✅ Setter exported
+    fileToDelete,
+    setFileToDelete, // ✅ Setter exported
+  };
+}
+
+// ✅ CORRECT: UI component destructuring
+// src/features/adminWeb/support/update/ui/SupportUpdateForm.tsx
+
+const {
+  // ... other destructuring ...
+  showDeleteConfirmDialog,
+  setShowDeleteConfirmDialog, // ✅ Setter destructured
+  fileToDelete,
+  setFileToDelete, // ✅ Setter destructured
+} = useSupportUpdate();
+
+// ✅ CORRECT: Setter usage
+<ConfirmDialog
+  onCancel={() => {
+    setShowDeleteConfirmDialog(false); // ✅ Works
+    setFileToDelete(null); // ✅ Works
+  }}
+/>
+```
+
+**🎯 Remember:**
+
+- Every `useState` creates a pair: `[value, setter]`
+- If UI needs to update state, BOTH must be exported and destructured
+- TypeScript won't catch missing exports (runtime error only)
+- Always verify setters are exported when values are exported
+- Test state updates to ensure setters work before marking as complete
+
+---
+
+## 🧑‍🎓 학생 기준 로딩 규칙 (저소득층/기초·차상위 기준 정비)
+
+### ⚠️ CRITICAL: 학생 기준으로 `lowIncomeYn` 결정
+
+다음 지원 사업 화면에서 저소득층 관련 값은 “보호자”가 아니라 “학생”을 기준으로 판단해야 합니다.
+
+- 적용 대상:
+  - 1) `지원 > 1:1 원어민 화상영어 > 신청 등록`
+  - 2) `지원 > 스터디 사업 > 신청`
+
+#### 1) 1:1 원어민 화상영어 신청 등록
+- 보호자 선택 시: `lowIncomeYn` 설정을 제거/초기화한다.
+- 학생 선택 시: `ArmuserService.getDetail(학생 esntlId)` 호출 후, 응답의 `student.basicYn`/`student.poorYn`로 `lowIncomeYn`을 결정한다.
+- 상세 모드(로드) 시: `pEsntlId`(보호자) 기준이 아닌 `reqEsntlId`(학생)로 상세를 조회하여 `lowIncomeYn`을 설정한다.
+
+권장 구현 포인트:
+- 학생 선택 핸들러에서만 학생 기준 조회를 수행하여 영향 범위를 최소화한다.
+- 기존에 보호자 선택 시 세팅되던 값이 있다면 반드시 초기화한다.
+
+#### 2) 스터디 사업(신청)
+- 현재 신청 폼에는 저소득층 값 로딩 로직이 없음.
+- 학생 선택 핸들러에 `ArmuserService.getDetail(학생 esntlId)` 호출을 추가하고, `student.basicYn`/`student.poorYn`으로 `lowIncomeYn`(또는 별도 상태 `basicYn`/`poorYn`)을 설정한다.
+- 필요 시 UI에 저소득층 표시 영역을 추가하거나, 서버 전송 필드에 포함한다.
+
+주의/전제:
+- 백엔드 `ARMUSER(학생)` 상세 응답에 `basicYn`/`poorYn` 값이 포함되어야 한다. 학생 계정에도 해당 필드가 채워지는지 백엔드 확인이 필요하다.
+- 공통 훅을 사용하는 화면(예: 스터디 신청)이면, “학생 선택” 핸들러 내부에서만 학생 기준 조회를 붙이는 것이 안전하다.
+
+검증 체크리스트:
+- [ ] 보호자 선택 시 `lowIncomeYn`(및 관련 상태) 초기화됨
+- [ ] 학생 선택 시 `ArmuserService.getDetail(reqEsntlId)` 호출됨
+- [ ] `student.basicYn`/`student.poorYn` → `lowIncomeYn`으로 정상 매핑됨
+- [ ] 상세 모드에서 `reqEsntlId`로 상세 조회하고 값이 반영됨
+- [ ] 스터디 신청 화면에도 동일 원칙이 적용됨
+
+---
+
+## 🧭 꿈틀꿈틀 우리아이 꿈탐험 전용 리스트/폼 표준
+
+본 섹션은 “꿈틀꿈틀 우리아이 꿈탐험” 화면에 한해 적용되는 UI/용어/상태코드 표준입니다.
+
+### 1) 용어 변경
+- “사업기간” → “모집기간”으로 표기한다.
+- 폼/검색영역/리스트 헤더 어디서든 동일 용어를 사용한다.
+
+### 2) 달력 아이콘(모집기간)
+- 날짜 선택 UI 옆 아이콘은 통일된 캘린더 아이콘을 사용한다.
+- 권장 클래스: `w-4 h-4 text-gray-600` (hover 시 `text-blue-600`)
+- 버튼/아이콘 컨테이너: `inline-flex items-center gap-1`
+
+### 3) 리스트 컬럼
+- “운영방식” 컬럼은 표시하지 않는다.
+- 컬럼 순서는 다른 지원 리스트와 동일 패턴 유지.
+
+### 4) “신청목록 보기” 버튼 크기
+- 버튼 클래스(목록 테이블 안): `px-2 py-1 text-[12px] text-blue-600 border border-blue-600 rounded hover:bg-blue-50 transition-colors`
+- 최소 폭이 필요한 경우 `style={{ minWidth: "60px" }}` 적용.
+- Support/Study 리스트의 보기 버튼과 동일한 크기·비율을 유지한다.
+
+### 5) 상태코드 매핑(리스트/상세/검색) — 사업 RUN_STA
+- ARTPROM **진행상태**는 지원사업 공통과 동일: **01 모집예정, 02 모집중, 04 모집마감, 99 취소** (`runStaAdmin.ts`).
+- 상태 배지는 기존 규칙의 사이즈/색상 패턴을 그대로 사용한다.
+  - 배지 공통: `inline-flex items-center justify-center min-w-[72px] px-2.5 py-0.5 rounded-[5px] text-[13px] font-medium`
+- 검색 select, 리스트·엑셀 표시는 `RUN_STA_SEARCH_OPTIONS` / `getRunStaLabel` 등과 일치할 것.
+
+검증 체크리스트:
+- [ ] 모든 화면에서 “모집기간” 용어 사용(사업기간 미사용)
+- [ ] 달력 아이콘 크기/색상 패턴 통일
+- [ ] 리스트에 “운영방식” 컬럼 없음
+- [ ] “신청목록 보기” 버튼 크기가 Support/Study와 동일
+- [ ] 사업 RUN_STA 매핑이 `runStaAdmin`과 일관(01/02/04/99)

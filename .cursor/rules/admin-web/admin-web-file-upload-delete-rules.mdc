@@ -1,0 +1,1083 @@
+---
+alwaysApply: false
+---
+
+# File Upload and Delete Rules for Admin Web Pages
+
+## 🎯 Purpose
+
+This rule defines comprehensive patterns and best practices for implementing file upload and delete functionality in **admin web pages** (`/adminWeb/*`). This includes handling file IDs with large numbers (18+ digits), delete confirmation dialogs, state management, and proper type handling.
+
+**Key Context:**
+
+- ✅ File IDs from backend can be 18+ digit numbers (JavaScript Number precision issue)
+- ✅ File deletion requires user confirmation before execution
+- ✅ State management must follow consistent patterns
+- ✅ File comparison must handle both string and number types
+- ✅ Success/failure messages must be shown after file operations
+
+---
+
+## ⚠️ CRITICAL: File ID Type Handling (Large Number Precision)
+
+**MUST ALWAYS use `string | number` type for fileId when:**
+
+- ✅ Defining file item interfaces (e.g., `FileItem`, `ArtappmFileItem`, `SupportFileItem`)
+- ✅ Creating file delete API functions
+- ✅ Handling file IDs from backend responses
+- ✅ Comparing file IDs in filter operations
+- ✅ Passing fileId to delete API endpoints
+
+**MUST ensure fileId is typed as `string | number`:**
+
+```typescript
+// ✅ CORRECT: File item interface with string | number
+export interface FileItem {
+  fileId?: string | number; // ✅ string | number (NOT just number)
+  seq?: string | number;     // ✅ string | number (NOT just number)
+  orgfNm?: string;
+  saveNm?: string;
+  filePath?: string;
+  fileExt?: string;
+  fileSize?: number;
+  fileType?: string;
+  sttusCode?: string;
+  [key: string]: unknown;
+}
+```
+
+**MUST NOT:**
+
+- ❌ **NEVER** use `number` type for fileId (causes precision loss for 18+ digit numbers)
+- ❌ **NEVER** assume fileId will always be small enough for JavaScript Number
+- ❌ **NEVER** use `Number()` conversion for fileId comparison
+- ❌ **NEVER** ignore precision issues with large file IDs
+- ❌ **NEVER** use `number` type in API function parameters for fileId
+
+**Why this is CRITICAL:**
+
+JavaScript's `Number` type uses IEEE 754 double-precision floating-point format, which can safely represent integers up to `Number.MAX_SAFE_INTEGER` (2^53 - 1 = 9,007,199,254,740,991, approximately 15-16 digits).
+
+When backend returns file IDs like `808619273596438406` (18 digits):
+1. ❌ JSON parsing converts to Number → precision loss occurs
+2. ❌ `808619273596438406` becomes `808619273596438400` (last digits become 0)
+3. ❌ File deletion fails because fileId doesn't match
+4. ❌ No build-time errors (TypeScript doesn't catch this)
+5. ❌ Silent failure until runtime
+
+**Real-world example of the mistake:**
+
+```typescript
+// ❌ WRONG: Using number type for fileId
+export interface ArtappmFileItem {
+  fileId?: number; // ❌ Wrong: precision loss for 18+ digit numbers
+  seq?: number;
+  // ...
+}
+
+// Backend returns: 808619273596438406
+// JavaScript Number: 808619273596438400 (precision lost!)
+// File deletion fails: fileId mismatch
+// Error: "File not found" even though file exists
+```
+
+**✅ CORRECT: Using string | number type**
+
+```typescript
+// ✅ CORRECT: string | number type
+export interface ArtappmFileItem {
+  fileId?: string | number; // ✅ Handles both string and number
+  seq?: string | number;
+  // ...
+}
+
+// Backend returns: 808619273596438406
+// Stored as: "808619273596438406" (string) or number (if small)
+// File deletion works: fileId matches correctly
+```
+
+**🔍 Root Cause Analysis: Why This Mistake Happens**
+
+1. **Type Assumption Error**
+   - Developer sees backend uses `Long` type (Java)
+   - Assumes TypeScript `number` is equivalent
+   - Doesn't realize JavaScript Number has precision limits
+   - Doesn't understand IEEE 754 floating-point limitations
+
+2. **JSON Parsing Behavior**
+   - Backend sends large number as JSON number
+   - JavaScript automatically parses as Number type
+   - Precision loss happens silently during parsing
+   - No warning or error during parsing
+
+3. **No Build-Time Warning**
+   - TypeScript doesn't warn about precision issues
+   - Error only appears at runtime when fileId doesn't match
+   - Difficult to debug without understanding Number precision
+   - Error message doesn't indicate precision issue
+
+4. **Copy-Paste from Examples**
+   - Copies interface from example with `number` type
+   - Doesn't verify if example handles large numbers
+   - Assumes example is correct for all cases
+   - Doesn't test with actual large file IDs
+
+5. **Lack of Understanding**
+   - Doesn't know about `Number.MAX_SAFE_INTEGER`
+   - Doesn't understand when precision loss occurs
+   - Assumes "number type = works for all numbers"
+   - Doesn't realize 18+ digit numbers are problematic
+
+**📋 Prevention Checklist (MUST verify when working with file IDs):**
+
+- [ ] **File ID type**: All fileId fields use `string | number` type (NOT just `number`)
+- [ ] **API response handling**: File IDs from API are handled as `string | number`
+- [ ] **Comparison operations**: Use `String()` conversion for fileId comparison
+- [ ] **Delete API parameters**: Accept `string | number` for fileId parameter
+- [ ] **Type consistency**: All file-related interfaces use same type pattern
+- [ ] **Test with large numbers**: Verify file operations work with 18+ digit file IDs
+- [ ] **Backend verification**: Check if backend returns file IDs that exceed MAX_SAFE_INTEGER
+- [ ] **Postman/DB check**: Verify actual fileId values from backend match frontend
+
+**🔄 Step-by-Step Verification Process:**
+
+1. **Step 1: Check Backend File ID Values**
+   ```sql
+   -- Check actual fileId values in database
+   SELECT FILE_ID FROM ARTFILE WHERE FILE_ID > 9007199254740991;
+   -- If any results, MUST use string | number type
+   ```
+
+2. **Step 2: Verify Interface Definition**
+   ```typescript
+   // ✅ CORRECT
+   export interface FileItem {
+     fileId?: string | number; // ✅ string | number
+     seq?: string | number;
+   }
+   ```
+
+3. **Step 3: Verify API Function**
+   ```typescript
+   // ✅ CORRECT
+   static async deleteFile(params: {
+     fileId: string | number; // ✅ string | number
+     seq: string | number;
+   }): Promise<Response> {
+     // ...
+   }
+   ```
+
+4. **Step 4: Test with Large Number**
+   ```typescript
+   // Test with 18+ digit number
+   const largeFileId = 808619273596438406;
+   const file: FileItem = { fileId: largeFileId };
+   console.log("Original:", largeFileId);
+   console.log("As number:", file.fileId);
+   // If last digits become 0, precision loss occurred
+   ```
+
+---
+
+## ⚠️ CRITICAL: File Delete Confirmation Dialog Pattern
+
+**MUST ALWAYS show confirmation dialog before deleting files when:**
+
+- ✅ User clicks delete button for existing files
+- ✅ Deleting promotional images (홍보사진)
+- ✅ Deleting attachment files (첨부파일)
+- ✅ Any file deletion action in admin forms
+- ✅ Deleting files from edit/detail forms
+
+**MUST implement delete confirmation pattern:**
+
+```typescript
+// ✅ CORRECT: Delete confirmation dialog pattern
+
+// 1. State for delete confirmation dialog (MUST export all setters)
+const [showDeleteConfirmDialog, setShowDeleteConfirmDialog] = useState(false);
+const [fileToDelete, setFileToDelete] = useState<FileItem | null>(null);
+
+// 2. Handler to show confirmation dialog
+const handleDeleteFileClick = (file: FileItem) => {
+  setFileToDelete(file);
+  setShowDeleteConfirmDialog(true);
+};
+
+// 3. Actual delete function (called after confirmation)
+const deleteExistingFile = async (file: FileItem) => {
+  // ... delete logic ...
+};
+
+// 4. Return statement (MUST include all setters)
+return {
+  // ... other returns ...
+  showDeleteConfirmDialog,
+  setShowDeleteConfirmDialog, // ✅ Setter MUST be exported
+  fileToDelete,
+  setFileToDelete, // ✅ Setter MUST be exported
+  handleDeleteFileClick,
+  deleteExistingFile,
+};
+```
+
+**MUST NOT:**
+
+- ❌ **NEVER** call delete function directly from onClick handler
+- ❌ **NEVER** skip confirmation dialog for file deletion
+- ❌ **NEVER** use `window.confirm()` (use ConfirmDialog component)
+- ❌ **NEVER** forget to export state setters from hook
+- ❌ **NEVER** delete file without user confirmation
+
+**Why this is CRITICAL:**
+
+File deletion is a destructive operation. Without confirmation:
+1. ❌ Users may accidentally delete important files
+2. ❌ No way to cancel accidental clicks
+3. ❌ Poor user experience
+4. ❌ Data loss risk
+5. ❌ No undo mechanism
+
+**Real-world example of the mistake:**
+
+```typescript
+// ❌ WRONG: Direct delete without confirmation
+<button onClick={() => deleteExistingFile(file)}>
+  삭제
+</button>
+
+// User accidentally clicks → File deleted immediately
+// No way to cancel → Data loss
+// Poor user experience
+```
+
+**✅ CORRECT: Confirmation dialog pattern**
+
+```typescript
+// ✅ CORRECT: Confirmation dialog before delete
+
+// Hook: Delete confirmation handler
+const handleDeleteFileClick = (file: FileItem) => {
+  setFileToDelete(file);
+  setShowDeleteConfirmDialog(true);
+};
+
+// UI Component: Delete button
+<button onClick={() => handleDeleteFileClick(file)}>
+  삭제
+</button>
+
+// UI Component: Confirmation dialog
+<ConfirmDialog
+  isOpen={showDeleteConfirmDialog}
+  title="파일 삭제"
+  message="해당 파일을 삭제하시겠습니까?"
+  type="danger"  // ✅ MUST use "danger" (red icon) for consistency
+  onConfirm={async () => {
+    if (!fileToDelete) {
+      setShowDeleteConfirmDialog(false);
+      return;
+    }
+    // Save fileToDelete value before clearing state
+    const file = fileToDelete;
+    setShowDeleteConfirmDialog(false);
+    setFileToDelete(null);
+    await deleteExistingFile(file);
+  }}
+  onCancel={() => {
+    setShowDeleteConfirmDialog(false);
+    setFileToDelete(null);
+  }}
+  confirmText="삭제"
+  cancelText="취소"
+/>
+```
+
+**🔍 Root Cause Analysis: Why This Mistake Happens**
+
+1. **Rapid Development**
+   - Developer implements delete function first
+   - Plans to add confirmation "later"
+   - Forgets to add confirmation before deployment
+   - Assumes confirmation is "nice to have" not "must have"
+
+2. **Copy-Paste from Examples**
+   - Copies delete button code without confirmation
+   - Doesn't verify if example includes confirmation
+   - Assumes delete is straightforward
+   - Doesn't check if example follows best practices
+
+3. **Missing UX Consideration**
+   - Focuses on functionality, not user experience
+   - Doesn't consider accidental clicks
+   - Doesn't realize importance of confirmation
+   - Doesn't understand destructive operation risks
+
+4. **Inconsistent Patterns**
+   - Some features have confirmation, others don't
+   - No standard pattern to follow
+   - Developer doesn't know confirmation is required
+   - No clear guideline in codebase
+
+5. **Testing Oversight**
+   - Tests happy path only
+   - Doesn't test accidental deletion scenario
+   - Doesn't verify user can cancel deletion
+   - Assumes users are always careful
+
+**📋 Prevention Checklist (MUST verify when implementing file delete):**
+
+- [ ] **Confirmation dialog**: Delete button shows confirmation dialog before deletion
+- [ ] **State management**: Delete confirmation state (showDeleteConfirmDialog, fileToDelete) is defined
+- [ ] **Handler function**: handleDeleteFileClick function is implemented
+- [ ] **State export**: All state setters are exported from hook
+- [ ] **UI destructuring**: All state and setters are destructured in UI component
+- [ ] **ConfirmDialog component**: ConfirmDialog is used (NOT window.confirm)
+- [ ] **onConfirm handler**: onConfirm saves fileToDelete before clearing state
+- [ ] **onCancel handler**: onCancel clears state properly
+- [ ] **Error handling**: Delete errors are handled and shown to user
+- [ ] **Dialog type**: ConfirmDialog uses `type="danger"` (NOT `type="warning"`)
+
+---
+
+## ⚠️ CRITICAL: ConfirmDialog Type for File Deletion
+
+**MUST ALWAYS use `type="danger"` (red icon) for file deletion confirmation dialogs when:**
+
+- ✅ User clicks delete button for existing files
+- ✅ Deleting promotional images (홍보사진)
+- ✅ Deleting attachment files (첨부파일)
+- ✅ Any file deletion confirmation dialog in admin forms
+
+**MUST use `type="danger"` (red icon) for file deletion:**
+
+```typescript
+// ✅ CORRECT: Use type="danger" for file deletion
+<ConfirmDialog
+  isOpen={showDeleteConfirmDialog}
+  title="파일 삭제"
+  message="해당 파일을 삭제하시겠습니까?"
+  type="danger"  // ✅ danger (red icon) - matches other delete dialogs
+  onConfirm={async () => {
+    if (!fileToDelete) {
+      setShowDeleteConfirmDialog(false);
+      return;
+    }
+    const file = fileToDelete;
+    setShowDeleteConfirmDialog(false);
+    setFileToDelete(null);
+    await deleteExistingFile(file);
+  }}
+  onCancel={() => {
+    setShowDeleteConfirmDialog(false);
+    setFileToDelete(null);
+  }}
+  confirmText="삭제"
+  cancelText="취소"
+/>
+```
+
+**MUST NOT:**
+
+- ❌ **NEVER** use `type="warning"` (yellow icon) for file deletion
+- ❌ **NEVER** use `type="success"` for file deletion
+- ❌ **NEVER** use inconsistent types across delete dialogs
+- ❌ **NEVER** mix warning and danger types for same operation type
+
+**Why this is CRITICAL:**
+
+Consistency with other delete dialogs in the application:
+1. ✅ All delete operations use `type="danger"` (red icon)
+2. ✅ Users recognize red icon as destructive action
+3. ✅ Consistent user experience across all delete operations
+4. ✅ Matches pattern: Support deletion, Member deletion, Article deletion, Board deletion, Program deletion, Menu deletion, etc.
+5. ✅ Red color clearly indicates destructive operation
+
+**Real-world example of the mistake:**
+
+```typescript
+// ❌ WRONG: Using type="warning" for file deletion
+<ConfirmDialog
+  isOpen={showDeleteConfirmDialog}
+  title="파일 삭제"
+  message="해당 파일을 삭제하시겠습니까?"
+  type="warning"  // ❌ Wrong: Yellow icon, inconsistent with other deletes
+  onConfirm={async () => {
+    // ... delete logic ...
+  }}
+  onCancel={() => {
+    setShowDeleteConfirmDialog(false);
+    setFileToDelete(null);
+  }}
+  confirmText="삭제"
+  cancelText="취소"
+/>
+
+// Other delete dialogs use type="danger" (red)
+// File deletion uses type="warning" (yellow)
+// Inconsistent user experience
+// Users may not recognize yellow as destructive action
+```
+
+**✅ CORRECT: Using type="danger" for file deletion**
+
+```typescript
+// ✅ CORRECT: Use type="danger" for consistency
+<ConfirmDialog
+  isOpen={showDeleteConfirmDialog}
+  title="파일 삭제"
+  message="해당 파일을 삭제하시겠습니까?"
+  type="danger"  // ✅ Correct: Red icon, matches other delete dialogs
+  onConfirm={async () => {
+    // ... delete logic ...
+  }}
+  onCancel={() => {
+    setShowDeleteConfirmDialog(false);
+    setFileToDelete(null);
+  }}
+  confirmText="삭제"
+  cancelText="취소"
+/>
+
+// All delete dialogs use type="danger" (red)
+// Consistent user experience
+// Users immediately recognize red as destructive action
+```
+
+**🔍 Root Cause Analysis: Why This Mistake Happens**
+
+1. **Copy-Paste from Warning Examples**
+   - Developer copies code from warning dialog example
+   - Doesn't realize warning is for non-destructive actions
+   - Assumes "warning" means "be careful" (which is true, but wrong type)
+   - Doesn't check other delete dialogs for consistency
+
+2. **Misunderstanding Dialog Types**
+   - Thinks `type="warning"` is appropriate for "warning before delete"
+   - Doesn't understand `type="danger"` is for destructive actions
+   - Doesn't realize warning is for non-destructive warnings (e.g., "Unsaved changes")
+   - Confuses "warning user" with "destructive action type"
+
+3. **Lack of Consistency Check**
+   - Doesn't check how other delete dialogs are implemented
+   - Doesn't verify consistency across the application
+   - Assumes each feature can use different types
+   - Doesn't realize consistency is important for UX
+
+4. **No Clear Guideline**
+   - No existing rule about dialog types for delete operations
+   - Developer makes decision based on intuition
+   - Intuition suggests "warning" for "warning before delete"
+   - Doesn't realize application has established pattern
+
+5. **Testing Oversight**
+   - Tests functionality only, not visual consistency
+   - Doesn't compare with other delete dialogs
+   - Doesn't verify user experience consistency
+   - Assumes yellow icon is acceptable
+
+**📋 Prevention Checklist (MUST verify when implementing file delete dialog):**
+
+- [ ] **Dialog type**: ConfirmDialog uses `type="danger"` (NOT `type="warning"`)
+- [ ] **Consistency check**: Verified other delete dialogs use `type="danger"`
+- [ ] **Visual consistency**: Red icon matches other delete operations
+- [ ] **User recognition**: Red color clearly indicates destructive action
+- [ ] **Pattern matching**: Follows same pattern as Support, Member, Article, Board deletions
+
+**🔄 Step-by-Step Verification Process:**
+
+1. **Step 1: Check Other Delete Dialogs**
+   ```typescript
+   // Check existing delete dialogs in codebase
+   // Support deletion: type="danger" ✅
+   // Member deletion: type="danger" ✅
+   // Article deletion: type="danger" ✅
+   // File deletion: type="danger" ✅ (should match)
+   ```
+
+2. **Step 2: Verify Dialog Type**
+   ```typescript
+   // ✅ CORRECT
+   <ConfirmDialog
+     type="danger"  // ✅ Red icon for destructive action
+     // ...
+   />
+   ```
+
+3. **Step 3: Test Visual Consistency**
+   ```
+   - Open file delete dialog
+   - Open support delete dialog
+   - Compare icons: Both should be red (danger type)
+   - Verify consistent user experience
+   ```
+
+**📚 Reference: Other Delete Dialogs**
+
+All other delete confirmation dialogs in the application use `type="danger"`:
+- ✅ Support deletion: `type="danger"` (지원사업 삭제)
+- ✅ Member deletion: `type="danger"` (회원 삭제)
+- ✅ Article deletion: `type="danger"` (게시글 삭제)
+- ✅ Board deletion: `type="danger"` (게시판 삭제)
+- ✅ Program deletion: `type="danger"` (프로그램 삭제)
+- ✅ Menu deletion: `type="danger"` (메뉴 삭제)
+- ✅ Code deletion: `type="danger"` (코드 삭제)
+
+**File deletion MUST follow the same pattern for consistency.**
+
+**When to Use Each Type:**
+
+- `type="danger"`: ✅ **ALWAYS** for delete operations (destructive actions)
+- `type="warning"`: ✅ For non-destructive warnings (e.g., "Unsaved changes will be lost")
+- `type="success"`: ✅ For success messages after create/update operations
+
+---
+
+## ⚠️ CRITICAL: File Comparison Pattern (String Conversion)
+
+**MUST ALWAYS use `String()` conversion when comparing file IDs:**
+
+- ✅ Filtering files after deletion
+- ✅ Checking if file exists in list
+- ✅ Matching fileId and seq for deletion
+- ✅ Any file ID comparison operation
+- ✅ Removing files from state after deletion
+
+**MUST use String() conversion for file comparison:**
+
+```typescript
+// ✅ CORRECT: String conversion for file comparison
+setExistingFiles((prev) =>
+  prev.filter(
+    (f) => {
+      // ✅ Use String() conversion for comparison
+      return !(
+        String(f.fileId) === String(fileId) &&
+        String(f.seq) === String(seq)
+      );
+    },
+  ),
+);
+```
+
+**MUST NOT:**
+
+- ❌ **NEVER** use `Number()` conversion for fileId comparison
+- ❌ **NEVER** use direct `===` comparison without String() conversion
+- ❌ **NEVER** assume fileId types match exactly
+- ❌ **NEVER** use `==` (loose equality) for file comparison
+- ❌ **NEVER** compare fileId without type conversion
+
+**Why this is CRITICAL:**
+
+File IDs can be `string | number` type. Direct comparison may fail:
+1. ❌ `"808619273596438406" === 808619273596438406` → false (type mismatch)
+2. ❌ `808619273596438406 === 808619273596438400` → false (precision loss)
+3. ❌ File not removed from list after deletion
+4. ❌ UI shows incorrect file list
+5. ❌ User sees deleted file still in list
+
+**Real-world example of the mistake:**
+
+```typescript
+// ❌ WRONG: Direct comparison without String() conversion
+setExistingFiles((prev) =>
+  prev.filter(
+    (f) => {
+      // ❌ Wrong: Direct comparison, may fail due to type mismatch
+      return !(f.fileId === fileId && f.seq === seq);
+    },
+  ),
+);
+
+// fileId: "808619273596438406" (string)
+// f.fileId: 808619273596438406 (number)
+// Comparison: false (type mismatch)
+// File not removed from list
+// User sees deleted file still displayed
+```
+
+**✅ CORRECT: String conversion pattern**
+
+```typescript
+// ✅ CORRECT: String conversion for comparison
+setExistingFiles((prev) =>
+  prev.filter(
+    (f) => {
+      // ✅ Correct: String() conversion handles both string and number
+      return !(
+        String(f.fileId) === String(fileId) &&
+        String(f.seq) === String(seq)
+      );
+    },
+  ),
+);
+
+// fileId: "808619273596438406" (string)
+// f.fileId: 808619273596438406 (number)
+// String(fileId): "808619273596438406"
+// String(f.fileId): "808619273596438406"
+// Comparison: true (both converted to string)
+// File correctly removed from list
+```
+
+**🔍 Root Cause Analysis: Why This Mistake Happens**
+
+1. **Type Assumption**
+   - Assumes fileId types always match
+   - Doesn't realize string and number are different types
+   - Doesn't understand strict equality (`===`) requires type match
+   - Assumes JavaScript will auto-convert types
+
+2. **Copy-Paste Error**
+   - Copies comparison code from example
+   - Example might use same type (works by accident)
+   - Doesn't verify if example handles type mismatch
+   - Doesn't test with different types
+
+3. **Testing Oversight**
+   - Tests with same type (string vs string)
+   - Doesn't test with different types (string vs number)
+   - Doesn't verify file removal works correctly
+   - Assumes comparison works if no error occurs
+
+4. **Lack of Understanding**
+   - Doesn't understand strict equality (`===`)
+   - Doesn't know about type coercion
+   - Assumes `==` and `===` work the same
+   - Doesn't realize type conversion is needed
+
+---
+
+## ⚠️ CRITICAL: Delete Success Message Dialog Pattern
+
+**MUST ALWAYS show success message after file deletion when:**
+
+- ✅ File deletion API returns success (result === "00")
+- ✅ File is successfully removed from server
+- ✅ File list is updated in UI
+- ✅ User needs feedback about operation result
+
+**MUST implement success message dialog:**
+
+```typescript
+// ✅ CORRECT: Success message after deletion
+
+// State for message dialog (MUST export all setters)
+const [showMessageDialog, setShowMessageDialog] = useState(false);
+const [messageDialogTitle, setMessageDialogTitle] = useState("");
+const [messageDialogMessage, setMessageDialogMessage] = useState("");
+const [messageDialogType, setMessageDialogType] = useState<"danger" | "warning" | "success">("success");
+
+// After successful deletion
+if (response.result === "00") {
+  // Update file list
+  setExistingFiles((prev) =>
+    prev.filter(
+      (f) => {
+        return !(
+          String(f.fileId) === String(fileId) &&
+          String(f.seq) === String(seq)
+        );
+      },
+    ),
+  );
+
+  // Show success message
+  setMessageDialogTitle("삭제 완료");
+  setMessageDialogMessage(
+    response.message || "파일이 삭제되었습니다."
+  );
+  setMessageDialogType("success");
+  setShowMessageDialog(true);
+} else {
+  // Show failure message
+  setMessageDialogTitle("삭제 실패");
+  setMessageDialogMessage(
+    response.message || "파일 삭제에 실패했습니다."
+  );
+  setMessageDialogType("danger");
+  setShowMessageDialog(true);
+}
+```
+
+**MUST NOT:**
+
+- ❌ **NEVER** delete file silently without user feedback
+- ❌ **NEVER** skip success message for file deletion
+- ❌ **NEVER** use console.log instead of user-visible message
+- ❌ **NEVER** forget to handle deletion failure message
+- ❌ **NEVER** forget to export message dialog state setters
+
+**Why this is CRITICAL:**
+
+User feedback is essential for file operations:
+1. ❌ Users don't know if deletion succeeded
+2. ❌ Users may think operation failed if no feedback
+3. ❌ Poor user experience
+4. ❌ Users may try to delete again (duplicate operations)
+5. ❌ No way to know if error occurred
+
+---
+
+## 📋 Complete File Delete Implementation Pattern
+
+### Step 1: Define File Item Interface
+
+```typescript
+// ✅ CORRECT: File item interface
+export interface FileItem {
+  fileId?: string | number; // ✅ string | number (NOT just number)
+  seq?: string | number;     // ✅ string | number (NOT just number)
+  orgfNm?: string;
+  saveNm?: string;
+  filePath?: string;
+  fileExt?: string;
+  fileSize?: number;
+  fileType?: string;
+  sttusCode?: string;
+  [key: string]: unknown;
+}
+```
+
+### Step 2: Define Delete API Function
+
+```typescript
+// ✅ CORRECT: Delete API function
+static async deleteFile(params: {
+  proId: string;
+  fileId: string | number; // ✅ string | number
+  seq: string | number;     // ✅ string | number
+}): Promise<DeleteResponse> {
+  const { proId, fileId, seq } = params;
+  const response = await apiClient.delete<DeleteResponse>(
+    `${API_ENDPOINTS.BASE}/${proId}/files/${fileId}/${seq}`,
+  );
+  return response;
+}
+```
+
+### Step 3: Implement Delete Confirmation Handler
+
+```typescript
+// ✅ CORRECT: Delete confirmation handler
+const handleDeleteFileClick = (file: FileItem) => {
+  setFileToDelete(file);
+  setShowDeleteConfirmDialog(true);
+};
+```
+
+### Step 4: Implement Actual Delete Function
+
+```typescript
+// ✅ CORRECT: Actual delete function
+const deleteExistingFile = async (file: FileItem) => {
+  // Convert to string for comparison (handles precision)
+  const fileId = file.fileId != null ? String(file.fileId) : null;
+  const seq = file.seq != null ? String(file.seq) : null;
+
+  if (!fileId || !seq) {
+    setError("삭제할 파일 정보가 올바르지 않습니다.");
+    return;
+  }
+
+  try {
+    setLoading(true);
+    setError("");
+
+    const response = await FileService.deleteFile({
+      proId: businessId,
+      fileId, // Can be string or number, API handles both
+      seq,
+    });
+
+    if (response.result === "00") {
+      // Update file list with String() conversion
+      setExistingFiles((prev) =>
+        prev.filter(
+          (f) => {
+            return !(
+              String(f.fileId) === String(fileId) &&
+              String(f.seq) === String(seq)
+            );
+          },
+        ),
+      );
+
+      // Show success message
+      setMessageDialogTitle("삭제 완료");
+      setMessageDialogMessage(
+        response.message || "파일이 삭제되었습니다."
+      );
+      setMessageDialogType("success");
+      setShowMessageDialog(true);
+    } else {
+      // Show failure message
+      setMessageDialogTitle("삭제 실패");
+      setMessageDialogMessage(
+        response.message || "파일 삭제에 실패했습니다."
+      );
+      setMessageDialogType("danger");
+      setShowMessageDialog(true);
+    }
+  } catch (err) {
+    setMessageDialogTitle("삭제 실패");
+    setMessageDialogMessage(
+      err instanceof Error
+        ? err.message
+        : "파일 삭제 중 오류가 발생했습니다."
+    );
+    setMessageDialogType("danger");
+    setShowMessageDialog(true);
+  } finally {
+    setLoading(false);
+  }
+};
+```
+
+### Step 5: Export All State and Functions
+
+```typescript
+// ✅ CORRECT: Export all state and functions
+return {
+  // ... other returns ...
+  // Delete confirmation dialog state
+  showDeleteConfirmDialog,
+  setShowDeleteConfirmDialog, // ✅ Setter MUST be exported
+  fileToDelete,
+  setFileToDelete, // ✅ Setter MUST be exported
+  // Delete functions
+  handleDeleteFileClick,
+  deleteExistingFile,
+  // Message dialog state
+  showMessageDialog,
+  messageDialogTitle,
+  messageDialogMessage,
+  messageDialogType,
+  setShowMessageDialog, // ✅ Setter MUST be exported
+};
+```
+
+### Step 6: Implement UI Component
+
+```typescript
+// ✅ CORRECT: UI component implementation
+
+// Destructure all required state and functions
+const {
+  existingFiles,
+  handleDeleteFileClick,
+  deleteExistingFile,
+  showDeleteConfirmDialog,
+  setShowDeleteConfirmDialog,
+  fileToDelete,
+  setFileToDelete,
+  showMessageDialog,
+  messageDialogTitle,
+  messageDialogMessage,
+  messageDialogType,
+  setShowMessageDialog,
+} = useXxxHook();
+
+// Delete button
+<button
+  type="button"
+  onClick={(e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    handleDeleteFileClick(file);
+  }}
+  title="파일삭제"
+  aria-label="파일삭제"
+>
+  삭제
+</button>
+
+// Delete confirmation dialog
+<ConfirmDialog
+  isOpen={showDeleteConfirmDialog}
+  title="파일 삭제"
+  message="해당 파일을 삭제하시겠습니까?"
+  type="danger"  // ✅ MUST use "danger" (red icon) for consistency
+  onConfirm={async () => {
+    if (!fileToDelete) {
+      setShowDeleteConfirmDialog(false);
+      return;
+    }
+    // Save fileToDelete value before clearing state
+    const file = fileToDelete;
+    setShowDeleteConfirmDialog(false);
+    setFileToDelete(null);
+    await deleteExistingFile(file);
+  }}
+  onCancel={() => {
+    setShowDeleteConfirmDialog(false);
+    setFileToDelete(null);
+  }}
+  confirmText="삭제"
+  cancelText="취소"
+/>
+
+// Success/failure message dialog
+<ConfirmDialog
+  isOpen={showMessageDialog}
+  title={messageDialogTitle}
+  message={messageDialogMessage}
+  type={messageDialogType}
+  onConfirm={() => setShowMessageDialog(false)}
+  onCancel={() => setShowMessageDialog(false)}
+  confirmText="확인"
+  cancelText="닫기"
+/>
+```
+
+---
+
+## 🔍 Decision Tree
+
+```
+Implementing file delete functionality?
+├─ Define file item interface
+│  └─ fileId type: string | number (NOT just number)
+├─ Create delete API function
+│  └─ Accept fileId: string | number parameter
+├─ Implement delete confirmation
+│  ├─ Add state: showDeleteConfirmDialog, fileToDelete
+│  ├─ Add handler: handleDeleteFileClick
+│  └─ Export all state and setters (CRITICAL)
+├─ Implement actual delete function
+│  ├─ Convert fileId/seq to string for comparison
+│  ├─ Call delete API
+│  ├─ Update file list with String() conversion
+│  └─ Show success/failure message
+└─ Implement UI
+   ├─ Delete button calls handleDeleteFileClick
+   ├─ ConfirmDialog for confirmation
+   └─ ConfirmDialog for success/failure message
+```
+
+---
+
+## 🚫 Common Mistakes to Avoid
+
+### Mistake 1: Using number type for fileId
+
+```typescript
+// ❌ WRONG
+export interface FileItem {
+  fileId?: number; // ❌ Precision loss for 18+ digit numbers
+}
+
+// ✅ CORRECT
+export interface FileItem {
+  fileId?: string | number; // ✅ Handles large numbers
+}
+```
+
+### Mistake 2: Direct delete without confirmation
+
+```typescript
+// ❌ WRONG
+<button onClick={() => deleteExistingFile(file)}>
+  삭제
+</button>
+
+// ✅ CORRECT
+<button onClick={() => handleDeleteFileClick(file)}>
+  삭제
+</button>
+```
+
+### Mistake 3: Forgetting to export state setters
+
+```typescript
+// ❌ WRONG
+return {
+  showDeleteConfirmDialog,
+  // ❌ Missing: setShowDeleteConfirmDialog
+  fileToDelete,
+  // ❌ Missing: setFileToDelete
+};
+
+// ✅ CORRECT
+return {
+  showDeleteConfirmDialog,
+  setShowDeleteConfirmDialog, // ✅ Setter exported
+  fileToDelete,
+  setFileToDelete, // ✅ Setter exported
+};
+```
+
+### Mistake 4: Direct comparison without String() conversion
+
+```typescript
+// ❌ WRONG
+prev.filter((f) => f.fileId === fileId) // ❌ Type mismatch
+
+// ✅ CORRECT
+prev.filter((f) => String(f.fileId) === String(fileId)) // ✅ String conversion
+```
+
+### Mistake 5: Not showing success message
+
+```typescript
+// ❌ WRONG
+if (response.result === "00") {
+  setExistingFiles(/* ... */);
+  // ❌ No success message
+}
+
+// ✅ CORRECT
+if (response.result === "00") {
+  setExistingFiles(/* ... */);
+  setMessageDialogTitle("삭제 완료");
+  setMessageDialogMessage("파일이 삭제되었습니다.");
+  setMessageDialogType("success");
+  setShowMessageDialog(true);
+}
+```
+
+### Mistake 6: Using type="warning" for file deletion
+
+```typescript
+// ❌ WRONG
+<ConfirmDialog
+  type="warning"  // ❌ Yellow icon, inconsistent with other deletes
+  title="파일 삭제"
+  message="해당 파일을 삭제하시겠습니까?"
+  // ...
+/>
+
+// ✅ CORRECT
+<ConfirmDialog
+  type="danger"  // ✅ Red icon, matches other delete dialogs
+  title="파일 삭제"
+  message="해당 파일을 삭제하시겠습니까?"
+  // ...
+/>
+```
+
+---
+
+## 📚 Reference Implementation
+
+- **Support (artprom)**: `src/features/adminWeb/support/update/model/useSupportUpdate.ts`
+- **Support Application (artappm)**: `src/features/adminWeb/support/application/register/model/useSupportApplicationRegister.ts`
+- **File API**: `src/entities/adminWeb/support/api/supportApi.ts`
+- **Application File API**: `src/entities/adminWeb/support/application/api/supportApplicationApi.ts`
+
+---
+
+## 💡 Key Principles
+
+1. **Type Safety**: Always use `string | number` for fileId to handle large numbers
+2. **User Confirmation**: Always show confirmation dialog before deletion
+3. **Dialog Type Consistency**: Always use `type="danger"` (red icon) for file deletion dialogs to match other delete operations
+4. **String Conversion**: Always use `String()` for file ID comparison
+5. **State Export**: Always export state setters when exporting state values
+6. **User Feedback**: Always show success/failure message after deletion
+7. **Error Handling**: Always handle deletion errors gracefully
+8. **Consistency**: Follow the same pattern for all file operations
+
+**Remember**: File operations involve user data. Always prioritize safety, confirmation, and clear feedback. Test with actual large file IDs to verify precision handling works correctly. Use `type="danger"` for all file deletion dialogs to maintain consistency with other delete operations in the application.

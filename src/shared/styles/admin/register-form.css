@@ -1,0 +1,58 @@
+/* 등록 폼 레이블 스타일 */
+.register-form-label {
+  @apply justify-end pr-4 font-bold;
+}
+
+/* 레이블|필드 경계 한 줄만 보이도록 (데스크톱 포함, 다른 지원사업 등록과 동일) */
+.register-form-mobile-field {
+  border-left: none !important;
+}
+
+/* number input의 spinner 화살표 숨기기 */
+input[type='number']::-webkit-inner-spin-button,
+input[type='number']::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type='number'] {
+  -moz-appearance: textfield;
+}
+
+/* 모바일에서 카드 형태로 표시 */
+@media (max-width: 767px) {
+  .register-form-label {
+    @apply justify-start pl-3 pr-0 font-bold bg-gray-100;
+    border: 1px solid #dee2e6 !important;
+    border-bottom: none !important;
+    padding: 8px 12px !important;
+    width: 100% !important;
+  }
+
+  .register-form-mobile-field {
+    width: 100% !important;
+    border: 1px solid #dee2e6 !important;
+    border-top: none !important;
+    /* label|field 경계에 한 줄만 보이도록: left 제거 시 2px로 두껍게 보이는 현상 방지 */
+    border-left: none !important;
+    padding: 8px 12px !important;
+  }
+
+  .register-form-mobile-row {
+    width: 100% !important;
+    margin-bottom: 16px;
+  }
+
+  .register-form-mobile-wrapper {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+  }
+}
+
+/* 가맹 학원 등록: 데스크톱에서 모든 행 높이 45px 통일 */
+@media (min-width: 768px) {
+  .franchise-register-form .register-form-mobile-wrapper {
+    min-height: 45px;
+  }
+}

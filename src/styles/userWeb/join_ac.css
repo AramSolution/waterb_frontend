@@ -1,0 +1,1067 @@
+@charset "UTF-8";
+
+/* --primary/--primary-light는 LayoutWrapper data-theme(학생/학부모/학원/멘토 type 쿼리)으로 통일. header.css 상속 */
+.joinBg {
+  background: var(--primary-light);
+  padding: 80px 0 120px;
+}
+.mainTitle {
+  font-size: 32px;
+  font-weight: 900;
+  text-align: center;
+  margin-bottom: 80px;
+}
+.mainBg {
+  width: 100%;
+  padding: 60px;
+  background: #fff;
+  border-radius: 30px;
+}
+.joinStatus {
+  font-size: 18px;
+  padding: 6px 24px;
+  border-radius: 30px;
+  font-weight: bold;
+  display: inline-block;
+  margin-bottom: 40px;
+}
+.joinStatus.register {
+  color: #ff7700;
+  border: 1px solid #ff7700;
+  background: #fff3e2;
+}
+.joinStatus.join {
+  color: #0770e8;
+  border: 1px solid #0770e8;
+  background: #ebf4ff;
+}
+.joinStatus.out {
+  color: #707070;
+  border: 1px solid #707070;
+  background: #eeeeee;
+}
+.sectionHeader .idInfo {
+  font-weight: bold;
+  color: #0771ea;
+}
+.file {
+  display: block;
+  margin-bottom: 8px;
+}
+.file:last-child {
+  margin-bottom: 0 !important;
+}
+.file:hover,
+.file:focus {
+  text-decoration: underline;
+  cursor: pointer;
+  font-weight: bold;
+}
+.file::before {
+  content: "";
+  width: 24px;
+  height: 24px;
+  display: inline-block;
+  margin: -2px 8px 0 0;
+  vertical-align: middle;
+}
+.file.hwp::before {
+  background: url("/images/userWeb/icon/ico_file_hwp.png") no-repeat center /
+    24px auto;
+}
+.file.img::before {
+  background: url("/images/userWeb/icon/ico_file_img.png") no-repeat center /
+    24px auto;
+}
+.file.pdf::before {
+  background: url("/images/userWeb/icon/ico_file_pdf.png") no-repeat center /
+    24px auto;
+}
+.file.ppt::before {
+  background: url("/images/userWeb/icon/ico_file_ppt.png") no-repeat center /
+    24px auto;
+}
+.file.xls::before {
+  background: url("/images/userWeb/icon/ico_file_xls.png") no-repeat center /
+    24px auto;
+}
+.file.zip::before {
+  background: url("/images/userWeb/icon/ico_file_zip.png") no-repeat center /
+    24px auto;
+}
+.file .btnFileDel {
+  vertical-align: middle;
+  width: 24px;
+  height: 24px;
+  margin-left: 16px;
+}
+@media (max-width: 1024px) {
+  .mainBg {
+    padding: 40px !important;
+  }
+}
+@media (max-width: 640px) {
+  .mainBg {
+    padding: 24px 16px !important;
+  }
+}
+
+/* 회원가입 */
+.joinInput .hiddenInput {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  opacity: 0;
+}
+.imageUploadContainer {
+  position: relative;
+}
+.btnImageAdd {
+  display: inline-block;
+  cursor: pointer;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  overflow: hidden;
+  width: 140px;
+  height: 140px;
+}
+.btnImageAdd img {
+  width: 100%;
+  height: 100%;
+  object-position: center;
+  object-fit: cover;
+}
+.hiddenInput:focus-visible + .btnImageAdd {
+  outline: 2px solid #000 !important;
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+.btnImageDel {
+  position: absolute;
+  bottom: 16px;
+  right: 10px;
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+  background: url("/images/userWeb/icon/ico_file_del.png") no-repeat center /
+    24px auto;
+}
+.btnImageDel:focus-visible {
+  outline: 2px solid #000;
+  outline-offset: 1px;
+}
+.joinInput .srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+}
+.joinInput .formSection {
+  margin-bottom: 40px;
+}
+.joinInput .sectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 2px solid #333;
+  padding-bottom: 10px;
+  margin-bottom: 24px;
+}
+.joinInput .sectionTitle {
+  font-size: 18px;
+  font-weight: 900;
+  text-align: right;
+}
+
+.joinInput .formGrid {
+  border: 1px solid #eee;
+}
+.joinInput .formGrid .formRow:last-child {
+  border-bottom: none !important;
+}
+.joinInput .formRow {
+  display: flex;
+  border-bottom: 1px solid #eee;
+  width: 100%;
+}
+.joinInput .formLabel {
+  width: 180px;
+  background: #fafafa;
+  padding: 0 15px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  justify-content: flex-end;
+  min-height: 64px;
+}
+/* 첨부파일/사업자등록증 행: bizInput처럼 라벨 높이 줄임 */
+.joinInput .formRowFile .formLabel {
+  min-height: auto;
+  padding: 8px 15px;
+}
+.joinInput .formLabel .requiredMark {
+  color: #c00;
+  margin-right: 4px;
+}
+.joinInput .formControl {
+  flex: 1;
+  padding: 8px 14px;
+  display: flex;
+  gap: 8px;
+  box-sizing: border-box;
+}
+.joinInput .inputField,
+.joinInput .selectField {
+  width: 100%;
+  height: 48px;
+}
+.joinInput .textAreaField {
+  width: 100%;
+  min-height: 120px;
+  padding: 14px;
+  resize: vertical;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  box-sizing: border-box;
+}
+.joinInput .btnRed {
+  background: var(--primary);
+  color: #fff;
+  cursor: pointer;
+  min-width: 160px;
+  border-radius: 6px;
+  font-weight: bold;
+  height: 48px;
+}
+.joinInput .btnSearch {
+  background: var(--primary);
+  height: 48px;
+  font-weight: bold;
+  color: #fff;
+  cursor: pointer;
+  width: 100px;
+  border-radius: 6px;
+}
+.joinInput .customGroup {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.joinInput .customItem {
+  cursor: pointer;
+  display: inline-block;
+}
+.joinInput .customItem .customInput {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.joinInput .customBox {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 110px;
+  height: 36px;
+  border: 1px solid #ccc;
+  border-radius: 18px;
+  background-color: #f7f7f7;
+  transition: all 0.2s ease;
+}
+.joinInput .customBox .customText {
+  color: #757575;
+  font-weight: bold;
+}
+.joinInput .customBox .customIcon {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  margin-right: 6px;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-image: url("/images/userWeb/icon/ico_radio_check_off.png");
+}
+.joinInput .customInput:checked + .customBox {
+  border: 1px solid var(--primary);
+  background-color: var(--primary-light);
+}
+.joinInput .customInput:checked + .customBox .customText {
+  color: var(--primary) !important;
+}
+.joinInput .customInput:checked + .customBox .customIcon {
+  background-image: url("/images/userWeb/icon/ico_radio_check_on.png");
+}
+[data-theme="student"] .joinInput .customInput:checked + .customBox .customIcon {
+  background-image: url("/images/userWeb/icon/ico_radio_check_on_st.png");
+}
+[data-theme="parent"] .joinInput .customInput:checked + .customBox .customIcon {
+  background-image: url("/images/userWeb/icon/ico_radio_check_on_pr.png");
+}
+[data-theme="academy"] .joinInput .customInput:checked + .customBox .customIcon {
+  background-image: url("/images/userWeb/icon/ico_radio_check_on_ac.png");
+}
+[data-theme="mentor"] .joinInput .customInput:checked + .customBox .customIcon {
+  background-image: url("/images/userWeb/icon/ico_radio_check_on_mt.png");
+}
+[data-theme="school"] .joinInput .customInput:checked + .customBox .customIcon {
+  background-image: url("/images/userWeb/icon/ico_radio_check_on_sh.png");
+}
+.joinInput .customInput:focus-visible + .customBox {
+  outline: 2px solid #000;
+  outline-offset: 2px;
+  border-radius: 24px;
+  z-index: 1;
+}
+/* 인증 데이터로 채워진 성별 - 수정 불가 (이름/전화번호와 동일) */
+.joinInput .customGroup.certReadOnly {
+  pointer-events: none;
+  opacity: 0.85;
+}
+.joinInput .customGroup.certReadOnly .customBox {
+  background-color: #f7f7f7;
+}
+
+/* MY PAGE와 동일: 여부 필드 단일 인증 버튼(pressed 상태 구분) */
+.joinInput .mypageYnCertBtn[aria-pressed="true"] {
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.9);
+  opacity: 0.92;
+}
+
+/* MY PAGE와 동일: 인증 버튼 옆 인증완료/날짜 표시 */
+.joinInput .formControl.mypageYnCertControl {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.joinInput .mypageYnCertDate {
+  font-size: 14px;
+  line-height: 1.35;
+  color: #4b5563;
+  min-width: 7.5rem;
+}
+.joinInput .mypageYnCertDatePrefix {
+  color: #6b7280;
+  font-weight: 600;
+}
+.joinInput .mypageYnCertDate time {
+  font-weight: 600;
+  color: #374151;
+}
+.joinInput .mypageYnCertDatePlaceholder,
+.joinInput .mypageYnCertDateMuted {
+  color: #9ca3af;
+  font-weight: 500;
+}
+
+/* MY PAGE와 동일: 간편로그인연결 행 */
+.joinInput .mypageSnsLinkRow {
+  margin-top: 0;
+}
+/* 간편로그인연결 행이 붙을 경우, 위 토글 그리드 마지막 행 보더 복원 */
+.joinInput .formGridToggleTwoCol .formRow:nth-last-child(-n + 2) {
+  border-bottom: 1px solid #eee;
+}
+.joinInput .formControl.mypageSnsLinkControl {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 12px;
+  padding-bottom: 12px;
+}
+.joinInput .mypageSnsLinkItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.joinInput .mypageSnsLinkBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 120px;
+  height: 48px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: bold;
+  padding: 0;
+  flex-shrink: 0;
+  user-select: none;
+}
+.joinInput .mypageSnsLinkBadge img {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+.joinInput .mypageBadgeNaver {
+  background-color: #00c73c;
+  color: #fff;
+}
+.joinInput .mypageBadgeKakao {
+  background-color: #ffea00;
+  color: #3b1e1d;
+}
+.joinInput .mypageSnsConnectBtn {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  line-height: 1;
+  text-align: center;
+}
+.joinInput .addressContainer {
+  flex-direction: column;
+}
+.joinInput .inputWithBtn {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+  align-items: center;
+}
+.joinInput .inputWithBtn .inputField {
+  flex: 1;
+  min-width: 0;
+}
+.joinInput .inputWithBtn .inputField.addressZip {
+  flex: 0 0 100px;
+  max-width: 120px;
+}
+/* 스터디사업 예/아니오 항목: 데스크톱 2열 그리드(학생 6개=3행×2열, 학부모 4개=2행×2열) */
+.joinInput .formGridToggleTwoCol {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  width: 100%;
+}
+.joinInput .formGridToggleTwoCol .formRow {
+  border-right: 1px solid #eee;
+  border-bottom: 1px solid #eee;
+  min-width: 0;
+}
+.joinInput .formGridToggleTwoCol .formRow:nth-child(2n) {
+  border-right: none;
+}
+.joinInput .formGridToggleTwoCol .formRow:nth-last-child(-n + 2) {
+  border-bottom: none;
+}
+@media (min-width: 769px) {
+  .joinInput .formRow.split {
+    display: flex;
+  }
+  .joinInput .fieldUnit {
+    display: flex;
+    flex: 1;
+  }
+  .joinInput .fieldUnit:first-child {
+    border-right: 1px solid #ddd;
+  }
+  .joinInput .accountGroup {
+    display: flex;
+    width: 100%;
+  }
+  .joinInput .accountGroup .selectField {
+    width: 180px;
+    flex-shrink: 0;
+  }
+  .joinInput .accountGroup .inputField {
+    flex: 1;
+  }
+}
+@media (max-width: 768px) {
+  .joinInput .tabLabel {
+    width: 40% !important;
+  }
+  .joinInput .formRow {
+    flex-direction: column;
+  }
+  .joinInput .formRow.split {
+    flex-direction: column;
+  }
+  .joinInput .formLabel {
+    width: 100% !important;
+    height: 40px;
+    text-align: right;
+    justify-content: flex-end;
+    background: #eee;
+  }
+  .joinInput .formControl {
+    width: 100%;
+  }
+  .joinInput .formControl.group,
+  .joinInput .accountGroup {
+    flex-direction: column;
+  }
+  .joinInput .fieldUnit {
+    border-right: none;
+    width: 100%;
+  }
+  .joinInput .formGridToggleTwoCol {
+    grid-template-columns: 1fr;
+  }
+  .joinInput .formGridToggleTwoCol .formRow {
+    border-right: none;
+  }
+  .joinInput .formGridToggleTwoCol .formRow:nth-last-child(-n + 2) {
+    border-bottom: 1px solid #eee;
+  }
+  .joinInput .formGridToggleTwoCol .formRow:last-child {
+    border-bottom: none !important;
+  }
+}
+.titleWrapper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.subTextBlue {
+  font-size: 14px;
+  color: #007bff;
+}
+.subTextBlue.certRequired {
+  color: #c00;
+  font-weight: 600;
+}
+.fieldSelectGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+.fieldRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.fieldRow .inputField {
+  flex: 1;
+  color: #888;
+}
+@media (max-width: 768px) {
+  .fieldRow {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 5px;
+    padding-bottom: 10px;
+    border-bottom: 1px dashed #eee;
+    height: 100px;
+  }
+  .fieldRow .inputField {
+    width: 100%;
+  }
+}
+.joinInput .hiddenInput {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
+.joinInput .hiddenInput:focus-visible + .btnFileAdd {
+  outline: 2px solid #000;
+  outline-offset: 2px;
+  border-radius: 4px;
+  z-index: 1;
+}
+.btnFileAdd:hover {
+  opacity: 0.8;
+}
+.btnFileAdd {
+  margin-left: 8px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+}
+.fileListContainer {
+  display: unset !important;
+}
+.btnFileDel {
+  cursor: pointer;
+  display: inline-block;
+}
+/* GPKI 시민·감면 인증: 주민번호·회원명 미충족 시 필드 강조 */
+.joinInput .fieldUnit.fieldMissing .formLabel,
+.joinInput .fieldUnit.fieldMissing > span.formLabel {
+  color: var(--error, #ef4034);
+}
+.joinInput .fieldUnit.fieldMissing .inputField {
+  border-color: var(--error, #ef4034);
+}
+.joinInput .formError {
+  color: #c00;
+  font-size: 14px;
+  margin-top: 12px;
+  margin-bottom: 0;
+}
+.joinInput .formActions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 50px;
+  padding-bottom: 50px;
+}
+.joinInput .btnWhite,
+.joinInput .btnSubmit {
+  min-width: 160px;
+  height: 54px;
+  border-radius: 8px;
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.joinInput .btnWhite {
+  background: var(--primary-light);
+  border: 1px solid var(--primary);
+  color: var(--primary);
+}
+.joinInput .btnSubmit {
+  background: var(--primary);
+  color: #fff;
+}
+@media (max-width: 768px) {
+  .joinInput .formActions {
+    flex-direction: column;
+  }
+  .joinInput .btnWhite,
+  .joinInput .btnSubmit {
+    width: 100%;
+  }
+}
+
+/* 학교검색 모달 (join_ac.html과 동일, 로그인 모달 제외: .modalOverlay:not(.loginModal)) */
+.modalOverlay:not(.loginModal) {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 20px;
+}
+.modalOverlay:not(.loginModal).active {
+  display: flex;
+}
+.modalOverlay:not(.loginModal) .modalContent {
+  background-color: #fff;
+  width: 100%;
+  max-width: 568px;
+  border-radius: 40px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  max-height: 85vh;
+}
+.modalOverlay:not(.loginModal) .modalHeader {
+  padding: 40px 40px 24px 40px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.modalOverlay:not(.loginModal) .modalHeader #schoolModalTitle {
+  font-size: 20px;
+  font-weight: bold;
+}
+.modalOverlay:not(.loginModal) .closeBtn {
+  font-size: 40px;
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 0;
+  line-height: 1;
+  color: #212121;
+  font-weight: normal;
+}
+.modalOverlay:not(.loginModal) .modalBody {
+  padding: 0 40px 40px;
+  overflow-y: auto;
+}
+/* 모달 검색창: 학교명 행과 동일 크기·스타일 (테마 색 var(--primary) 적용) */
+.modalOverlay:not(.loginModal) .schoolSearchBar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  align-items: center;
+}
+.modalOverlay:not(.loginModal) .schoolSearchBar .inputField {
+  flex: 1;
+  min-width: 0;
+  height: 48px;
+  padding: 0 14px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 16px;
+  box-sizing: border-box;
+}
+.modalOverlay:not(.loginModal) .schoolSearchBar .btnSearch {
+  background: var(--primary);
+  color: #fff;
+  height: 48px;
+  min-width: 100px;
+  padding: 0 16px;
+  border: none;
+  border-radius: 6px;
+  font-weight: bold;
+  font-size: 16px;
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    opacity 0.2s;
+}
+.modalOverlay:not(.loginModal)
+  .schoolSearchBar
+  .btnSearch:hover:not(:disabled) {
+  opacity: 0.9;
+}
+.modalOverlay:not(.loginModal) .schoolSearchBar .btnSearch:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+/* 학교 목록 리스트 (join_ac.html / common.css와 동일) */
+.modalOverlay:not(.loginModal) .schoolList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.modalOverlay:not(.loginModal) .schoolItem {
+  border: 1px solid #e1e1e1;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.modalOverlay:not(.loginModal) .schoolItem:last-child {
+  margin-bottom: 0;
+}
+.modalOverlay:not(.loginModal) .schoolItem:hover,
+.modalOverlay:not(.loginModal) .schoolItem:focus {
+  outline: none;
+}
+.modalOverlay:not(.loginModal) .schoolItem.active {
+  border: 2px solid var(--primary);
+  box-shadow: 0 4px 4px 0 rgba(0, 0, 0, 0.16);
+}
+.modalOverlay:not(.loginModal) .schoolInfo {
+  margin: 0;
+}
+.modalOverlay:not(.loginModal) .schoolName {
+  display: block;
+  font-size: 18px;
+  font-weight: bold;
+  color: #212121;
+  margin-bottom: 10px;
+}
+.modalOverlay:not(.loginModal) .categoryTag {
+  color: #616161;
+  margin-left: 8px;
+  font-weight: normal;
+}
+.modalOverlay:not(.loginModal) .schoolAddr {
+  margin: 4px 0 0;
+  font-size: 14px;
+  color: #616161;
+  line-height: 1.4;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.modalOverlay:not(.loginModal) .schoolAddr .iconLocBg {
+  display: inline-block;
+  width: 24px;
+  height: 24px;
+  background-repeat: no-repeat;
+  background-size: contain;
+  background-position: center;
+  vertical-align: middle;
+  margin-right: 4px;
+  flex-shrink: 0;
+  background-image: url("/images/userWeb/icon/ico_loca_24.png");
+}
+.modalOverlay:not(.loginModal) .schoolAddr .mapBtn {
+  color: #0771ea;
+  text-decoration: underline;
+  font-size: 14px;
+  margin-left: 8px;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  transition: color 0.2s ease;
+  font-weight: bold;
+}
+.modalOverlay:not(.loginModal) .schoolAddr .mapBtn:hover {
+  color: #0056b3;
+}
+.modalOverlay:not(.loginModal) .schoolListEmpty {
+  text-align: center;
+  color: #757575;
+  padding: 24px;
+  margin: 0;
+}
+.modalOverlay:not(.loginModal) .schoolModalPagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 20px;
+}
+.modalOverlay:not(.loginModal) .schoolPageInfo {
+  font-size: 14px;
+  color: #616161;
+}
+
+/* ===== 약관 체크리스트 UI (join_terms.html 디자인) ===== */
+.termsContainer {
+  width: 100%;
+}
+.termsContainer .termsList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* 체크박스 커스텀 */
+.termsContainer .checkInput {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
+.termsContainer .checkLabel {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  font-size: 18px;
+  font-weight: 800;
+}
+.termsContainer .checkLabel::before {
+  content: "";
+  display: inline-block;
+  width: 24px;
+  height: 24px;
+  min-width: 24px;
+  margin-right: 8px;
+  background-color: #757575;
+  background-image: url("/images/userWeb/icon/ico_radio_check_off.png");
+  background-size: contain;
+  background-repeat: no-repeat;
+  border-radius: 50%;
+}
+/* 체크 시 단색 원 + 흰색 체크 (4시 하이라이트 제거, 플랫 스타일) */
+.termsContainer .checkInput:checked + .checkLabel::before {
+  background-color: var(--primary);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'%3E%3C/polyline%3E%3C/svg%3E");
+  background-size: 14px 14px;
+  background-position: center;
+}
+.termsContainer .checkInput:focus-visible + .checkLabel::before {
+  outline: 2px solid #000;
+  outline-offset: 2px;
+}
+
+/* 전체 약관동의 박스 */
+.termsContainer .allCheckWrapper {
+  padding: 20px 40px;
+  border: 2px solid #e9e9e9;
+  background: #fafafa;
+  border-radius: 12px;
+}
+.termsContainer .allCheckWrapper.active {
+  background: var(--primary-light);
+  border: 2px solid var(--primary);
+}
+.termsContainer .allCheckWrapper.active label {
+  color: var(--primary);
+}
+.termsContainer .allCheckWrapper label {
+  color: #616161;
+  font-size: 20px;
+}
+.termsContainer .allCheckWrapper .checkLabel::before {
+  margin-right: 16px;
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+}
+
+/* 구분선 */
+.termsContainer .divider {
+  border: 0;
+  height: 1px;
+  background: #e1e1e1;
+  margin: 40px auto 0;
+}
+
+/* 개별 약관 항목 */
+.termsContainer .termsItem {
+  padding: 40px 0;
+  border-bottom: 1px solid #e1e1e1;
+}
+.termsContainer .termsItem:last-child {
+  border-bottom: none;
+}
+.termsContainer .termsHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.termsContainer .checkGroup {
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+.termsContainer .point {
+  color: #0771ea;
+  margin-right: 4px;
+  font-size: 18px;
+}
+.termsContainer .gray {
+  color: #9e9e9e;
+  margin-right: 4px;
+  font-size: 18px;
+}
+
+/* 더보기/닫기 토글 버튼 */
+.termsContainer .toggleBtn {
+  width: 64px;
+  height: 32px;
+  background: var(--primary-light);
+  border: 1px solid var(--primary);
+  color: var(--primary);
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 800;
+  font-size: 14px;
+  flex-shrink: 0;
+  transition: all 0.2s;
+}
+.termsContainer .toggleBtn:hover {
+  background: var(--primary);
+  color: #fff;
+}
+
+/* 약관 본문 영역 */
+.termsContainer .termsContent {
+  margin-top: 20px;
+  border: 1px solid #eeeeee;
+  border-radius: 4px;
+}
+.termsContainer .innerBox {
+  padding: 24px;
+  max-height: 350px;
+  overflow-y: auto;
+  line-height: 1.6;
+  color: #424242;
+  font-size: 15px;
+  white-space: pre-wrap;
+}
+.termsContainer .innerBox p {
+  white-space: normal;
+  margin: 0 0 1em;
+}
+.termsContainer .innerBox p:last-child {
+  margin-bottom: 0;
+}
+/* 개인정보 제3자 제공 현황 표 */
+.termsContainer .termsTable {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 16px 0;
+  font-size: 14px;
+}
+.termsContainer .termsTable th,
+.termsContainer .termsTable td {
+  border: 1px solid #e1e1e1;
+  padding: 12px;
+  text-align: center;
+  vertical-align: middle;
+}
+.termsContainer .termsTable th {
+  background: #f5f5f5;
+  font-weight: bold;
+  color: #333;
+}
+.termsContainer .termsTable td {
+  background: #fff;
+  color: #424242;
+}
+
+/* 하단 본인인증 버튼 */
+.termsContainer .submitWrapper {
+  margin-top: 40px;
+  text-align: center;
+}
+.termsContainer .submitBtn {
+  width: 180px;
+  height: 54px;
+  border: 1px solid var(--primary);
+  background: var(--primary-light);
+  color: var(--primary);
+  border-radius: 8px;
+  font-weight: 800;
+  cursor: not-allowed;
+  font-size: 18px;
+  transition: all 0.2s;
+}
+.termsContainer .submitBtn.active {
+  background: var(--primary);
+  color: #fff;
+  cursor: pointer;
+}
+.termsContainer .submitBtn.active:hover {
+  opacity: 0.9;
+}
+
+/* 반응형: 태블릿 */
+@media (max-width: 1024px) {
+  .termsContainer .allCheckWrapper {
+    padding: 16px 24px;
+  }
+  .termsContainer .termsItem {
+    padding: 24px 0;
+  }
+}
+/* 반응형: 모바일 */
+@media (max-width: 480px) {
+  .termsContainer .allCheckWrapper {
+    padding: 16px;
+  }
+  .termsContainer .allCheckWrapper label {
+    font-size: 16px;
+  }
+  .termsContainer .checkLabel,
+  .termsContainer .point,
+  .termsContainer .gray {
+    font-size: 14px;
+  }
+  .termsContainer .toggleBtn {
+    width: 56px;
+    padding: 4px 8px;
+    font-size: 12px;
+  }
+  .termsContainer .submitBtn {
+    width: 100%;
+  }
+  .termsContainer .termsHeader {
+    gap: 8px;
+  }
+}

@@ -1,0 +1,2614 @@
+---
+alwaysApply: false
+---
+# Admin Web List & Pagination Guide (꿈틀꿈틀 우리아이 꿈탐험 포함)
+
+## 📌 목적
+- 리스트/검색/페이징/상태/액션 버튼 UI의 일관성을 보장한다.
+- “꿈틀꿈틀 우리아이 꿈탐험” 전용 요구사항(모집기간/컬럼/상태/버튼)을 명시한다.
+
+---
+
+## 🔎 검색 영역
+- 기간 필드 명칭: “모집기간” (사업기간 금지)
+- 기간 입력 구성:
+  - 좌측: 시작일 `FormDatePicker` + 캘린더 아이콘
+  - 구분자 “~”
+  - 우측: 종료일 `FormDatePicker` + 캘린더 아이콘
+- 아이콘 스타일:
+  - 아이콘: `w-4 h-4 text-gray-600` (hover: `text-blue-600`)
+  - 컨테이너: `inline-flex items-center gap-1`
+
+예시:
+```tsx
+<div className="inline-flex items-center gap-2">
+  <FormDatePicker name="recFromDd" ... />
+  <svg className="w-4 h-4 text-gray-600" ... />
+  <span>~</span>
+  <FormDatePicker name="recToDd" ... />
+  <svg className="w-4 h-4 text-gray-600" ... />
+</div>
+```
+
+---
+
+## 🧱 리스트 컬럼
+- 공통 컬럼 순서: 체크박스 → 상태 → 제목/사업명 → 기간(모집기간) → 등록일/수정일 → 액션
+- 꿈탐험 전용: “운영방식” 컬럼 제거
+
+---
+
+## 🏷 상태코드 매핑 (지원사업 사업 RUN_STA)
+- **단일 출처:** `@/entities/adminWeb/support/lib/runStaAdmin` (`RUN_STA_SEARCH_OPTIONS`, `RUN_STA_BASE_OPTIONS`, `getRunStaLabel`, …)
+- **기본(목록·검색·등록·수정·엑셀):** 사용자 노출 용어와 동일하게 유지
+  - 01: 모집예정
+  - 02: 모집중
+  - 04: 모집마감
+  - 99: 취소
+- **레거시 DB값(상세에서 드물게):** 03 검토중, 05 완료, 11 반려, 12 중단 — 라벨은 `getRunStaLabel` / `LEGACY_RUN_STA_LABEL`과 일치할 것.
+- 배지 스타일(공통):
+  - `inline-flex items-center justify-center min-w-[72px] px-2.5 py-0.5 rounded-[5px] text-[13px] font-medium`
+
+상태 표시 예시(실제 구현은 `runStaAdmin`을 import):
+```ts
+import {
+  RUN_STA_SEARCH_OPTIONS,
+  getRunStaLabel,
+} from "@/entities/adminWeb/support/lib/runStaAdmin";
+// 검색 select 옵션: RUN_STA_SEARCH_OPTIONS
+// 테이블/엑셀 셀: getRunStaLabel(code)
+```
+
+---
+
+## 👁 보기/상세 이동 버튼 규격
+- “신청목록 보기” 버튼(행 내):
+  - 클래스: `px-2 py-1 text-[12px] text-blue-600 border border-blue-600 rounded hover:bg-blue-50 transition-colors`
+  - 필요 시 `style={{ minWidth: '60px' }}`
+- Support/Study 리스트의 “보기/상세/삭제”와 크기 일치
+
+---
+
+## 🔢 페이지네이션
+- 공통 `Pagination` 컴포넌트 사용
+- 우측 정렬, 상단/하단 한 곳만 배치(목록 하단권장)
+- 데이터 0건일 때는 페이지네이션 숨김
+
+---
+
+## ✅ 체크리스트
+- [ ] 기간 라벨이 “모집기간”으로 표기됨
+- [ ] 캘린더 아이콘 사이즈/색상 일치
+- [ ] “운영방식” 컬럼 제거됨(꿈탐험 전용)
+- [ ] “신청목록 보기” 버튼 크기 표준 적용
+- [ ] 상태코드 01/02/03/04/05/99 일관 적용
+- [ ] 페이지네이션 위치/표시 규칙 준수
+
+---
+
+## 📚 참고
+- 버튼/상태 배지/표 스타일은 `admin-web-rules.mdc`의 공통 규칙을 따른다.
+``` -->
+---
+alwaysApply: false
+---
+
+# List Page Pagination & Filtering Implementation Guide
+
+## 🎯 Purpose
+
+This rule ensures proper implementation of **server-side pagination and server-side filtering** in list pages, preventing common mistakes that cause pagination to break, excessive API calls, or incorrect data display.
+
+**⚠️ CRITICAL: This project uses server-side pagination + server-side filtering as the STANDARD pattern. All list pages MUST follow this pattern unless there's an exceptional requirement.**
+
+**⚠️ CRITICAL: Filtering Strategy**
+
+**This project uses ONLY server-side filtering. Client-side filtering is NOT used. Table filter UI (filter toggle button, filter row) is NOT used.**
+
+**Key Points:**
+- ✅ All filtering happens on server-side via API parameters
+- ✅ Filter parameters are sent to backend API
+- ✅ Backend returns filtered results
+- ❌ NO client-side filtering (filtering data in frontend after API response)
+- ❌ NO table filter UI (filter toggle button, filter row, etc.)
+- ❌ NO `showFilters` state or filter toggle functionality
+
+**Why Server-Side Only:**
+- Performance: Large datasets require server-side filtering
+- Consistency: All filtering logic in one place (backend)
+- Scalability: Works with any dataset size
+- Simplicity: No need for complex client-side filter state management
+
+---
+
+## 🔍 Root Cause Analysis
+
+### Common Mistakes That Break Pagination:
+
+1. **Insufficient Data Fetching**
+   - ❌ Setting API `length` parameter incorrectly (too small for client-side filtering)
+   - ❌ Not distinguishing between server-side and client-side pagination
+   - ❌ Mixing server-side pagination with client-side filtering
+
+2. **State Management Issues**
+   - ❌ Using single state for both raw API data and filtered/displayed data
+   - ❌ Adding search conditions or filters to `useCallback` dependencies, causing unnecessary function recreation
+   - ❌ Not using `useRef` to stabilize function references in debounce scenarios
+   - ❌ Not separating search conditions from table filters
+
+3. **Pagination Logic Errors**
+   - ❌ Calculating `start` parameter incorrectly (0-based vs 1-based)
+   - ❌ Not resetting to page 1 when filters change
+   - ❌ Using API pagination for client-side filtered results
+
+4. **API Call Frequency Issues**
+   - ❌ Triggering API calls on every keystroke (search conditions)
+   - ❌ Triggering API calls on every filter input change (no debounce)
+   - ❌ Putting `isInitialLoad` in page-change or filter effect dependencies (effect re-runs when it flips to false → duplicate calls; filter timer resets page when returning from detail)
+   - ❌ Circular dependencies causing infinite re-renders
+
+5. **Row Number Display Issues**
+   - ❌ Calculating row numbers on frontend: `(currentPage - 1) * pageSize + index + 1`
+   - ❌ Not using `rnum` field from database response
+   - ❌ Displaying page-relative numbers instead of total-relative numbers
+   - ❌ Breaking number consistency when filters/search are applied
+
+---
+
+## ✅ Implementation Strategy
+
+### Step 1: Server-Side Pagination + Server-Side Filtering (STANDARD PATTERN)
+
+**This is the DEFAULT and REQUIRED pattern for all list pages in this project.**
+
+**Key Characteristics:**
+
+- ✅ All filtering happens on server
+- ✅ Only current page data is fetched
+- ✅ Table filters trigger server-side API calls with Debounce (800ms)
+- ✅ Search conditions trigger API calls only on explicit user action (Enter key or button click)
+- ✅ Uses `useRef` to prevent unnecessary function recreation and circular dependencies
+
+**Complete Implementation:**
+
+```typescript
+import { useState, useEffect, useRef, useCallback } from "react";
+
+export function useListPage() {
+  // 1. State structure for server-side pattern
+  const [members, setMembers] = useState<Item[]>([]); // Current page data from server
+  const [totalElements, setTotalElements] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
+  const [loading, setLoading] = useState(true);
+
+  // Search conditions (server-side filtering via API)
+  const [searchCondition, setSearchCondition] = useState("1");
+  const [searchKeyword, setSearchKeyword] = useState("");
+
+  const pageSize = 15;
+
+  // 2. Use useRef to hold latest search values (prevents function recreation)
+  // Note: NO filters state - all filtering is done server-side via API parameters
+  const searchConditionRef = useRef(searchCondition);
+  const searchKeywordRef = useRef(searchKeyword);
+  const initialFetchDoneRef = useRef(false); // First fetch done (page-change effect: avoid duplicate call)
+
+  // Update refs when state changes
+  useEffect(() => {
+    searchConditionRef.current = searchCondition;
+  }, [searchCondition]);
+
+  useEffect(() => {
+    searchKeywordRef.current = searchKeyword;
+  }, [searchKeyword]);
+
+  // 3. Fetch function with useCallback (only currentPage and pageSize in dependencies)
+  const fetchMembers = useCallback(async () => {
+    try {
+      setLoading(true);
+      const startIndex = (currentPage - 1) * pageSize;
+
+      // Use refs, not state directly (prevents function recreation)
+      const params = {
+        searchCondition: searchConditionRef.current,
+        searchKeyword: searchKeywordRef.current,
+        length: pageSize.toString(),
+        start: startIndex.toString(),
+        // Note: Additional server-side filter parameters can be added here if needed
+        // All filtering is done server-side, not client-side
+      };
+
+      const response = await Service.getList(params);
+
+      setMembers(response.data || []);
+      setTotalElements(response.recordsTotal || 0);
+      setTotalPages(Math.ceil((response.recordsTotal || 0) / pageSize));
+    } catch (err) {
+      console.error("Data fetch failed:", err);
+    } finally {
+      setLoading(false);
+      setIsInitialLoad(false);
+      initialFetchDoneRef.current = true;
+      initialLoadDoneRef.current = true;
+    }
+  }, [currentPage, pageSize]); // ⚠️ CRITICAL: Only page-related dependencies
+
+  // 4. Create ref for fetchMembers to use in debounce (prevents circular dependency)
+  const fetchMembersRef = useRef(fetchMembers);
+  useEffect(() => {
+    fetchMembersRef.current = fetchMembers;
+  }, [fetchMembers]);
+
+  // 5. Initial load (one call only)
+  useEffect(() => {
+    fetchMembers();
+  }, []);
+
+  // 6. Page change triggers API call (only after first fetch done; prevents duplicate call on mount)
+  useEffect(() => {
+    if (!initialFetchDoneRef.current) return;
+    fetchMembers();
+  }, [currentPage, fetchMembers]); // ⚠️ MUST NOT include isInitialLoad
+
+  // 7. Explicit search handler (NO automatic search, server-side filtering)
+  const handleSearch = () => {
+    setCurrentPage(1);
+    fetchMembers();
+  };
+
+  return {
+    members,
+    totalElements,
+    totalPages,
+    currentPage,
+    setCurrentPage,
+    loading,
+    handleSearch,
+    searchCondition,
+    setSearchCondition,
+    searchKeyword,
+    setSearchKeyword,
+  };
+}
+```
+
+**Key Requirements:**
+
+- ✅ **useRef for search**: Prevents `fetchMembers` from recreating on every search change
+- ✅ **useRef for fetchMembers**: Allows stable reference (if needed for future use)
+- ✅ **Explicit Search**: Search conditions trigger API only on button click or Enter key
+- ✅ **Page Reset**: Search resets to page 1
+- ✅ **Server-Side Only**: All filtering is done server-side via API parameters (NO client-side filtering, NO table filter UI)
+- ✅ **Minimal Dependencies**: `fetchMembers` only depends on `currentPage` and `pageSize`
+
+---
+
+### ⚠️ CRITICAL: Preventing Duplicate API Calls and Preserving Page State (Detail → List)
+
+**MUST ALWAYS use refs (not `isInitialLoad` in dependencies) to gate fetch-triggering effects when:**
+
+- ✅ Implementing list pages that navigate to detail and back (e.g. 상세 → 목록 닫기)
+- ✅ Ensuring the list API is called only once per logical user action (initial load, page change, filter change, search click)
+- ✅ Preserving search conditions and page number when returning from detail to list
+
+**Why this is CRITICAL:**
+
+If **page-change** or **filter debounce** effects include `isInitialLoad` in their dependency array:
+
+1. **Duplicate API calls**: When the first fetch completes, `setIsInitialLoad(false)` runs. Both effects re-run (dependency changed). The page-change effect calls fetch again; the filter effect sets an 800ms timer that calls fetch again. Result: same list API called 2–3+ times on load or when returning from detail.
+2. **Page reset bug**: When returning from detail to list with URL `?page=2&searchCondition=3&searchKeyword=...`, the list mounts and the first fetch runs correctly (page 2). Then `isInitialLoad` flips to false → filter effect runs → it schedules a timer → 800ms later `setCurrentPage(1)` and fetch run. The user ends up on page 1 instead of the preserved page 2.
+
+**Root cause:** Effects that trigger fetch must not depend on `isInitialLoad`. Use **refs** to record "first fetch done" and "first load done," and gate those effects with ref checks instead.
+
+**✅ CORRECT: Ref-based pattern**
+
+**1. Declare refs (NO filtersRef - all filtering is server-side only):**
+
+```typescript
+const initialFetchDoneRef = useRef(false); // First fetch completed (for page-change effect)
+const initialLoadDoneRef = useRef(false); // First load completed (for filter effect)
+```
+
+**2. Set both refs in the fetch function's `finally` block:**
+
+```typescript
+} finally {
+  setLoading(false);
+  setIsInitialLoad(false);
+  initialFetchDoneRef.current = true;
+  initialLoadDoneRef.current = true;
+}
+```
+
+**3. Page-change effect: remove `isInitialLoad` from dependencies; gate with ref:**
+
+```typescript
+// Page change triggers API (only after first fetch done; prevents duplicate call on mount)
+useEffect(() => {
+  if (!initialFetchDoneRef.current) return;
+  fetchMembers();
+}, [currentPage, fetchMembers]); // ⚠️ MUST NOT include isInitialLoad
+```
+
+**4. Filter debounce effect: remove `isInitialLoad` from dependencies; gate with ref:**
+
+```typescript
+// Filters with Debounce 800ms (only after first load done; preserves page when returning from detail)
+useEffect(() => {
+  if (!initialLoadDoneRef.current) return;
+
+  const timer = setTimeout(() => {
+    setCurrentPage(1);
+    fetchMembersRef.current();
+  }, 800);
+
+  return () => clearTimeout(timer);
+}, [
+  filters.userId,
+  filters.userNm,
+  filters.emailAdres,
+  filters.sbscrbDe,
+  filters.mberSttus,
+]);
+// ⚠️ MUST NOT include isInitialLoad
+```
+
+**Expected behavior after applying:**
+
+| Scenario                           | Result                                                      |
+| ---------------------------------- | ----------------------------------------------------------- |
+| Detail → List (닫기)               | Search conditions and page preserved; list API called once. |
+| New search (change keyword + 조회) | Page resets to 1; list API called once.                     |
+| Filter input                       | After 800ms, page 1 and one list API call.                  |
+| Page number change                 | One list API call.                                          |
+| Initial load / refresh             | One list API call (or two in dev with Strict Mode).         |
+
+**MUST NOT:**
+
+- ❌ **NEVER** put `isInitialLoad` in the dependency array of the **page-change** effect.
+- ❌ **NEVER** put `isInitialLoad` in the dependency array of the **filter debounce** effect.
+- ❌ **NEVER** rely only on `if (isInitialLoad) return` inside those effects without also removing `isInitialLoad` from dependencies (the effect still re-runs when `isInitialLoad` flips, causing duplicate calls and page reset).
+
+**Decision tree:**
+
+```
+Implementing list with detail → list navigation?
+├─ Page-change effect: does it depend on isInitialLoad?
+│  ├─ YES → Remove isInitialLoad; add initialFetchDoneRef; gate with if (!initialFetchDoneRef.current) return;
+│  └─ NO → Keep ref gate and [currentPage, fetchMembers] only
+└─ Filter debounce effect: does it depend on isInitialLoad?
+   ├─ YES → Remove isInitialLoad; add initialLoadDoneRef; gate with if (!initialLoadDoneRef.current) return;
+   └─ NO → Keep ref gate and filter fields only in dependencies
+```
+
+**Verification checklist:**
+
+- [ ] **Refs declared**: `initialFetchDoneRef`, `initialLoadDoneRef` (both `useRef(false)`).
+- [ ] **Refs set in finally**: Both set to `true` in fetch function's `finally` block.
+- [ ] **Page-change effect**: Dependency array is `[currentPage, fetchMembers]` only; first line is `if (!initialFetchDoneRef.current) return;`.
+- [ ] **Filter effect**: Dependency array contains only filter fields; first line is `if (!initialLoadDoneRef.current) return;`.
+- [ ] **Detail → List**: Test: go to detail from page 2, click 닫기 → list shows page 2 and same search; list API called once.
+- [ ] **New search**: Test: change search and click 조회 → page 1 and one API call.
+
+**Reference implementation:**
+
+- `src/features/adminWeb/program/list/model/useProgramList.ts` (uses `initialFetchDoneRef`, `initialLoadDoneRef`; page-change and filter effects gated by refs; no `isInitialLoad` in those effect dependencies).
+
+---
+
+### ⚠️ CRITICAL: Row Number Display (Server-Side Pagination)
+
+**MUST ALWAYS use `rnum` from database response when displaying row numbers in list pages when:**
+
+- ✅ Implementing server-side pagination
+- ✅ Displaying row numbers in table cells
+- ✅ Creating list page UI components
+- ✅ Copying code from other list pages
+- ✅ Refactoring existing list pages
+
+**MUST ensure row numbers use database-calculated `rnum` field, NOT frontend calculation.**
+
+**Why this is CRITICAL:**
+
+Server-side pagination requires server-calculated row numbers because:
+
+1. **Total-Relative Ordering**: Row numbers must reflect position in the total dataset, not just current page
+2. **Filter/Search Consistency**: When filters or search are applied, row numbers must remain consistent with filtered results
+3. **Database Accuracy**: Database calculates `rnum` based on actual data ordering, ensuring correctness
+4. **Cross-Page Continuity**: Row numbers should continue across pages (e.g., page 2 starts at 16, not 1)
+
+**Root Cause Analysis - Why Developers Make This Mistake:**
+
+1. **Client-Side Pagination Pattern Confusion:**
+   - Developers are familiar with client-side pagination where frontend calculation is correct
+   - They apply the same pattern (`(currentPage - 1) * pageSize + index + 1`) to server-side pagination
+   - They don't realize server-side pagination requires server-calculated numbers
+
+2. **Missing Database Response Review:**
+   - Developers don't check if API response includes `rnum` field
+   - They don't verify SQL mapper returns `RNUM` column
+   - They assume frontend calculation is the only way to display row numbers
+
+3. **Incomplete Pattern Recognition:**
+   - Developers see `currentPage`, `pageSize`, and `index` available in component
+   - They think "I have all the data needed to calculate row number"
+   - They don't realize database already calculated the correct number
+
+4. **Copy-Paste Without Verification:**
+   - Developers copy row number calculation from examples or other projects
+   - Examples often show client-side pagination pattern
+   - They don't verify if the pattern is appropriate for server-side pagination
+
+5. **Lack of Understanding Server-Side Pagination Implications:**
+   - Developers don't understand that server-side pagination means server calculates everything
+   - They think "pagination = frontend calculation"
+   - They don't realize row numbers are part of pagination logic
+
+6. **Not Checking Existing Implementations:**
+   - Developers don't check how other list pages display row numbers
+   - They don't verify if existing pages use `rnum` or frontend calculation
+   - They assume their approach is correct without verification
+
+7. **Type Definition Overlook:**
+   - Developers see `rnum` in type definitions but don't use it
+   - They think "it's just a field, I can calculate it myself"
+   - They don't realize `rnum` is specifically provided for row number display
+
+**Real-world Example of the Mistake:**
+
+```typescript
+// ❌ WRONG: Frontend calculation for server-side pagination
+articles.map((article, index) => {
+  const actualNum = (currentPage - 1) * pageSize + index + 1;
+  // Problem: Page 2 shows 1, 2, 3... instead of 16, 17, 18...
+  // Problem: Filtered results show wrong numbers
+  return (
+    <tr>
+      <td>{actualNum}</td>
+      {/* ... */}
+    </tr>
+  );
+});
+```
+
+**What Happens:**
+
+- Page 1: Shows 1, 2, 3, ..., 15 (correct for page, wrong for total)
+- Page 2: Shows 1, 2, 3, ..., 15 (should show 16, 17, 18, ..., 30)
+- With filters: Shows 1, 2, 3... (should show actual position in filtered results)
+
+**Correct Implementation:**
+
+```typescript
+// ✅ CORRECT: Use rnum from database
+articles.map((article, index) => {
+  const actualNum = article.rnum || String((currentPage - 1) * pageSize + index + 1);
+  // Fallback only if rnum is missing (shouldn't happen in production)
+  return (
+    <tr>
+      <td>{actualNum}</td>
+      {/* ... */}
+    </tr>
+  );
+});
+```
+
+**Benefits:**
+
+- ✅ Page 1: Shows 1, 2, 3, ..., 15 (correct)
+- ✅ Page 2: Shows 16, 17, 18, ..., 30 (correct)
+- ✅ With filters: Shows correct position in filtered results
+- ✅ Consistent across all pages and filter states
+
+**MUST:**
+
+- ✅ **Check API Type Definition**: Verify `rnum` field exists in response type (e.g., `Article.rnum`, `Member.rnum`)
+- ✅ **Verify SQL Mapper**: Confirm SQL returns `RNUM` column (e.g., `SELECT ... AS RNUM`)
+- ✅ **Use Database rnum**: Display `item.rnum` or `article.rnum` from API response
+- ✅ **Provide Fallback**: Only use frontend calculation as fallback: `item.rnum || String((currentPage - 1) * pageSize + index + 1)`
+- ✅ **Check Existing Patterns**: Verify how other list pages display row numbers before implementing
+
+**MUST NOT:**
+
+- ❌ **NEVER** calculate row numbers on frontend for server-side pagination
+- ❌ **NEVER** ignore `rnum` field from database response
+- ❌ **NEVER** assume frontend calculation is correct for server-side pagination
+- ❌ **NEVER** copy row number calculation pattern without verifying database provides `rnum`
+- ❌ **NEVER** use page-relative numbers (`1, 2, 3...`) when total-relative numbers are needed
+
+**Type Definition Verification:**
+
+```typescript
+// ✅ CORRECT: Check type definition for rnum field
+export interface Article {
+  rnum: string; // ✅ Row number from database
+  nttId: string;
+  // ... other fields
+}
+
+// ✅ CORRECT: Use rnum in component
+const actualNum =
+  article.rnum || String((currentPage - 1) * pageSize + index + 1);
+```
+
+**SQL Mapper Verification:**
+
+```xml
+<!-- ✅ CORRECT: SQL returns RNUM -->
+<select id="selectArticleList" parameterType="egovMap" resultType="egovMap">
+  SELECT CAST((T.TOTAL_COUNT - ROW_NUMBER() OVER (ORDER BY A1.PARNTSCTT_ID DESC, A1.NTT_ID) + 1) AS CHAR) AS RNUM
+       , A1.NTT_ID
+       , A1.NTT_SJ
+       -- ... other columns
+    FROM ARTBBSM A1
+  LIMIT #{lengthPage} OFFSET #{startIndex}
+</select>
+```
+
+**Prevention Checklist (MUST verify when displaying row numbers):**
+
+- [ ] **Checked API Type Definition**: Verified `rnum` field exists in response type
+- [ ] **Verified SQL Mapper**: Confirmed SQL returns `RNUM` column
+- [ ] **Used Database rnum**: Using `item.rnum` or `article.rnum` from API response
+- [ ] **Added Fallback**: Provided fallback only if `rnum` might be missing
+- [ ] **Tested Row Numbers**: Verified row numbers are correct across pages
+- [ ] **Tested with Filters**: Verified row numbers are correct when filters/search are applied
+- [ ] **Checked Existing Patterns**: Reviewed how other list pages display row numbers
+
+**Common Mistakes:**
+
+1. **Frontend Calculation for Server-Side Pagination:**
+
+   ```typescript
+   // ❌ WRONG: Calculate on frontend
+   const actualNum = (currentPage - 1) * pageSize + index + 1;
+
+   // ✅ CORRECT: Use database rnum
+   const actualNum =
+     article.rnum || String((currentPage - 1) * pageSize + index + 1);
+   ```
+
+2. **Ignoring rnum Field:**
+
+   ```typescript
+   // ❌ WRONG: Ignore rnum field
+   const actualNum = (currentPage - 1) * pageSize + index + 1;
+   // article.rnum exists but not used
+
+   // ✅ CORRECT: Use rnum field
+   const actualNum =
+     article.rnum || String((currentPage - 1) * pageSize + index + 1);
+   ```
+
+3. **Not Checking Type Definition:**
+
+   ```typescript
+   // ❌ WRONG: Assume rnum doesn't exist
+   const actualNum = (currentPage - 1) * pageSize + index + 1;
+
+   // ✅ CORRECT: Check type definition first
+   // Checked: export interface Article { rnum: string; ... }
+   const actualNum =
+     article.rnum || String((currentPage - 1) * pageSize + index + 1);
+   ```
+
+4. **Copying Pattern Without Verification:**
+
+   ```typescript
+   // ❌ WRONG: Copy pattern without checking
+   const actualNum = (currentPage - 1) * pageSize + index + 1; // Copied from example
+
+   // ✅ CORRECT: Verify database provides rnum first
+   // Verified: SQL returns RNUM, type has rnum field
+   const actualNum =
+     article.rnum || String((currentPage - 1) * pageSize + index + 1);
+   ```
+
+**Decision Tree for Row Number Display:**
+
+```
+Displaying row numbers in list page?
+├─ Using server-side pagination?
+│  ├─ YES → Check if API response includes rnum field
+│  │  ├─ YES → Use item.rnum (with fallback)
+│  │  │  └─ Verify SQL mapper returns RNUM column
+│  │  └─ NO → Add rnum to SQL mapper and type definition
+│  └─ NO → Frontend calculation is acceptable (client-side pagination)
+└─ Using client-side pagination?
+   └─ YES → Frontend calculation is correct
+```
+
+**Step-by-Step Verification Process:**
+
+1. **Step 1: Check API Type Definition**
+
+   ```typescript
+   // Check if rnum field exists
+   export interface Article {
+     rnum: string; // ✅ Found
+     // ...
+   }
+   ```
+
+2. **Step 2: Verify SQL Mapper**
+
+   ```xml
+   <!-- Check if SQL returns RNUM -->
+   <select id="selectArticleList">
+     SELECT ... AS RNUM  <!-- ✅ Found -->
+   </select>
+   ```
+
+3. **Step 3: Use rnum in Component**
+
+   ```typescript
+   // ✅ CORRECT: Use rnum from database
+   const actualNum =
+     article.rnum || String((currentPage - 1) * pageSize + index + 1);
+   ```
+
+4. **Step 4: Test Implementation**
+   ```
+   1. Open page 1 → Verify numbers: 1, 2, 3, ..., 15
+   2. Go to page 2 → Verify numbers: 16, 17, 18, ..., 30
+   3. Apply filters → Verify numbers reflect filtered position
+   4. Clear filters → Verify numbers return to correct sequence
+   ```
+
+**Reference Implementation:**
+
+Check these files for correct row number display:
+
+- `src/features/adminWeb/member/list/ui/MemberListPageView.tsx` (uses `member.rnum`)
+- `src/features/adminWeb/board/list/ui/BoardListPageView.tsx` (uses `board.rnum`)
+- `src/features/adminWeb/article/list/ui/ArticleListPageView.tsx` (uses `article.rnum`)
+- `src/features/adminWeb/program/list/ui/ProgramListPageView.tsx` (uses `program.rnum`)
+
+**All list pages MUST use this exact pattern:**
+
+```typescript
+// ✅ CORRECT: Use rnum from database
+items.map((item, index) => {
+  const rowNumber = item.rnum || String((currentPage - 1) * pageSize + index + 1);
+  return (
+    <tr key={item.id}>
+      <td>{rowNumber}</td>
+      {/* ... other cells */}
+    </tr>
+  );
+});
+```
+
+**Remember**: Server-side pagination means server calculates everything, including row numbers. Always use `rnum` from database response, never calculate on frontend.
+
+---
+
+### Step 2: State Structure
+
+**MUST create separate states for server-side pattern:**
+
+```typescript
+// ✅ CORRECT: Server-side pattern states
+const [members, setMembers] = useState<Item[]>([]); // Current page data
+const [totalElements, setTotalElements] = useState(0); // Total count from server
+const [totalPages, setTotalPages] = useState(0); // Calculated from totalElements
+const [currentPage, setCurrentPage] = useState(1);
+const [isInitialLoad, setIsInitialLoad] = useState(true);
+
+// Search conditions (server-side filtering via API)
+const [searchCondition, setSearchCondition] = useState("1");
+const [searchKeyword, setSearchKeyword] = useState("");
+
+// ✅ CORRECT: useRef for stable references
+// Note: NO filters state - all filtering is done server-side via API parameters
+const searchConditionRef = useRef(searchCondition);
+const searchKeywordRef = useRef(searchKeyword);
+const fetchMembersRef = useRef(fetchMembers);
+
+// ❌ WRONG: Single state for everything
+const [data, setData] = useState<Item[]>([]); // Don't do this!
+```
+
+---
+
+### Step 3: API Call Strategy
+
+**For Server-Side Pagination + Server-Side Filtering:**
+
+```typescript
+// ✅ CORRECT: Fetch function with minimal dependencies
+const fetchMembers = useCallback(async () => {
+  const startIndex = (currentPage - 1) * pageSize;
+  const params = {
+    // Use refs, not state directly
+    searchCondition: searchConditionRef.current,
+    searchKeyword: searchKeywordRef.current,
+    length: pageSize.toString(),
+    start: startIndex.toString(),
+    // Note: Additional server-side filter parameters can be added here if needed
+    // All filtering is done server-side, not client-side
+  };
+
+  const response = await Service.getList(params);
+  setMembers(response.data || []);
+  setTotalElements(response.recordsTotal || 0);
+}, [currentPage, pageSize]); // ⚠️ Only page-related dependencies
+
+// ✅ CORRECT: Page change triggers API
+useEffect(() => {
+  if (!isInitialLoad) {
+    fetchMembers();
+  }
+}, [currentPage, fetchMembers, isInitialLoad]);
+
+// ✅ CORRECT: Filters with Debounce (use ref to avoid dependency issues)
+useEffect(() => {
+  if (isInitialLoad) return;
+
+  const timer = setTimeout(() => {
+    setCurrentPage(1);
+    fetchMembersRef.current(); // Use ref, not fetchMembers directly
+  }, 800);
+
+  return () => clearTimeout(timer);
+}, [
+  filters.userId,
+  filters.userNm /* ... other filter fields */,
+  ,
+  isInitialLoad,
+]);
+
+// ✅ CORRECT: Explicit search (NO automatic search)
+const handleSearch = () => {
+  setCurrentPage(1);
+  fetchMembers();
+};
+```
+
+---
+
+### ⚠️ CRITICAL: Explicit Search vs Automatic Search
+
+**MUST ALWAYS use explicit search pattern for search conditions (검색구분, 검색어) when:**
+
+- ✅ Creating new list pages with search forms
+- ✅ Implementing search functionality in admin list pages
+- ✅ Refactoring existing search implementations
+- ✅ Adding search conditions to list pages
+- ✅ Copying search patterns from other pages
+
+**MUST ensure search conditions trigger API calls ONLY on explicit user action, NOT on every input change.**
+
+**Root Cause Analysis of Common Mistakes:**
+
+1. **useEffect Dependency Misunderstanding**: Developers add search condition states to useEffect dependencies, thinking "when search changes, fetch data" is correct, but this triggers API calls on EVERY keystroke
+2. **Pattern Copying Without Verification**: Developers copy code from examples that use automatic search pattern without understanding the performance impact
+3. **Confusing Search Conditions with Table Filters**: Developers treat search conditions same as table filters, not distinguishing between server-side (explicit) and client-side (automatic) filtering
+4. **Missing Performance Considerations**: Developers focus on functionality, not considering API call frequency or server load
+5. **Lack of User Experience Awareness**: Developers don't test from user perspective, not noticing list updates while typing
+6. **Incomplete Rule Documentation**: Existing rules show "search conditions change" pattern without warning about automatic calls
+
+**Why This Rule is CRITICAL:**
+
+- **Performance**: API called on every keystroke causes unnecessary server load
+- **User Experience**: List updates while user is typing is distracting and unprofessional
+- **Resource Waste**: Unnecessary API calls consume server resources and network bandwidth
+- **Consistency**: Search conditions should behave consistently across all admin pages
+
+---
+
+## ✅ CORRECT: Explicit Search Pattern
+
+**MUST use this exact pattern for search conditions:**
+
+```typescript
+// ✅ CORRECT: Only initial load triggers API call
+useEffect(() => {
+  fetchData(); // Initial load only
+}, []);
+
+// ✅ CORRECT: Explicit search handler
+const handleSearch = () => {
+  setCurrentPage(1); // Reset to first page
+  fetchData(); // API call only when user clicks search or presses Enter
+};
+
+// ✅ CORRECT: Input field with Enter key support
+<input
+  type="text"
+  value={searchKeyword}
+  onChange={(e) => setSearchKeyword(e.target.value)} // State only, no API call
+  onKeyPress={(e) => {
+    if (e.key === "Enter") {
+      handleSearch(); // Explicit API call
+    }
+  }}
+/>
+
+// ✅ CORRECT: Search button
+<button onClick={handleSearch}>🔍 조회</button>
+```
+
+**Key Requirements:**
+
+- ✅ **Initial Load**: API called once on page load
+- ✅ **Explicit Search**: API called only when:
+  - User clicks "조회" button
+  - User presses Enter key in search input
+- ✅ **Input Changes**: State updates only, NO API calls
+- ✅ **Table Filters**: Server-side filtering with Debounce (800ms)
+
+---
+
+## ❌ WRONG: Automatic Search Pattern
+
+**MUST NOT use this pattern (causes API call on every input):**
+
+```typescript
+// ❌ WRONG: API called on every input change
+useEffect(() => {
+  if (!isInitialLoad) {
+    fetchData(); // ← Called on every searchKeyword change
+  }
+}, [searchCondition, searchKeyword, joGunMberSta]); // ← Dependencies cause automatic calls
+
+// ❌ WRONG: Input triggers API automatically
+<input
+  type="text"
+  value={searchKeyword}
+  onChange={(e) => {
+    setSearchKeyword(e.target.value); // State change triggers useEffect → API call
+  }}
+/>
+```
+
+**Why this is WRONG:**
+
+1. ❌ **Performance Issue**: API called on every keystroke
+   - User types "홍길동" → 3 API calls (홍, 홍길, 홍길동)
+   - Unnecessary server load
+   - Increased network traffic
+
+2. ❌ **User Experience Issue**:
+   - List updates while user is still typing
+   - Loading states appear during typing
+   - Distracting and unprofessional
+
+3. ❌ **Resource Waste**:
+   - Unnecessary API calls consume server resources
+   - Network bandwidth wasted
+   - Database queries executed unnecessarily
+
+4. ❌ **Inconsistent Behavior**:
+   - Search conditions trigger API automatically
+   - Table filters use Debounce (800ms)
+   - Confusing for users and developers
+
+**Real-world Example of the Mistake:**
+
+```typescript
+// ❌ WRONG: This was the actual mistake in useMemberList.ts
+useEffect(() => {
+  if (!isInitialLoad) {
+    fetchMembers(); // ← Called on EVERY keystroke
+  }
+}, [searchCondition, searchKeyword, joGunMberSta]); // ← Dependencies cause automatic calls
+
+// Result: User types "홍길동" → 3 API calls
+// - "홍" → API call
+// - "홍길" → API call
+// - "홍길동" → API call
+```
+
+**Fix:**
+
+```typescript
+// ✅ CORRECT: Remove search conditions from dependencies
+useEffect(() => {
+  fetchMembers(); // Initial load only
+}, []);
+
+// ✅ CORRECT: Explicit search handler
+const handleSearch = () => {
+  setCurrentPage(1);
+  fetchMembers(); // API call only on explicit action
+};
+```
+
+---
+
+### ⚠️ CRITICAL: Server-Side Filtering with Debounce
+
+**MUST ALWAYS use Debounce (800ms) for table filters when implementing server-side filtering:**
+
+**Why Debounce is Required:**
+
+- **Performance**: Prevents API calls on every keystroke
+- **User Experience**: Provides real-time feel without excessive server load
+- **Balance**: 800ms balances responsiveness and performance
+
+**Implementation Pattern:**
+
+```typescript
+// ✅ CORRECT: Filters with Debounce 800ms
+const [filters, setFilters] = useState({
+  userId: "",
+  userNm: "",
+  emailAdres: "",
+  sbscrbDe: "",
+  mberSttus: "",
+});
+
+// Use ref to hold latest filter values
+const filtersRef = useRef(filters);
+useEffect(() => {
+  filtersRef.current = filters;
+}, [filters]);
+
+// Fetch function uses ref, not state directly
+const fetchMembers = useCallback(async () => {
+  const currentFilters = filtersRef.current; // Use ref
+  const params = {
+    filterUserId: currentFilters.userId || undefined,
+    filterUserNm: currentFilters.userNm || undefined,
+    // ... other filters
+  };
+  // ... API call
+}, [currentPage, pageSize]); // ⚠️ filters NOT in dependencies
+
+// Create ref for fetchMembers
+const fetchMembersRef = useRef(fetchMembers);
+useEffect(() => {
+  fetchMembersRef.current = fetchMembers;
+}, [fetchMembers]);
+
+// Debounce useEffect (filters in dependencies, but fetchMembers NOT in dependencies)
+useEffect(() => {
+  if (isInitialLoad) return;
+
+  const timer = setTimeout(() => {
+    setCurrentPage(1);
+    fetchMembersRef.current(); // Use ref to call latest function
+  }, 800);
+
+  return () => clearTimeout(timer);
+}, [
+  filters.userId,
+  filters.userNm,
+  filters.emailAdres,
+  filters.sbscrbDe,
+  filters.mberSttus,
+  isInitialLoad,
+]);
+```
+
+**Key Requirements:**
+
+- ✅ **filtersRef**: Holds latest filter values without causing function recreation
+- ✅ **fetchMembersRef**: Holds latest fetch function for use in debounce
+- ✅ **Debounce 800ms**: Filters trigger API after 800ms of inactivity
+- ✅ **Page Reset**: Filters reset to page 1
+- ✅ **No fetchMembers in debounce dependencies**: Prevents circular dependency issues
+
+**Common Mistakes:**
+
+```typescript
+// ❌ WRONG: search conditions in fetchMembers dependencies
+const fetchMembers = useCallback(async () => {
+  const params = {
+    searchKeyword: searchKeyword, // Direct state access
+  };
+}, [currentPage, pageSize, searchKeyword]); // ❌ searchKeyword causes function recreation
+
+// ✅ CORRECT: Use refs
+const fetchMembers = useCallback(async () => {
+  const params = {
+    searchKeyword: searchKeywordRef.current, // Use ref
+  };
+}, [currentPage, pageSize]); // ✅ No search conditions in dependencies
+
+// Note: NO debounce effect for filters - all filtering is server-side only via API parameters
+// NO table filter UI (filter toggle button, filter row) - NOT used in this project
+```
+
+---
+
+## 🔍 Root Cause Analysis: Why Developers Make This Mistake
+
+### 1. **Misunderstanding useEffect Dependencies**
+
+**Problem:**
+
+- Developers add search condition states to useEffect dependencies
+- They think "when search changes, fetch data" is correct
+- They don't realize this triggers on EVERY input change
+
+**Example:**
+
+```typescript
+// Developer thinks: "When searchKeyword changes, fetch data"
+useEffect(() => {
+  fetchData();
+}, [searchKeyword]); // ❌ This triggers on EVERY keystroke
+```
+
+**Solution:**
+
+- Remove search conditions from useEffect dependencies
+- Use explicit search handler instead
+- Only call API on user action (button click, Enter key)
+
+### 2. **Copying Patterns Without Understanding**
+
+**Problem:**
+
+- Developers copy code from examples or other projects
+- Examples often show "automatic search" pattern
+- They don't verify if pattern is appropriate for their use case
+
+**Example:**
+
+```typescript
+// Copied from example that uses automatic search
+useEffect(() => {
+  if (!isInitialLoad) {
+    fetchData();
+  }
+}, [searchConditions]); // ❌ Copied without understanding impact
+```
+
+**Solution:**
+
+- Always verify pattern before copying
+- Check if automatic search is needed
+- Prefer explicit search for better UX and performance
+
+### 3. **Confusing Search Conditions with Table Filters**
+
+**Problem:**
+
+- Developers treat search conditions same as table filters
+- They think both should trigger API calls
+- They don't distinguish between server-side (explicit) and server-side (debounce) filtering
+
+**Example:**
+
+```typescript
+// Developer thinks: "Both search and filters should trigger API"
+useEffect(() => {
+  fetchData(); // ❌ Called for both search and filters
+}, [searchConditions, tableFilters]);
+```
+
+**Solution:**
+
+- **Search Conditions**: Explicit API call (Enter key or button)
+- **Table Filters**: Server-side filtering with Debounce (800ms)
+- Clear separation of concerns
+
+### 4. **Missing Performance Considerations**
+
+**Problem:**
+
+- Developers focus on functionality, not performance
+- They don't consider API call frequency
+- They don't think about server load
+
+**Example:**
+
+```typescript
+// Developer implements: "Search works, that's enough"
+useEffect(() => {
+  fetchData(); // ❌ No consideration for call frequency
+}, [searchKeyword]);
+```
+
+**Solution:**
+
+- Always consider API call frequency
+- Use explicit search to control when API is called
+- Use Debounce for table filters
+
+### 5. **Lack of User Experience Awareness**
+
+**Problem:**
+
+- Developers don't test from user perspective
+- They don't notice list updating while typing
+- They don't realize it's distracting
+
+**Example:**
+
+```typescript
+// Developer tests: "API works, search works"
+// Doesn't notice: List updates 10 times while typing "홍길동"
+```
+
+**Solution:**
+
+- Test from user perspective
+- Notice if list updates during typing
+- Prefer explicit search for better UX
+
+### 6. **Not Using useRef for Stable References**
+
+**Problem:**
+
+- Developers add filters/search to `useCallback` dependencies
+- This causes `fetchMembers` to recreate on every filter/search change
+- Debounce `useEffect` detects `fetchMembers` change and triggers early API calls
+
+**Example:**
+
+```typescript
+// ❌ WRONG: filters in dependencies
+const fetchMembers = useCallback(async () => {
+  const params = {
+    filterUserId: filters.userId, // Direct state access
+  };
+}, [currentPage, pageSize, filters]); // ❌ filters causes recreation
+
+// ❌ WRONG: fetchMembers in debounce dependencies
+useEffect(() => {
+  const timer = setTimeout(() => {
+    fetchMembers(); // Direct call
+  }, 800);
+}, [filters, fetchMembers]); // ❌ fetchMembers causes circular dependency
+```
+
+**Solution:**
+
+- Use `useRef` to hold latest filter/search values
+- Use `useRef` to hold latest `fetchMembers` function
+- Remove filters/search from `fetchMembers` dependencies
+- Remove `fetchMembers` from debounce dependencies
+
+---
+
+### 7. **⚠️ CRITICAL: Overlooking Select/Dropdown Fields in Search Conditions**
+
+**Problem:**
+
+- Developers think "search conditions" only refer to text input fields
+- They remove text input fields from useEffect dependencies but forget select/dropdown fields
+- They don't realize that `<select>` tags with `onChange` handlers also trigger state changes
+- Select fields like "대상구분" (targetGbn), "사용여부" (useAt), "상태" (status) are also search conditions
+- When these select fields are in useEffect dependencies, changing them triggers API calls automatically
+
+**Root Cause Analysis:**
+
+1. **Mental Model Mismatch:**
+   - When developers hear "search conditions", they think of text inputs (`<input type="text">`)
+   - They don't consider that `<select>` tags are also part of search conditions
+   - They treat select fields as "filters" or "separate concerns" rather than search conditions
+
+2. **Incomplete Dependency Review:**
+   - Developers remove `searchKeyword` and `searchCondition` from useEffect dependencies
+   - They see the fix works for text inputs
+   - They don't check if there are other state variables that should also be removed
+   - They miss select-related states like `targetGbn`, `useAt`, `status`, etc.
+
+3. **Lack of Comprehensive Testing:**
+   - Developers test text input changes (no API call ✅)
+   - They don't test select field changes (API call still happens ❌)
+   - They assume "search conditions" fix applies to all fields
+   - They don't verify every state variable in useEffect dependencies
+
+4. **Inconsistent Understanding:**
+   - Developers understand that text input `onChange` triggers state change → useEffect → API call
+   - They don't realize that select `onChange` does the same thing
+   - They think select fields are "different" or "special" cases
+
+**Example of the Mistake:**
+
+```typescript
+// ❌ WRONG: Removed text inputs but forgot select field
+useEffect(() => {
+  if (targetList.length > 0 && targetGbn) {
+    fetchBoards(); // ← Still called when targetGbn changes!
+  }
+}, [targetList, targetGbn]); // ❌ targetGbn in dependencies causes automatic API calls
+
+// ❌ WRONG: Select field onChange triggers state change
+<select
+  value={targetGbn}
+  onChange={(e) => setTargetGbn(e.target.value)} // ← State change triggers useEffect
+>
+  {targetList.map((target) => (
+    <option key={target.code} value={target.code}>
+      {target.codeNm}
+    </option>
+  ))}
+</select>
+```
+
+**What Happens:**
+
+1. User changes "대상구분" select → `setTargetGbn(newValue)` called
+2. `targetGbn` state changes → useEffect detects dependency change
+3. useEffect runs → `fetchBoards()` called automatically
+4. API called on every select change (same problem as text input!)
+
+**Correct Solution:**
+
+```typescript
+// ✅ CORRECT: Use isInitialLoad flag to prevent automatic calls
+useEffect(() => {
+  if (isInitialLoad && targetList.length > 0 && targetGbn) {
+    fetchBoards(); // ← Only called on initial load
+  }
+}, [targetList, targetGbn, isInitialLoad]); // ✅ isInitialLoad prevents automatic calls
+
+// ✅ CORRECT: Select field only updates state, no automatic API call
+<select
+  value={targetGbn}
+  onChange={(e) => setTargetGbn(e.target.value)} // ← Only state change, no API call
+>
+  {targetList.map((target) => (
+    <option key={target.code} value={target.code}>
+      {target.codeNm}
+    </option>
+  ))}
+</select>
+
+// ✅ CORRECT: Explicit search handler includes all search conditions
+const handleSearch = () => {
+  setCurrentPage(1);
+  fetchBoards(); // ← API called only on explicit action (Enter key or button click)
+};
+```
+
+**Solution:**
+
+- **Identify ALL search condition fields**: Both text inputs AND select/dropdown fields
+- **Remove ALL search conditions from useEffect dependencies**: Not just text inputs, but also select fields
+- **Use isInitialLoad flag**: Prevent automatic API calls for all search conditions
+- **Include ALL search conditions in handleSearch**: When user clicks "조회" or presses Enter, use all search conditions
+- **Test ALL fields**: Verify that changing any search condition field doesn't trigger API automatically
+- **Comprehensive review**: Check every state variable used in search form, not just text inputs
+
+**Checklist for Search Conditions:**
+
+When implementing explicit search, verify ALL of these:
+
+- [ ] **Text input fields**: `searchKeyword`, `searchText`, etc. (removed from dependencies ✅)
+- [ ] **Select/Dropdown fields**: `targetGbn`, `useAt`, `status`, `category`, etc. (also removed from dependencies ✅)
+- [ ] **Radio button groups**: If used as search conditions, also removed from dependencies
+- [ ] **Checkbox groups**: If used as search conditions, also removed from dependencies
+- [ ] **Date pickers**: If used as search conditions, also removed from dependencies
+- [ ] **All search conditions**: Included in `handleSearch()` function
+- [ ] **isInitialLoad flag**: Used to prevent automatic calls for all search conditions
+- [ ] **Tested all fields**: Verified that changing any search condition doesn't trigger API automatically
+
+**Key Principle:**
+
+> **ALL search condition fields (text inputs, selects, dropdowns, etc.) must follow the same explicit search pattern. There is no exception for select/dropdown fields.**
+
+---
+
+## 📋 Verification Checklist for Search Implementation
+
+**MUST verify ALL items when implementing search functionality:**
+
+### Pre-Implementation Checklist
+
+- [ ] **Decided on search pattern**: Explicit search (preferred) or Automatic search
+- [ ] **Understood difference**: Explicit = user action, Automatic = every input change
+- [ ] **Considered performance**: How many API calls will be made?
+- [ ] **Considered UX**: Will list update while user is typing?
+
+### Implementation Checklist
+
+- [ ] **Initial Load**: API called once on page load
+- [ ] **Search Conditions (ALL types)**: NOT in useEffect dependencies (except initial load)
+  - [ ] Text input fields (searchKeyword, searchText, etc.)
+  - [ ] Select/Dropdown fields (targetGbn, useAt, status, category, etc.)
+  - [ ] Radio button groups (if used as search conditions)
+  - [ ] Checkbox groups (if used as search conditions)
+  - [ ] Date pickers (if used as search conditions)
+- [ ] **isInitialLoad Flag**: Used to prevent automatic API calls for all search conditions
+- [ ] **Explicit Search Handler**: `handleSearch()` function created
+- [ ] **All Search Conditions in Handler**: `handleSearch()` includes ALL search condition fields
+- [ ] **Enter Key Support**: `onKeyPress` handler for Enter key
+- [ ] **Search Button**: Calls `handleSearch()` on click
+- [ ] **Input Changes**: Only update state, NO API calls (text inputs AND selects)
+- [ ] **Table Filters**: Server-side filtering with Debounce (800ms)
+
+### Post-Implementation Checklist
+
+- [ ] **Tested ALL Input Fields**: Typing doesn't trigger API calls (check Network tab)
+  - [ ] Text input fields tested
+  - [ ] Select/Dropdown fields tested
+  - [ ] Radio button groups tested (if applicable)
+  - [ ] Checkbox groups tested (if applicable)
+  - [ ] Date pickers tested (if applicable)
+- [ ] **Tested Enter Key**: Enter key triggers API call
+- [ ] **Tested Search Button**: Button click triggers API call
+- [ ] **Verified Network**: Checked Network tab, no unnecessary calls when changing ANY search condition
+- [ ] **Tested Performance**: No lag or excessive API calls
+- [ ] **Tested UX**: List doesn't update while typing or changing select fields
+
+### Code Review Checklist
+
+- [ ] **No search conditions in useEffect dependencies** (except initial load)
+  - [ ] No text input states (searchKeyword, searchText, etc.)
+  - [ ] No select/dropdown states (targetGbn, useAt, status, etc.)
+  - [ ] No radio button states (if used as search conditions)
+  - [ ] No checkbox states (if used as search conditions)
+  - [ ] No date picker states (if used as search conditions)
+- [ ] **isInitialLoad flag used** to prevent automatic API calls
+- [ ] **Explicit search handler exists** (`handleSearch` function)
+- [ ] **All search conditions included in handleSearch** (text inputs AND selects)
+- [ ] **Enter key handler implemented** (`onKeyPress` with Enter check)
+- [ ] **Search button calls handler** (`onClick={handleSearch}`)
+- [ ] **Input onChange only updates state** (no API calls for text inputs)
+- [ ] **Select onChange only updates state** (no API calls for selects)
+- [ ] **Table filters use server-side filtering with Debounce** (800ms)
+
+---
+
+## 🔄 Step-by-Step Implementation Guide
+
+### Step 1: Set Up State and Refs
+
+```typescript
+// ✅ CORRECT: State structure
+const [members, setMembers] = useState<Item[]>([]);
+const [totalElements, setTotalElements] = useState(0);
+const [totalPages, setTotalPages] = useState(0);
+const [currentPage, setCurrentPage] = useState(1);
+const [isInitialLoad, setIsInitialLoad] = useState(true);
+
+const [filters, setFilters] = useState({
+  userId: "",
+  userNm: "",
+  // ... other filters
+});
+
+const [searchCondition, setSearchCondition] = useState("1");
+const [searchKeyword, setSearchKeyword] = useState("");
+
+// ✅ CORRECT: Refs for stable references
+const filtersRef = useRef(filters);
+const searchConditionRef = useRef(searchCondition);
+const searchKeywordRef = useRef(searchKeyword);
+const initialFetchDoneRef = useRef(false); // First fetch done (page-change effect: avoid duplicate call)
+const initialLoadDoneRef = useRef(false); // First load done (filter effect: preserve page when returning from detail)
+
+// Update refs when state changes
+useEffect(() => {
+  filtersRef.current = filters;
+}, [filters]);
+
+useEffect(() => {
+  searchConditionRef.current = searchCondition;
+}, [searchCondition]);
+
+useEffect(() => {
+  searchKeywordRef.current = searchKeyword;
+}, [searchKeyword]);
+```
+
+### Step 2: Create Fetch Function with useCallback
+
+```typescript
+// ✅ CORRECT: Fetch function with minimal dependencies
+const fetchMembers = useCallback(async () => {
+  try {
+    setLoading(true);
+    const startIndex = (currentPage - 1) * pageSize;
+
+    const params = {
+      // Use refs, not state directly
+      searchCondition: searchConditionRef.current,
+      searchKeyword: searchKeywordRef.current,
+      length: pageSize.toString(),
+      start: startIndex.toString(),
+      filterUserId: filtersRef.current.userId || undefined,
+      // ... other filters
+    };
+
+    const response = await Service.getList(params);
+    setMembers(response.data || []);
+    setTotalElements(response.recordsTotal || 0);
+    setTotalPages(Math.ceil((response.recordsTotal || 0) / pageSize));
+  } catch (err) {
+    console.error("Data fetch failed:", err);
+  } finally {
+    setLoading(false);
+    setIsInitialLoad(false);
+    initialFetchDoneRef.current = true;
+    initialLoadDoneRef.current = true;
+  }
+}, [currentPage, pageSize]); // ⚠️ Only page-related dependencies
+```
+
+### Step 3: Create Ref for Fetch Function
+
+```typescript
+// ✅ CORRECT: Ref for fetchMembers
+const fetchMembersRef = useRef(fetchMembers);
+useEffect(() => {
+  fetchMembersRef.current = fetchMembers;
+}, [fetchMembers]);
+```
+
+### Step 4: Set Up Initial Load and Page Change
+
+```typescript
+// ✅ CORRECT: Initial load (one call only)
+useEffect(() => {
+  fetchMembers();
+}, []);
+
+// ✅ CORRECT: Page change triggers API (only after first fetch done; prevents duplicate call on mount)
+useEffect(() => {
+  if (!initialFetchDoneRef.current) return;
+  fetchMembers();
+}, [currentPage, fetchMembers]); // ⚠️ MUST NOT include isInitialLoad
+```
+
+**Why ref gate:** If `isInitialLoad` is in the dependency array, when the first fetch completes and `setIsInitialLoad(false)` runs, this effect runs again and calls fetch a second time. Using `initialFetchDoneRef` and removing `isInitialLoad` from deps ensures fetch runs only when `currentPage` actually changes after the initial load.
+
+### Step 5: Implement Explicit Search Handler
+
+```typescript
+// ✅ CORRECT: Explicit search handler (server-side filtering)
+// Note: NO debounce effect for filters - all filtering is server-side only via API parameters
+// NO table filter UI (filter toggle button, filter row) - NOT used in this project
+const handleSearch = () => {
+  setCurrentPage(1);
+  fetchMembers();
+};
+```
+
+**Why ref gate:** If `isInitialLoad` is in the dependency array, when it flips to false (after first fetch), this effect runs and schedules an 800ms timer that calls `setCurrentPage(1)` and fetch. When returning from detail to list with `?page=2`, that timer overwrites the preserved page to 1. Using `initialLoadDoneRef` and removing `isInitialLoad` from deps prevents the timer from running on mount/return-from-detail; it runs only when filter values actually change.
+
+### Step 6: Create Explicit Search Handler
+
+```typescript
+// ✅ CORRECT: Explicit search handler
+const handleSearch = () => {
+  setCurrentPage(1);
+  fetchMembers();
+};
+```
+
+### Step 7: Update ALL Search Condition Fields
+
+```typescript
+// ✅ CORRECT: Text input with Enter key support
+<input
+  type="text"
+  value={searchKeyword}
+  onChange={(e) => setSearchKeyword(e.target.value)} // State only, NO API call
+  onKeyPress={(e) => {
+    if (e.key === "Enter") {
+      handleSearch(); // Explicit API call
+    }
+  }}
+/>
+
+// ✅ CORRECT: Select/Dropdown field (also only updates state)
+<select
+  value={targetGbn}
+  onChange={(e) => setTargetGbn(e.target.value)} // State only, NO API call
+>
+  {targetList.map((target) => (
+    <option key={target.code} value={target.code}>
+      {target.codeNm}
+    </option>
+  ))}
+</select>
+
+// ⚠️ CRITICAL: Both text inputs AND selects must follow the same pattern!
+// - onChange only updates state
+// - NO automatic API calls
+// - API called only via handleSearch() (Enter key or button click)
+```
+
+### Step 8: Update Search Button
+
+```typescript
+// ✅ CORRECT: Search button calls handler
+<button onClick={handleSearch}>🔍 조회</button>
+```
+
+### Step 9: Verify Implementation
+
+```
+1. Type in search input → No API calls (check Network tab)
+2. Change select/dropdown field → No API calls (check Network tab) ⚠️ CRITICAL
+3. Press Enter → API call triggered
+4. Click "조회" button → API call triggered
+5. Type in filter input → API call triggered after 800ms (Debounce)
+6. Change page → API call triggered
+
+⚠️ CRITICAL: Test ALL search condition fields, not just text inputs!
+```
+
+---
+
+## 🚫 Common Mistakes to Avoid
+
+### Mistake 1: Adding Search Conditions to useEffect Dependencies
+
+```typescript
+// ❌ WRONG: Search conditions in dependencies (text inputs)
+useEffect(() => {
+  if (!isInitialLoad) {
+    fetchData();
+  }
+}, [searchCondition, searchKeyword]); // ❌ Causes automatic calls
+
+// ❌ WRONG: Select fields also cause automatic calls!
+useEffect(() => {
+  if (targetList.length > 0 && targetGbn) {
+    fetchData(); // ❌ Called when targetGbn changes!
+  }
+}, [targetList, targetGbn]); // ❌ targetGbn in dependencies causes automatic calls
+```
+
+**Fix:**
+
+```typescript
+// ✅ CORRECT: Remove ALL search conditions from dependencies
+useEffect(() => {
+  fetchData(); // Initial load only
+}, []);
+
+// ✅ CORRECT: Use explicit handler for ALL search conditions
+const handleSearch = () => {
+  setCurrentPage(1);
+  fetchData(); // API called only on explicit action
+};
+```
+
+**⚠️ CRITICAL**: Remember to remove BOTH text inputs AND select/dropdown fields from dependencies!
+
+### Mistake 2: Putting isInitialLoad in Fetch-Triggering Effect Dependencies
+
+```typescript
+// ❌ WRONG: isInitialLoad in page-change effect dependencies
+useEffect(() => {
+  if (!isInitialLoad) {
+    fetchMembers();
+  }
+}, [currentPage, fetchMembers, isInitialLoad]); // ❌ When isInitialLoad flips to false, effect runs again → duplicate API call
+
+// ❌ WRONG: isInitialLoad in filter debounce effect dependencies
+useEffect(() => {
+  if (isInitialLoad) return;
+  const timer = setTimeout(() => {
+    setCurrentPage(1);
+    fetchMembersRef.current();
+  }, 800);
+  return () => clearTimeout(timer);
+}, [filters.userId, filters.userNm, isInitialLoad]); // ❌ When isInitialLoad flips to false, effect runs → 800ms later page resets to 1 (breaks detail→list page preservation)
+```
+
+**Why this is wrong:** When the first fetch completes, `setIsInitialLoad(false)` runs. Both effects re-run because `isInitialLoad` is in their dependency array. The page-change effect calls fetch again (duplicate call). The filter effect schedules an 800ms timer that calls `setCurrentPage(1)` and fetch, so when returning from detail to list with `?page=2`, the preserved page is overwritten to 1.
+
+**Fix:**
+
+```typescript
+// ✅ CORRECT: Use refs; remove isInitialLoad from dependencies
+const initialFetchDoneRef = useRef(false);
+const initialLoadDoneRef = useRef(false);
+
+// In fetch function finally block:
+initialFetchDoneRef.current = true;
+initialLoadDoneRef.current = true;
+
+// Page-change effect: gate with ref; dependency without isInitialLoad
+useEffect(() => {
+  if (!initialFetchDoneRef.current) return;
+  fetchMembers();
+}, [currentPage, fetchMembers]);
+
+// Filter effect: gate with ref; dependency without isInitialLoad
+useEffect(() => {
+  if (!initialLoadDoneRef.current) return;
+  const timer = setTimeout(() => {
+    setCurrentPage(1);
+    fetchMembersRef.current();
+  }, 800);
+  return () => clearTimeout(timer);
+}, [filters.userId, filters.userNm]); // filter fields only
+```
+
+### Mistake 3: Calling API in Input/Select onChange
+
+```typescript
+// ❌ WRONG: API call in text input onChange
+<input
+  value={searchKeyword}
+  onChange={(e) => {
+    setSearchKeyword(e.target.value);
+    fetchData(); // ❌ API call on every keystroke
+  }}
+/>
+
+// ❌ WRONG: API call in select onChange (same problem!)
+<select
+  value={targetGbn}
+  onChange={(e) => {
+    setTargetGbn(e.target.value);
+    fetchData(); // ❌ API call on every select change
+  }}
+>
+```
+
+**Fix:**
+
+```typescript
+// ✅ CORRECT: Text input - only update state
+<input
+  value={searchKeyword}
+  onChange={(e) => setSearchKeyword(e.target.value)} // State only, NO API call
+  onKeyPress={(e) => {
+    if (e.key === "Enter") {
+      handleSearch(); // Explicit API call
+    }
+  }}
+/>
+
+// ✅ CORRECT: Select - only update state
+<select
+  value={targetGbn}
+  onChange={(e) => setTargetGbn(e.target.value)} // State only, NO API call
+>
+  {targetList.map((target) => (
+    <option key={target.code} value={target.code}>
+      {target.codeNm}
+    </option>
+  ))}
+</select>
+
+// ✅ CORRECT: Explicit search handler
+const handleSearch = () => {
+  setCurrentPage(1);
+  fetchData(); // API called only on explicit action
+};
+```
+
+### Mistake 4: Mixing Automatic and Explicit Search
+
+```typescript
+// ❌ WRONG: Both automatic and explicit
+useEffect(() => {
+  if (!isInitialLoad) {
+    fetchData(); // Automatic
+  }
+}, [searchKeyword]);
+
+const handleSearch = () => {
+  fetchData(); // Explicit
+};
+// Result: API called twice (once automatic, once explicit)
+```
+
+**Fix:**
+
+```typescript
+// ✅ CORRECT: Only explicit search
+useEffect(() => {
+  fetchData(); // Initial load only
+}, []);
+
+const handleSearch = () => {
+  fetchData(); // Only explicit
+};
+```
+
+### Mistake 5: Not Using useRef for Filters/Search
+
+```typescript
+// ❌ WRONG: filters in fetchMembers dependencies
+const fetchMembers = useCallback(async () => {
+  const params = {
+    filterUserId: filters.userId, // Direct state access
+  };
+}, [currentPage, pageSize, filters]); // ❌ filters causes function recreation
+
+// ❌ WRONG: fetchMembers in debounce dependencies
+useEffect(() => {
+  const timer = setTimeout(() => {
+    fetchMembers(); // Direct call
+  }, 800);
+}, [filters, fetchMembers]); // ❌ fetchMembers causes circular dependency
+```
+
+**Fix:**
+
+```typescript
+// ✅ CORRECT: Use refs
+const filtersRef = useRef(filters);
+useEffect(() => {
+  filtersRef.current = filters;
+}, [filters]);
+
+const fetchMembers = useCallback(async () => {
+  const params = {
+    filterUserId: filtersRef.current.userId, // Use ref
+  };
+}, [currentPage, pageSize]); // ✅ No filters in dependencies
+
+const fetchMembersRef = useRef(fetchMembers);
+useEffect(() => {
+  fetchMembersRef.current = fetchMembers;
+}, [fetchMembers]);
+
+useEffect(() => {
+  const timer = setTimeout(() => {
+    fetchMembersRef.current(); // Use ref
+  }, 800);
+}, [filters, isInitialLoad]); // ✅ No fetchMembers in dependencies
+```
+
+### Mistake 6: Missing Debounce for Table Filters
+
+```typescript
+// ❌ WRONG: Filters trigger API immediately
+useEffect(() => {
+  fetchData();
+}, [filters]); // ❌ API called on every filter change
+```
+
+**Fix:**
+
+```typescript
+// ✅ CORRECT: Filters with Debounce 800ms
+useEffect(() => {
+  if (isInitialLoad) return;
+
+  const timer = setTimeout(() => {
+    setCurrentPage(1);
+    fetchMembersRef.current();
+  }, 800);
+
+  return () => clearTimeout(timer);
+}, [
+  filters.userId,
+  filters.userNm /* ... other filter fields */,
+  ,
+  isInitialLoad,
+]);
+```
+
+---
+
+## 💡 Key Principles
+
+1. **Server-Side First**: Always use server-side pagination and server-side filtering as the default pattern
+2. **Explicit Over Automatic**: Always prefer explicit search (user action) over automatic search (input change)
+3. **Performance First**: Minimize API calls using Debounce (800ms) for filters and explicit search for search conditions
+4. **Stable References**: Use `useRef` to prevent unnecessary function recreation and circular dependencies
+5. **First-Load Gating**: Do NOT put `isInitialLoad` in fetch-triggering effect dependencies; use refs (`initialFetchDoneRef`, `initialLoadDoneRef`) to gate page-change and filter effects so the list API is called once per logical action and page is preserved when returning from detail
+6. **Clear Separation**: Search conditions = explicit API call, Table filters = Debounce API call
+7. **Consistency**: Use same pattern across all list pages
+
+---
+
+## 🔍 Decision Tree
+
+```
+Implementing list page?
+├─ Use server-side pagination + server-side filtering? ✅ YES (STANDARD)
+│  ├─ Set up state and refs
+│  ├─ Create fetch function with useCallback (minimal dependencies)
+│  ├─ Create ref for fetch function
+│  ├─ Set up initial load and page change
+│  ├─ Implement Debounce (800ms) for table filters
+│  ├─ Create explicit search handler
+│  └─ Update all search condition fields (text inputs AND selects)
+└─ Need client-side filtering? (EXCEPTIONAL CASE)
+   └─ Only use if absolutely necessary and document why
+```
+
+---
+
+## 📚 Reference Implementation
+
+**Files that correctly implement server-side pagination + server-side filtering:**
+
+- ✅ `src/features/adminWeb/member/list/model/useMemberList.ts` (reference implementation)
+
+**All list pages MUST use this exact pattern:**
+
+```typescript
+// State and refs
+const [members, setMembers] = useState<Item[]>([]);
+const [filters, setFilters] = useState({...});
+const filtersRef = useRef(filters);
+const fetchMembersRef = useRef(fetchMembers);
+
+// Fetch function (minimal dependencies)
+const fetchMembers = useCallback(async () => {
+  const params = {
+    filterUserId: filtersRef.current.userId || undefined,
+    // ... use refs, not state
+  };
+}, [currentPage, pageSize]);
+
+// Initial load
+useEffect(() => {
+  fetchMembers();
+}, []);
+
+// Page change
+useEffect(() => {
+  if (!isInitialLoad) {
+    fetchMembers();
+  }
+}, [currentPage, fetchMembers, isInitialLoad]);
+
+// Filters with Debounce
+useEffect(() => {
+  if (isInitialLoad) return;
+  const timer = setTimeout(() => {
+    setCurrentPage(1);
+    fetchMembersRef.current();
+  }, 800);
+  return () => clearTimeout(timer);
+}, [filters.userId, filters.userNm, /* ... */, isInitialLoad]);
+
+// Explicit search
+const handleSearch = () => {
+  setCurrentPage(1);
+  fetchMembers();
+};
+```
+
+---
+
+## 🚫 MUST NOT
+
+**MUST NOT:**
+
+- ❌ **NEVER** add search conditions to useEffect dependencies (except initial load)
+- ❌ **NEVER** call API in input onChange handler
+- ❌ **NEVER** use automatic search pattern
+- ❌ **NEVER** mix automatic search with explicit search
+- ❌ **NEVER** trigger API calls on every input change
+- ❌ **NEVER** add filters/search to `useCallback` dependencies
+- ❌ **NEVER** add `fetchMembers` to debounce `useEffect` dependencies
+- ❌ **NEVER** treat search conditions same as table filters
+- ❌ **NEVER** use client-side filtering with server-side pagination
+- ❌ **NEVER** calculate row numbers on frontend for server-side pagination
+- ❌ **NEVER** ignore `rnum` field from database response
+- ❌ **NEVER** use page-relative numbers when total-relative numbers are needed
+
+---
+
+## 🔄 Migration Guide
+
+**If you find existing implementations with automatic search or client-side filtering:**
+
+### Step 1: Identify Current Pattern
+
+```typescript
+// Look for these patterns:
+// 1. Automatic search
+useEffect(() => {
+  if (!isInitialLoad) {
+    fetchData();
+  }
+}, [searchCondition, searchKeyword, ...]); // ← Search conditions in dependencies
+
+// 2. Client-side filtering (NOT USED in this project)
+// ❌ This project uses server-side filtering only
+// const [allData, setAllData] = useState([]);
+// useEffect(() => {
+//   let filtered = [...allData];
+//   // Filter client-side
+// }, [allData, tableFilters]);
+```
+
+### Step 2: Convert to Server-Side Pattern
+
+```typescript
+// ✅ AFTER: Server-side pattern
+// 1. Remove allData, use members (current page data)
+const [members, setMembers] = useState<Item[]>([]);
+
+// 2. Add refs (NO filters ref - all filtering is server-side only)
+const searchConditionRef = useRef(searchCondition);
+const searchKeywordRef = useRef(searchKeyword);
+
+// 3. Update fetch function
+const fetchMembers = useCallback(async () => {
+  const params = {
+    searchCondition: searchConditionRef.current,
+    searchKeyword: searchKeywordRef.current,
+    // Note: Additional server-side filter parameters can be added here if needed
+    // All filtering is done server-side, not client-side
+  };
+}, [currentPage, pageSize]); // Only page-related dependencies
+
+// 4. Remove automatic search
+// ❌ REMOVE: useEffect with search conditions in dependencies
+
+// 5. Add explicit search
+const handleSearch = () => {
+  setCurrentPage(1);
+  fetchMembers();
+};
+
+// 6. Add Debounce for filters
+useEffect(() => {
+  if (isInitialLoad) return;
+  const timer = setTimeout(() => {
+    setCurrentPage(1);
+    fetchMembersRef.current();
+  }, 800);
+  return () => clearTimeout(timer);
+}, [filters.userId, filters.userNm /* ... */, , isInitialLoad]);
+```
+
+### Step 3: Update UI Components
+
+```typescript
+// ✅ CORRECT: Input with Enter key
+<input
+  value={searchKeyword}
+  onChange={(e) => setSearchKeyword(e.target.value)}
+  onKeyPress={(e) => {
+    if (e.key === "Enter") {
+      handleSearch();
+    }
+  }}
+/>
+
+// ✅ CORRECT: Search button
+<button onClick={handleSearch}>🔍 조회</button>
+```
+
+### Step 4: Test Implementation
+
+```
+1. Open page → Initial API call (check Network tab)
+2. Type in search input → No API calls
+3. Press Enter → API call triggered
+4. Click "조회" button → API call triggered
+5. Type in filter input → API call triggered after 800ms (Debounce)
+6. Change page → API call triggered
+7. Verify no unnecessary API calls
+```
+
+---
+
+## 📝 Code Template
+
+### Server-Side Pagination + Server-Side Filtering Pattern (STANDARD):
+
+```typescript
+import { useState, useEffect, useRef, useCallback } from "react";
+
+export function useListPage() {
+  // State
+  const [members, setMembers] = useState<Item[]>([]);
+  const [totalElements, setTotalElements] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
+  const [loading, setLoading] = useState(true);
+
+  // Search conditions (server-side filtering via API)
+  const [searchCondition, setSearchCondition] = useState("1");
+  const [searchKeyword, setSearchKeyword] = useState("");
+
+  const pageSize = 15;
+
+  // Refs for stable references
+  const searchConditionRef = useRef(searchCondition);
+  const searchKeywordRef = useRef(searchKeyword);
+
+  // Update refs when state changes
+  useEffect(() => {
+    searchConditionRef.current = searchCondition;
+  }, [searchCondition]);
+
+  useEffect(() => {
+    searchKeywordRef.current = searchKeyword;
+  }, [searchKeyword]);
+
+  // Fetch function (minimal dependencies)
+  const fetchMembers = useCallback(async () => {
+    try {
+      setLoading(true);
+      const startIndex = (currentPage - 1) * pageSize;
+      const params = {
+        searchCondition: searchConditionRef.current,
+        searchKeyword: searchKeywordRef.current,
+        length: pageSize.toString(),
+        start: startIndex.toString(),
+        // Note: Additional server-side filter parameters can be added here if needed
+        // All filtering is done server-side, not client-side
+      };
+
+      const response = await Service.getList(params);
+      setMembers(response.data || []);
+      setTotalElements(response.recordsTotal || 0);
+      setTotalPages(Math.ceil((response.recordsTotal || 0) / pageSize));
+    } catch (err) {
+      console.error("Data fetch failed:", err);
+    } finally {
+      setLoading(false);
+      setIsInitialLoad(false);
+    }
+  }, [currentPage, pageSize]);
+
+  // Ref for fetchMembers
+  const fetchMembersRef = useRef(fetchMembers);
+  useEffect(() => {
+    fetchMembersRef.current = fetchMembers;
+  }, [fetchMembers]);
+
+  // Initial load
+  useEffect(() => {
+    fetchMembers();
+  }, []);
+
+  // Page change
+  useEffect(() => {
+    if (!isInitialLoad) {
+      fetchMembers();
+    }
+  }, [currentPage, fetchMembers, isInitialLoad]);
+
+  // Explicit search handler (server-side filtering)
+  const handleSearch = () => {
+    setCurrentPage(1);
+    fetchMembers();
+  };
+
+  return {
+    members,
+    totalElements,
+    totalPages,
+    currentPage,
+    setCurrentPage,
+    loading,
+    filters,
+    setFilters,
+    showFilters,
+    setShowFilters,
+    handleSearch,
+    handleClearFilters,
+    searchCondition,
+    setSearchCondition,
+    searchKeyword,
+    setSearchKeyword,
+  };
+}
+```
+
+---
+
+## 🎓 Key Principles
+
+1. **Server-Side First**: Always use server-side pagination and server-side filtering as the default pattern
+2. **Explicit Over Automatic**: Always prefer explicit search (user action) over automatic search (input change)
+3. **Performance First**: Minimize API calls using Debounce (800ms) for filters and explicit search for search conditions
+4. **Stable References**: Use `useRef` to prevent unnecessary function recreation and circular dependencies
+5. **Clear Separation**: Search conditions = explicit API call, Table filters = Debounce API call
+6. **Consistency**: Use same pattern across all list pages
+
+---
+
+## 🔧 Debugging Checklist
+
+If pagination or filtering doesn't work, check:
+
+1. ✅ Is `fetchMembers` using refs (`searchConditionRef.current`, `searchKeywordRef.current`) instead of state?
+2. ✅ Is `fetchMembers` only depending on `currentPage` and `pageSize`?
+3. ✅ Is `fetchMembersRef` created and updated when `fetchMembers` changes?
+4. ✅ Are search conditions NOT in any `useEffect` dependencies (except initial load)?
+5. ✅ Is `start` parameter 0-based? `(currentPage - 1) * pageSize`
+6. ✅ Are API calls triggered only when needed?
+7. ✅ Is `totalPages` calculated from `recordsTotal` from server?
+8. ✅ Is filtering done server-side only (no client-side filtering)?
+9. ✅ Is table filter UI NOT implemented (no filter toggle button, no filter row)?
+
+---
+
+## 💡 Remember
+
+> **Golden Rule:** This project uses **server-side pagination + server-side filtering** as the standard pattern. Use `useRef` to stabilize function references and explicit search for search conditions. All filtering is done server-side only—NO client-side filtering and NO table filter UI (filter toggle button, filter row). Do NOT put `isInitialLoad` in page-change effect dependencies—use refs (`initialFetchDoneRef`, `initialLoadDoneRef`) to gate those effects so the list API is called once per logical action and page/search state is preserved when returning from detail. Never mix server-side pagination with client-side filtering.
+
+---
+
+## 📋 Implementation Checklist
+
+Before implementing a list page, verify:
+
+- [ ] **Data Fetching Strategy**
+  - [ ] Using server-side pagination + server-side filtering (STANDARD)
+  - [ ] `length` equals page size, `start` calculated correctly
+  - [ ] Using `useRef` for filters and search conditions
+
+- [ ] **State Management**
+  - [ ] Created state for current page data (`members`)
+  - [ ] Created state for total count (`totalElements`)
+  - [ ] Created refs for search conditions only (no filter state)
+  - [ ] Created `initialFetchDoneRef` and `initialLoadDoneRef`; set both to `true` in fetch function's `finally` block
+  - [ ] NO `showFilters` state (table filter UI is NOT used)
+  - [ ] NO `filters` state (all filtering is server-side via API parameters)
+
+- [ ] **First-Load Gating (Detail → List)**
+  - [ ] Page-change effect: dependency array is `[currentPage, fetchMembers]` only (no `isInitialLoad`); first line is `if (!initialFetchDoneRef.current) return;`
+  - [ ] Tested: Detail → List (닫기) preserves search conditions and page; list API called once
+
+- [ ] **API Call Triggers**
+  - [ ] Initial load triggers API call
+  - [ ] Page change triggers API call
+  - [ ] Search conditions trigger API call only on explicit action (Enter key or button click)
+  - [ ] NOT called on both (causes duplicate requests)
+
+- [ ] **Filtering Logic**
+  - [ ] All filtering is done server-side only (via API parameters)
+  - [ ] NO client-side filtering (filtering data in frontend after API response)
+  - [ ] NO table filter UI (filter toggle button, filter row, etc.)
+  - [ ] Using `searchConditionRef.current` and `searchKeywordRef.current` in fetch function
+
+- [ ] **Pagination Calculation**
+  - [ ] `start` parameter uses 0-based indexing: `(currentPage - 1) * pageSize`
+  - [ ] `totalPages` calculated from `recordsTotal` from server
+  - [ ] Page change triggers API call
+
+- [ ] **Edge Cases**
+  - [ ] Empty filter results handled
+  - [ ] Page number validation (not exceeding totalPages)
+  - [ ] Loading states properly managed
+  - [ ] Initial load flag prevents unnecessary API calls
+
+---
+
+## 🚨 Anti-Patterns to Avoid
+
+### ❌ DO NOT:
+
+1. **Mix pagination strategies:**
+
+   ```typescript
+   // ❌ WRONG: Fetching page data but trying to filter client-side
+   const params = { length: "15", start: "0" };
+   // Then trying to filter this 15 items client-side - won't work!
+   ```
+
+2. **Use same state for raw and filtered data:**
+
+   ```typescript
+   // ❌ WRONG
+   const [data, setData] = useState([]);
+   // Using same state for API response and filtered results
+   ```
+
+3. **Add filters/search to useCallback dependencies:**
+
+   ```typescript
+   // ❌ WRONG
+   const fetchMembers = useCallback(async () => {
+     const params = {
+       filterUserId: filters.userId, // Direct state access
+     };
+   }, [currentPage, pageSize, filters]); // ❌ filters causes function recreation
+   ```
+
+4. **Add fetchMembers to debounce dependencies:**
+
+   ```typescript
+   // ❌ WRONG
+   useEffect(() => {
+     const timer = setTimeout(() => {
+       fetchMembers(); // Direct call
+     }, 800);
+   }, [filters, fetchMembers]); // ❌ fetchMembers causes circular dependency
+   ```
+
+5. **Calculate start parameter incorrectly:**
+
+   ```typescript
+   // ❌ WRONG: 1-based
+   const start = currentPage * pageSize;
+
+   // ✅ CORRECT: 0-based
+   const start = (currentPage - 1) * pageSize;
+   ```
+
+6. **Implement client-side filtering or table filter UI:**
+
+   ```typescript
+   // ❌ WRONG: Client-side filtering or table filter UI
+   // This project uses server-side filtering only
+   // NO client-side filtering
+   // NO table filter UI (filter toggle button, filter row)
+   ```
+
+---
+
+**⚠️ NOTE: Table filter UI (filter toggle button, filter row) is NOT used in this project. All filtering is done server-side only via API parameters.**
+---
+
+## 📋 Complete Implementation Checklist
+
+Before implementing a list page, verify ALL of these:
+
+- [ ] **Data Fetching Strategy**
+  - [ ] Using server-side pagination + server-side filtering (STANDARD)
+  - [ ] `length` equals page size, `start` calculated correctly (0-based)
+  - [ ] Using `useRef` for search conditions only (no filter refs)
+  - [ ] All filtering done server-side (no client-side filtering)
+
+- [ ] **State Management**
+  - [ ] Created state for current page data (`members`)
+  - [ ] Created state for total count (`totalElements`)
+  - [ ] Created refs: `searchConditionRef`, `searchKeywordRef`, `fetchMembersRef`
+  - [ ] NO `showFilters` state (table filter UI is NOT used)
+  - [ ] NO `filters` state (all filtering is server-side via API parameters)
+
+- [ ] **API Call Triggers**
+  - [ ] Initial load triggers API call
+  - [ ] Page change triggers API call
+  - [ ] Search conditions trigger API call only on explicit action (Enter key or button click)
+  - [ ] NOT called on both (causes duplicate requests)
+
+- [ ] **useCallback Dependencies**
+  - [ ] `fetchMembers` only depends on `currentPage` and `pageSize`
+  - [ ] Search conditions NOT in `fetchMembers` dependencies
+  - [ ] Using `searchConditionRef.current`, `searchKeywordRef.current` in fetch function
+
+- [ ] **Search Conditions**
+  - [ ] Search conditions NOT in any `useEffect` dependencies (except initial load)
+  - [ ] Explicit search handler (`handleSearch`) created
+  - [ ] Enter key support added to search input
+  - [ ] Search button calls `handleSearch`
+  - [ ] ALL search condition fields (text inputs AND selects) follow explicit pattern
+
+- [ ] **Filtering Logic**
+  - [ ] All filtering is done server-side only (via API parameters)
+  - [ ] NO client-side filtering (filtering data in frontend after API response)
+  - [ ] NO table filter UI (filter toggle button, filter row, etc.)
+
+- [ ] **Pagination Calculation**
+  - [ ] `start` parameter uses 0-based indexing: `(currentPage - 1) * pageSize`
+  - [ ] `totalPages` calculated from `recordsTotal` from server
+  - [ ] Page change triggers API call
+
+- [ ] **Edge Cases**
+  - [ ] Empty filter results handled
+  - [ ] Page number validation (not exceeding totalPages)
+  - [ ] Loading states properly managed
+  - [ ] Initial load flag prevents unnecessary API calls
+
+---
+
+## ⚠️ CRITICAL: Backend SQL Parameter Mapping - Common Mistake Prevention
+
+### 🚨 Problem Statement
+
+**MISTAKE:** When implementing server-side pagination in backend SQL, developers often incorrectly use frontend parameter names (`length`, `start`) directly in SQL LIMIT/OFFSET clauses, instead of using the transformed parameter names (`lengthPage`, `startIndex`) that are provided by `CommonService.setCommon()`.
+
+**Example of the Mistake:**
+
+```xml
+<!-- ❌ WRONG: Using frontend parameter names directly -->
+<select id="selectList" parameterType="egovMap" resultType="egovMap">
+  SELECT * FROM table
+  LIMIT #{length} OFFSET #{start}  <!-- ❌ These parameters don't exist in ModelMap! -->
+</select>
+```
+
+**Correct Implementation:**
+
+```xml
+<!-- ✅ CORRECT: Using transformed parameter names from CommonService -->
+<select id="selectList" parameterType="egovMap" resultType="egovMap">
+  SELECT * FROM table
+  LIMIT #{lengthPage} OFFSET #{startIndex}  <!-- ✅ These are set by CommonService.setCommon() -->
+</select>
+```
+
+### 🔍 Root Cause Analysis
+
+**Why This Mistake Happens:**
+
+1. **Incomplete Data Flow Understanding:**
+   - Developers see frontend sending `length` and `start` parameters
+   - They assume these parameters are directly available in SQL mapper
+   - They don't trace the complete data flow from frontend → controller → service → SQL mapper
+   - They miss the critical transformation step in `CommonService.setCommon()`
+
+2. **Missing CommonService Review:**
+   - Developers don't check `CommonService.setCommon()` method before writing SQL
+   - They don't realize that parameter transformation happens in this common service
+   - They assume frontend parameters are passed through unchanged
+   - They don't verify what parameters are actually available in `ModelMap`/`egovMap`
+
+3. **Pattern Inconsistency:**
+   - Developers don't check existing SQL implementations (e.g., `AdminUserMemberManage_SQL_mysql.xml`)
+   - They don't notice that existing SQL uses `lengthPage` and `startIndex`
+   - They create new SQL with different parameter names
+   - They don't follow the established project pattern
+
+4. **Assumption Without Verification:**
+   - Developers assume "if frontend sends `length`, SQL can use `#{length}`"
+   - They don't verify parameter availability in SQL context
+   - They don't test SQL execution to catch the error early
+   - They rely on assumptions rather than checking actual data flow
+
+5. **Lack of Backend Architecture Awareness:**
+   - Developers don't understand the role of `CommonService` in parameter transformation
+   - They don't realize that `setCommon()` is called in every controller method
+   - They don't know that `ModelMap` is populated with transformed parameters
+   - They treat backend as a "black box" without understanding internal flow
+
+### 📊 Data Flow Diagram
+
+**Complete Parameter Flow:**
+
+```
+Frontend (React/TypeScript)
+  ↓
+  Sends: { length: "15", start: "0" }
+  ↓
+Controller (Java)
+  ↓
+  Receives: HttpServletRequest parameters
+  ↓
+  Calls: this.setCommon(request, model)
+  ↓
+CommonService.setCommon()
+  ↓
+  Transforms:
+    model.put("lengthPage", Integer.parseInt(model.get("length").toString()));
+    model.put("startIndex", Integer.parseInt(model.get("start").toString()));
+  ↓
+  ModelMap now contains: { lengthPage: 15, startIndex: 0, ... }
+  ↓
+Service Layer (Java)
+  ↓
+  Passes ModelMap to DAO
+  ↓
+SQL Mapper (MyBatis XML)
+  ↓
+  Uses: #{lengthPage} and #{startIndex}  ← ✅ CORRECT
+  NOT: #{length} and #{start}            ← ❌ WRONG
+```
+
+### ✅ Correct Implementation Pattern
+
+**Step 1: Verify CommonService Transformation**
+
+Before writing SQL, ALWAYS check `CommonService.setCommon()`:
+
+```java
+// File: src/main/java/arami/common/CommonService.java
+public void setCommon(HttpServletRequest request, ModelMap model) throws Exception {
+    // ... other code ...
+
+    // LIMIT OFFSET 페이징처리(DataTable)
+    model.put("lengthPage", Integer.parseInt(model.get("length").toString()));
+    model.put("startIndex", Integer.parseInt(model.get("start").toString()));
+
+    // ... other code ...
+}
+```
+
+**Key Insight:** `CommonService.setCommon()` transforms `length` → `lengthPage` and `start` → `startIndex`.
+
+**Step 2: Check Existing SQL Patterns**
+
+ALWAYS check existing SQL implementations to see what parameter names are used:
+
+```xml
+<!-- File: AdminUserMemberManage_SQL_mysql.xml -->
+<select id="selectAdminUserMemberList" parameterType="egovMap" resultType="egovMap">
+  SELECT * FROM table
+  LIMIT #{lengthPage} OFFSET #{startIndex}  <!-- ✅ This is the correct pattern -->
+</select>
+```
+
+**Key Insight:** All existing SQL in this project uses `lengthPage` and `startIndex`, NOT `length` and `start`.
+
+**Step 3: Write SQL with Correct Parameter Names**
+
+```xml
+<!-- ✅ CORRECT: Use transformed parameter names -->
+<select id="selectList" parameterType="egovMap" resultType="egovMap">
+  SELECT *
+    FROM (
+      SELECT ROW_NUMBER() OVER (ORDER BY id DESC) AS RNUM
+           , column1
+           , column2
+        FROM table_name
+       WHERE 1=1
+         <!-- filter conditions -->
+    ) A1
+  LIMIT #{lengthPage} OFFSET #{startIndex}  <!-- ✅ Use transformed names -->
+</select>
+
+<!-- ✅ CORRECT: Count query (no LIMIT/OFFSET needed) -->
+<select id="selectListCount" parameterType="egovMap" resultType="int">
+  SELECT COUNT(1)
+    FROM table_name
+   WHERE 1=1
+     <!-- same filter conditions as selectList -->
+</select>
+```
+
+### 🚫 Common Mistakes to Avoid
+
+**Mistake 1: Using Frontend Parameter Names Directly**
+
+```xml
+<!-- ❌ WRONG: Using frontend parameter names -->
+<select id="selectList" parameterType="egovMap" resultType="egovMap">
+  SELECT * FROM table
+  LIMIT #{length} OFFSET #{start}  <!-- ❌ These don't exist in ModelMap! -->
+</select>
+```
+
+**Why this is wrong:**
+
+- `length` and `start` are NOT in `ModelMap` after `CommonService.setCommon()` runs
+- SQL will fail with parameter binding error
+- MyBatis cannot find `#{length}` and `#{start}` in the parameter map
+
+**Fix:**
+
+```xml
+<!-- ✅ CORRECT: Use transformed parameter names -->
+<select id="selectList" parameterType="egovMap" resultType="egovMap">
+  SELECT * FROM table
+  LIMIT #{lengthPage} OFFSET #{startIndex}  <!-- ✅ These exist in ModelMap -->
+</select>
+```
+
+**Mistake 2: Not Checking Existing Patterns**
+
+```xml
+<!-- ❌ WRONG: Creating new pattern without checking existing code -->
+<select id="selectList" parameterType="egovMap" resultType="egovMap">
+  SELECT * FROM table
+  LIMIT #{pageSize} OFFSET #{offset}  <!-- ❌ Different names, not following project pattern -->
+</select>
+```
+
+**Why this is wrong:**
+
+- Inconsistent with existing SQL implementations
+- Breaks project conventions
+- Other developers expect `lengthPage` and `startIndex`
+
+**Fix:**
+
+```xml
+<!-- ✅ CORRECT: Follow existing project pattern -->
+<select id="selectList" parameterType="egovMap" resultType="egovMap">
+  SELECT * FROM table
+  LIMIT #{lengthPage} OFFSET #{startIndex}  <!-- ✅ Matches existing pattern -->
+</select>
+```
+
+**Mistake 3: Assuming Parameter Names Without Verification**
+
+```xml
+<!-- ❌ WRONG: Assuming parameter names without checking -->
+<select id="selectList" parameterType="egovMap" resultType="egovMap">
+  SELECT * FROM table
+  LIMIT #{limit} OFFSET #{offset}  <!-- ❌ Assumed names, not verified -->
+</select>
+```
+
+**Why this is wrong:**
+
+- No verification of actual parameter names
+- Assumptions lead to runtime errors
+- Doesn't follow data flow verification process
+
+**Fix:**
+
+```xml
+<!-- ✅ CORRECT: Verify parameter names from CommonService -->
+<!-- 1. Check CommonService.setCommon() -->
+<!-- 2. See it sets lengthPage and startIndex -->
+<!-- 3. Use those names in SQL -->
+<select id="selectList" parameterType="egovMap" resultType="egovMap">
+  SELECT * FROM table
+  LIMIT #{lengthPage} OFFSET #{startIndex}  <!-- ✅ Verified names -->
+</select>
+```
+
+### 📋 Pre-Implementation Checklist
+
+**BEFORE writing SQL LIMIT/OFFSET clauses, verify ALL of these:**
+
+- [ ] **Checked CommonService.setCommon()**: Reviewed the method to see what parameter names are set
+- [ ] **Verified Parameter Transformation**: Confirmed that `length` → `lengthPage` and `start` → `startIndex`
+- [ ] **Checked Existing SQL**: Reviewed at least one existing SQL file (e.g., `AdminUserMemberManage_SQL_mysql.xml`) to see the pattern
+- [ ] **Confirmed Parameter Names**: Verified that SQL uses `#{lengthPage}` and `#{startIndex}`, NOT `#{length}` and `#{start}`
+- [ ] **Tested SQL Execution**: Verified that SQL executes without parameter binding errors
+- [ ] **Followed Project Pattern**: Ensured consistency with existing SQL implementations
+
+### 🔍 Verification Steps
+
+**Step 1: Check CommonService**
+
+```bash
+# File location
+src/main/java/arami/common/CommonService.java
+
+# Look for these lines:
+model.put("lengthPage", Integer.parseInt(model.get("length").toString()));
+model.put("startIndex", Integer.parseInt(model.get("start").toString()));
+```
+
+**Step 2: Check Existing SQL**
+
+```bash
+# File location
+src/main/resources/egovframework/mapper/arami/member/AdminUserMemberManage_SQL_mysql.xml
+
+# Look for LIMIT/OFFSET pattern:
+LIMIT #{lengthPage} OFFSET #{startIndex}
+```
+
+**Step 3: Verify Your SQL**
+
+```xml
+<!-- Your SQL should match this pattern -->
+<select id="selectYourList" parameterType="egovMap" resultType="egovMap">
+  SELECT * FROM your_table
+  LIMIT #{lengthPage} OFFSET #{startIndex}  <!-- ✅ Must match -->
+</select>
+```
+
+### 💡 Key Principles
+
+1. **Always Trace Data Flow**: Frontend → Controller → CommonService → SQL Mapper
+2. **Verify Parameter Transformation**: Check `CommonService.setCommon()` before writing SQL
+3. **Follow Existing Patterns**: Check existing SQL implementations for parameter naming conventions
+4. **Never Assume**: Always verify parameter names are available in SQL context
+5. **Test Early**: Verify SQL execution to catch parameter binding errors immediately
+
+### 🎯 Remember
+
+> **CRITICAL RULE:** When implementing server-side pagination in backend SQL, ALWAYS use `#{lengthPage}` and `#{startIndex}` (set by `CommonService.setCommon()`), NEVER use `#{length}` and `#{start}` (frontend parameter names). Always verify parameter transformation in `CommonService.setCommon()` and check existing SQL patterns before writing new SQL.
+
+### 📚 Reference Implementation
+
+**Correct SQL Pattern (from AdminUserMemberManage_SQL_mysql.xml):**
+
+```xml
+<!-- ✅ CORRECT: Reference implementation -->
+<select id="selectAdminUserMemberList" parameterType="egovMap" resultType="egovMap">
+  SELECT *
+    FROM (
+      SELECT ROW_NUMBER() OVER (ORDER BY A2.SBSCRB_DE DESC) AS RNUM
+           , COALESCE(A2.ESNTL_ID, '') AS ESNTL_ID
+           , COALESCE(A2.USER_ID, '') AS USER_ID
+           -- ... other columns ...
+        FROM ARMUSER A2
+       WHERE 1=1
+         AND A2.USER_SE = 'USR'
+         <!-- filter conditions -->
+    ) A1
+  LIMIT #{lengthPage} OFFSET #{startIndex}  <!-- ✅ Correct parameter names -->
+</select>
+```
+
+**All SQL implementations in this project MUST follow this exact pattern.**
+
+---
+
+## 💡 Remember
+
+> **Golden Rule:** This project uses **server-side pagination + server-side filtering** as the standard pattern. Use `useRef` to stabilize function references, implement Debounce (800ms) for table filters, and explicit search for search conditions. Never mix server-side pagination with client-side filtering unless absolutely necessary.
+>
+> **Backend SQL Rule:** ALWAYS use `#{lengthPage}` and `#{startIndex}` in SQL LIMIT/OFFSET clauses (set by `CommonService.setCommon()`), NEVER use `#{length}` and `#{start}` (frontend parameter names). Always verify parameter transformation and check existing SQL patterns before writing new SQL.
+>
+> **Row Number Display Rule:** ALWAYS use `rnum` from database response when displaying row numbers in server-side pagination. NEVER calculate row numbers on frontend (`(currentPage - 1) * pageSize + index + 1`). Always verify API type definition includes `rnum` field and SQL mapper returns `RNUM` column before implementing row number display.

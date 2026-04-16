@@ -1,0 +1,1252 @@
+---
+alwaysApply: false
+---
+
+# Modal Component Rules for Admin Web Pages
+
+## 🎯 Purpose
+
+This rule defines comprehensive rules and best practices for implementing modal dialogs in **admin web pages** (`/adminWeb/*`). Admin pages use three types of modals: **Modal Component**, **ConfirmDialog Component**, and **Custom Inline Modals**.
+
+**Key Context:**
+
+- ✅ Modal and ConfirmDialog components are located in `@/shared/ui/adminWeb`
+- ✅ Custom CSS classes are defined in `@/shared/styles/admin/dialog.css`
+- ✅ Modals are primarily used in admin pages for complex interactions
+
+---
+
+## 📋 Modal Types
+
+### Type 1: Modal Component (`@/shared/ui/adminWeb/Modal`)
+
+**Purpose**: General-purpose modal for displaying complex content (forms, trees, lists, data tables)
+
+**Characteristics:**
+
+- ✅ Flexible size options: `sm`, `md`, `lg`, `xl`
+- ✅ Custom title and close button support
+- ✅ ESC key support (automatic)
+- ✅ Body scroll lock when open (automatic)
+- ✅ Overlay click to close
+- ✅ Uses `modal-container` and `modal-content` CSS classes from `dialog.css`
+
+**When to Use:**
+
+- Displaying complex content (trees, forms, data tables)
+- Content that requires scrolling
+- Multi-step workflows
+- Content selection modals
+- Menu tree displays
+- Large data displays
+
+**Location:** `src/shared/ui/admin/Modal.tsx`
+
+### Type 2: ConfirmDialog Component (`@/shared/ui/adminWeb/ConfirmDialog`)
+
+**Purpose**: Simple confirmation dialogs for user actions
+
+**Characteristics:**
+
+- ✅ Fixed size (max-w-[450px])
+- ✅ Icon-based type system: `danger`, `warning`, `success`
+- ✅ Two-button layout (Cancel/Confirm)
+- ✅ Uses `dialog-container` and `dialog-content` CSS classes from `dialog.css`
+- ✅ Centered content layout
+
+**When to Use:**
+
+- Delete confirmations
+- Save/Update confirmations
+- Warning messages
+- Success notifications (after create/update operations)
+- Simple yes/no questions
+
+**Location:** `src/shared/ui/admin/ConfirmDialog.tsx`
+
+### Type 3: Custom Inline Modals
+
+**Purpose**: Page-specific modals that don't fit standard patterns
+
+**Characteristics:**
+
+- ✅ Implemented directly in page components
+- ✅ Custom structure and behavior
+- ✅ Must follow styling guidelines from this rule
+
+**When to Use:**
+
+- Highly specialized UI requirements
+- Complex interactions not covered by standard components
+- Legacy code migration (should be refactored to use Modal component when possible)
+
+---
+
+## ⚠️ CRITICAL: Component Selection
+
+**MUST follow this decision tree when implementing modals:**
+
+```
+Need a modal in admin page?
+├─ Simple confirmation/alert?
+│  └─ YES → Use ConfirmDialog
+│     ├─ Delete action? → type="danger"
+│     ├─ Warning message? → type="warning"
+│     └─ Success message (after create/update)? → type="success"
+│
+└─ Complex content (form, tree, list, table)?
+   └─ YES → Use Modal Component
+      ├─ Small content? → size="sm" (448px)
+      ├─ Medium content? → size="md" (672px) - DEFAULT
+      ├─ Large content? → size="lg" (896px)
+      └─ Extra large? → size="xl" (1152px)
+```
+
+**MUST NOT:**
+
+- ❌ Use ConfirmDialog for complex content (forms, trees, lists)
+- ❌ Use Modal component for simple yes/no confirmations
+- ❌ Create custom inline modals when standard components suffice
+
+---
+
+## 📦 Modal Component Usage
+
+### ⚠️ CRITICAL: Import and Basic Structure
+
+**MUST:**
+
+```typescript
+import { Modal } from "@/shared/ui/adminWeb";
+
+// State management
+const [isModalOpen, setIsModalOpen] = useState(false);
+
+// Open handler
+const handleOpenModal = () => {
+  setIsModalOpen(true);
+};
+
+// Close handler with cleanup
+const handleCloseModal = () => {
+  setIsModalOpen(false);
+  // Reset form/data if needed
+  setFormData(initialFormData);
+  setErrors({});
+};
+
+// Usage
+<Modal
+  isOpen={isModalOpen}
+  title="Modal Title"
+  onClose={handleCloseModal}
+  size="md" // or "sm", "lg", "xl"
+  showCloseButton={true}
+>
+  {/* Modal content */}
+</Modal>;
+```
+
+**MUST NOT:**
+
+- ❌ Import from wrong path (must be `@/shared/ui/adminWeb`)
+- ❌ Use inline styles for positioning (CSS classes handle this automatically)
+- ❌ Forget to handle state cleanup on close
+- ❌ Use `dialog-container` or `dialog-content` classes directly (those are for ConfirmDialog)
+- ❌ Skip CSS import (`@/shared/styles/admin/dialog.css` is imported in Modal component)
+
+### Size Guidelines
+
+**MUST use appropriate size based on content:**
+
+| Size | Max Width | Use Case                        | Example                |
+| ---- | --------- | ------------------------------- | ---------------------- |
+| `sm` | 448px     | Simple forms, small selections  | Single input forms     |
+| `md` | 672px     | Standard forms, medium lists    | Default for most cases |
+| `lg` | 896px     | Large forms, data tables, trees | Menu tree displays     |
+| `xl` | 1152px    | Complex dashboards, wide tables | Data analysis views    |
+
+**Reference Implementation:**
+
+- ✅ `src/features/adminWeb/menu/make/ui/MenuMakePageView.tsx` uses `size="lg"` for menu tree
+
+### Content Structure
+
+**MUST:**
+
+```tsx
+<Modal isOpen={isOpen} title="Title" onClose={onClose} size="md">
+  {/* Handle loading state */}
+  {loading ? (
+    <div className="p-8 text-center">
+      <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      <p className="mt-4 text-gray-600">Loading...</p>
+    </div>
+  ) : error ? (
+    <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
+      {error}
+    </div>
+  ) : (
+    <div className="space-y-4">{/* Your content here */}</div>
+  )}
+</Modal>
+```
+
+**MUST NOT:**
+
+- ❌ Put content directly without wrapper divs
+- ❌ Use fixed heights without overflow handling
+- ❌ Forget to handle loading/error states
+- ❌ Skip proper spacing between content elements
+
+---
+
+## ✅ ConfirmDialog Component Usage
+
+### ⚠️ CRITICAL: Type Selection
+
+**MUST use correct type for each scenario:**
+
+```typescript
+// Delete confirmation
+<ConfirmDialog
+  type="danger"
+  title="삭제 확인"
+  message="정말로 삭제하시겠습니까?"
+  confirmText="삭제"
+  cancelText="취소"
+  onConfirm={handleDelete}
+  onCancel={handleCancel}
+/>
+
+// Warning message
+<ConfirmDialog
+  type="warning"
+  title="알림"
+  message="이 작업은 되돌릴 수 없습니다."
+  onConfirm={handleConfirm}
+  onCancel={handleCancel}
+/>
+
+// Success message (after create/update) - CRITICAL
+<ConfirmDialog
+  type="success" // ✅ REQUIRED for success messages
+  title="등록 완료"
+  message="정상적으로 등록되었습니다."
+  confirmText="확인"
+  onConfirm={handleClose}
+  onCancel={handleClose}
+/>
+```
+
+**MUST NOT:**
+
+- ❌ Use `type="danger"` for success messages
+- ❌ Use `type="success"` for delete confirmations
+- ❌ Mix up `onConfirm` and `onCancel` handlers
+- ❌ Use ConfirmDialog for complex content (use Modal component instead)
+
+### Success Message Pattern (CRITICAL)
+
+**MUST ALWAYS use `type="success"` for:**
+
+- ✅ Registration (등록) completion
+- ✅ Update (수정) completion
+- ✅ Any successful operation notification
+
+**MUST follow this pattern:**
+
+```typescript
+if (response.resultCode === "00" || response.result === "00") {
+  setMessageDialogTitle("등록 완료");
+  setMessageDialogMessage(
+    response.resultMessage || "정상적으로 등록되었습니다."
+  );
+  setMessageDialogType("success"); // ✅ REQUIRED - must be "success"
+  setShowMessageDialog(true);
+}
+```
+
+**MUST NOT:**
+
+- ❌ Use `type="danger"` or `type="warning"` for success messages
+- ❌ Skip type specification (defaults to "danger" which is wrong for success)
+
+**Reference Implementation:**
+
+- ✅ Check `src/features/adminWeb/program/list/ui/ProgramListPageView.tsx` for success message pattern
+
+---
+
+### ⚠️ CRITICAL: API Communication Error Handling Pattern
+
+**MUST ALWAYS check existing registration form patterns before implementing API error handling when:**
+
+- ✅ Creating new registration/edit forms
+- ✅ Implementing form submission error handling
+- ✅ Handling API communication errors (ApiError, network errors, etc.)
+- ✅ Displaying error messages after API calls
+- ✅ Ensuring consistency across all admin forms
+
+**MUST ensure all API communication errors are displayed using ConfirmDialog ONLY, not red text messages above forms.**
+
+---
+
+## 🎯 Root Cause Analysis of Common Mistakes
+
+### Pattern Ignorance: Not Checking Existing Codebase Patterns
+
+**Why This Rule Exists:**
+
+All admin registration/edit forms in this codebase follow a **consistent pattern** for API error handling:
+
+1. ❌ **WRONG**: Using `setError()` to display API errors as red text above forms
+2. ✅ **CORRECT**: Using `ConfirmDialog` with `type="danger"` for all API communication errors
+
+**Real-world example of the mistake:**
+
+```typescript
+// ❌ WRONG: Displaying API errors as red text
+catch (err) {
+  if (err instanceof ApiError) {
+    setError(err.message); // ❌ Inconsistent with other forms
+    // Missing ConfirmDialog for API errors
+  }
+}
+
+// In component:
+{error && <div className="p-6 text-center text-red-600">{error}</div>} // ❌ Red text above form
+```
+
+**Why this is wrong:**
+
+- ❌ Creates inconsistent user experience (some forms show red text, others show dialogs)
+- ❌ Users may miss errors that appear above the form (less visible than modal dialogs)
+- ❌ Does not match the established pattern used in all other admin registration forms
+
+**MUST:**
+
+- ✅ **ALWAYS** check existing registration forms (`MemberRegisterForm`, `BoardRegisterForm`, `ProgramRegisterForm`) before implementing error handling
+- ✅ **ALWAYS** use ConfirmDialog for API communication errors
+- ✅ **ALWAYS** use `type="danger"` for API error dialogs (NOT "error")
+- ✅ **ALWAYS** initialize `error` state but use it only for non-API errors (pre-submission validation, etc.)
+
+**MUST NOT:**
+
+- ❌ **NEVER** use `setError()` for API communication errors
+- ❌ **NEVER** display API errors as red text above forms
+- ❌ **NEVER** use `type="error"` (correct type is "danger")
+- ❌ **NEVER** implement error handling without checking existing patterns
+- ❌ **NEVER** mix error display methods (ConfirmDialog + red text)
+
+---
+
+## ✅ CORRECT: API Communication Error Handling Pattern
+
+**MUST follow this exact pattern for all API communication errors:**
+
+```typescript
+// ✅ CORRECT: Using ConfirmDialog for API errors
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+
+  if (!validateForm()) {
+    return; // Client-side validation errors can use red text if needed
+  }
+
+  setLoading(true);
+  setError(""); // ✅ Initialize, but don't use for API errors
+
+  try {
+    const response = await SomeService.create({ /* params */ });
+
+    if (response.result === "00") {
+      // Success handling
+      setMessageDialogTitle("등록 완료");
+      setMessageDialogMessage(
+        response.message || "정상적으로 등록되었습니다."
+      );
+      setMessageDialogType("success");
+      setShowMessageDialog(true);
+    } else {
+      // API response indicates failure
+      setMessageDialogTitle("등록 실패");
+      setMessageDialogMessage(
+        response.message || "등록 중 오류가 발생했습니다."
+      );
+      setMessageDialogType("danger"); // ✅ REQUIRED - use "danger"
+      setShowMessageDialog(true);
+    }
+  } catch (err) {
+    console.error("등록 오류:", err); // ✅ Log error for debugging
+    
+    // ✅ CORRECT: Use ConfirmDialog for ALL API communication errors
+    if (err instanceof ApiError) {
+      setMessageDialogTitle("등록 실패");
+      setMessageDialogMessage(
+        err.message || "등록 중 오류가 발생했습니다."
+      );
+      setMessageDialogType("danger"); // ✅ REQUIRED - use "danger", NOT "error"
+      setShowMessageDialog(true);
+    } else {
+      setMessageDialogTitle("등록 실패");
+      setMessageDialogMessage(
+        "등록 중 알 수 없는 오류가 발생했습니다."
+      );
+      setMessageDialogType("danger"); // ✅ REQUIRED - use "danger"
+      setShowMessageDialog(true);
+    }
+  } finally {
+    setLoading(false);
+  }
+};
+```
+
+**Component structure:**
+
+```tsx
+// ✅ CORRECT: No red text for API errors
+export const RegisterForm: React.FC = () => {
+  const {
+    // ... other state
+    showMessageDialog,
+    messageDialogTitle,
+    messageDialogMessage,
+    messageDialogType,
+    handleSubmit,
+    handleMessageDialogClose,
+  } = useRegister();
+
+  return (
+    <>
+      <form onSubmit={handleSubmit}>
+        {/* Form fields */}
+        {/* ❌ NO red text display for API errors */}
+      </form>
+
+      {/* ✅ CORRECT: ConfirmDialog for all API errors */}
+      <ConfirmDialog
+        isOpen={showMessageDialog}
+        title={messageDialogTitle}
+        message={messageDialogMessage}
+        type={messageDialogType} // "danger" for API errors, "success" for success
+        confirmText="확인"
+        cancelText="닫기"
+        onConfirm={handleMessageDialogClose}
+        onCancel={handleMessageDialogClose}
+      />
+    </>
+  );
+};
+```
+
+---
+
+## ❌ WRONG: Inconsistent Error Handling
+
+**MUST NOT use this pattern (creates inconsistency):**
+
+```typescript
+// ❌ WRONG: Mixing error display methods
+catch (err) {
+  if (err instanceof ApiError) {
+    setError(err.message); // ❌ Red text - inconsistent with other forms
+    // Missing ConfirmDialog
+  }
+}
+
+// In component:
+{error && <div className="p-6 text-center text-red-600">{error}</div>} // ❌ Red text above form
+<ConfirmDialog ... /> // May also be present but unused for API errors
+```
+
+**Why this is wrong:**
+
+1. ❌ **Inconsistent UX**: Other forms use ConfirmDialog, this form uses red text
+2. ❌ **Less visible**: Red text above form is less noticeable than modal dialog
+3. ❌ **Confusing**: Users expect consistent error display across all forms
+4. ❌ **Maintenance issues**: Different patterns make code harder to maintain
+
+---
+
+## 🎯 Error Type Selection
+
+**MUST use correct ConfirmDialog type for each scenario:**
+
+| Scenario | Type | Example |
+| -------- | ---- | ------- |
+| **API Communication Error** | `"danger"` | Network error, server error, API error |
+| **API Response Failure** | `"danger"` | `result !== "00"` (server returned failure) |
+| **Validation Error (Client-side)** | N/A | Display as inline red text next to fields |
+| **Success Message** | `"success"` | `result === "00"` (operation succeeded) |
+| **Warning Message** | `"warning"` | Duplicate ID, non-critical issues |
+
+**MUST NOT:**
+
+- ❌ Use `type="error"` (this type does not exist, use `"danger"` instead)
+- ❌ Use `type="danger"` for success messages (use `"success"`)
+- ❌ Use `type="success"` for API errors (use `"danger"`)
+
+---
+
+## 🔍 Prevention Checklist
+
+**MUST verify ALL items before implementing form submission error handling:**
+
+- [ ] **Checked existing registration forms** (`MemberRegisterForm`, `BoardRegisterForm`, `ProgramRegisterForm`)
+- [ ] **Using ConfirmDialog ONLY** for API communication errors (no red text)
+- [ ] **Using `type="danger"`** for API errors (NOT "error")
+- [ ] **Error state (`error`) is initialized** but not used for API errors
+- [ ] **ConfirmDialog is properly configured** with title, message, type, and handlers
+- [ ] **No `setError()` calls** in API error catch blocks
+- [ ] **No red text display** in component for API errors
+- [ ] **Console.error is used** for debugging API errors
+- [ ] **`setLoading(false)` is in `finally` block** for proper cleanup
+
+---
+
+## 📚 Reference Implementations
+
+### ✅ CORRECT: Member Registration Form
+
+**File:** `src/features/adminWeb/member/register/model/useMemberRegister.ts`
+
+```typescript
+catch (err) {
+  console.error("회원 등록 오류:", err);
+  if (err instanceof ApiError) {
+    setMessageDialogTitle("등록 실패");
+    setMessageDialogMessage(
+      err.message || "회원 등록 중 오류가 발생했습니다."
+    );
+    setMessageDialogType("danger"); // ✅ CORRECT
+  } else {
+    setMessageDialogTitle("등록 실패");
+    setMessageDialogMessage("회원 등록 중 알 수 없는 오류가 발생했습니다.");
+    setMessageDialogType("danger"); // ✅ CORRECT
+  }
+  setShowMessageDialog(true); // ✅ ConfirmDialog only, no setError
+}
+```
+
+### ✅ CORRECT: Board Registration Form
+
+**File:** `src/features/adminWeb/board/register/model/useBoardRegister.ts`
+
+```typescript
+catch (err) {
+  console.error("게시판 등록 오류:", err);
+  if (err instanceof ApiError) {
+    setMessageDialogTitle("등록 실패");
+    setMessageDialogMessage(
+      err.message || "게시판 등록 중 오류가 발생했습니다."
+    );
+    setMessageDialogType("danger"); // ✅ CORRECT
+  } else {
+    setMessageDialogTitle("등록 실패");
+    setMessageDialogMessage(
+      "게시판 등록 중 알 수 없는 오류가 발생했습니다."
+    );
+    setMessageDialogType("danger"); // ✅ CORRECT
+  }
+  setShowMessageDialog(true); // ✅ ConfirmDialog only, no setError
+}
+```
+
+### ✅ CORRECT: Program Registration Form
+
+**File:** `src/features/adminWeb/program/register/model/useProgramRegister.ts`
+
+```typescript
+catch (err) {
+  console.error("프로그램 등록 오류:", err);
+  if (err instanceof ApiError) {
+    setMessageDialogTitle("등록 실패");
+    setMessageDialogMessage(
+      err.message || "프로그램 등록 중 오류가 발생했습니다."
+    );
+    setMessageDialogType("danger"); // ✅ CORRECT
+  } else {
+    setMessageDialogTitle("등록 실패");
+    setMessageDialogMessage("프로그램 등록 중 알 수 없는 오류가 발생했습니다.");
+    setMessageDialogType("danger"); // ✅ CORRECT
+  }
+  setShowMessageDialog(true); // ✅ ConfirmDialog only, no setError
+}
+```
+
+**All registration forms follow this EXACT pattern. Any deviation is WRONG.**
+
+---
+
+## 🚫 Common Mistakes to Avoid
+
+### Mistake 1: Using `setError()` for API Errors
+
+**❌ WRONG:**
+
+```typescript
+catch (err) {
+  if (err instanceof ApiError) {
+    setError(err.message); // ❌ WRONG - inconsistent with other forms
+  }
+}
+```
+
+**✅ CORRECT:**
+
+```typescript
+catch (err) {
+  if (err instanceof ApiError) {
+    setMessageDialogTitle("등록 실패");
+    setMessageDialogMessage(err.message || "등록 중 오류가 발생했습니다.");
+    setMessageDialogType("danger");
+    setShowMessageDialog(true); // ✅ Use ConfirmDialog
+  }
+}
+```
+
+### Mistake 2: Using Wrong Type (`"error"` instead of `"danger"`)
+
+**❌ WRONG:**
+
+```typescript
+setMessageDialogType("error"); // ❌ Type "error" does not exist
+```
+
+**✅ CORRECT:**
+
+```typescript
+setMessageDialogType("danger"); // ✅ Correct type for API errors
+```
+
+### Mistake 3: Displaying API Errors as Red Text
+
+**❌ WRONG:**
+
+```tsx
+{error && <div className="p-6 text-center text-red-600">{error}</div>}
+```
+
+**✅ CORRECT:**
+
+```tsx
+{/* No red text display for API errors */}
+<ConfirmDialog
+  isOpen={showMessageDialog}
+  title={messageDialogTitle}
+  message={messageDialogMessage}
+  type={messageDialogType}
+  onConfirm={handleMessageDialogClose}
+  onCancel={handleMessageDialogClose}
+/>
+```
+
+### Mistake 4: Not Checking Existing Patterns
+
+**❌ WRONG:**
+
+- Implementing error handling without checking existing registration forms
+- Assuming error handling pattern without verification
+- Creating new patterns that differ from established conventions
+
+**✅ CORRECT:**
+
+- Always check `MemberRegisterForm`, `BoardRegisterForm`, `ProgramRegisterForm` before implementing
+- Follow the established pattern exactly
+- Ensure consistency across all forms
+
+---
+
+## 💡 Key Principles
+
+1. **Consistency First**: All admin registration/edit forms MUST follow the same error handling pattern
+2. **User Experience**: ConfirmDialog is more visible and user-friendly than red text
+3. **Maintainability**: Consistent patterns make code easier to maintain and update
+4. **Pattern Verification**: Always check existing forms before implementing new error handling
+
+---
+
+## 🔗 Related Rules
+
+- **Success Message Pattern** (above): For success message handling
+- **Admin Web Rules** (`.cursor/rules/admin-web/admin-web-rules.mdc`): General admin page patterns
+- **Validation UI Rules** (`.cursor/rules/admin-web/admin-web-validation-ui-rules.mdc`): Form validation error message structure
+
+---
+
+**Remember**: API communication errors MUST always use ConfirmDialog with `type="danger"`. NEVER use `setError()` or red text above forms for API errors. Always check existing registration forms (`MemberRegisterForm`, `BoardRegisterForm`, `ProgramRegisterForm`) before implementing error handling to ensure consistency.
+
+---
+
+## 🎨 Custom Inline Modal Pattern
+
+### ⚠️ CRITICAL: Required Structure
+
+**MUST follow this exact structure when creating custom inline modals:**
+
+```tsx
+{
+  showModal && (
+    <>
+      {/* Overlay - MUST */}
+      <div
+        className="fixed inset-0 bg-black bg-opacity-50 z-50"
+        onClick={handleCloseModal}
+      ></div>
+
+      {/* Modal Container - MUST */}
+      <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
+        <div
+          className="bg-white rounded-lg shadow-lg w-full max-w-2xl max-h-[80vh] flex flex-col overflow-hidden"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Header - MUST */}
+          <div className="p-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center rounded-t-lg">
+            <h2 className="text-lg font-semibold text-gray-900">Modal Title</h2>
+            <button
+              onClick={handleCloseModal}
+              className="text-gray-500 hover:text-gray-700 text-2xl font-bold leading-none"
+              aria-label="닫기"
+            >
+              ×
+            </button>
+          </div>
+
+          {/* Content - MUST */}
+          <div className="flex-1 overflow-y-auto p-4 rounded-b-lg">
+            {/* Your content here */}
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+```
+
+### Styling Requirements (CRITICAL)
+
+**MUST:**
+
+- ✅ Use `rounded-lg` for main container (NOT `rounded-xl` or other values)
+- ✅ Use `overflow-hidden` on main container (preserves rounded corners)
+- ✅ Use `rounded-t-lg` on header
+- ✅ Use `rounded-b-lg` on content area
+- ✅ Use `z-50` for both overlay and modal (consistent z-index)
+- ✅ Use `bg-black bg-opacity-50` for overlay
+- ✅ Use `shadow-lg` for modal container
+- ✅ Use `stopPropagation` on modal content to prevent overlay click
+
+**MUST NOT:**
+
+- ❌ Use `rounded-xl`, `rounded-2xl`, or other border radius values (inconsistent)
+- ❌ Forget `overflow-hidden` (breaks rounded corners appearance)
+- ❌ Use different z-index values (must be `z-50`)
+- ❌ Skip `stopPropagation` on modal content (causes modal to close when clicking inside)
+- ❌ Use different overlay colors or opacity
+
+### Size Guidelines
+
+**MUST use appropriate max-width and max-height:**
+
+| Content Type    | Max Width   | Max Height     |
+| --------------- | ----------- | -------------- |
+| Small selection | `max-w-2xl` | `max-h-[80vh]` |
+| Medium content  | `max-w-4xl` | `max-h-[90vh]` |
+| Large content   | `max-w-6xl` | `max-h-[90vh]` |
+
+**Reference Implementation:**
+
+- ✅ `src/features/adminWeb/menu/tree/ui/MenuTreePageView.tsx` - Custom inline modals for menu selection and program search
+
+---
+
+## 🎨 CSS Classes and Styling
+
+### ⚠️ CRITICAL: CSS Import
+
+**MUST:**
+
+- ✅ Modal and ConfirmDialog components automatically import `@/shared/styles/admin/dialog.css`
+- ✅ For custom inline modals, CSS classes are handled via Tailwind classes (no additional import needed)
+
+**CSS Classes Reference:**
+
+#### Modal Component Classes (from dialog.css)
+
+```css
+.modal-container {
+  /* Centered positioning, animation */
+  /* Size controlled by Tailwind classes (max-w-md, max-w-2xl, etc.) */
+}
+
+.modal-content {
+  /* White background, rounded corners (rounded-lg), shadow, padding */
+}
+```
+
+#### ConfirmDialog Classes (from dialog.css)
+
+```css
+.dialog-container {
+  /* Fixed size: max-w-[450px] */
+  /* Centered positioning */
+}
+
+.dialog-content {
+  /* White background, rounded corners, shadow */
+}
+```
+
+**MUST NOT:**
+
+- ❌ Use `modal-container` or `modal-content` classes directly in custom code (only Modal component uses these)
+- ❌ Use `dialog-container` or `dialog-content` classes in Modal component (those are for ConfirmDialog)
+- ❌ Mix CSS classes between Modal and ConfirmDialog
+
+### Border Radius Standards
+
+**MUST:**
+
+- ✅ Use `rounded-lg` for all modal containers (standard across project)
+- ✅ Use `rounded-t-lg` for headers (top corners only)
+- ✅ Use `rounded-b-lg` for content areas (bottom corners only)
+- ✅ Use `overflow-hidden` to preserve rounded corners
+
+**MUST NOT:**
+
+- ❌ Mix different border radius values (`rounded-xl`, `rounded-2xl`, etc.)
+- ❌ Forget `overflow-hidden` (breaks rounded appearance)
+- ❌ Use inconsistent border radius across different modals
+
+### Shadow Standards
+
+**MUST:**
+
+- ✅ Use `shadow-lg` for modal containers
+- ✅ Use `shadow-2xl` for ConfirmDialog (defined in CSS, automatic)
+
+---
+
+## ♿ Accessibility Requirements
+
+### ⚠️ CRITICAL: Keyboard Support
+
+**MUST:**
+
+- ✅ Support ESC key to close (Modal component handles this automatically)
+- ✅ Support Tab navigation within modal
+- ✅ Trap focus within modal when open
+- ✅ Return focus to trigger element when closed
+
+**MUST NOT:**
+
+- ❌ Allow focus to escape modal
+- ❌ Skip keyboard navigation support
+- ❌ Forget ESC key handler in custom modals
+
+### ARIA Attributes
+
+**MUST:**
+
+```tsx
+<button
+  onClick={onClose}
+  aria-label="닫기" // ✅ Required for close buttons
+>
+  ×
+</button>
+```
+
+### Screen Reader Support
+
+**MUST:**
+
+- ✅ Provide descriptive titles
+- ✅ Use semantic HTML (buttons, headings)
+- ✅ Announce modal state changes
+
+---
+
+## ❌ Common Mistakes
+
+### Mistake 1: Wrong Component Selection
+
+**❌ WRONG:**
+
+```tsx
+// Using ConfirmDialog for complex content
+<ConfirmDialog
+  isOpen={showForm}
+  message={<ComplexForm />} // ❌ Too complex for ConfirmDialog
+/>
+```
+
+**✅ CORRECT:**
+
+```tsx
+<Modal isOpen={showForm} title="Form Title" onClose={onClose}>
+  <ComplexForm />
+</Modal>
+```
+
+### Mistake 2: Missing Overflow Handling
+
+**❌ WRONG:**
+
+```tsx
+<div className="bg-white rounded-lg">
+  {/* Long content without overflow handling */}
+</div>
+```
+
+**✅ CORRECT:**
+
+```tsx
+<div className="bg-white rounded-lg overflow-hidden">
+  <div className="overflow-y-auto max-h-[80vh]">{/* Long content */}</div>
+</div>
+```
+
+### Mistake 3: Incorrect CSS Classes
+
+**❌ WRONG:**
+
+```tsx
+<Modal>
+  <div className="dialog-container">
+    {" "}
+    {/* ❌ Wrong class */}
+    {/* content */}
+  </div>
+</Modal>
+```
+
+**✅ CORRECT:**
+
+```tsx
+<Modal>
+  {/* Modal component handles container classes automatically */}
+  <div>{/* content */}</div>
+</Modal>
+```
+
+### Mistake 4: Missing State Cleanup
+
+**❌ WRONG:**
+
+```tsx
+const handleCloseModal = () => {
+  setIsModalOpen(false);
+  // ❌ Forgot to reset form data
+};
+```
+
+**✅ CORRECT:**
+
+```tsx
+const handleCloseModal = () => {
+  setIsModalOpen(false);
+  setFormData(initialFormData); // ✅ Reset state
+  setErrors({}); // ✅ Clear errors
+};
+```
+
+### Mistake 5: Z-Index Conflicts
+
+**❌ WRONG:**
+
+```tsx
+<div className="fixed z-10">
+  {" "}
+  {/* ❌ Too low */}
+  {/* modal */}
+</div>
+```
+
+**✅ CORRECT:**
+
+```tsx
+<div className="fixed z-50">
+  {" "}
+  {/* ✅ Standard z-index */}
+  {/* modal */}
+</div>
+```
+
+### Mistake 6: Wrong Success Message Type
+
+**❌ WRONG:**
+
+```typescript
+// Using danger type for success
+if (response.resultCode === "00") {
+  setMessageDialogType("danger"); // ❌ Wrong type
+  setShowMessageDialog(true);
+}
+```
+
+**✅ CORRECT:**
+
+```typescript
+if (response.resultCode === "00") {
+  setMessageDialogType("success"); // ✅ Correct type
+  setShowMessageDialog(true);
+}
+```
+
+### Mistake 7: Inconsistent Border Radius
+
+**❌ WRONG:**
+
+```tsx
+<div className="rounded-xl"> {/* ❌ Inconsistent */}
+```
+
+**✅ CORRECT:**
+
+```tsx
+<div className="rounded-lg"> {/* ✅ Standard */}
+```
+
+---
+
+## ✅ Best Practices
+
+### 1. State Management
+
+**MUST:**
+
+```typescript
+// Single source of truth
+const [isModalOpen, setIsModalOpen] = useState(false);
+
+// Clear naming
+const handleOpenModal = () => setIsModalOpen(true);
+const handleCloseModal = () => {
+  setIsModalOpen(false);
+  // Cleanup: reset form, clear errors, etc.
+  setFormData(initialFormData);
+  setErrors({});
+};
+```
+
+### 2. Loading States
+
+**MUST:**
+
+```tsx
+<Modal isOpen={isOpen} title="Loading..." onClose={onClose}>
+  {loading ? (
+    <div className="p-8 text-center">
+      <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      <p className="mt-4 text-gray-600">Loading...</p>
+    </div>
+  ) : (
+    <Content />
+  )}
+</Modal>
+```
+
+### 3. Error Handling
+
+**MUST:**
+
+```tsx
+<Modal isOpen={isOpen} title="Error" onClose={onClose}>
+  {error ? (
+    <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
+      {error}
+    </div>
+  ) : (
+    <Content />
+  )}
+</Modal>
+```
+
+### 4. Body Scroll Lock
+
+**MUST:**
+
+- ✅ Modal component handles this automatically
+- ✅ For custom modals, implement manually:
+
+```typescript
+useEffect(() => {
+  if (isModalOpen) {
+    document.body.style.overflow = "hidden";
+  }
+  return () => {
+    document.body.style.overflow = "unset";
+  };
+}, [isModalOpen]);
+```
+
+### 5. Multiple Modals
+
+**MUST:**
+
+```typescript
+// Use separate state for each modal
+const [showModal1, setShowModal1] = useState(false);
+const [showModal2, setShowModal2] = useState(false);
+
+// Ensure only one modal is open at a time
+const handleOpenModal1 = () => {
+  setShowModal2(false); // Close other modals
+  setShowModal1(true);
+};
+```
+
+---
+
+## 🔍 Checklist
+
+### Before Creating a Modal
+
+- [ ] **Component Selection**: Chosen correct component type (Modal vs ConfirmDialog)
+- [ ] **Size Selection**: Appropriate size for content (`sm`, `md`, `lg`, `xl`)
+- [ ] **State Management**: Proper state handling with cleanup
+- [ ] **Styling**: Correct CSS classes and border radius (`rounded-lg`)
+- [ ] **Accessibility**: ESC key support, ARIA labels, focus management
+- [ ] **Loading/Error**: Proper handling of async states
+- [ ] **Body Scroll**: Scroll lock when modal is open
+
+### Before Committing
+
+- [ ] **No Console Logs**: Removed debug statements
+- [ ] **Type Safety**: Proper TypeScript types
+- [ ] **Error Handling**: Try-catch blocks where needed
+- [ ] **State Cleanup**: Reset form/data on close
+- [ ] **Z-Index**: Correct z-index values (z-50)
+- [ ] **Overflow**: Proper overflow handling for long content
+- [ ] **Rounded Corners**: Consistent `rounded-lg` usage
+- [ ] **Success Type**: Using `type="success"` for success messages
+
+---
+
+## 🚫 Anti-Patterns
+
+**MUST NOT:**
+
+1. ❌ **Mix Modal Types**: Don't use ConfirmDialog for complex content
+2. ❌ **Inline Styles for Positioning**: Use CSS classes instead
+3. ❌ **Forget State Cleanup**: Always reset state on modal close
+4. ❌ **Skip Overflow Handling**: Always handle long content
+5. ❌ **Inconsistent Styling**: Use standard classes, don't mix border radius values
+6. ❌ **Missing Accessibility**: Always support keyboard navigation
+7. ❌ **Z-Index Conflicts**: Use standard z-50, don't create conflicts
+8. ❌ **Multiple Open Modals**: Ensure only one modal is open at a time
+9. ❌ **Wrong Success Type**: Always use `type="success"` for success messages
+
+---
+
+## 📚 Reference Implementation
+
+### ✅ CORRECT: Modal Component Usage
+
+```typescript
+// src/features/adminWeb/menu/make/ui/MenuMakePageView.tsx
+import { Modal } from "@/shared/ui/adminWeb";
+
+<Modal
+  isOpen={isModalOpen}
+  title={`메뉴 생성 - ${selectedAuthorNm} (${selectedAuthorCode})`}
+  onClose={handleCloseModal}
+  size="lg"
+>
+  {treeLoading ? (
+    <div className="p-8 text-center">
+      <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      <p className="mt-4 text-gray-600">메뉴 목록을 불러오는 중...</p>
+    </div>
+  ) : treeError ? (
+    <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
+      {treeError}
+    </div>
+  ) : (
+    <MenuTree items={menuTreeItems} />
+  )}
+</Modal>;
+```
+
+### ✅ CORRECT: ConfirmDialog Success Message
+
+```typescript
+// After successful create/update operation
+if (response.resultCode === "00") {
+  setMessageDialogTitle("등록 완료");
+  setMessageDialogMessage("정상적으로 등록되었습니다.");
+  setMessageDialogType("success"); // ✅ REQUIRED
+  setShowMessageDialog(true);
+}
+
+<ConfirmDialog
+  isOpen={showMessageDialog}
+  title={messageDialogTitle}
+  message={messageDialogMessage}
+  type={messageDialogType} // "success" for completion messages
+  onConfirm={handleMessageDialogClose}
+  onCancel={handleMessageDialogClose}
+/>;
+```
+
+### ✅ CORRECT: Custom Inline Modal
+
+```typescript
+// src/features/adminWeb/menu/tree/ui/MenuTreePageView.tsx
+{
+  showMenuTreeModal && (
+    <>
+      <div
+        className="fixed inset-0 bg-black bg-opacity-50 z-50"
+        onClick={() => setShowMenuTreeModal(false)}
+      ></div>
+      <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
+        <div
+          className="bg-white rounded-lg shadow-lg w-full max-w-2xl max-h-[80vh] flex flex-col overflow-hidden"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="p-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center rounded-t-lg">
+            <h2 className="text-lg font-semibold text-gray-900">
+              상위메뉴 선택
+            </h2>
+            <button
+              onClick={() => setShowMenuTreeModal(false)}
+              className="text-gray-500 hover:text-gray-700 text-2xl font-bold leading-none"
+              aria-label="닫기"
+            >
+              ×
+            </button>
+          </div>
+          <div className="flex-1 overflow-y-auto p-4 rounded-b-lg">
+            {/* Content */}
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+```
+
+---
+
+## 💡 Key Principles
+
+1. **Consistency**: Always use standard components when possible
+2. **Accessibility**: Support keyboard navigation and screen readers
+3. **User Experience**: Provide clear feedback and easy dismissal
+4. **Maintainability**: Follow established patterns for easier maintenance
+5. **Performance**: Clean up state and event listeners properly
+6. **Type Safety**: Use correct ConfirmDialog type for each scenario
+
+---
+
+## 🔗 Related Rules
+
+- **Admin Web Rules** (`.cursor/rules/admin-web-rules.mdc`): General admin page styling and CSS import requirements
+- **Validation UI Rules** (`.cursor/rules/admin-web/admin-web-validation-ui-rules.mdc`): Form validation error message structure
+
+---
+
+**Remember**: When in doubt, use the Modal component. Only create custom inline modals when absolutely necessary, and always follow the established patterns with `rounded-lg`, `overflow-hidden`, and proper z-index values. For success messages after create/update operations, ALWAYS use `type="success"` in ConfirmDialog.

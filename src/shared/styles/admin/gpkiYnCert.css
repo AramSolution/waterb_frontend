@@ -1,0 +1,67 @@
+/* 관리자 회원 폼: FormField 내 다른 보조 버튼(파일 선택·다운로드 등)과 동일 톤 */
+.adminGpkiYnCert.joinInput .formControl.mypageYnCertControl {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+/* px-3 py-1 text-sm border border-gray-400 text-gray-700 hover:bg-gray-100 rounded-none — 학생/학부모 폼과 동일 */
+.adminGpkiYnCert.joinInput .btnSearch.mypageYnCertBtn {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0.25rem 0.75rem;
+  min-height: 34px;
+  min-width: 4.5rem;
+  font-size: 0.875rem;
+  line-height: 1.25;
+  font-weight: 500;
+  color: #374151;
+  background-color: #fff;
+  border: 1px solid #9ca3af;
+  border-radius: 0;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.adminGpkiYnCert.joinInput .btnSearch.mypageYnCertBtn:hover:not(:disabled) {
+  background-color: #f3f4f6;
+}
+
+.adminGpkiYnCert.joinInput .btnSearch.mypageYnCertBtn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+/* 토글 예/아니요 행의 선택 탭과 유사: 인증 완료(pressed)로 버튼이 보일 때만 */
+.adminGpkiYnCert.joinInput .mypageYnCertBtn[aria-pressed="true"] {
+  background-color: #2563eb;
+  border-color: #2563eb;
+  color: #fff;
+  box-shadow: none;
+  opacity: 1;
+}
+
+.adminGpkiYnCert.joinInput .mypageYnCertBtn[aria-pressed="true"]:hover:not(:disabled) {
+  background-color: #1d4ed8;
+  border-color: #1d4ed8;
+}
+
+.adminGpkiYnCert.joinInput .mypageYnCertDate {
+  font-size: 13px;
+  line-height: 1.35;
+  color: #4b5563;
+  min-width: 6.5rem;
+}
+
+.adminGpkiYnCert.joinInput .mypageYnCertDatePrefix {
+  color: #4b5563;
+  font-weight: 600;
+}
+
+.adminGpkiYnCert.joinInput .mypageYnCertDatePlaceholder,
+.adminGpkiYnCert.joinInput .mypageYnCertDateMuted {
+  color: #9ca3af;
+  font-weight: 500;
+}

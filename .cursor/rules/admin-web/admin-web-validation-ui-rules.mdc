@@ -1,0 +1,3098 @@
+---
+alwaysApply: false
+---
+# 유효성 검사 UI 표시 규칙 (Validation UI Rules)
+
+## 연계: 관리자 상세·수정 화면 첨부파일 삭제 UX
+
+유효성 검사와 직접 관련은 없으나, **상세/수정 폼에서 기존 첨부파일을 개별 삭제**한 뒤에는 **같은 페이지에 머물러야** 합니다. 저장(수정) 완료 후에만 목록으로 이동하는 등의 내비게이션은 `admin-web-rules.mdc`의 **Common File Attachment Patterns → §5 Detail/edit page: deleting an existing attachment**를 따릅니다.
+
+동일 `ConfirmDialog` 닫기에서 저장 성공 vs 첨부 삭제 성공을 나눌 때, **`useState` 플래그만으로는 async 삭제 후 확인 클로저가 꼬일 수 있으므로** §5에 적힌 대로 **`useRef`로 이동 의도를 동기 설정**하는 편이 안전하다.
+
+---
+
+## 연계: 지원사업 등록·수정 성공/실패 `MessageDialog` 문구
+
+유효성 검사와 직접 관련은 없으나, **등록/수정 저장 후 알림 다이얼로그** 문구는 스터디사업·공공형 진로진학 컨설팅 등 **동일 톤**으로 맞춘다.
+
+- **제목:** `등록 완료` / `수정 완료` 등 짧게 (사업 유형 전체 이름 금지).
+- **본문:** 기본값은 `정상적으로 등록되었습니다.`, `정상적으로 수정되었습니다.` — **「공공형 진로진학 컨설팅 사업이 …」처럼 사업명을 본문에 반복하지 않는다.** 백엔드 `response.message`가 있으면 우선 표시.
+- **결과 코드:** `response.result === "00"`일 때만 성공 처리.
+
+상세 규칙·금지 사항·참조 파일은 `admin-web-rules.mdc`의 **Common File Attachment Patterns → §6 Support business registration/update: MessageDialog copy**를 따른다.
+
+---
+
+## 연계: 지원사업 신청 등록·상세 저장 / 첨부 개별 삭제
+
+**신청(ARTAPPM) 화면**은 §6의 **사업(ARTPROM) 등록·수정**과 구분한다.
+
+- **페이지 껍데기:** 청소년 자기계발 연수지원 신청(`SupportApplicationRegisterPageView`)과 같이 **`bg-white rounded-lg shadow`** 한 덩어리 안에 폼·저장/닫기가 들어가게 맞춘다(글로벌 문화탐방·지역연계 진로체험 활동·공공형 진로진학 컨설팅 신청 상세/등록 포함, §7 Page shell).
+
+- **사업(ARTPROM) 진행상태 vs 신청(STTUS_CODE):** 스터디·공공형 진로진학 컨설팅·1:1 원어민 화상영어·지역연계 진로체험·꿈탐험·글로벌 문화탐방·청소년 자기계발 연수지원 등 **사업** RUN_STA는 신청상태와 별개이며, 관리자 **사업** 목록·검색·등록·수정·엑셀에서 **01 모집예정, 02 모집중, 04 모집마감, 99 취소**를 쓴다. 코드·라벨 단일 출처: `@/entities/adminWeb/support/lib/runStaAdmin`. 규칙 요약은 `admin-web-rules.mdc` Support list 항목.
+
+- **지역연계 진로체험 활동·공공형 진로진학 컨설팅 — 신규 신청 등록 기본 상태:** 관리자가 신청을 새로 등록할 때 **상태(신청상태) 필드 기본값은 `03`(승인)**. 구현: `useRegionalCareerActivityApplicationRegister` / `useCareerConsultingApplicationRegister` 초기 `formData.status`. 상세·수정 모드는 서버 `sttusCode` 우선(기존 건 편집 시 기본값 덮어씀).
+
+- **저장 성공(신청 등록 vs 신청 상세 수정):** 상세(수정) 모드면 제목 **`수정 완료`**, 본문 **`정상적으로 수정되었습니다.`** 또는 `response.message` 우선. 신규 등록이면 **`등록 완료`** / **`정상적으로 등록되었습니다.`** — 상세 모드에서 **`저장 완료` / `저장되었습니다.`만 고정**하면 스터디 신청·지원사업 수정 톤과 어긋난다.
+- **저장 성공 다이얼로그 확인 후:** 기본적으로 **사업별 신청목록 상세**로 이동한다(해당 화면의 닫기·취소와 같은 URL). **신청 상세 저장 후 편집 폼에 그대로 남기지 않는다**(예외는 기획·§7에 명시).
+- **기존 신청 첨부 개별 삭제:** **삭제 API 전** 확인 다이얼로그(예: `선택한 첨부파일을 삭제하시겠습니까?`)를 띄운다. **API 성공 후** 제목 **`삭제 완료`**, 본문 **`정상적으로 삭제되었습니다.`** 성공 다이얼로그를 띄운다. 삭제 성공 후에는 §5와 같이 **같은 페이지 유지**(저장 성공과 구분, 목록 이동 없음). 저장 성공과 **동일한** `MessageDialog` `onClose`를 쓰는 화면(예: 꿈탐험 `DreamExplorationApplicationRegisterForm`)은 **`messageDialogNavigateToListRef`로 저장 성공일 때만** 신청목록으로 이동한다(위 §7·상단 `useRef` 안내).
+- **상세에서 새 첨부 저장 후:** `getArtappmDetail` 등으로 **기존 파일 목록을 갱신한 뒤** `setSelectedFiles([])` / `setSelectedApplicationFiles([])` 로 **신규 선택만 비운다**. 안 비우면 재조회된 기존 행 + 선택 대기 행이 **같은 파일 두 줄**로 보인다(`admin-web-rules.mdc` §5 §3).
+
+상세·체크리스트·참조 파일은 `admin-web-rules.mdc`의 **Common File Attachment Patterns → §7 Application registration/detail**을 따른다.
+
+---
+
+## Admin Archive (BBST03): Image Upload / Reorder UI — Prompt Spec (English)
+
+Use when changing **archive board** article **register** or **detail/edit** screens (`bbsSe === "BBST03"`). This is **not** generic attachment UX; it is the **multi-slot image gallery** with **row reorder** and **multipart** contract to `ArticleManageController`.
+
+### Scope (WHAT)
+
+- **Board type:** `BBST03` (아카이브). Show extra fields: intro (`nttData6`), data source (`nttData5`), and the **이미지업로드** horizontal slot strip.
+- **Max images:** `ARCHIVE_REGISTER_IMAGE_MAX` (10) from `useArticleRegister` / `useArticleDetail`.
+- **Row model:** `ArchiveImageRow` — local `File | null`, optional `serverFileId` / `serverSeq` / `serverSaveNm`, optional `replaceTargetSeq` when replacing an existing server slot.
+
+### MUST — interaction patterns
+
+1. **File pick (per slot)**  
+   - Hidden `<input type="file" accept="image/*">` + **파일 선택** button (do not use a visible raw file input).  
+   - On change: clear `e.target.value = ""` so the same file can be re-selected.  
+   - **Validate MIME:** `file.type.startsWith("image/")`.  
+     - **Register:** `setError("이미지 파일만 업로드할 수 있습니다.")`.  
+     - **Detail:** `MessageDialog` title `파일 형식 오류`, message `이미지 파일만 업로드할 수 있습니다.`, type `danger`.
+
+2. **Replace vs append (edit)**  
+   - If the row had a **server** image and user picks a new file, set **`replaceTargetSeq`** to that row’s `serverSeq` and clear server preview fields — backend uses **`archiveImageFileReplaceSeqs`** with `>= 0` to **`updateFile`** in place.
+
+3. **Drag-and-drop (reorder only)**  
+   - **Not** OS file-drop onto the card; reorder uses **HTML5 drag** on the **grip handle** (`draggable`), `dataTransfer.setData("text/plain", String(index))`, drop target = **card** `onDragOver` (`preventDefault`, `dropEffect = "move"`) + `onDrop` → `reorderArchiveImageRows(from, to)`.  
+   - Visual feedback: `archiveDragOverIndex` → **3px solid `#0d6efd`** border on hover target.  
+   - `onDragEnd` / successful drop: clear `archiveDragOverIndex`.
+
+4. **Trailing empty slot**  
+   - After add/remove/reorder/load, call **`ensureTrailingEmptySlot`** so when the last filled slot has an image and count &lt; max, one **empty** upload column appears.
+
+5. **Validation & errors (align with this file’s DOM rules)**  
+   - **Register:** at least one slot with an image: `archiveImageRows.some((r) => r.file)` (or equivalent); error field **`archiveImageFile`**, message **`이미지를 등록해주세요.`** Show under the field (see **올바른 구조** — inner wrapper).  
+   - **Detail:** `archiveRowHasImage` must be true for at least one row; use **`errors.nttImgFileId`** with the same message. Clear `nttImgFileId` error when a valid image is selected.
+
+6. **Submit packaging**  
+   - Use **`buildArchiveImageSubmitParts(archiveImageRows)`** → `archiveImageFiles`, `archiveImageFileSeqs`, `archiveImageFileReplaceSeqs`, `archiveImageOrder`.  
+   - **`ArticleService.insertArticle` / `updateArticle`** (`articleApi.ts`) appends multipart parts — **always send `archiveImageOrder` as JSON string** when present; backend applies order **after** uploads.
+
+### MUST NOT
+
+- ❌ Drop **files** from the desktop onto the strip unless you implement explicit `onDrop` file handling (current product: **pick via input only**).  
+- ❌ Reorder by dragging the **preview image** or whole card without the grip pattern above (breaks index contract).  
+- ❌ Skip `ensureTrailingEmptySlot` after mutations.  
+- ❌ Use different field names for register vs detail error keys inconsistently (`archiveImageFile` vs `nttImgFileId`) — each matches its form’s validation object.
+
+### Reference files
+
+- `src/features/adminWeb/article/register/model/useArticleRegister.ts` — rows, `handleArchiveImageSelected`, `buildArchiveImageSubmitParts`, max count.  
+- `src/features/adminWeb/article/detail/model/useArticleDetail.ts` — same + `validateForm` for BBST03.  
+- `src/features/adminWeb/article/register/ui/ArticleRegisterForm.tsx` — register strip UI + drag.  
+- `src/features/adminWeb/article/detail/ui/ArticleDetailForm.tsx` — detail strip + server preview + `resolveArticleImageUrl` (see `admin-web-rules.mdc` cache-bust section).  
+- `src/entities/adminWeb/article/api/articleApi.ts` — FormData keys for archive multipart.
+
+---
+
+## ⚠️ CRITICAL: 유효성 검사 에러 메시지 구조
+
+**MUST ALWAYS use the correct DOM structure for validation error messages when:**
+
+- ✅ Creating new registration/edit forms
+- ✅ Adding validation to existing forms
+- ✅ Refactoring form components
+- ✅ Ensuring UI consistency across forms
+
+**MUST ensure error messages are placed INSIDE the inner wrapper div, NOT outside the field container.**
+
+---
+
+## 🏗️ 올바른 구조 (CORRECT Structure)
+
+**MUST use this exact structure for all validated input fields:**
+
+```tsx
+<div
+  className="register-form-mobile-field w-full md:w-3/4 flex items-center"
+  style={{
+    border: "1px solid #dee2e6",
+    borderLeft: "none",
+    borderTop: "none", // First row: remove this line
+    padding: "5px",
+  }}
+>
+  <div className="w-full">
+    {" "}
+    {/* ✅ Inner wrapper - REQUIRED */}
+    <input
+      type="text"
+      name="fieldName"
+      className={`w-full border rounded-none px-3 py-2 ${
+        errors.fieldName ? "border-red-500" : ""
+      }`}
+      style={{
+        border: errors.fieldName ? "1px solid #dc3545" : "1px solid #e0e0e0",
+      }}
+      value={formData.fieldName}
+      onChange={handleInputChange}
+    />
+    {/* ✅ Error message INSIDE inner wrapper */}
+    {errors.fieldName && (
+      <div className="text-red-600 text-sm mt-1 px-2">{errors.fieldName}</div>
+    )}
+  </div>
+</div>
+```
+
+**Structure Diagram:**
+
+```
+┌─────────────────────────────────────┐
+│ register-form-mobile-field          │ ← Field container with w-full md:w-3/4
+│ w-full md:w-3/4                     │
+│  ┌──────────────────────────────┐  │
+│  │ w-full (inner wrapper)       │  │ ← REQUIRED inner wrapper
+│  │  ┌────────────────────────┐  │  │
+│  │  │ input                  │  │  │
+│  │  └────────────────────────┘  │  │
+│  │  [error message]             │  │ ← Error message INSIDE
+│  └──────────────────────────────┘  │
+└─────────────────────────────────────┘
+```
+
+---
+
+## ❌ 잘못된 구조 (WRONG Structure)
+
+**MUST NOT use this structure:**
+
+```tsx
+<div className="w-full md:w-3/4">
+  {" "}
+  {/* ❌ External wrapper - WRONG */}
+  <div
+    className="register-form-mobile-field w-full flex items-center"
+    style={{
+      border: "1px solid #dee2e6",
+      borderLeft: "none",
+      padding: "5px",
+    }}
+  >
+    <input
+      type="text"
+      name="fieldName"
+      className={`w-full border rounded-none px-3 py-2 ${
+        errors.fieldName ? "border-red-500" : ""
+      }`}
+      style={{
+        border: errors.fieldName ? "1px solid #dc3545" : "1px solid #e0e0e0",
+      }}
+      value={formData.fieldName}
+      onChange={handleInputChange}
+    />
+  </div>
+  {/* ❌ Error message OUTSIDE field container - WRONG */}
+  {errors.fieldName && (
+    <div className="text-red-600 text-sm mt-1 px-2">{errors.fieldName}</div>
+  )}
+</div>
+```
+
+**Why this is WRONG:**
+
+1. ❌ Error message is outside the field container, breaking layout consistency
+2. ❌ Responsive design issues on mobile devices
+3. ❌ Visual disconnect between input field and error message
+4. ❌ CSS styling becomes unpredictable
+
+---
+
+## 📐 구조 요구사항
+
+### MUST:
+
+- ✅ `register-form-mobile-field`에 `w-full md:w-3/4` 클래스를 직접 적용
+- ✅ 내부에 `w-full` wrapper div 반드시 포함
+- ✅ 입력 필드는 내부 wrapper 안에 위치
+- ✅ 에러 메시지는 내부 wrapper 안에, 입력 필드 바로 아래 위치
+- ✅ 에러 메시지는 `register-form-mobile-field` 밖에 위치하지 않음
+
+### MUST NOT:
+
+- ❌ 외부 `w-full md:w-3/4` wrapper 사용
+- ❌ 에러 메시지를 필드 컨테이너 밖에 배치
+- ❌ 내부 wrapper 없이 input과 error를 직접 배치
+- ❌ 구조를 임의로 변경
+
+---
+
+## 🎨 스타일 규칙
+
+### 에러 상태 표시
+
+**MUST:**
+
+- ✅ Input border 색상: 에러 시 `#dc3545` (빨간색), 정상 시 `#e0e0e0` (회색)
+- ✅ Tailwind 클래스: `errors.fieldName ? "border-red-500" : ""`
+- ✅ Inline style: `border: errors.fieldName ? "1px solid #dc3545" : "1px solid #e0e0e0"`
+- ✅ 에러 메시지 색상: `text-red-600`
+- ✅ 에러 메시지 크기: `text-sm`
+- ✅ 에러 메시지 상단 여백: `mt-1`
+- ✅ 에러 메시지 좌우 패딩: `px-2`
+
+**Error Message Template (MUST use exactly):**
+
+```tsx
+{
+  errors.fieldName && (
+    <div className="text-red-600 text-sm mt-1 px-2">{errors.fieldName}</div>
+  );
+}
+```
+
+---
+
+## ⚠️ CRITICAL: Required Field Indicator Rule
+
+**MUST ALWAYS add a required field indicator (red asterisk `*`) to the label when:**
+
+- ✅ Adding validation logic to a field (client-side or server-side)
+- ✅ Creating new forms with required fields
+- ✅ Refactoring existing forms to add validation
+- ✅ Implementing edit/update forms with validated fields
+- ✅ Any field that has `errors.fieldName` validation logic
+
+**⚠️ CRITICAL: Rule Verification Process (Prompt Engineering Technique)**
+
+**MUST ALWAYS follow this process BEFORE making any code changes related to required field indicators:**
+
+1. **Step 1: Read and Verify Current Rules**
+   - ✅ **ALWAYS** read the relevant rule file (`admin-web-validation-ui-rules.mdc`) FIRST
+   - ✅ **ALWAYS** verify the current rule specifies indicator position (before or after label)
+   - ✅ **ALWAYS** check all examples and templates in the rule file
+   - ✅ **NEVER** assume the rule without reading it first
+
+2. **Step 2: Compare User Request with Rules**
+   - ✅ **ALWAYS** compare user's request with the current rule
+   - ✅ **ALWAYS** identify if the request matches the rule or requires rule change
+   - ✅ **ALWAYS** ask for clarification if request conflicts with existing rules
+   - ✅ **NEVER** implement partial changes (specific fields only) when rule change is needed
+
+3. **Step 3: Determine Change Scope**
+   - ✅ If user request matches rule → Implement as requested
+   - ✅ If user request conflicts with rule → **MUST** clarify:
+     - Is this a rule change for ALL fields?
+     - Or is this an exception for specific fields only?
+   - ✅ **NEVER** implement exceptions without explicit user confirmation
+   - ✅ **NEVER** modify code without understanding if it's a rule change or exception
+
+4. **Step 4: Implementation Decision**
+   - ✅ If rule change → Update rule file FIRST, then update all code
+   - ✅ If exception → Document exception clearly, implement only for specified fields
+   - ✅ **ALWAYS** update rule file if changing default behavior
+   - ✅ **ALWAYS** ensure consistency across all forms
+
+**Why This Process is CRITICAL:**
+
+- **Prevents Rule Violations**: Reading rules first prevents implementing code that violates established patterns
+- **Ensures Consistency**: Understanding rule scope ensures all forms follow the same pattern
+- **Avoids Partial Implementation**: Clarifying scope prevents implementing exceptions when rule change is needed
+- **Maintains Code Quality**: Following this process ensures maintainable and consistent codebase
+
+**Common Mistakes This Process Prevents:**
+
+1. ❌ **Implementing without reading rules**: Modifying code without checking existing rules first
+2. ❌ **Partial rule changes**: Changing specific fields when entire rule should be updated
+3. ❌ **Inconsistent implementation**: Some fields follow new pattern, others follow old pattern
+4. ❌ **Rule-code mismatch**: Code doesn't match documented rules, causing confusion
+
+**Root Cause Analysis of Common Mistakes:**
+
+1. **Validation Added Without Indicator**: Validation logic is implemented (`errors.fieldName` exists), but the label lacks the visual indicator
+2. **Incomplete Form Review**: Focus on validation logic and error messages, but forget the label indicator
+3. **Copy-Paste Pattern**: Copying form fields from non-validated examples without adding the indicator
+4. **Inconsistent Application**: Some validated fields have indicators, others don't, creating UI inconsistency
+5. **Rule Violation**: Implementing code changes without reading and verifying rules first
+6. **Partial Rule Changes**: Changing specific fields when entire rule should be updated
+
+**Why This Rule is CRITICAL:**
+
+- **User Experience**: Users cannot identify required fields before attempting to submit
+- **Accessibility**: Screen readers and assistive technologies rely on consistent indicators
+- **UI Consistency**: All validated fields must have the same visual treatment
+- **Prevent User Frustration**: Users fill out forms only to discover required fields at submission time
+- **Professional Appearance**: Incomplete forms look unprofessional and untested
+
+**MUST ensure ALL validated fields have the required indicator in their label:**
+
+**⚠️ CRITICAL: Required indicator MUST be placed BEFORE the label text (not after).**
+
+```tsx
+<label
+  className="w-full md:w-1/4 flex items-center m-0 register-form-label bg-gray-100"
+  style={{ border: "1px solid #dee2e6", padding: "5px" }}
+>
+  <span className="text-red-600 mr-1">*</span> Field Name
+</label>
+```
+
+**Required Indicator Template (MUST use exactly):**
+
+```tsx
+<span className="text-red-600 mr-1">*</span> Field Name
+```
+
+**Alternative with JSX spacing (also acceptable):**
+
+```tsx
+<span className="text-red-600 mr-1">*</span>{" "}
+Field Name
+```
+
+**Key Points:**
+- ✅ **Position**: Asterisk (`*`) MUST be BEFORE the label text
+- ✅ **Spacing**: Use `mr-1` (margin-right) for spacing between asterisk and label
+- ✅ **Color**: Use `text-red-600` for the asterisk color
+- ✅ **NEVER** use `ml-1` (margin-left) - this places asterisk after label (WRONG)
+
+---
+
+## ✅ CORRECT: Required Field Indicator Examples
+
+### Example 1: Text Input with Validation
+
+```tsx
+<label
+  className="w-full md:w-1/4 flex items-center m-0 register-form-label bg-gray-100"
+  style={{ border: "1px solid #dee2e6", padding: "5px" }}
+>
+  <span className="text-red-600 mr-1">*</span> User ID
+</label>
+<div
+  className="register-form-mobile-field w-full md:w-3/4 flex items-center"
+  style={{
+    border: "1px solid #dee2e6",
+    borderLeft: "none",
+    padding: "5px",
+  }}
+>
+  <div className="w-full">
+    <input
+      type="text"
+      name="userId"
+      className={`w-full border rounded-none px-3 py-2 ${
+        errors.userId ? "border-red-500" : ""
+      }`}
+      style={{
+        border: errors.userId
+          ? "1px solid #dc3545"
+          : "1px solid #e0e0e0",
+      }}
+      value={formData.userId}
+      onChange={handleInputChange}
+    />
+    {errors.userId && (
+      <div className="text-red-600 text-sm mt-1 px-2">
+        {errors.userId}
+      </div>
+    )}
+  </div>
+</div>
+```
+
+### Example 2: Select with Validation
+
+```tsx
+<label
+  className="w-full md:w-1/4 flex items-center m-0 register-form-label bg-gray-100"
+  style={{
+    border: "1px solid #dee2e6",
+    borderTop: "none",
+    padding: "5px",
+  }}
+>
+  <span className="text-red-600 mr-1">*</span> Code ID
+</label>
+<div
+  className="register-form-mobile-field w-full md:w-3/4 flex items-center"
+  style={{
+    border: "1px solid #dee2e6",
+    borderLeft: "none",
+    borderTop: "none",
+    padding: "5px",
+  }}
+>
+  <div className="w-full">
+    <select
+      name="codeId"
+      className={`w-full border rounded-none px-3 py-2 ${
+        errors.codeId ? "border-red-500" : ""
+      }`}
+      style={{
+        border: errors.codeId
+          ? "1px solid #dc3545"
+          : "1px solid #e0e0e0",
+      }}
+      value={formData.codeId}
+      onChange={handleInputChange}
+    >
+      <option value="">Select...</option>
+    </select>
+    {errors.codeId && (
+      <div className="text-red-600 text-sm mt-1 px-2">
+        {errors.codeId}
+      </div>
+    )}
+  </div>
+</div>
+```
+
+### Example 3: Textarea with Validation
+
+```tsx
+<label
+  className="w-full md:w-1/4 flex items-center m-0 register-form-label bg-gray-100"
+  style={{
+    border: "1px solid #dee2e6",
+    borderTop: "none",
+    padding: "5px",
+  }}
+>
+  <span className="text-red-600 mr-1">*</span> Description
+</label>
+<div
+  className="register-form-mobile-field w-full md:w-3/4 flex items-center"
+  style={{
+    border: "1px solid #dee2e6",
+    borderLeft: "none",
+    borderTop: "none",
+    padding: "5px",
+  }}
+>
+  <div className="w-full">
+    <textarea
+      name="description"
+      className={`w-full border rounded-none px-3 py-2 ${
+        errors.description ? "border-red-500" : ""
+      }`}
+      style={{
+        border: errors.description
+          ? "1px solid #dc3545"
+          : "1px solid #e0e0e0",
+      }}
+      value={formData.description}
+      onChange={handleInputChange}
+    />
+    {errors.description && (
+      <div className="text-red-600 text-sm mt-1 px-2">
+        {errors.description}
+      </div>
+    )}
+  </div>
+</div>
+```
+
+---
+
+## ❌ WRONG: Missing Required Field Indicator
+
+### Wrong Example 1: Validation Exists But No Indicator
+
+```tsx
+// ❌ WRONG: Has validation logic but missing required indicator
+<label
+  className="w-full md:w-1/4 flex items-center m-0 register-form-label bg-gray-100"
+  style={{ border: "1px solid #dee2e6", padding: "5px" }}
+>
+  User ID  {/* ❌ Missing required indicator */}
+</label>
+<div className="register-form-mobile-field w-full md:w-3/4 flex items-center">
+  <div className="w-full">
+    <input
+      type="text"
+      name="userId"
+      className={`w-full border rounded-none px-3 py-2 ${
+        errors.userId ? "border-red-500" : ""  // ❌ Validation exists
+      }`}
+      value={formData.userId}
+      onChange={handleInputChange}
+    />
+    {errors.userId && (  // ❌ Error handling exists
+      <div className="text-red-600 text-sm mt-1 px-2">
+        {errors.userId}
+      </div>
+    )}
+  </div>
+</div>
+```
+
+**Why this is WRONG:**
+
+1. ❌ User cannot identify this is a required field before submitting
+2. ❌ Inconsistent with other validated fields that have indicators
+3. ❌ Poor user experience - user discovers requirement only after error
+4. ❌ Violates accessibility standards for required field indication
+
+### Wrong Example 2: Different Styling
+
+```tsx
+// ❌ WRONG: Using different styling for required indicator
+<label>
+  User ID <span className="text-red-500">*</span>  {/* ❌ Wrong color class */}
+</label>
+
+// ❌ WRONG: Using different HTML structure
+<label>
+  User ID <strong className="text-red-600">*</strong>  {/* ❌ Wrong element */}
+</label>
+
+// ❌ WRONG: Missing spacing
+<label>
+  <span className="text-red-600 mr-1">*</span>User ID  {/* ❌ No space after asterisk */}
+</label>
+```
+
+**Why this is WRONG:**
+
+1. ❌ Inconsistent styling breaks visual harmony
+2. ❌ Different HTML structure makes maintenance difficult
+3. ❌ Missing spacing makes the label hard to read
+
+---
+
+## 📋 Required Field Indicator Requirements
+
+### MUST:
+
+- ✅ **ALWAYS** add `<span className="text-red-600 mr-1">*</span>` BEFORE labels of validated fields
+- ✅ Place the indicator immediately BEFORE the label text (not after)
+- ✅ Use consistent spacing: `mr-1` (margin-right) for spacing between asterisk and label
+- ✅ Ensure the indicator uses exactly `text-red-600` color class
+- ✅ Ensure the indicator uses exactly `mr-1` margin-right class (NOT `ml-1`)
+- ✅ Verify the indicator is visible and properly styled
+- ✅ Check that ALL validated fields have the indicator before completing a form
+
+### MUST NOT:
+
+- ❌ **NEVER** add validation logic without adding the required indicator to the label
+- ❌ **NEVER** use different styling for the required indicator (`text-red-500`, `text-red-700`, etc.)
+- ❌ **NEVER** use different HTML structure (`<strong>`, `<em>`, etc.)
+- ❌ **NEVER** omit the required indicator for validated fields
+- ❌ **NEVER** add the indicator to non-validated/optional fields
+- ❌ **NEVER** use different spacing or positioning
+- ❌ **NEVER** place the asterisk AFTER the label text (must be BEFORE)
+- ❌ **NEVER** use `ml-1` (margin-left) - use `mr-1` (margin-right) instead
+
+---
+
+## 🔍 Validation Checklist for Required Field Indicators
+
+**MUST verify ALL items when adding validation to a field:**
+
+### Pre-Implementation Checklist
+
+- [ ] **Identified all fields that will have validation logic**
+- [ ] **Planned to add required indicator to ALL validated field labels**
+- [ ] **Verified the exact HTML structure for the indicator**
+
+### Implementation Checklist
+
+- [ ] **Added validation logic** (`errors.fieldName` state and validation function)
+- [ ] **Added required indicator** (`<span className="text-red-600 mr-1">*</span>`) BEFORE the label
+- [ ] **Verified indicator placement** (immediately BEFORE label text, not after)
+- [ ] **Verified indicator styling** (exactly `text-red-600 mr-1`, NOT `ml-1`)
+- [ ] **Added error message display** (inside inner wrapper div)
+
+### Post-Implementation Checklist
+
+- [ ] **Tested form submission** - validation errors appear correctly
+- [ ] **Verified visual consistency** - all validated fields have indicators
+- [ ] **Checked accessibility** - indicators are visible and properly styled
+- [ ] **Reviewed all validated fields** - none are missing indicators
+- [ ] **Compared with other forms** - consistent pattern across application
+
+### Code Review Checklist
+
+- [ ] **Every field with `errors.fieldName` has required indicator in label**
+- [ ] **Every required indicator uses exact template: `<span className="text-red-600 mr-1">*</span>` BEFORE label**
+- [ ] **No validated fields are missing required indicators**
+- [ ] **No non-validated fields have required indicators**
+- [ ] **Consistent spacing and styling across all indicators**
+
+---
+
+## 🔄 Step-by-Step Implementation Guide
+
+### Step 1: Identify Fields Needing Validation
+
+```tsx
+// Example: Planning validation
+const [errors, setErrors] = useState({
+  userId: "", // ✅ Will have validation → needs indicator
+  password: "", // ✅ Will have validation → needs indicator
+  email: "", // ✅ Will have validation → needs indicator
+  phone: "", // ❌ No validation → no indicator needed
+});
+```
+
+### Step 2: Add Required Indicators to Labels
+
+```tsx
+// ✅ CORRECT: Add indicator when adding validation
+<label>
+  <span className="text-red-600 mr-1">*</span> User ID
+</label>
+
+<label>
+  <span className="text-red-600 mr-1">*</span> Password
+</label>
+
+<label>
+  <span className="text-red-600 mr-1">*</span> Email
+</label>
+
+<label>
+  Phone  {/* ❌ No indicator - no validation */}
+</label>
+```
+
+### Step 3: Implement Validation Logic
+
+```tsx
+const validateForm = () => {
+  const newErrors = {};
+
+  if (!formData.userId) {
+    newErrors.userId = "User ID is required"; // ✅ Matches label indicator
+  }
+
+  if (!formData.password) {
+    newErrors.password = "Password is required"; // ✅ Matches label indicator
+  }
+
+  // ... validation logic
+};
+```
+
+### Step 4: Verify Consistency
+
+```tsx
+// ✅ Verify: Every errors.fieldName has corresponding label indicator
+// errors.userId → label has indicator ✅
+// errors.password → label has indicator ✅
+// errors.email → label has indicator ✅
+```
+
+---
+
+## 🚫 Common Mistakes to Avoid
+
+### Mistake 1: Adding Validation Without Indicator
+
+```tsx
+// ❌ WRONG: Validation added but forgot indicator
+const [errors, setErrors] = useState({ codeId: "" });  // Validation exists
+
+<label>Code ID</label>  // ❌ Missing indicator
+<input
+  className={errors.codeId ? "border-red-500" : ""}  // Validation exists
+/>
+```
+
+**Fix:**
+
+```tsx
+// ✅ CORRECT: Add indicator when adding validation
+<label>
+  <span className="text-red-600 mr-1">*</span> Code ID // ✅ Indicator added BEFORE label
+</label>
+```
+
+### Mistake 2: Inconsistent Indicator Styling
+
+```tsx
+// ❌ WRONG: Different styling
+<label>
+  <span className="text-red-600 mr-1">*</span> Field 1  // ✅ Correct (BEFORE label)
+</label>
+<label>
+  <span className="text-red-500 mr-2">*</span> Field 2  // ❌ Wrong color and spacing
+</label>
+```
+
+**Fix:**
+
+```tsx
+// ✅ CORRECT: Consistent styling
+<label>
+  <span className="text-red-600 mr-1">*</span> Field 1  // ✅ Correct (BEFORE label)
+</label>
+<label>
+  <span className="text-red-600 mr-1">*</span> Field 2  // ✅ Correct (BEFORE label)
+</label>
+```
+
+### Mistake 3: Indicator on Non-Validated Fields
+
+```tsx
+// ❌ WRONG: Indicator on optional field
+<label>
+  <span className="text-red-600 mr-1">*</span> Optional Field  // ❌ No validation
+</label>
+<input name="optionalField" />  // No errors.optionalField
+```
+
+**Fix:**
+
+```tsx
+// ✅ CORRECT: No indicator for optional fields
+<label>Optional Field {/* ✅ No indicator - field is optional */}</label>
+```
+
+---
+
+## 💡 Key Principles
+
+1. **Consistency First**: ALL validated fields MUST have the required indicator
+2. **Visual Clarity**: Users must be able to identify required fields at a glance
+3. **Accessibility**: Required indicators help all users, including those using assistive technologies
+4. **Prevention Over Correction**: Add indicators when adding validation, not as an afterthought
+5. **Complete Implementation**: Validation logic + Error display + Required indicator = Complete validation
+
+---
+
+## 🔍 Decision Tree
+
+```
+Adding validation to a field?
+├─ Does the field have validation logic (errors.fieldName)?
+│  ├─ YES → Does the label have required indicator?
+│  │  ├─ YES → ✅ Correct implementation
+│  │  └─ NO → ❌ ADD REQUIRED INDICATOR IMMEDIATELY
+│  └─ NO → No indicator needed
+└─ Reviewing existing form?
+   ├─ Check all fields with errors.fieldName
+   ├─ Verify each has required indicator
+   └─ Add missing indicators
+```
+
+---
+
+## 📚 Reference Implementation
+
+Files that correctly implement this rule:
+
+- ✅ `src/features/adminWeb/member/register/ui/MemberRegisterForm.tsx`
+- ✅ `src/features/adminWeb/member/detail/ui/MemberDetailView.tsx`
+- ✅ `src/features/adminWeb/code/manage/ui/CmmCodeManagePageView.tsx` (after fixes)
+
+---
+
+**Remember**: Every field with validation logic (`errors.fieldName`) MUST have a required field indicator (`<span className="text-red-600 mr-1">*</span>`) BEFORE its label text. The asterisk MUST be placed BEFORE the label, not after. This is not optional - it is a CRITICAL requirement for user experience and accessibility.
+
+---
+
+## 📋 적용 대상 필드
+
+이 규칙을 적용해야 하는 모든 입력 필드:
+
+- ✅ 텍스트 입력 (`<input type="text">`)
+- ✅ 이메일 입력 (`<input type="email">`)
+- ✅ 전화번호 입력 (`<input type="tel">`)
+- ✅ 비밀번호 입력 (`<input type="password">`)
+- ✅ 숫자 입력 (`<input type="number">`)
+- ✅ 날짜 입력 (`<input type="date">`)
+- ✅ 텍스트 영역 (`<textarea>`)
+- ✅ 셀렉트 박스 (`<select>`) - 유효성 검사가 있는 경우
+
+---
+
+## 📝 완전한 예시 코드
+
+### 텍스트 입력 필드 (Text Input)
+
+```tsx
+<label
+  className="w-full md:w-1/4 flex items-center m-0 register-form-label bg-gray-100"
+  style={{ border: "1px solid #dee2e6", padding: "5px" }}
+>
+  <span className="text-red-600 mr-1">*</span> 아이디
+</label>
+<div
+  className="register-form-mobile-field w-full md:w-3/4 flex items-center"
+  style={{
+    border: "1px solid #dee2e6",
+    borderLeft: "none",
+    padding: "5px",
+  }}
+>
+  <div className="w-full">
+    <input
+      type="text"
+      name="userId"
+      className={`w-full border rounded-none px-3 py-2 ${
+        errors.userId ? "border-red-500" : ""
+      }`}
+      placeholder="아이디를 입력하세요"
+      style={{
+        border: errors.userId
+          ? "1px solid #dc3545"
+          : "1px solid #e0e0e0",
+      }}
+      value={formData.userId}
+      onChange={handleInputChange}
+      maxLength={60}
+    />
+    {errors.userId && (
+      <div className="text-red-600 text-sm mt-1 px-2">
+        {errors.userId}
+      </div>
+    )}
+  </div>
+</div>
+```
+
+### 비밀번호 입력 필드 (Password Input)
+
+```tsx
+<label
+  className="w-full md:w-1/4 flex items-center m-0 register-form-label bg-gray-100"
+  style={{
+    border: "1px solid #dee2e6",
+    borderTop: "none",
+    padding: "5px",
+  }}
+>
+  <span className="text-red-600 mr-1">*</span> 비밀번호
+</label>
+<div
+  className="register-form-mobile-field w-full md:w-3/4 flex items-center"
+  style={{
+    border: "1px solid #dee2e6",
+    borderLeft: "none",
+    borderTop: "none",
+    padding: "5px",
+  }}
+>
+  <div className="w-full">
+    <input
+      type="password"
+      name="password"
+      className={`w-full border rounded-none px-3 py-2 ${
+        errors.password ? "border-red-500" : ""
+      }`}
+      placeholder="비밀번호를 입력하세요"
+      style={{
+        border: errors.password
+          ? "1px solid #dc3545"
+          : "1px solid #e0e0e0",
+      }}
+      value={formData.password}
+      onChange={handleInputChange}
+      maxLength={200}
+    />
+    {errors.password && (
+      <div className="text-red-600 text-sm mt-1 px-2">
+        {errors.password}
+      </div>
+    )}
+  </div>
+</div>
+```
+
+### 셀렉트 박스 (Select - with validation)
+
+```tsx
+<label
+  className="w-full md:w-1/4 flex items-center m-0 register-form-label bg-gray-100"
+  style={{
+    border: "1px solid #dee2e6",
+    borderTop: "none",
+    padding: "5px",
+  }}
+>
+  <span className="text-red-600 mr-1">*</span> 사이트ID
+</label>
+<div
+  className="register-form-mobile-field w-full md:w-3/4 flex items-center"
+  style={{
+    border: "1px solid #dee2e6",
+    borderLeft: "none",
+    borderTop: "none",
+    padding: "5px",
+  }}
+>
+  <div className="w-full">
+    <select
+      name="siteId"
+      className={`w-full border rounded-none px-3 py-2 ${
+        errors.siteId ? "border-red-500" : ""
+      }`}
+      style={{
+        border: errors.siteId
+          ? "1px solid #dc3545"
+          : "1px solid #e0e0e0",
+      }}
+      value={formData.siteId}
+      onChange={handleInputChange}
+    >
+      <option value="">선택하세요</option>
+      {/* options... */}
+    </select>
+    {errors.siteId && (
+      <div className="text-red-600 text-sm mt-1 px-2">
+        {errors.siteId}
+      </div>
+    )}
+  </div>
+</div>
+```
+
+---
+
+## 🔍 구조 검증 체크리스트
+
+모든 유효성 검사가 있는 입력 필드를 만들거나 수정할 때 다음을 확인:
+
+### 구조 검증
+
+- [ ] `register-form-mobile-field`에 `w-full md:w-3/4` 클래스가 직접 적용되어 있는가?
+- [ ] 내부에 `w-full` wrapper div가 있는가?
+- [ ] 입력 필드가 내부 wrapper 안에 있는가?
+- [ ] 에러 메시지가 내부 wrapper 안에, 입력 필드 바로 아래에 위치하는가?
+- [ ] 에러 메시지가 `register-form-mobile-field` 밖에 위치하지 않는가?
+- [ ] 외부 `w-full md:w-3/4` wrapper를 사용하지 않는가?
+
+### 스타일 검증
+
+- [ ] 에러 상태일 때 input의 border가 빨간색(`#dc3545`)으로 변경되는가?
+- [ ] 에러 메시지가 `text-red-600 text-sm mt-1 px-2` 클래스를 사용하는가?
+- [ ] 에러 메시지가 조건부 렌더링(`{errors.fieldName && ...}`)으로 표시되는가?
+
+### 필수 필드 표시 검증 (CRITICAL)
+
+- [ ] **유효성 검사가 있는 모든 필드의 라벨에 필수 표시(`<span className="text-red-600 mr-1">*</span>`)가 추가되어 있는가?**
+- [ ] 필수 표시가 라벨 텍스트 바로 앞에 위치하는가? (뒤가 아님)
+- [ ] 필수 표시가 정확히 `text-red-600 mr-1` 클래스를 사용하는가? (`ml-1`이 아님)
+- [ ] 유효성 검사가 없는 필드에는 필수 표시가 없는가?
+- [ ] 모든 유효성 검사 필드가 일관된 스타일의 필수 표시를 가지고 있는가?
+
+---
+
+## 🚫 금지 사항 (MUST NOT)
+
+**MUST NOT:**
+
+- ❌ 에러 메시지를 `register-form-mobile-field` 밖에 위치시키지 말 것
+- ❌ 외부 `w-full md:w-3/4` wrapper를 사용하지 말 것
+- ❌ 내부 wrapper 없이 구조를 만들지 말 것
+- ❌ 에러 메시지의 위치를 임의로 변경하지 말 것 (반드시 입력 필드 바로 아래)
+- ❌ 에러 메시지 스타일을 임의로 변경하지 말 것 (`text-red-600 text-sm mt-1 px-2` 고정)
+- ❌ 에러 상태의 border 색상을 다른 색상으로 변경하지 말 것 (`#dc3545` 고정)
+- ❌ **유효성 검사가 있는 필드의 라벨에 필수 표시를 빠뜨리지 말 것 (CRITICAL)**
+- ❌ 필수 표시의 스타일을 임의로 변경하지 말 것 (`text-red-600 mr-1` 고정, `ml-1` 아님)
+- ❌ 필수 표시를 라벨 뒤에 배치하지 말 것 (반드시 라벨 앞에 배치)
+
+---
+
+## 🔄 마이그레이션 가이드
+
+기존 코드를 새로운 구조로 변경할 때:
+
+### Step 1: 구조 변경
+
+```tsx
+// ❌ 기존 (제거)
+<div className="w-full md:w-3/4">
+  <div className="register-form-mobile-field w-full flex items-center">
+    <input ... />
+  </div>
+  {errors.field && <div>...</div>}
+</div>
+
+// ✅ 변경 후
+<div className="register-form-mobile-field w-full md:w-3/4 flex items-center">
+  <div className="w-full">
+    <input ... />
+    {errors.field && <div>...</div>}
+  </div>
+</div>
+```
+
+### Step 2: 클래스 이름 수정
+
+- `register-form-mobile-field w-full` → `register-form-mobile-field w-full md:w-3/4`
+- 외부 `w-full md:w-3/4` wrapper 제거
+- 내부에 `w-full` wrapper 추가
+
+### Step 3: 에러 메시지 위치 변경
+
+- 에러 메시지를 내부 `w-full` wrapper 안으로 이동
+- 입력 필드 바로 아래에 위치하도록 조정
+
+---
+
+## 📚 참고 구현
+
+이 규칙이 올바르게 적용된 예시 파일:
+
+- ✅ `src/features/adminWeb/member/register/ui/MemberRegisterForm.tsx`
+- ✅ `src/features/adminWeb/member/detail/ui/MemberDetailView.tsx`
+
+---
+
+## 💡 핵심 원칙
+
+1. **구조적 일관성**: 모든 유효성 검사 필드는 동일한 구조를 가져야 함
+2. **시각적 명확성**: 에러 메시지는 입력 필드와 명확하게 연결되어야 함
+3. **반응형 안정성**: 모바일과 데스크톱에서 모두 일관된 레이아웃 유지
+4. **유지보수성**: 표준화된 구조로 코드 일관성과 가독성 향상
+5. **필수 필드 표시 (CRITICAL)**: 유효성 검사가 있는 모든 필드는 라벨에 필수 표시(`*`)를 반드시 포함해야 함
+6. **완전한 구현**: 유효성 검사 로직 + 에러 메시지 표시 + 필수 필드 표시 = 완전한 유효성 검사 구현
+
+---
+
+## 🔍 차이점 상세 설명
+
+### 왜 이 구조가 중요한가?
+
+**잘못된 구조의 문제점:**
+
+1. **레이아웃 불일치**: 에러 메시지가 필드 컨테이너 밖에 있어 레이아웃이 깨질 수 있음
+2. **반응형 이슈**: 모바일에서 에러 메시지가 예상치 못한 위치에 나타남
+3. **시각적 분리**: 입력 필드와 에러 메시지의 연결성이 약함
+4. **CSS 관리 어려움**: 스타일링이 예측 불가능함
+
+**올바른 구조의 장점:**
+
+1. **레이아웃 일관성**: 모든 요소가 하나의 컨테이너 안에 있어 레이아웃 안정성 보장
+2. **반응형 안정성**: 모바일과 데스크톱에서 모두 예측 가능한 레이아웃
+3. **시각적 연결성**: 에러 메시지가 입력 필드 바로 아래에 위치하여 명확한 연결
+4. **CSS 관리 용이**: 표준화된 구조로 스타일링 예측 가능
+
+---
+
+**Remember**: This structure ensures consistent, maintainable, and responsive form validation UI across the entire application.
+
+---
+
+# Form Field Component Usage Rules
+
+## ⚠️ CRITICAL: Reusable Form Field Components
+
+**MUST ALWAYS use shared form field components from `@/shared/ui/adminWeb/form` when:**
+
+- ✅ Creating new registration/edit forms
+- ✅ Refactoring existing forms
+- ✅ Adding new form fields to existing forms
+- ✅ Ensuring UI consistency across all forms
+- ✅ Building any admin web form (member, board, code, program, etc.)
+
+**MUST NOT:**
+
+- ❌ Create custom form field markup structures
+- ❌ Duplicate form field HTML/CSS code
+- ❌ Use inline form field styles directly
+- ❌ Mix custom markup with component-based approach
+
+**Why This Rule is CRITICAL:**
+
+1. **Code Reusability**: Single source of truth for form field implementation
+2. **Consistency**: All forms use identical UI/UX patterns
+3. **Maintainability**: Update once, apply everywhere
+4. **Type Safety**: TypeScript interfaces ensure correct prop usage
+5. **Reduced Bugs**: Standardized components reduce styling and logic errors
+6. **Developer Experience**: Faster form development with pre-built components
+
+---
+
+## 🧩 Available Form Field Components
+
+### Component Library: `@/shared/ui/adminWeb/form`
+
+**MUST import from the shared form component library:**
+
+```typescript
+import {
+  FormField,
+  FormInput,
+  FormSelect,
+  FormTextarea,
+  FormRadioGroup,
+} from "@/shared/ui/adminWeb/form";
+import type { SelectOption, RadioOption } from "@/shared/ui/adminWeb/form";
+```
+
+### Component Overview
+
+| Component | Purpose | Props |
+|-----------|---------|-------|
+| `FormField` | Field wrapper with label and container | `label`, `required`, `isFirstRow`, `isFirstInRow`, `fullWidth`, `error`, `children` |
+| `FormInput` | Text input fields (text, password, email, tel, date) | `name`, `value`, `onChange`, `error`, `type`, `placeholder`, `maxLength`, `readOnly`, `disabled`, `className` |
+| `FormSelect` | Select dropdown fields | `name`, `value`, `onChange`, `options`, `error`, `loading`, `loadingText`, `emptyText`, `disabled`, `required` |
+| `FormTextarea` | Multi-line text input | `name`, `value`, `onChange`, `error`, `placeholder`, `maxLength`, `readOnly`, `minHeight` |
+| `FormRadioGroup` | Radio button groups | `name`, `value`, `onChange`, `options`, `error` |
+
+---
+
+## ✅ CORRECT: Using Form Field Components
+
+### Example 1: Text Input Field
+
+```tsx
+import { FormField, FormInput } from "@/shared/ui/adminWeb/form";
+
+<FormField
+  label="User ID"
+  required
+  isFirstRow
+  isFirstInRow
+  error={errors.userId}
+>
+  <FormInput
+    type="text"
+    name="userId"
+    value={formData.userId}
+    onChange={handleInputChange}
+    error={errors.userId}
+    placeholder="Enter user ID"
+    maxLength={60}
+  />
+</FormField>
+```
+
+### Example 2: Password Input Field
+
+```tsx
+<FormField
+  label="Password"
+  required
+  error={errors.password}
+>
+  <FormInput
+    type="password"
+    name="password"
+    value={formData.password}
+    onChange={handleInputChange}
+    error={errors.password}
+    placeholder="Enter password"
+    maxLength={200}
+  />
+</FormField>
+```
+
+### Example 3: Select Dropdown Field
+
+```tsx
+import type { SelectOption } from "@/shared/ui/adminWeb/form";
+
+// Convert data to SelectOption format
+const siteOptions: SelectOption[] = siteList.map((site) => ({
+  value: site.siteId,
+  label: site.siteNm,
+}));
+
+<FormField
+  label="Site ID"
+  required
+  error={errors.siteId}
+>
+  <FormSelect
+    name="siteId"
+    value={formData.siteId}
+    onChange={handleInputChange}
+    options={siteOptions}
+    loading={loading}
+    loadingText="Loading..."
+    emptyText="No sites available"
+    error={errors.siteId}
+    required
+  />
+</FormField>
+```
+
+### Example 4: Textarea Field (Full Width)
+
+```tsx
+<FormField
+  label="Description"
+  fullWidth
+>
+  <FormTextarea
+    name="description"
+    value={formData.description}
+    onChange={handleInputChange}
+    placeholder="Enter description"
+    maxLength={500}
+    minHeight="100px"
+  />
+</FormField>
+```
+
+### Example 5: Radio Button Group
+
+```tsx
+import type { RadioOption } from "@/shared/ui/adminWeb/form";
+
+const statusOptions: RadioOption[] = [
+  { value: "A", label: "Active", disabled: false },
+  { value: "D", label: "Deleted", disabled: false },
+];
+
+<FormField label="Status">
+  <FormRadioGroup
+    name="status"
+    value={formData.status}
+    onChange={handleRadioChange}
+    options={statusOptions}
+  />
+</FormField>
+```
+
+### Example 6: Complete Form Row (Two Fields)
+
+```tsx
+<div className="flex flex-wrap">
+  <FormField
+    label="User ID"
+    required
+    isFirstRow
+    isFirstInRow
+    error={errors.userId}
+  >
+    <FormInput
+      type="text"
+      name="userId"
+      value={formData.userId}
+      onChange={handleInputChange}
+      error={errors.userId}
+      placeholder="Enter user ID"
+      maxLength={60}
+    />
+  </FormField>
+  <FormField
+    label="Email"
+    required
+    isFirstInRow
+    error={errors.email}
+  >
+    <FormInput
+      type="email"
+      name="email"
+      value={formData.email}
+      onChange={handleInputChange}
+      error={errors.email}
+      placeholder="Enter email"
+      maxLength={60}
+    />
+  </FormField>
+</div>
+```
+
+---
+
+## ❌ WRONG: Custom Form Field Markup
+
+### Wrong Example 1: Manual HTML Structure
+
+```tsx
+// ❌ WRONG: Creating custom form field markup
+<div className="w-full md:w-1/2 register-form-mobile-row">
+  <div className="register-form-mobile-wrapper md:flex md:items-stretch">
+    <label className="w-full md:w-1/4 flex items-center m-0 register-form-label bg-gray-100">
+      <span className="text-red-600 mr-1">*</span> User ID
+    </label>
+    <div className="register-form-mobile-field w-full md:w-3/4 flex items-center">
+      <div className="w-full">
+        <input
+          type="text"
+          name="userId"
+          className={`w-full border rounded-none px-3 py-2 ${
+            errors.userId ? "border-red-500" : ""
+          }`}
+          value={formData.userId}
+          onChange={handleInputChange}
+        />
+        {errors.userId && (
+          <div className="text-red-600 text-sm mt-1 px-2">
+            {errors.userId}
+          </div>
+        )}
+      </div>
+    </div>
+  </div>
+</div>
+```
+
+**Why this is WRONG:**
+
+1. ❌ Duplicates code that already exists in `FormField` and `FormInput`
+2. ❌ Inconsistent with other forms using components
+3. ❌ Harder to maintain - changes require updating multiple files
+4. ❌ More prone to errors (border logic, spacing, etc.)
+5. ❌ Violates DRY (Don't Repeat Yourself) principle
+
+**Fix:**
+
+```tsx
+// ✅ CORRECT: Use shared components
+<FormField
+  label="User ID"
+  required
+  error={errors.userId}
+>
+  <FormInput
+    type="text"
+    name="userId"
+    value={formData.userId}
+    onChange={handleInputChange}
+    error={errors.userId}
+  />
+</FormField>
+```
+
+### Wrong Example 2: Mixing Components and Custom Markup
+
+```tsx
+// ❌ WRONG: Mixing component with custom markup
+<FormField label="User ID" required>
+  <input
+    type="text"
+    name="userId"
+    className="w-full border rounded-none px-3 py-2"
+    value={formData.userId}
+    onChange={handleInputChange}
+  />
+  {/* ❌ Manual error handling instead of FormInput */}
+  {errors.userId && (
+    <div className="text-red-600 text-sm mt-1 px-2">
+      {errors.userId}
+    </div>
+  )}
+</FormField>
+```
+
+**Why this is WRONG:**
+
+1. ❌ Inconsistent error handling (not using `FormInput`'s built-in error display)
+2. ❌ Missing error border styling logic
+3. ❌ Duplicates error message markup
+
+**Fix:**
+
+```tsx
+// ✅ CORRECT: Use FormInput for complete functionality
+<FormField label="User ID" required error={errors.userId}>
+  <FormInput
+    type="text"
+    name="userId"
+    value={formData.userId}
+    onChange={handleInputChange}
+    error={errors.userId}
+  />
+</FormField>
+```
+
+### Wrong Example 3: Not Converting Data to Component Format
+
+```tsx
+// ❌ WRONG: Passing raw data instead of SelectOption format
+<FormField label="Site">
+  <FormSelect
+    name="siteId"
+    value={formData.siteId}
+    onChange={handleInputChange}
+    options={siteList} // ❌ Wrong format
+  />
+</FormField>
+```
+
+**Why this is WRONG:**
+
+1. ❌ `FormSelect` expects `SelectOption[]` format: `{ value: string, label: string }[]`
+2. ❌ TypeScript will show type errors
+3. ❌ Component won't render options correctly
+
+**Fix:**
+
+```tsx
+// ✅ CORRECT: Convert data to SelectOption format
+const siteOptions: SelectOption[] = siteList.map((site) => ({
+  value: site.siteId,
+  label: site.siteNm,
+}));
+
+<FormField label="Site">
+  <FormSelect
+    name="siteId"
+    value={formData.siteId}
+    onChange={handleInputChange}
+    options={siteOptions} // ✅ Correct format
+  />
+</FormField>
+```
+
+---
+
+## 📋 FormField Props Reference
+
+### FormField Component
+
+**Props:**
+
+| Prop | Type | Required | Default | Description |
+|------|------|----------|---------|-------------|
+| `label` | `string` | ✅ | - | Field label text |
+| `required` | `boolean` | ❌ | `false` | Show required indicator (`*`) |
+| `isFirstRow` | `boolean` | ❌ | `false` | First row in form (affects border styling) |
+| `isFirstInRow` | `boolean` | ❌ | `false` | First field in a row (affects border styling) |
+| `fullWidth` | `boolean` | ❌ | `false` | Full width field (uses `md:w-[12.5%]` label) |
+| `error` | `string` | ❌ | - | Error message to display (passed to child component) |
+| `children` | `ReactNode` | ✅ | - | Form input component (`FormInput`, `FormSelect`, etc.) |
+
+**Border Logic:**
+
+- **First row, first field**: No top border on label or field (prevents duplicate line)
+- **First row, second field**: Top border on both label and field
+- **Subsequent rows, first field**: No top border on label, no top border on field
+- **Subsequent rows, second field**: No top border on label, no top border on field
+
+---
+
+## 📋 FormInput Props Reference
+
+### FormInput Component
+
+**Props:**
+
+| Prop | Type | Required | Default | Description |
+|------|------|----------|---------|-------------|
+| `name` | `string` | ✅ | - | Input name attribute |
+| `value` | `string` | ✅ | - | Input value |
+| `onChange` | `(e: ChangeEvent<HTMLInputElement>) => void` | ✅ | - | Change handler |
+| `type` | `string` | ❌ | `"text"` | Input type (text, password, email, tel, date, etc.) |
+| `error` | `string` | ❌ | - | Error message to display |
+| `placeholder` | `string` | ❌ | - | Placeholder text |
+| `maxLength` | `number` | ❌ | - | Maximum input length |
+| `readOnly` | `boolean` | ❌ | `false` | Read-only state |
+| `disabled` | `boolean` | ❌ | `false` | Disabled state |
+| `className` | `string` | ❌ | `""` | Additional CSS classes |
+| `...rest` | `InputHTMLAttributes` | ❌ | - | Other standard input attributes |
+
+**Features:**
+
+- ✅ Automatic error border styling (`#dc3545` when error exists)
+- ✅ Built-in error message display
+- ✅ Read-only styling (`bg-gray-50`)
+- ✅ Supports all standard input types
+
+---
+
+## 📋 FormSelect Props Reference
+
+### FormSelect Component
+
+**Props:**
+
+| Prop | Type | Required | Default | Description |
+|------|------|----------|---------|-------------|
+| `name` | `string` | ✅ | - | Select name attribute |
+| `value` | `string` | ✅ | - | Selected value |
+| `onChange` | `(e: ChangeEvent<HTMLSelectElement>) => void` | ✅ | - | Change handler |
+| `options` | `SelectOption[]` | ✅ | - | Options array: `{ value: string, label: string }[]` |
+| `error` | `string` | ❌ | - | Error message to display |
+| `placeholder` | `string` | ❌ | - | Placeholder option text |
+| `loading` | `boolean` | ❌ | `false` | Loading state |
+| `loadingText` | `string` | ❌ | `"로딩 중..."` | Loading state text |
+| `emptyText` | `string` | ❌ | `"선택하세요"` | Empty options text |
+| `disabled` | `boolean` | ❌ | `false` | Disabled state |
+| `required` | `boolean` | ❌ | `false` | Required attribute |
+| `...rest` | `SelectHTMLAttributes` | ❌ | - | Other standard select attributes |
+
+**SelectOption Type:**
+
+```typescript
+interface SelectOption {
+  value: string;
+  label: string;
+}
+```
+
+**Features:**
+
+- ✅ Automatic error border styling
+- ✅ Built-in error message display
+- ✅ Loading state handling
+- ✅ Empty state handling
+- ✅ Automatic placeholder option when `placeholder` prop provided
+
+---
+
+## 📋 FormTextarea Props Reference
+
+### FormTextarea Component
+
+**Props:**
+
+| Prop | Type | Required | Default | Description |
+|------|------|----------|---------|-------------|
+| `name` | `string` | ✅ | - | Textarea name attribute |
+| `value` | `string` | ✅ | - | Textarea value |
+| `onChange` | `(e: ChangeEvent<HTMLTextAreaElement>) => void` | ✅ | - | Change handler |
+| `error` | `string` | ❌ | - | Error message to display |
+| `placeholder` | `string` | ❌ | - | Placeholder text |
+| `maxLength` | `number` | ❌ | - | Maximum input length |
+| `readOnly` | `boolean` | ❌ | `false` | Read-only state |
+| `minHeight` | `string` | ❌ | `"100px"` | Minimum height |
+| `...rest` | `TextareaHTMLAttributes` | ❌ | - | Other standard textarea attributes |
+
+**Features:**
+
+- ✅ Automatic error border styling
+- ✅ Built-in error message display
+- ✅ Read-only styling
+- ✅ Customizable minimum height
+
+---
+
+## 📋 FormRadioGroup Props Reference
+
+### FormRadioGroup Component
+
+**Props:**
+
+| Prop | Type | Required | Default | Description |
+|------|------|----------|---------|-------------|
+| `name` | `string` | ✅ | - | Radio group name attribute |
+| `value` | `string` | ✅ | - | Selected value |
+| `onChange` | `(e: ChangeEvent<HTMLInputElement>) => void` | ✅ | - | Change handler |
+| `options` | `RadioOption[]` | ✅ | - | Options array: `{ value: string, label: string, disabled?: boolean }[]` |
+| `error` | `string` | ❌ | - | Error message to display |
+
+**RadioOption Type:**
+
+```typescript
+interface RadioOption {
+  value: string;
+  label: string;
+  disabled?: boolean;
+}
+```
+
+**Features:**
+
+- ✅ Automatic error message display
+- ✅ Individual option disabling support
+- ✅ Consistent styling across all radio buttons
+
+---
+
+## 🔄 Migration Guide: From Custom Markup to Components
+
+### Step 1: Identify Form Fields
+
+```tsx
+// Before: Custom markup
+<div className="w-full md:w-1/2 register-form-mobile-row">
+  <div className="register-form-mobile-wrapper md:flex md:items-stretch">
+    <label className="w-full md:w-1/4 flex items-center m-0 register-form-label bg-gray-100">
+      <span className="text-red-600 mr-1">*</span> User ID
+    </label>
+    <div className="register-form-mobile-field w-full md:w-3/4 flex items-center">
+      <div className="w-full">
+        <input
+          type="text"
+          name="userId"
+          className={`w-full border rounded-none px-3 py-2 ${
+            errors.userId ? "border-red-500" : ""
+          }`}
+          value={formData.userId}
+          onChange={handleInputChange}
+        />
+        {errors.userId && (
+          <div className="text-red-600 text-sm mt-1 px-2">
+            {errors.userId}
+          </div>
+        )}
+      </div>
+    </div>
+  </div>
+</div>
+```
+
+### Step 2: Replace with Components
+
+```tsx
+// After: Using components
+import { FormField, FormInput } from "@/shared/ui/adminWeb/form";
+
+<FormField
+  label="User ID"
+  required
+  error={errors.userId}
+>
+  <FormInput
+    type="text"
+    name="userId"
+    value={formData.userId}
+    onChange={handleInputChange}
+    error={errors.userId}
+  />
+</FormField>
+```
+
+### Step 3: Convert Select Options
+
+```tsx
+// Before: Raw data
+<select name="siteId" value={formData.siteId} onChange={handleInputChange}>
+  {siteList.map((site) => (
+    <option key={site.siteId} value={site.siteId}>
+      {site.siteNm}
+    </option>
+  ))}
+</select>
+
+// After: Convert to SelectOption format
+import { FormSelect } from "@/shared/ui/adminWeb/form";
+import type { SelectOption } from "@/shared/ui/adminWeb/form";
+
+const siteOptions: SelectOption[] = siteList.map((site) => ({
+  value: site.siteId,
+  label: site.siteNm,
+}));
+
+<FormSelect
+  name="siteId"
+  value={formData.siteId}
+  onChange={handleInputChange}
+  options={siteOptions}
+/>
+```
+
+### Step 4: Convert Radio Buttons
+
+```tsx
+// Before: Manual radio buttons
+<div className="inline-flex items-center mb-0 mr-4">
+  <input
+    type="radio"
+    name="status"
+    value="A"
+    checked={formData.status === "A"}
+    onChange={handleRadioChange}
+  />
+  <label>Active</label>
+</div>
+<div className="inline-flex items-center mb-0">
+  <input
+    type="radio"
+    name="status"
+    value="D"
+    checked={formData.status === "D"}
+    onChange={handleRadioChange}
+  />
+  <label>Deleted</label>
+</div>
+
+// After: Using FormRadioGroup
+import { FormRadioGroup } from "@/shared/ui/adminWeb/form";
+import type { RadioOption } from "@/shared/ui/adminWeb/form";
+
+const statusOptions: RadioOption[] = [
+  { value: "A", label: "Active" },
+  { value: "D", label: "Deleted" },
+];
+
+<FormRadioGroup
+  name="status"
+  value={formData.status}
+  onChange={handleRadioChange}
+  options={statusOptions}
+/>
+```
+
+---
+
+## 🔍 Implementation Checklist
+
+**MUST verify ALL items when creating or refactoring forms:**
+
+### Pre-Implementation Checklist
+
+- [ ] **Identified all form fields** that need to be created
+- [ ] **Checked existing form components** in `@/shared/ui/adminWeb/form`
+- [ ] **Planned component usage** for each field type
+- [ ] **Prepared data conversion** for Select and RadioGroup (if needed)
+
+### Implementation Checklist
+
+- [ ] **Imported form components** from `@/shared/ui/adminWeb/form`
+- [ ] **Used `FormField`** for all form fields (no custom markup)
+- [ ] **Used `FormInput`** for text, password, email, tel, date inputs
+- [ ] **Used `FormSelect`** for dropdown fields
+- [ ] **Used `FormTextarea`** for multi-line text inputs
+- [ ] **Used `FormRadioGroup`** for radio button groups
+- [ ] **Converted data** to `SelectOption[]` or `RadioOption[]` format
+- [ ] **Set `required` prop** on `FormField` for validated fields
+- [ ] **Set `isFirstRow` and `isFirstInRow`** props correctly for border styling
+- [ ] **Set `fullWidth` prop** for full-width fields (like descriptions)
+- [ ] **Passed `error` prop** to both `FormField` and input component
+- [ ] **No custom form field markup** in the component
+
+### Post-Implementation Checklist
+
+- [ ] **Tested form rendering** - all fields display correctly
+- [ ] **Tested validation** - error messages appear correctly
+- [ ] **Tested responsive design** - mobile and desktop layouts work
+- [ ] **Verified consistency** - matches other forms using components
+- [ ] **Checked TypeScript** - no type errors
+- [ ] **Reviewed code** - no duplicate markup or custom structures
+
+### Code Review Checklist
+
+- [ ] **All form fields use components** (no custom markup)
+- [ ] **All imports are from `@/shared/ui/adminWeb/form`**
+- [ ] **Data is converted** to component format (SelectOption, RadioOption)
+- [ ] **Props are correctly set** (required, error, isFirstRow, etc.)
+- [ ] **No duplicate form field code** exists
+- [ ] **Consistent with other forms** in the codebase
+
+---
+
+## 🚫 Common Mistakes to Avoid
+
+### Mistake 1: Not Using Components
+
+```tsx
+// ❌ WRONG: Creating custom markup instead of using components
+<div className="register-form-mobile-field w-full md:w-3/4">
+  <input type="text" name="userId" />
+</div>
+```
+
+**Fix:**
+
+```tsx
+// ✅ CORRECT: Use FormField and FormInput
+<FormField label="User ID">
+  <FormInput
+    type="text"
+    name="userId"
+    value={formData.userId}
+    onChange={handleInputChange}
+  />
+</FormField>
+```
+
+### Mistake 2: Wrong Data Format for Select
+
+```tsx
+// ❌ WRONG: Passing raw array instead of SelectOption[]
+<FormSelect
+  name="siteId"
+  options={siteList} // ❌ Wrong format
+/>
+```
+
+**Fix:**
+
+```tsx
+// ✅ CORRECT: Convert to SelectOption format
+const siteOptions: SelectOption[] = siteList.map((site) => ({
+  value: site.siteId,
+  label: site.siteNm,
+}));
+
+<FormSelect name="siteId" options={siteOptions} />
+```
+
+### Mistake 3: Missing Error Prop
+
+```tsx
+// ❌ WRONG: Error not passed to component
+<FormField label="User ID" required>
+  <FormInput
+    name="userId"
+    value={formData.userId}
+    onChange={handleInputChange}
+    // ❌ Missing error prop
+  />
+</FormField>
+```
+
+**Fix:**
+
+```tsx
+// ✅ CORRECT: Pass error to both FormField and FormInput
+<FormField label="User ID" required error={errors.userId}>
+  <FormInput
+    name="userId"
+    value={formData.userId}
+    onChange={handleInputChange}
+    error={errors.userId} // ✅ Error passed
+  />
+</FormField>
+```
+
+### Mistake 4: Incorrect Border Props
+
+```tsx
+// ❌ WRONG: All fields have isFirstRow=true
+<FormField label="Field 1" isFirstRow> {/* ❌ Only first field should have this */}
+<FormField label="Field 2" isFirstRow> {/* ❌ Wrong */}
+<FormField label="Field 3" isFirstRow> {/* ❌ Wrong */}
+```
+
+**Fix:**
+
+```tsx
+// ✅ CORRECT: Only first field in first row has isFirstRow and isFirstInRow
+<div className="flex flex-wrap">
+  <FormField label="Field 1" isFirstRow isFirstInRow>
+    <FormInput ... />
+  </FormField>
+  <FormField label="Field 2" isFirstInRow>
+    <FormInput ... />
+  </FormField>
+</div>
+<div className="flex flex-wrap">
+  <FormField label="Field 3">
+    <FormInput ... />
+  </FormField>
+  <FormField label="Field 4" isFirstInRow>
+    <FormInput ... />
+  </FormField>
+</div>
+```
+
+### Mistake 5: Mixing Components with Custom Markup
+
+```tsx
+// ❌ WRONG: Using FormField but custom input
+<FormField label="User ID">
+  <input
+    type="text"
+    name="userId"
+    className="custom-class"
+    // ❌ Should use FormInput
+  />
+</FormField>
+```
+
+**Fix:**
+
+```tsx
+// ✅ CORRECT: Use FormInput component
+<FormField label="User ID">
+  <FormInput
+    type="text"
+    name="userId"
+    value={formData.userId}
+    onChange={handleInputChange}
+    className="custom-class" // ✅ Can still add custom classes
+  />
+</FormField>
+```
+
+---
+
+## 💡 Key Principles
+
+1. **Component-First Approach**: Always use form field components, never create custom markup
+2. **Consistency**: All forms must use the same components for identical UI/UX
+3. **Type Safety**: Use TypeScript types (`SelectOption`, `RadioOption`) for data conversion
+4. **Reusability**: One component implementation, used everywhere
+5. **Maintainability**: Update components once, changes apply to all forms
+6. **Error Handling**: Components handle error display automatically
+7. **Accessibility**: Components include proper ARIA attributes and semantic HTML
+
+---
+
+## 🔍 Decision Tree
+
+```
+Creating a new form field?
+├─ What type of field?
+│  ├─ Text/Password/Email/Tel/Date → Use FormInput
+│  ├─ Dropdown/Select → Use FormSelect (convert data to SelectOption[])
+│  ├─ Multi-line text → Use FormTextarea
+│  └─ Radio buttons → Use FormRadioGroup (convert data to RadioOption[])
+├─ Is it the first field in the first row?
+│  ├─ YES → Set isFirstRow={true} and isFirstInRow={true}
+│  └─ NO → Check if it's first in its row
+│     ├─ YES → Set isFirstInRow={true}
+│     └─ NO → No special props needed
+├─ Is it a full-width field (like description)?
+│  ├─ YES → Set fullWidth={true} on FormField
+│  └─ NO → Use default half-width layout
+├─ Does it have validation?
+│  ├─ YES → Set required={true} and pass error prop
+│  └─ NO → No required prop, no error prop
+└─ Review checklist before completing
+```
+
+---
+
+## 📚 Reference Implementation
+
+**Files that correctly implement form field components:**
+
+- ✅ `src/features/adminWeb/member/register/ui/MemberRegisterForm.tsx`
+- ✅ `src/features/adminWeb/member/detail/ui/MemberDetailView.tsx`
+- ✅ `src/features/adminWeb/board/register/ui/BoardRegisterForm.tsx`
+- ✅ `src/features/adminWeb/board/detail/ui/BoardDetailForm.tsx`
+
+**Component source files:**
+
+- ✅ `src/shared/ui/adminWeb/form/FormField.tsx`
+- ✅ `src/shared/ui/adminWeb/form/FormInput.tsx`
+- ✅ `src/shared/ui/adminWeb/form/FormSelect.tsx`
+- ✅ `src/shared/ui/adminWeb/form/FormTextarea.tsx`
+- ✅ `src/shared/ui/adminWeb/form/FormRadioGroup.tsx`
+- ✅ `src/shared/ui/adminWeb/form/index.ts`
+
+---
+
+## 🎯 Benefits Summary
+
+**Using form field components provides:**
+
+1. **60% Code Reduction**: Forms using components are ~60% shorter than custom markup
+2. **100% Consistency**: All forms have identical UI/UX
+3. **Single Source of Truth**: Update components once, all forms update
+4. **Type Safety**: TypeScript ensures correct prop usage
+5. **Error Prevention**: Standardized components reduce bugs
+6. **Faster Development**: Pre-built components speed up form creation
+7. **Easier Maintenance**: Changes in one place affect all forms
+8. **Better Testing**: Components can be tested independently
+
+---
+
+**Remember**: Always use form field components from `@/shared/ui/adminWeb/form`. Never create custom form field markup. This ensures consistency, maintainability, and reduces code duplication across the entire application.
+
+---
+
+# Modal Form Field Component Usage Rules
+
+## ⚠️ CRITICAL: Modal Form Field Components
+
+**MUST ALWAYS use `ModalFormField` component from `@/shared/ui/adminWeb/form` when:**
+
+- ✅ Creating forms inside modal dialogs
+- ✅ Building registration/edit forms in modals
+- ✅ Adding form fields to modal content
+- ✅ Implementing inline modals with form inputs
+
+**MUST NOT:**
+
+- ❌ Use `FormField` in modals (causes layout issues - fields appear only on left side)
+- ❌ Create custom modal form field markup
+- ❌ Mix `FormField` and `ModalFormField` in the same modal
+- ❌ Use regular page form components in modal contexts
+
+**Why Separate Component:**
+
+1. **Layout Difference**: Modal forms require full-width layout (`w-full`), while regular forms use half-width layout (`md:w-1/2`)
+2. **Border Styling**: Modal forms have no top borders between fields (cleaner appearance)
+3. **Visual Consistency**: Modals need different visual treatment than regular pages
+4. **User Experience**: Full-width fields in modals provide better space utilization
+
+---
+
+## 🧩 Modal Form Field Component
+
+### Import
+
+```typescript
+import {
+  ModalFormField,
+  FormInput,
+  FormSelect,
+  FormTextarea,
+} from "@/shared/ui/adminWeb/form";
+import type { SelectOption } from "@/shared/ui/adminWeb/form";
+```
+
+### Component: `ModalFormField`
+
+**Location:** `src/shared/ui/adminWeb/form/ModalFormField.tsx`
+
+**Props:**
+
+| Prop | Type | Required | Default | Description |
+|------|------|----------|---------|-------------|
+| `label` | `string` | ✅ | - | Field label text |
+| `required` | `boolean` | ❌ | `false` | Show red asterisk (*) for required fields |
+| `isFirstRow` | `boolean` | ❌ | `false` | First field in form (removes top border) |
+| `error` | `string` | ❌ | - | Error message to display |
+| `children` | `React.ReactNode` | ✅ | - | Form input component (FormInput, FormSelect, FormTextarea, etc.) |
+
+**Key Differences from `FormField`:**
+
+- ✅ Always uses full width (`w-full`) - no `md:w-1/2` split layout
+- ✅ No top borders between fields (cleaner modal appearance)
+- ✅ Optimized for modal dialog contexts
+- ✅ Same input components (FormInput, FormSelect, FormTextarea) can be used
+
+---
+
+## ✅ CORRECT: Modal Form Usage
+
+### Example 1: Text Input in Modal
+
+```tsx
+// ✅ CORRECT: Using ModalFormField in modal
+<ModalFormField
+  label="분류코드명"
+  required
+  isFirstRow
+  error={registerErrors.clCode}
+>
+  <FormSelect
+    name="clCode"
+    value={formData.clCode}
+    onChange={handleChange}
+    options={clCodeList.map((item) => ({
+      value: item.clCode,
+      label: item.clCodeNm,
+    }))}
+    placeholder="--------선택하세요-----"
+    error={registerErrors.clCode}
+  />
+</ModalFormField>
+```
+
+### Example 2: Multiple Fields in Modal
+
+```tsx
+// ✅ CORRECT: First field with isFirstRow, others without
+<form noValidate>
+  {/* First field */}
+  <div className="flex flex-wrap">
+    <ModalFormField
+      label="코드ID"
+      required
+      isFirstRow
+      error={errors.codeId}
+    >
+      <FormInput
+        type="text"
+        name="codeId"
+        value={formData.codeId}
+        onChange={handleChange}
+        error={errors.codeId}
+      />
+    </ModalFormField>
+  </div>
+
+  {/* Second field - no isFirstRow */}
+  <div className="flex flex-wrap">
+    <ModalFormField
+      label="코드ID명"
+      required
+      error={errors.codeIdNm}
+    >
+      <FormInput
+        type="text"
+        name="codeIdNm"
+        value={formData.codeIdNm}
+        onChange={handleChange}
+        error={errors.codeIdNm}
+      />
+    </ModalFormField>
+  </div>
+
+  {/* Textarea field */}
+  <div className="flex flex-wrap">
+    <ModalFormField label="코드ID설명">
+      <FormTextarea
+        name="codeIdDc"
+        value={formData.codeIdDc}
+        onChange={handleChange}
+        minHeight="100px"
+      />
+    </ModalFormField>
+  </div>
+</form>
+```
+
+### Example 3: Complex Field with Custom Layout
+
+```tsx
+// ✅ CORRECT: Custom layout inside ModalFormField
+<ModalFormField
+  label="코드ID"
+  required
+  error={errors.codeIdInput}
+>
+  <div className="w-full flex gap-2">
+    <FormInput
+      type="text"
+      name="codeId"
+      value={formData.codeId}
+      onChange={() => {}}
+      readOnly
+      disabled
+      className="w-1/4"
+    />
+    <FormInput
+      type="text"
+      name="codeIdInput"
+      value={formData.codeIdInput}
+      onChange={handleChange}
+      error={errors.codeIdInput}
+      placeholder="3자리의 숫자만 입력할 수 있습니다."
+      maxLength={3}
+      className="flex-1"
+    />
+  </div>
+</ModalFormField>
+```
+
+---
+
+## ❌ WRONG: Using FormField in Modal
+
+### Mistake 1: Wrong Component in Modal
+
+```tsx
+// ❌ WRONG: Using FormField in modal (causes layout issues)
+<FormField label="분류코드명" required>
+  <FormSelect
+    name="clCode"
+    value={formData.clCode}
+    onChange={handleChange}
+    options={options}
+  />
+</FormField>
+```
+
+**Problem:** `FormField` uses `md:w-1/2` layout, causing fields to appear only on the left side of the modal.
+
+**Fix:**
+
+```tsx
+// ✅ CORRECT: Use ModalFormField in modal
+<ModalFormField label="분류코드명" required>
+  <FormSelect
+    name="clCode"
+    value={formData.clCode}
+    onChange={handleChange}
+    options={options}
+  />
+</ModalFormField>
+```
+
+### Mistake 2: Mixing Components
+
+```tsx
+// ❌ WRONG: Mixing FormField and ModalFormField
+<ModalFormField label="Field 1" isFirstRow>
+  <FormInput ... />
+</ModalFormField>
+<FormField label="Field 2"> {/* ❌ Wrong component */}
+  <FormInput ... />
+</FormField>
+```
+
+**Fix:**
+
+```tsx
+// ✅ CORRECT: Use ModalFormField for all fields in modal
+<ModalFormField label="Field 1" isFirstRow>
+  <FormInput ... />
+</ModalFormField>
+<ModalFormField label="Field 2"> {/* ✅ Correct */}
+  <FormInput ... />
+</ModalFormField>
+```
+
+### Mistake 3: Missing isFirstRow on First Field
+
+```tsx
+// ❌ WRONG: First field missing isFirstRow prop
+<ModalFormField label="First Field"> {/* ❌ Missing isFirstRow */}
+  <FormInput ... />
+</ModalFormField>
+<ModalFormField label="Second Field">
+  <FormInput ... />
+</ModalFormField>
+```
+
+**Fix:**
+
+```tsx
+// ✅ CORRECT: First field has isFirstRow prop
+<ModalFormField label="First Field" isFirstRow> {/* ✅ Correct */}
+  <FormInput ... />
+</ModalFormField>
+<ModalFormField label="Second Field">
+  <FormInput ... />
+</ModalFormField>
+```
+
+---
+
+## 📋 Decision Tree
+
+**MUST follow this decision tree when creating form fields:**
+
+```
+Creating form field?
+├─ Is it inside a modal dialog?
+│  ├─ YES → Use ModalFormField
+│  │  └─ Is it the first field?
+│  │     ├─ YES → Add isFirstRow prop
+│  │     └─ NO → Don't add isFirstRow
+│  └─ NO → Use FormField
+│     └─ Follow FormField rules (isFirstRow, isFirstInRow, etc.)
+└─ What input type?
+   ├─ Text → FormInput
+   ├─ Dropdown → FormSelect
+   ├─ Textarea → FormTextarea
+   └─ Radio buttons → FormRadioGroup
+```
+
+---
+
+## 🔍 Props Reference
+
+### ModalFormField Props
+
+```typescript
+interface ModalFormFieldProps {
+  label: string;              // ✅ Required: Field label
+  required?: boolean;         // Optional: Show required indicator (*)
+  isFirstRow?: boolean;       // Optional: First field (removes top border)
+  error?: string;             // Optional: Error message
+  children: React.ReactNode;  // ✅ Required: Form input component
+}
+```
+
+### Usage Pattern
+
+```tsx
+<ModalFormField
+  label="Field Label"      // ✅ Required
+  required                 // Optional: Show *
+  isFirstRow              // Optional: Only for first field
+  error={errors.fieldName} // Optional: Pass error message
+>
+  {/* Form input component */}
+  <FormInput ... />
+  {/* or FormSelect, FormTextarea, etc. */}
+</ModalFormField>
+```
+
+---
+
+## 🎯 Implementation Checklist
+
+### Before Creating Modal Form
+
+- [ ] **Component Selection**: Using `ModalFormField` (not `FormField`)
+- [ ] **Import Check**: Imported from `@/shared/ui/adminWeb/form`
+- [ ] **First Field**: Added `isFirstRow` prop to first field
+- [ ] **Input Components**: Using FormInput, FormSelect, FormTextarea
+- [ ] **Error Handling**: Passing error props to both ModalFormField and input component
+
+### During Implementation
+
+- [ ] **Layout**: All fields use full width (no split layout)
+- [ ] **Borders**: No top borders between fields
+- [ ] **Consistency**: All fields in modal use ModalFormField
+- [ ] **Props**: Required props correctly set
+- [ ] **Data Format**: Select options converted to SelectOption[] format
+
+### After Implementation
+
+- [ ] **Visual Check**: Fields display full width in modal
+- [ ] **Error Display**: Errors show correctly
+- [ ] **No Layout Issues**: Fields not appearing only on left side
+- [ ] **Consistency**: Matches other modal forms in codebase
+
+---
+
+## 🚫 Common Mistakes to Avoid
+
+### Mistake 1: Using FormField in Modal
+
+```tsx
+// ❌ WRONG: FormField causes layout issues in modal
+<FormField label="Field Name">
+  <FormInput ... />
+</FormField>
+```
+
+**Problem:** Fields appear only on left side, not full width.
+
+**Fix:**
+
+```tsx
+// ✅ CORRECT: Use ModalFormField
+<ModalFormField label="Field Name">
+  <FormInput ... />
+</ModalFormField>
+```
+
+### Mistake 2: Forgetting isFirstRow
+
+```tsx
+// ❌ WRONG: First field missing isFirstRow
+<ModalFormField label="First Field">
+  <FormInput ... />
+</ModalFormField>
+```
+
+**Fix:**
+
+```tsx
+// ✅ CORRECT: Add isFirstRow to first field
+<ModalFormField label="First Field" isFirstRow>
+  <FormInput ... />
+</ModalFormField>
+```
+
+### Mistake 3: Not Passing Error to Both Components
+
+```tsx
+// ❌ WRONG: Error only passed to input
+<ModalFormField label="Field Name">
+  <FormInput error={errors.fieldName} ... />
+</ModalFormField>
+```
+
+**Fix:**
+
+```tsx
+// ✅ CORRECT: Pass error to both ModalFormField and input
+<ModalFormField label="Field Name" error={errors.fieldName}>
+  <FormInput error={errors.fieldName} ... />
+</ModalFormField>
+```
+
+---
+
+## ✅ Reference Implementations
+
+**Files that correctly implement modal form fields:**
+
+- ✅ `src/features/adminWeb/code/manage/ui/CmmCodeManagePageView.tsx`
+  - 대분류코드 등록 모달
+  - 대분류코드 상세 모달
+  - 소분류코드 등록 모달
+  - 소분류코드 상세 모달
+
+**All modal forms in this file use:**
+- ✅ `ModalFormField` for all fields
+- ✅ `isFirstRow` on first field only
+- ✅ `FormInput`, `FormSelect`, `FormTextarea` for inputs
+- ✅ Error props passed correctly
+
+---
+
+## 🎯 Key Principles
+
+1. **Modal-Specific Component**: Always use `ModalFormField` in modals, never `FormField`
+2. **Full Width Layout**: Modal forms always use full width (`w-full`)
+3. **No Top Borders**: Fields in modals have no top borders between them
+4. **First Field Marking**: Always mark first field with `isFirstRow` prop
+5. **Consistent Inputs**: Use same input components (FormInput, FormSelect, etc.) as regular forms
+6. **Error Handling**: Pass error props to both ModalFormField and input component
+7. **No Mixing**: Never mix `FormField` and `ModalFormField` in same modal
+
+---
+
+## 🎯 Benefits Summary
+
+**Using `ModalFormField` in modals provides:**
+
+1. **Correct Layout**: Fields display full width in modal (not just left side)
+2. **Visual Consistency**: Clean appearance with no top borders between fields
+3. **Code Reusability**: Same input components work in both regular forms and modals
+4. **Type Safety**: TypeScript interfaces ensure correct prop usage
+5. **Maintainability**: Single component for all modal forms
+6. **Developer Experience**: Clear distinction between regular and modal forms
+
+---
+
+**Remember**: Always use `ModalFormField` for forms inside modals. Never use `FormField` in modal contexts as it causes layout issues (fields appear only on left side). This ensures correct layout, visual consistency, and proper user experience in modal dialogs.
+
+---
+
+# Form Layout and Button Consistency Rules
+
+## ⚠️ CRITICAL: Form Layout Consistency
+
+**MUST ALWAYS use the standard 2-column layout pattern when:**
+
+- ✅ Creating registration/edit forms
+- ✅ Adding fields to existing forms
+- ✅ Refactoring form layouts
+- ✅ Building any admin web form (member, board, article, code, program, etc.)
+
+**MUST ensure ALL registration/edit forms use consistent 2-column layout across the entire application.**
+
+**Why This Rule is CRITICAL:**
+
+1. **Visual Consistency**: All forms must look identical in layout structure
+2. **Space Efficiency**: 2-column layout maximizes space utilization
+3. **User Experience**: Consistent layouts reduce cognitive load for users
+4. **Professional Appearance**: Inconsistent layouts look unprofessional and untested
+5. **Maintainability**: Standardized layouts are easier to maintain
+
+---
+
+## ✅ CORRECT: Standard 2-Column Layout Pattern
+
+**MUST use 2-column layout for registration/edit forms:**
+
+```tsx
+// ✅ CORRECT: 2-column layout pattern
+<div className="flex flex-wrap">
+  {/* First row: Field 1 (left) + Field 2 (right) */}
+  <FormField
+    label="Field 1"
+    required
+    isFirstRow
+    isFirstInRow
+    error={errors.field1}
+  >
+    <FormInput ... />
+  </FormField>
+  <FormField
+    label="Field 2"
+    isFirstInRow
+    error={errors.field2}
+  >
+    <FormInput ... />
+  </FormField>
+</div>
+
+<div className="flex flex-wrap">
+  {/* Second row: Field 3 (left) + Field 4 (right) */}
+  <FormField
+    label="Field 3"
+    error={errors.field3}
+  >
+    <FormInput ... />
+  </FormField>
+  <FormField
+    label="Field 4"
+    isFirstInRow
+    error={errors.field4}
+  >
+    <FormInput ... />
+  </FormField>
+</div>
+```
+
+**Layout Rules:**
+
+- ✅ **Two fields per row**: Each row should contain two fields (left and right)
+- ✅ **Complex fields**: Even complex fields (date range "from ~ to", file inputs, etc.) should be in left column with another field in right column
+- ✅ **Full-width fields**: Only textarea or description fields can span full width using `fullWidth` prop
+- ✅ **First row**: First field uses `isFirstRow` and `isFirstInRow`, second field uses only `isFirstInRow`
+- ✅ **Subsequent rows**: First field has no special props, second field uses `isFirstInRow`
+
+---
+
+## ❌ WRONG: 1-Column Layout (Inconsistent)
+
+**MUST NOT use 1-column layout unless absolutely necessary (e.g., full-width textarea):**
+
+```tsx
+// ❌ WRONG: Each field in separate row (1-column layout)
+<div className="flex flex-wrap">
+  <FormField label="Field 1" isFirstRow isFirstInRow>
+    <FormInput ... />
+  </FormField>
+</div>
+<div className="flex flex-wrap">
+  <FormField label="Field 2">
+    <FormInput ... />
+  </FormField>
+</div>
+<div className="flex flex-wrap">
+  <FormField label="Field 3">
+    <FormInput ... />
+  </FormField>
+</div>
+```
+
+**Why this is WRONG:**
+
+1. ❌ **Inconsistent with other forms**: MemberRegisterForm, BoardRegisterForm all use 2-column layout
+2. ❌ **Wastes vertical space**: Unnecessarily uses more screen space
+3. ❌ **Visual inconsistency**: Creates confusion when navigating between forms
+4. ❌ **Unprofessional appearance**: Looks like incomplete or rushed implementation
+5. ❌ **Even complex fields should use 2-column**: Date range, file inputs, etc. can be left column
+
+**Common Mistake Example:**
+
+**Real-world case: ArticleRegisterForm**
+- ❌ Used 1-column layout for all fields
+- ❌ Reason: Thought date range field "from ~ to" needed full width
+- ❌ Reality: Date range field can be left column (50%), status field can be right column (50%)
+
+**Fix:**
+```tsx
+// ✅ CORRECT: Date range in left column, status in right column
+<div className="flex flex-wrap">
+  <FormField label="게시기간" error={errors.ntcrStartDt || errors.ntcrEndDt}>
+    <div className="w-full flex items-center gap-2">
+      <FormInput type="date" name="ntcrStartDt" ... />
+      <span>~</span>
+      <FormInput type="date" name="ntcrEndDt" ... />
+    </div>
+  </FormField>
+  <FormField label="상태코드" isFirstInRow error={errors.sttusCode}>
+    <FormRadioGroup ... />
+  </FormField>
+</div>
+```
+
+---
+
+## ⚠️ CRITICAL: Form Action Button Consistency
+
+**MUST ALWAYS use consistent button text, position, and order for ALL registration/edit forms:**
+
+**Standard Pattern (MUST follow exactly):**
+
+1. **Button Order**: Register/Submit button (LEFT) → Close button (RIGHT)
+2. **Button Text**: "등록" / "등록 중..." → "닫기" (NOT "취소")
+3. **Button Colors**: Blue (`bg-blue-600`) for 등록 → Gray (`bg-gray-500`) for 닫기
+4. **Button Classes**: Standard classes with `minWidth: "100px"`
+
+**Why This Rule is CRITICAL:**
+
+1. **UI Consistency**: All forms must have identical button patterns
+2. **User Experience**: Users expect consistent button placement and text
+3. **Professional Appearance**: Inconsistent buttons look unprofessional
+4. **Accessibility**: Consistent patterns help users navigate faster
+5. **Prevent Mistakes**: Standard pattern prevents common implementation errors
+
+---
+
+## ✅ CORRECT: Standard Button Pattern
+
+**MUST use this exact pattern for ALL form action buttons:**
+
+```tsx
+// ✅ CORRECT: Standard button pattern for registration/edit forms
+<div className="flex justify-end mt-3 gap-2 px-6 py-4">
+  <button
+    type="submit"
+    className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+    style={{ minWidth: "100px" }}
+    disabled={loading}
+  >
+    {loading ? "등록 중..." : "등록"}
+  </button>
+  <button
+    type="button"
+    className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
+    style={{ minWidth: "100px" }}
+    onClick={handleCancel}
+    disabled={loading}
+  >
+    닫기
+  </button>
+</div>
+```
+
+**Required Properties (MUST use exactly):**
+
+- ✅ **Button order**: 등록 (left) → 닫기 (right)
+- ✅ **Button text**: "등록" / "등록 중..." (when loading) and "닫기" (NOT "취소")
+- ✅ **Button colors**: `bg-blue-600` for 등록, `bg-gray-500` for 닫기
+- ✅ **Button classes**: `px-4 py-2 rounded` with `minWidth: "100px"`
+- ✅ **Container classes**: `flex justify-end mt-3 gap-2 px-6 py-4`
+
+---
+
+## ❌ WRONG: Inconsistent Button Patterns
+
+### Mistake 1: Wrong Button Text ("취소" instead of "닫기")
+
+```tsx
+// ❌ WRONG: Using "취소" instead of "닫기"
+<button
+  type="button"
+  onClick={handleCancel}
+>
+  취소 {/* ❌ Wrong text */}
+</button>
+```
+
+**Why this is WRONG:**
+
+1. ❌ **Inconsistent with other forms**: BoardRegisterForm, MemberRegisterForm all use "닫기"
+2. ❌ **Semantic difference**: "취소" implies canceling input/operation, "닫기" means closing and returning to list
+3. ❌ **Creates UI inconsistency**: Breaks visual and text consistency across application
+4. ❌ **Professional appearance**: Mixed button text looks unprofessional
+
+**Root Cause Analysis:**
+
+- **Problem**: Not checking existing forms for standard button text
+- **Assumption**: "취소" seems logical for canceling form input
+- **Reality**: Standard pattern across all admin forms is "닫기"
+- **Solution**: Always check MemberRegisterForm and BoardRegisterForm before implementing
+
+**Fix:**
+
+```tsx
+// ✅ CORRECT: Use "닫기" (standard text)
+<button
+  type="button"
+  onClick={handleCancel}
+>
+  닫기 {/* ✅ Correct text */}
+</button>
+```
+
+### Mistake 2: Wrong Button Order (Close before Register)
+
+```tsx
+// ❌ WRONG: Close button before Register button
+<div className="flex justify-end gap-2">
+  <button
+    type="button"
+    onClick={handleCancel}
+  >
+    닫기 {/* ❌ Wrong position - should be right */}
+  </button>
+  <button
+    type="submit"
+  >
+    등록 {/* ❌ Wrong position - should be left */}
+  </button>
+</div>
+```
+
+**Why this is WRONG:**
+
+1. ❌ **Primary action should be first**: 등록 (primary action) should be on left, 닫기 (secondary action) on right
+2. ❌ **Inconsistent with standard pattern**: All other forms use 등록 (left) → 닫기 (right)
+3. ❌ **Violates UI/UX best practices**: Primary actions should come before secondary actions
+4. ❌ **User confusion**: Users expect primary action (등록) to be first
+5. ❌ **Professional appearance**: Reversed order looks like a mistake
+
+**Root Cause Analysis:**
+
+- **Problem**: Implementing buttons without checking standard pattern
+- **Assumption**: Button order doesn't matter or can be reversed
+- **Reality**: Standard pattern is well-established (등록 left → 닫기 right)
+- **Solution**: Always check existing forms and follow established pattern
+
+**Fix:**
+
+```tsx
+// ✅ CORRECT: Register button left, Close button right
+<div className="flex justify-end gap-2">
+  <button
+    type="submit"
+  >
+    등록 {/* ✅ Correct position - left */}
+  </button>
+  <button
+    type="button"
+    onClick={handleCancel}
+  >
+    닫기 {/* ✅ Correct position - right */}
+  </button>
+</div>
+```
+
+### Mistake 3: Wrong Button Container Classes
+
+```tsx
+// ❌ WRONG: Missing standard classes or wrong structure
+<div className="flex justify-end gap-2 px-6 py-4 border-t border-gray-200">
+  {/* ❌ border-t should not be here for form buttons */}
+  <button>...</button>
+  <button>...</button>
+</div>
+```
+
+**Why this is WRONG:**
+
+1. ❌ **Inconsistent spacing**: `border-t` creates visual separation that may not match other forms
+2. ❌ **Standard pattern**: Other forms use `flex justify-end mt-3 gap-2 px-6 py-4` without `border-t`
+3. ❌ **Visual inconsistency**: Extra border creates different appearance
+
+**Fix:**
+
+```tsx
+// ✅ CORRECT: Standard container classes
+<div className="flex justify-end mt-3 gap-2 px-6 py-4">
+  {/* ✅ No border-t, standard spacing */}
+  <button>...</button>
+  <button>...</button>
+</div>
+```
+
+---
+
+## 🔍 Root Cause Analysis: Why Developers Make These Mistakes
+
+### 1. **Not Checking Existing Forms**
+
+**Problem:**
+- Developers create new forms without checking existing forms (MemberRegisterForm, BoardRegisterForm)
+- They assume their implementation is correct
+- No reference check step in workflow
+
+**Example:**
+```tsx
+// Developer creates ArticleRegisterForm
+// Never checks BoardRegisterForm or MemberRegisterForm
+// Result: Inconsistent layout and buttons
+```
+
+**Solution:**
+- Always check at least 2-3 existing forms before implementing
+- Compare layout structure and button patterns
+- Use existing forms as reference implementation
+
+### 2. **Assumptions About Complex Fields**
+
+**Problem:**
+- Developers think complex fields (date range, file uploads) need full width
+- They don't realize these can be in left column with another field in right
+- Overthinking layout requirements
+
+**Example:**
+```tsx
+// Developer sees date range "from ~ to"
+// Thinks: "This needs full width, so I'll make each field in separate row"
+// Reality: Date range can be left column, status can be right column
+```
+
+**Solution:**
+- Always use 2-column layout, even for complex fields
+- If in doubt, check how other forms handle similar fields
+- Remember: 2-column is standard, exceptions are rare (only full-width textarea)
+
+### 3. **Semantic Confusion (Cancel vs Close)**
+
+**Problem:**
+- Developers think "취소" (cancel) is correct for closing form
+- They don't check what other forms use
+- Semantic confusion between "cancel operation" and "close form"
+
+**Example:**
+```tsx
+// Developer thinks: "This button cancels the form, so '취소' is correct"
+// Reality: Standard pattern is "닫기" (close) which means "close and return to list"
+```
+
+**Solution:**
+- Always use "닫기" for close button in forms
+- Check existing forms for standard text
+- Understand difference: "취소" = cancel operation, "닫기" = close and return
+
+### 4. **Button Order Assumptions**
+
+**Problem:**
+- Developers don't consider button order important
+- They place buttons in any order that seems logical
+- No awareness of primary vs secondary action pattern
+
+**Example:**
+```tsx
+// Developer thinks: "Both buttons are important, order doesn't matter"
+// Reality: Standard pattern is primary action (등록) first, secondary (닫기) second
+```
+
+**Solution:**
+- Always follow pattern: Primary action (등록) left → Secondary action (닫기) right
+- Check existing forms for button order
+- Understand UI/UX best practices for button placement
+
+### 5. **Copy-Paste from Different Sources**
+
+**Problem:**
+- Developers copy code from different projects or examples
+- Each source uses different patterns
+- No verification against project standards
+
+**Solution:**
+- Always copy from existing forms within the same project
+- Verify patterns match before implementing
+- Use project forms as single source of truth
+
+---
+
+## 📋 Verification Checklist
+
+**MUST verify ALL items when creating/modifying registration/edit forms:**
+
+### Form Layout Checklist
+
+**Pre-Implementation:**
+- [ ] **Checked existing forms** (MemberRegisterForm, BoardRegisterForm) for layout pattern
+- [ ] **Planned 2-column layout** for all rows (unless full-width textarea)
+- [ ] **Identified field pairs** (which fields go in same row)
+
+**Implementation:**
+- [ ] **Using 2-column layout** for all rows
+- [ ] **Two fields per row** (left and right)
+- [ ] **Complex fields** (date range, file inputs) still use left column
+- [ ] **Full-width fields** only for textarea/description with `fullWidth` prop
+- [ ] **First row props**: First field has `isFirstRow` and `isFirstInRow`, second has `isFirstInRow`
+- [ ] **Subsequent rows**: First field has no special props, second has `isFirstInRow`
+
+**Post-Implementation:**
+- [ ] **Visual comparison**: Compared with MemberRegisterForm and BoardRegisterForm
+- [ ] **Layout consistency**: Form looks identical in structure to other forms
+- [ ] **No wasted space**: All fields efficiently use 2-column layout
+
+### Button Checklist
+
+**Pre-Implementation:**
+- [ ] **Checked existing forms** for button pattern
+- [ ] **Identified standard button order**: 등록 (left) → 닫기 (right)
+- [ ] **Identified standard button text**: "등록" / "등록 중..." and "닫기"
+
+**Implementation:**
+- [ ] **Button order**: 등록 (left) → 닫기 (right)
+- [ ] **Button text**: "등록" / "등록 중..." (when loading) and "닫기" (NOT "취소")
+- [ ] **Button colors**: `bg-blue-600` for 등록, `bg-gray-500` for 닫기
+- [ ] **Button classes**: Standard classes with `minWidth: "100px"`
+- [ ] **Container classes**: `flex justify-end mt-3 gap-2 px-6 py-4`
+
+**Post-Implementation:**
+- [ ] **Visual comparison**: Compared with other forms side-by-side
+- [ ] **Button consistency**: Buttons look and behave identically to other forms
+- [ ] **Text consistency**: Button text matches standard pattern
+
+---
+
+## 🔄 Step-by-Step Implementation Guide
+
+### Step 1: Check Existing Forms
+
+```tsx
+// Before implementing, check these files:
+// 1. src/features/adminWeb/member/register/ui/MemberRegisterForm.tsx
+// 2. src/features/adminWeb/board/register/ui/BoardRegisterForm.tsx
+
+// Verify:
+// - Layout structure (2-column)
+// - Button order and text
+// - Field pairing
+```
+
+### Step 2: Plan Layout Structure
+
+```tsx
+// Plan your form layout:
+// Row 1: Field 1 (left) + Field 2 (right)
+// Row 2: Field 3 (left) + Field 4 (right)
+// Row 3: Full-width textarea (if needed)
+
+// Example:
+// Row 1: 게시글 제목 (left) + 공지여부 (right)
+// Row 2: 게시기간 (left) + 상태코드 (right)
+```
+
+### Step 3: Implement 2-Column Layout
+
+```tsx
+// ✅ CORRECT: 2-column layout
+<div className="flex flex-wrap">
+  <FormField label="Field 1" isFirstRow isFirstInRow>
+    <FormInput ... />
+  </FormField>
+  <FormField label="Field 2" isFirstInRow>
+    <FormInput ... />
+  </FormField>
+</div>
+```
+
+### Step 4: Implement Buttons
+
+```tsx
+// ✅ CORRECT: Standard button pattern
+<div className="flex justify-end mt-3 gap-2 px-6 py-4">
+  <button type="submit" className="... bg-blue-600 ...">
+    등록
+  </button>
+  <button type="button" className="... bg-gray-500 ..." onClick={handleCancel}>
+    닫기
+  </button>
+</div>
+```
+
+### Step 5: Visual Comparison
+
+```
+1. Open your new form in browser
+2. Open MemberRegisterForm in another tab
+3. Compare layout structure side-by-side
+4. Compare button pattern side-by-side
+5. Verify they look identical
+6. If different, fix to match exactly
+```
+
+---
+
+## 🚫 Common Mistakes to Avoid
+
+### Mistake 1: Using 1-Column Layout
+
+```tsx
+// ❌ WRONG: Each field in separate row
+<div className="flex flex-wrap">
+  <FormField label="Field 1">...</FormField>
+</div>
+<div className="flex flex-wrap">
+  <FormField label="Field 2">...</FormField>
+</div>
+```
+
+**Why this is a mistake:**
+- Wastes vertical space
+- Inconsistent with other forms
+- Unprofessional appearance
+
+**Fix:**
+```tsx
+// ✅ CORRECT: 2-column layout
+<div className="flex flex-wrap">
+  <FormField label="Field 1" isFirstRow isFirstInRow>...</FormField>
+  <FormField label="Field 2" isFirstInRow>...</FormField>
+</div>
+```
+
+### Mistake 2: Wrong Button Text
+
+```tsx
+// ❌ WRONG: "취소" instead of "닫기"
+<button onClick={handleCancel}>취소</button>
+```
+
+**Fix:**
+```tsx
+// ✅ CORRECT: "닫기"
+<button onClick={handleCancel}>닫기</button>
+```
+
+### Mistake 3: Wrong Button Order
+
+```tsx
+// ❌ WRONG: 닫기 before 등록
+<button onClick={handleCancel}>닫기</button>
+<button type="submit">등록</button>
+```
+
+**Fix:**
+```tsx
+// ✅ CORRECT: 등록 before 닫기
+<button type="submit">등록</button>
+<button onClick={handleCancel}>닫기</button>
+```
+
+---
+
+## 💡 Key Principles
+
+1. **Consistency First**: ALL registration/edit forms MUST use identical layout and button patterns
+2. **2-Column Standard**: Always use 2-column layout unless full-width textarea
+3. **Reference Before Implementation**: Always check existing forms before creating new ones
+4. **Primary Action First**: Primary action (등록) should be left, secondary (닫기) should be right
+5. **Standard Text**: Always use "닫기" (not "취소") for close button
+6. **Visual Verification**: Always compare visually with existing forms after implementation
+7. **Complex Fields Fit**: Even complex fields (date range) can use 2-column layout
+
+---
+
+## 🔍 Decision Tree
+
+```
+Creating registration/edit form?
+├─ Check existing forms (MemberRegisterForm, BoardRegisterForm)?
+│  ├─ YES → Use their layout and button pattern
+│  └─ NO → ❌ ALWAYS check first
+├─ Planning layout?
+│  ├─ Need full-width textarea?
+│  │  ├─ YES → Use fullWidth prop for textarea
+│  │  └─ NO → Use 2-column layout for all fields
+│  └─ Complex field (date range, file upload)?
+│     ├─ YES → Still use left column, pair with another field
+│     └─ NO → Use 2-column layout
+├─ Implementing buttons?
+│  ├─ Button order: 등록 (left) → 닫기 (right) ✅
+│  ├─ Button text: "등록" / "등록 중..." and "닫기" ✅
+│  └─ Button colors: Blue (등록) → Gray (닫기) ✅
+└─ Post-implementation?
+   ├─ Visual comparison with other forms ✅
+   ├─ Layout consistency check ✅
+   └─ Button consistency check ✅
+```
+
+---
+
+## 📚 Reference Implementation
+
+**Files that correctly implement these rules:**
+
+- ✅ `src/features/adminWeb/member/register/ui/MemberRegisterForm.tsx`
+  - 2-column layout for all rows
+  - Button order: 등록 (left) → 닫기 (right)
+  - Button text: "등록" / "등록 중..." and "닫기"
+  
+- ✅ `src/features/adminWeb/board/register/ui/BoardRegisterForm.tsx`
+  - 2-column layout for all rows
+  - Button order: 등록 (left) → 닫기 (right)
+  - Button text: "등록" / "등록 중..." and "닫기"
+
+**All registration/edit forms MUST follow this exact pattern for consistency.**
+
+---
+
+## 🎯 Benefits Summary
+
+**Following these rules provides:**
+
+1. **100% Consistency**: All forms have identical layout and button patterns
+2. **Space Efficiency**: 2-column layout maximizes screen space usage
+3. **Professional Appearance**: Consistent UI looks polished and tested
+4. **User Experience**: Users can navigate between forms without confusion
+5. **Developer Experience**: Clear standards reduce implementation decisions
+6. **Maintainability**: Standardized patterns are easier to update
+7. **Bug Prevention**: Standards prevent common layout and button mistakes
+
+---
+
+**Remember**: Always use 2-column layout for registration/edit forms. Always check existing forms (MemberRegisterForm, BoardRegisterForm) before implementing. Always follow standard button pattern: 등록 (left) → 닫기 (right) with correct text and colors. This ensures consistency, professionalism, and excellent user experience across the entire application.
+
+---
+
+## 🧑‍🎓 학생 기준 유효성/표시 규칙 (저소득층 값 소스)
+
+### ⚠️ CRITICAL: `lowIncomeYn` 등의 저소득층 관련 값은 “학생” 기준
+
+- 적용 대상
+  - 1) `지원 > 1:1 원어민 화상영어 > 신청 등록`
+  - 2) `지원 > 스터디 사업 > 신청`
+
+### MUST
+- 학생 선택 시에만 `ArmuserService.getDetail(학생 esntlId)`를 호출해 `student.basicYn`/`student.poorYn`을 가져와 `lowIncomeYn`(또는 `basicYn`/`poorYn`) 표시/검증 상태를 설정한다.
+- 상세(읽기/수정) 로딩 시에도 `pEsntlId`(보호자)가 아닌 `reqEsntlId`(학생)로 조회하여 표시/검증 상태를 세팅한다.
+- 보호자 선택 시에는 기존에 세팅된 저소득층 관련 상태를 초기화(unset)한다.
+
+### UI/Validation 가이드
+- 화면에 저소득층 표시 영역이 있는 경우, 값의 출처가 학생 상세임을 전제로 표기한다.
+- 서버 전송 시에도 학생 기준의 `lowIncomeYn`(또는 `basicYn`/`poorYn`)을 포함한다.
+- 유효성 검사가 필요한 경우(예: 필수 표기/오류 메시지)에도 동일한 “학생 기준” 값을 참조한다.
+
+### 주의/전제
+- 백엔드 ARMUSER(학생) 상세 응답에 `basicYn`/`poorYn`이 포함되어야 한다. 미포함 시 백엔드 반영이 선행되어야 한다.
+- 공통 훅을 사용하는 화면(예: 스터디 신청)은 “학생 선택” 핸들러 내부에서만 학생 기준 조회를 수행해 영향 범위를 최소화한다.

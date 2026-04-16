@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0" />
+    <link rel="stylesheet" href="css/default.css">
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/biz_pr.css">
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard-gov.min.css" />
+    <link  rel="stylesheet" href="https://hangeul.pstatic.net/hangeul_static/css/nanum-square-round.css">
+</head>
+<body>
+    <div id="skip">
+        <a href="#main_content">본문 바로가기</a>
+    </div>
+    <header class="header">
+        <div class="headerTop inner">
+            <div class="headerLogo">
+                <h1>
+                    <a href="/">
+                        <img src="images/logo.png" alt="군산시꿈이음센터">
+                    </a>
+                </h1>
+                <span class="badgeStudent">학생</span>
+            </div>
+            <div class="utilMenu">
+                <div class="userLinks">
+                    <a href="#">로그인</a>
+                    <a href="#">회원가입</a>
+                    <a href="#" target="_blank" class="btnPortal">꿈이음센터포털 바로가기<img src="images/icon/ico_newtab_20_pr.png" alt="" aria-hidden="true"></a>
+                </div>
+                <button type="button" class="menuOpen" aria-label="메뉴 열기">
+                    <img src="images/icon/ico_menu_32.png" alt="메뉴 열기">
+                </button>
+            </div>
+        </div>
+        <nav class="navPc" aria-label="메인 메뉴">
+            <div class="inner">
+                <ul class="navList">
+                    <li>
+                        <a href="#" class="mainLink">초등학교</a>
+                        <div class="subMenu">
+                            <div class="inner">
+                                <ul class="subList">
+                                    <li><a href="#">1학년</a></li>
+                                    <li><a href="#">2학년</a></li>
+                                    <li><a href="#">3학년</a></li>
+                                    <li><a href="#">4학년</a></li>
+                                    <li><a href="#">5학년</a></li>
+                                    <li><a href="#">6학년</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </li>
+                    <li>
+                        <a href="#" class="mainLink">중학교</a>
+                        <div class="subMenu">
+                            <div class="inner">
+                                <ul class="subList">
+                                    <li><a href="#">1학년</a></li>
+                                    <li><a href="#">2학년</a></li>
+                                    <li><a href="#">3학년</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </li>
+                    <li>
+                        <a href="#" class="mainLink">고등학교</a>
+                        <div class="subMenu">
+                            <div class="inner">
+                                <ul class="subList">
+                                    <li><a href="#">1학년</a></li>
+                                    <li><a href="#">2학년</a></li>
+                                    <li><a href="#">3학년</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </li>
+                    <li><a href="#" class="mainLink">공지사항</a></li>
+                    <li><a href="#" class="mainLink">학원조회</a></li>
+                    <li><a href="#" class="mainLink">MY PAGE</a></li>
+                </ul>
+            </div>
+        </nav>
+        <div class="moMenu" id="mobileMenu">
+            <div class="moMenuInner">
+                <div class="moMenuHeader">
+                    <div class="logoArea">
+                        <img src="images/logo.png" alt="군산시꿈이음센터" height="32">
+                        <span class="badgeStudent">학생</span>
+                    </div>
+                    <button type="button" class="menuClose" aria-label="메뉴 닫기">
+                        <img src="images/icon/ico_close_32.png" alt="닫기">
+                    </button>
+                </div>
+                <div class="moMenuContent">
+                    <nav class="moMenuNav">
+                        <ul class="moNavList">
+                            <li class="navItem active">
+                                <button type="button" class="moMainLink">초등학교</button>
+                                <div class="moSubMenuPane">
+                                    <ul class="moSubList">
+                                        <li><a href="#">1학년</a></li>
+                                        <li><a href="#">2학년</a></li>
+                                        <li><a href="#">3학년</a></li>
+                                        <li><a href="#">4학년</a></li>
+                                        <li><a href="#">5학년</a></li>
+                                        <li><a href="#">6학년</a></li>
+                                    </ul>
+                                </div>
+                            </li>
+                            <li class="navItem">
+                                <button type="button" class="moMainLink">중학교</button>
+                                <div class="moSubMenuPane">
+                                    <ul class="moSubList">
+                                        <li><a href="#">1학년</a></li>
+                                        <li><a href="#">2학년</a></li>
+                                        <li><a href="#">3학년</a></li>
+                                    </ul>
+                                </div>
+                            </li>
+                            <li class="navItem">
+                                <button type="button" class="moMainLink">고등학교</button>
+                                <div class="moSubMenuPane">
+                                    <ul class="moSubList">
+                                        <li><a href="#">1학년</a></li>
+                                        <li><a href="#">2학년</a></li>
+                                        <li><a href="#">3학년</a></li>
+                                    </ul>
+                                </div>
+                            </li>
+                            <li class="navItem"><button type="button" class="moMainLink">공지사항</button></li>
+                            <li class="navItem"><button type="button" class="moMainLink">학원조회</button></li>
+                            <li class="navItem"><button type="button" class="moMainLink">MY PAGE</button></li>
+                        </ul>
+                        <div class="moMenuFooter">
+                            <a href="#" class="btn-login">로그인</a>
+                            <a href="#" class="btn-portal">꿈이음센터포털 바로가기</a>
+                        </div>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </header>
+    <main id="main_content" class="bizBg">
+        <section class="inner">
+            <div class="mainBg">
+                <article class="bizInfo">
+                    <div class="imageWrapper">
+                        <img src="images/img_noImg.png" alt="청소년자기계발연수지원" class="mainImage">
+                    </div>
+                    <div class="infoWrapper">
+                        <span class="statusBadge ing" aria-label="현재 상태">접수중</span>
+                        <div class="contentTitle">마중몰 스터디 사업 (마중몰 스터디)</div>
+                        <div class="detailBox">
+                            <ul class="detailList">
+                                <li class="detailItem">
+                                    <strong class="itemLabel">사업대상</strong>
+                                    <span class="itemValue">관내 중학교 2학년 재학생 (또는 학교 밖 청소년)</span>
+                                </li>
+                                <li class="detailItem">
+                                    <strong class="itemLabel">모집기간</strong>
+                                    <span class="itemValue">1기 (3월~4월) / 2기 (7월~8월) / 3기 (10월~11월)</span>
+                                </li>
+                                <li class="detailItem">
+                                    <strong class="itemLabel">기타내용</strong>
+                                    <span class="itemValue">기타내용이 들어가용</span>
+                                </li>
+                            </ul>
+                            <div class="flex-sb">
+                                <button type="button" class="hakwonButton" id="openModal" aria-haspopup="dialog" aria-controls="hakwonModal">학원목록 확인</button>
+                                <button type="button" class="submitButton">신청하기</button>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+                <div class="bizBox">
+                    <div class="title">사업개요</div>
+                    <div class="content">학생 스스로 자기계발 탐구영역을 정해서 신청하는 장학금으로 다양한 진로체험 기회 제공 및 자신감 향상 유도</div>
+                </div>
+                <div class="bizBox">
+                    <div class="title">사업내용</div>
+                    <div class="content">학생 스스로 자기계발 탐구영역을 정해서 신청하는 장학금으로 다양한 진로체험 기회 제공 및 자신감 향상 유도</div>
+                </div>
+                <div class="bizFile">
+                    <div class="title" id="fileDownloadTitle">첨부파일</div>
+                    <ul class="fileWrap" aria-labelledby="fileDownloadTitle">
+                        <li class="fileList">
+                            <a href="../downloads/plan_sample.hwp" class="file hwp" download title="탐구계획 작성 예시 hwp 파일 다운로드">
+                                <span class="fileIcon" aria-hidden="true"></span>
+                                <span class="fileName">탐구계획 작성 예시.hwp</span>
+                                <span class="sr-only">(다운로드)</span>
+                            </a>
+                        </li>
+                        <li class="fileList">
+                            <a href="../downloads/plan_sample.xls" class="file xls" download title="탐구계획 작성 예시 xls 파일 다운로드">
+                                <span class="fileIcon" aria-hidden="true"></span>
+                                <span class="fileName">탐구계획 작성 예시.xls</span>
+                                <span class="sr-only">(다운로드)</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+        <div class="modalOverlay" id="modalOverlay" aria-hidden="true">
+            <div class="modalContent" role="dialog" aria-labelledby="modalTitle">
+                <div class="modalHeader">
+                    <div id="modalTitle">학원목록</div>
+                    <button type="button" class="closeBtn" id="closeModal" aria-label="닫기">&times;</button>
+                </div>
+                <div class="modalBody">
+                    <ul class="hakwonList">
+                        <li class="hakwonItem active">
+                            <div class="hakwonInfo">
+                                <div class="topInfo">
+                                    <strong class="hakwonName">군산센트럴학원</strong>
+                                    <span class="categoryTag">영어 국어 수학</span>
+                                    <button type="button" class="mapBtn">지도보기</button>
+                                </div>
+                                <p class="hakwonAddr">
+                                    <span class="iconLocBg" aria-hidden="true"></span>
+                                    <span class="sr-only">주소:</span> 
+                                    전북 군산시 서수송1길 9 로고스빌딩 401호
+                                </p>
+                                <p class="hakwonTel">
+                                    <span class="iconPhoneBg" aria-hidden="true"></span>
+                                    <span class="sr-only">전화번호:</span> 
+                                    063-471-7784
+                                </p>
+                            </div>
+                        </li>
+                        <li class="hakwonItem">
+                            <div class="hakwonInfo">
+                                <div class="topInfo">
+                                    <strong class="hakwonName">군산센트럴학원</strong>
+                                    <span class="categoryTag">영어</span>
+                                    <button type="button" class="mapBtn">지도보기</button>
+                                </div>
+                                <p class="hakwonAddr">
+                                    <span class="iconLocBg" aria-hidden="true"></span>
+                                    <span class="sr-only">주소:</span> 
+                                    전북 군산시 서수송1길 9 로고스빌딩 401호
+                                </p>
+                                <p class="hakwonTel">
+                                    <span class="iconPhoneBg" aria-hidden="true"></span>
+                                    <span class="sr-only">전화번호:</span> 
+                                    063-471-7784
+                                </p>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </main>
+    <footer class="footer">
+        <div class="innerContainer inner">
+            <div class="footerInfoWrap">
+                <div class="footerLogo">
+                    <img src="images/logo_w.png" alt="군산시 꿈이음센터">
+                </div>
+                <div class="addressArea">
+                    <address>
+                        [54080] 전북특별자치도 군산시 조촌로 22 <span>|</span> 대표전화 : 063)450-2600
+                    </address>
+                    <p class="copyright">Copyright ⓒ 2025 GUNSAN COUNTY. All Rights Reserved.</p>
+                </div>
+            </div>
+            <div class="footerLinkWrap">
+                <div class="siteSelectBox">
+                    <select id="familySite" title="관련 사이트 선택" class="customSelect">
+                        <option value="">개인정보 처리방침</option>
+                        <option value="https://www.gunsan.go.kr">군산시청</option>
+                        <option value="#">교육지원사업</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </footer>
+</body>
+<script>
+/* 모달 */
+const modalOverlay = document.getElementById('modalOverlay');
+const openModalBtn = document.getElementById('openModal');
+const closeModalBtn = document.getElementById('closeModal');
+const hakwonItems = document.querySelectorAll('.hakwonItem');
+
+openModalBtn.addEventListener('click', () => {
+    modalOverlay.classList.add('active');
+    modalOverlay.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+});
+
+const closeModal = () => {
+    modalOverlay.classList.remove('active');
+    modalOverlay.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = 'auto'; 
+};
+
+closeModalBtn.addEventListener('click', closeModal);
+
+modalOverlay.addEventListener('click', (e) => {
+    if (e.target === modalOverlay) closeModal();
+});
+
+window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && modalOverlay.classList.contains('active')) {
+        closeModal();
+    }
+});
+
+hakwonItems.forEach(item => {
+    item.addEventListener('click', () => {
+        hakwonItems.forEach(el => el.classList.remove('active'));
+        item.classList.add('active');
+    });
+});
+
+/* 헤더 조작 */
+document.addEventListener('DOMContentLoaded', () => {
+    const menuOpen = document.querySelector('.menuOpen');
+    const menuClose = document.querySelector('.menuClose');
+    const moMenu = document.querySelector('.moMenu');
+    const moMenuBg = document.querySelector('.moMenuBg'); 
+
+    menuOpen.addEventListener('click', () => {
+        moMenu.classList.add('active');
+        document.body.style.overflow = 'hidden'; 
+        setTimeout(() => menuClose.focus(), 100); 
+    });
+
+    const closeMobileMenu = () => {
+        moMenu.classList.remove('active');
+        document.body.style.overflow = ''; 
+        menuOpen.focus();
+    };
+    menuClose.addEventListener('click', closeMobileMenu);
+    moMenuBg.addEventListener('click', closeMobileMenu);
+});
+
+/* 모바일 메뉴 접근성  */
+document.addEventListener('DOMContentLoaded', () => {
+    const navItems = document.querySelectorAll('.navItem');
+    const menuOpen = document.querySelector('.menuOpen');
+    const menuClose = document.querySelector('.menuClose');
+    const moMenu = document.querySelector('.moMenu');
+
+    menuOpen?.addEventListener('click', () => moMenu.classList.add('active'));
+    menuClose?.addEventListener('click', () => moMenu.classList.remove('active'));
+
+    navItems.forEach(item => {
+        const btn = item.querySelector('.moMainLink');
+        btn.addEventListener('click', () => {
+            navItems.forEach(li => li.classList.remove('active'));
+            item.classList.add('active');
+        });
+    });
+});
+</script>
+</html>

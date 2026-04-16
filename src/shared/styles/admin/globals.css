@@ -1,0 +1,162 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --sidebar-width: 280px;
+    --header-height: 60px;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  html,
+  body {
+    @apply max-w-full overflow-x-hidden;
+    font-family: '맑은 고딕', 'Malgun Gothic', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size: 13px;
+  }
+
+  a {
+    @apply no-underline;
+    color: inherit;
+  }
+
+  button,
+  input,
+  select,
+  textarea {
+    font-family: inherit;
+    font-size: inherit;
+    min-font-size: 13px;
+  }
+
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="date"],
+  input[type="number"],
+  textarea,
+  select {
+    @apply rounded-none;
+    height: 34px;
+  }
+
+  textarea {
+    height: auto;
+    min-height: 80px;
+  }
+
+  input[type="date"] {
+    @apply text-center;
+  }
+
+  input[type="number"] {
+    @apply text-right;
+  }
+
+  table {
+    font-size: 14px;
+  }
+}
+
+@layer components {
+  .table-cell {
+    @apply border-r border-border-gray text-center align-middle;
+    height: 40px;
+    font-size: 14px;
+  }
+
+  .table-cell:last-child {
+    @apply border-r-0;
+  }
+
+  .table-header {
+    @apply bg-gray-200 font-semibold;
+  }
+
+  .table-bordered .table-cell {
+    @apply border border-border-gray;
+  }
+
+  /* 입력 제한 클래스 */
+  .no-korean {
+    ime-mode: disabled;
+    -webkit-ime-mode: disabled;
+    -moz-ime-mode: disabled;
+    -ms-ime-mode: disabled;
+  }
+
+  .alphanumeric-only {
+    ime-mode: disabled;
+    -webkit-ime-mode: disabled;
+    -moz-ime-mode: disabled;
+    -ms-ime-mode: disabled;
+  }
+
+  .numeric-only {
+    ime-mode: disabled;
+    -webkit-ime-mode: disabled;
+    -moz-ime-mode: disabled;
+    -ms-ime-mode: disabled;
+  }
+
+  /**
+   * 선정 업무 등 넓은 표: 열을 한 화면에 억지로 넣지 않고 가로 스크롤.
+   * 스크롤바를 굵고 대비 있게 해 OS 클래식 스크롤바에 가깝게 보이게 함.
+   */
+  .admin-table-horizontal-scroll {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    overflow-x: scroll;
+    overflow-y: hidden;
+    scrollbar-gutter: stable;
+    scrollbar-color: #94a3b8 #e2e8f0;
+  }
+
+  .admin-table-horizontal-scroll::-webkit-scrollbar {
+    height: 16px;
+  }
+
+  .admin-table-horizontal-scroll::-webkit-scrollbar-track {
+    background: linear-gradient(to bottom, #e8e8e8, #f4f4f4);
+    border: 1px solid #c4c4c4;
+    border-radius: 2px;
+  }
+
+  .admin-table-horizontal-scroll::-webkit-scrollbar-thumb {
+    background: linear-gradient(to bottom, #d4d4d4, #a8a8a8);
+    border: 1px solid #737373;
+    border-radius: 3px;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  }
+
+  .admin-table-horizontal-scroll::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(to bottom, #bdbdbd, #8a8a8a);
+  }
+
+  .admin-table-horizontal-scroll::-webkit-scrollbar-corner {
+    background: #e2e8f0;
+  }
+
+  /** 표 영역: 가로 스크롤은 유지하되 스크롤바는 숨김 (하단 고정 바와 동기화) */
+  .admin-table-scroll-no-scrollbar {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    overflow-x: auto;
+    overflow-y: visible;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .admin-table-scroll-no-scrollbar::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
+  }
+
+}

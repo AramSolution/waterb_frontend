@@ -1,0 +1,1 @@
+export { useBannerDetail } from "./useBannerDetail";

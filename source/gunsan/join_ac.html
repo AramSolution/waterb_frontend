@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0" />
+    <link rel="stylesheet" href="css/default.css">
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/join_ac.css">
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard-gov.min.css" />
+    <link  rel="stylesheet" href="https://hangeul.pstatic.net/hangeul_static/css/nanum-square-round.css">
+</head>
+<body>
+    <div id="skip">
+        <a href="#main_content">본문 바로가기</a>
+    </div>
+    <header class="header">
+        <div class="headerTop inner">
+            <div class="headerLogo">
+                <h1>
+                    <a href="/">
+                        <img src="images/logo.png" alt="군산시꿈이음센터">
+                    </a>
+                </h1>
+                <span class="badgeAcademy">학원</span>
+            </div>
+            <div class="utilMenu">
+                <div class="userLinks">
+                    <a href="#">로그인</a>
+                    <a href="#">회원가입</a>
+                    <a href="#" target="_blank" class="btnPortal">꿈이음센터포털 바로가기<img src="images/icon/ico_newtab_20_pr.png" alt="" aria-hidden="true"></a>
+                </div>
+                <button type="button" class="menuOpen" aria-label="메뉴 열기">
+                    <img src="images/icon/ico_menu_32.png" alt="메뉴 열기">
+                </button>
+            </div>
+        </div>
+        <nav class="navPc" aria-label="메인 메뉴">
+            <div class="inner">
+                <ul class="navList">
+                    <li><a href="#" class="mainLink">학원소개</a></li>
+                    <li><a href="#" class="mainLink">교육소개</a></li>
+                    <li><a href="#" class="mainLink">참여관리</a></li>
+                    <li><a href="#" class="mainLink">통계</a></li>
+                    <li><a href="#" class="mainLink">MY PAGE</a></li>
+                </ul>
+            </div>
+        </nav>
+        <div class="moMenu" id="mobileMenu">
+            <div class="moMenuInner">
+                <div class="moMenuHeader">
+                    <div class="logoArea">
+                        <img src="images/logo.png" alt="군산시꿈이음센터" height="32">
+                        <span class="badgeAcademy">학생</span>
+                    </div>
+                    <button type="button" class="menuClose" aria-label="메뉴 닫기">
+                        <img src="images/icon/ico_close_32.png" alt="닫기">
+                    </button>
+                </div>
+                <div class="moMenuContent">
+                    <nav class="moMenuNav">
+                        <ul class="moNavList">
+                            <li class="navItem active"><button type="button" class="moMainLink">학원소개</button></li>
+                            <li class="navItem"><button type="button" class="moMainLink">교육소개</button></li>
+                            <li class="navItem"><button type="button" class="moMainLink">참여관리</button></li>
+                            <li class="navItem"><button type="button" class="moMainLink">통계</button></li>
+                            <li class="navItem"><button type="button" class="moMainLink">MY PAGE</button></li>
+                        </ul>
+                        <div class="moMenuFooter">
+                            <a href="#" class="btn-login">로그인</a>
+                            <a href="#" class="btn-portal">꿈이음센터포털 바로가기</a>
+                        </div>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </header>
+    <main id="main_content" class="joinBg">
+    <section class="inner">
+        <div class="mainTitle">회원가입</div>
+        <div class="mainBg">
+            <div class="registrationContainer joinInput">
+                <form class="mainForm">
+                    <section class="formSection">
+                        <!--register : 신청 / join : 가입 / out : 탈퇴 -->
+                        <div class="joinStatus register">신청</div>
+                        <div class="sectionHeader">
+                            <div class="sectionTitle">학원정보 입력</div>
+                            <div class="idInfo">생성된 ID : hakwon202602041234</div>
+                        </div>
+                        <div class="formGrid">
+                            <div class="formRow">
+                                <div class="fieldUnit">
+                                    <label for="guardianName" class="formLabel">학원로고</label>
+                                    <div class="formControl">
+                                        <div class="imageUploadContainer">
+                                            <input type="file" id="imageInput" class="hiddenInput" accept="image/*">
+                                            <label for="imageInput" class="btnImageAdd" role="button" aria-label="이미지 파일 첨부하기">
+                                                <img src="images/img_noImg.png" alt="" aria-hidden="true" id="previewImg">
+                                                <span class="srOnly">이미지 첨부하기</span>
+                                            </label>
+                                            <button type="button" class="btnImageDel" aria-label="첨부된 이미지 삭제">
+                                                <span class="iconDel sr-only" aria-hidden="true">삭제</span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="formRow">
+                                <label for="academyName" class="formLabel">학원명</label>
+                                <div class="formControl">
+                                    <input type="text" id="academyName" class="inputField" placeholder="학원명을 입력해주세요">
+                                </div>
+                            </div>
+                            <div class="formRow">
+                                <label class="formLabel" id="lblAddress">학교명</label>
+                                <div class="formControl">
+                                    <div class="inputWithBtn">
+                                        <input type="text" class="inputField bgGray" readonly title="학교를 선택해주세요">
+                                        <button type="button" class="btnSearch" id="openModal">학교검색</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="formRow split">
+                                <div class="fieldUnit">
+                                    <label for="ceoName" class="formLabel">대표자</label>
+                                    <div class="formControl">
+                                        <input type="text" id="ceoName" class="inputField" placeholder="대표자명을 입력해주세요">
+                                    </div>
+                                </div>
+                                <div class="fieldUnit">
+                                    <label for="bizNumber" class="formLabel">사업자등록번호</label>
+                                    <div class="formControl">
+                                        <input type="text" id="bizNumber" class="inputField" placeholder="사업자등록번호를 입력해주세요">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="formRow split">
+                                <div class="fieldUnit">
+                                    <label for="academyTel" class="formLabel">연락처</label>
+                                    <div class="formControl">
+                                        <input type="tel" id="academyTel" class="inputField" placeholder="숫자만 입력해주세요">
+                                    </div>
+                                </div>
+                                <div class="fieldUnit">
+                                    <label for="academyFax" class="formLabel">FAX</label>
+                                    <div class="formControl">
+                                        <input type="tel" id="academyFax" class="inputField" placeholder="숫자만 입력해주세요">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="formRow split">
+                                <div class="fieldUnit">
+                                    <label for="academyMobile" class="formLabel">휴대폰</label>
+                                    <div class="formControl">
+                                        <input type="tel" id="academyMobile" class="inputField" placeholder="숫자만 입력해주세요">
+                                    </div>
+                                </div>
+                                <div class="fieldUnit">
+                                    <label for="academyEmail" class="formLabel">이메일</label>
+                                    <div class="formControl">
+                                        <input type="email" id="academyEmail" class="inputField" placeholder="이메일을 입력해주세요">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="formRow">
+                                <label class="formLabel" id="lblAddress">주소</label>
+                                <div class="formControl addressContainer">
+                                    <div class="inputWithBtn">
+                                        <input type="text" class="inputField bgGray" readonly title="우편번호 및 기본주소">
+                                        <button type="button" class="btnSearch">주소검색</button>
+                                    </div>
+                                    <input type="text" class="inputField" placeholder="상세주소를 입력해주세요" aria-label="상세주소 입력">
+                                </div>
+                            </div>
+                            <div class="formRow">
+                                <label for="subjects" class="formLabel">취급과목</label>
+                                <div class="formControl">
+                                    <input type="text" id="subjects" class="inputField" placeholder="취급과목을 입력해주세요">
+                                </div>
+                            </div>
+                            <div class="formRow">
+                                <label for="academyIntro" class="formLabel">학원소개</label>
+                                <div class="formControl">
+                                    <textarea id="academyIntro" class="textAreaField" placeholder="학원소개 내용을 입력해주세요"></textarea>
+                                </div>
+                            </div>
+                            <div class="formRow split">
+                                <div class="fieldUnit">
+                                    <label for="regDate" class="formLabel">가입일</label>
+                                    <div class="formControl"><input type="date" id="regDate" class="inputField"></div>
+                                </div>
+                                <div class="fieldUnit">
+                                    <label for="approveDate" class="formLabel">승인일</label>
+                                    <div class="formControl"><input type="date" id="approveDate" class="inputField"></div>
+                                </div>
+                            </div>
+                            <div class="formRow">
+                                <span class="formLabel">
+                                    사업자등록증
+                                    <input type="file" id="bizFileInput" class="hiddenInput" multiple>
+                                    <label for="bizFileInput" class="btnFileAdd" aria-label="파일 첨부하기">
+                                        <img src="../images/icon/ico_file_add.png" alt="" aria-hidden="true">
+                                    </label>
+                                </span>
+                                <div class="formControl fileListContainer">
+                                    <div class="file pdf">
+                                        <span>filename.pdf</span>
+                                        <button type="button" class="btnFileDel" aria-label="filename.pdf 파일 삭제">
+                                            <img src="../images/icon/ico_file_del.png" alt="" aria-hidden="true">
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="formRow">
+                                <span class="formLabel">
+                                    첨부파일
+                                    <input type="file" id="etcFileInput" class="hiddenInput" multiple>
+                                    <label for="etcFileInput" class="btnFileAdd" aria-label="파일 첨부하기">
+                                        <img src="../images/icon/ico_file_add.png" alt="" aria-hidden="true">
+                                    </label>
+                                </span>
+                                <div class="formControl fileListContainer">
+                                    <div class="file hwp">
+                                        <span>filename.hwp</span>
+                                        <button type="button" class="btnFileDel" aria-label="filename.hwp 파일 삭제">
+                                            <img src="../images/icon/ico_file_del.png" alt="" aria-hidden="true">
+                                        </button>
+                                    </div>
+                                    <div class="file pdf">
+                                        <span>filename.pdf</span>
+                                        <button type="button" class="btnFileDel" aria-label="filename.pdf 파일 삭제">
+                                            <img src="../images/icon/ico_file_del.png" alt="" aria-hidden="true">
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                    <div class="formActions">
+                        <button type="button" class="btnWhite">초기화</button>
+                        <button type="submit" class="btnSubmit">신청하기</button>
+                    </div>
+                </form>
+            </div>
+        </div>   
+    </section>
+    </main>
+    <footer class="footer">
+        <div class="innerContainer inner">
+            <div class="footerInfoWrap">
+                <div class="footerLogo">
+                    <img src="images/logo_w.png" alt="군산시 꿈이음센터">
+                </div>
+                <div class="addressArea">
+                    <address>
+                        [54080] 전북특별자치도 군산시 조촌로 22 <span>|</span> 대표전화 : 063)450-2600
+                    </address>
+                    <p class="copyright">Copyright ⓒ 2025 GUNSAN COUNTY. All Rights Reserved.</p>
+                </div>
+            </div>
+            <div class="footerLinkWrap">
+                <div class="siteSelectBox">
+                    <select id="familySite" title="관련 사이트 선택" class="customSelect">
+                        <option value="">개인정보 처리방침</option>
+                        <option value="https://www.gunsan.go.kr">군산시청</option>
+                        <option value="#">교육지원사업</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </footer>
+</body>
+<script>
+/* 헤더 조작 */
+document.addEventListener('DOMContentLoaded', () => {
+    const menuOpen = document.querySelector('.menuOpen');
+    const menuClose = document.querySelector('.menuClose');
+    const moMenu = document.querySelector('.moMenu');
+    const moMenuBg = document.querySelector('.moMenuBg'); 
+
+    menuOpen.addEventListener('click', () => {
+        moMenu.classList.add('active');
+        document.body.style.overflow = 'hidden'; 
+        setTimeout(() => menuClose.focus(), 100); 
+    });
+
+    const closeMobileMenu = () => {
+        moMenu.classList.remove('active');
+        document.body.style.overflow = ''; 
+        menuOpen.focus();
+    };
+    menuClose.addEventListener('click', closeMobileMenu);
+    moMenuBg.addEventListener('click', closeMobileMenu);
+});
+
+/* 모바일 메뉴 접근성  */
+document.addEventListener('DOMContentLoaded', () => {
+    const navItems = document.querySelectorAll('.navItem');
+    const menuOpen = document.querySelector('.menuOpen');
+    const menuClose = document.querySelector('.menuClose');
+    const moMenu = document.querySelector('.moMenu');
+
+    menuOpen?.addEventListener('click', () => moMenu.classList.add('active'));
+    menuClose?.addEventListener('click', () => moMenu.classList.remove('active'));
+
+    navItems.forEach(item => {
+        const btn = item.querySelector('.moMainLink');
+        btn.addEventListener('click', () => {
+            navItems.forEach(li => li.classList.remove('active'));
+            item.classList.add('active');
+        });
+    });
+});
+</script>
+</html>

@@ -1,0 +1,765 @@
+---
+alwaysApply: false
+description: 'User web pages are built by converting HTML to React while preserving original design, CSS, and accessibility. CSS is loaded per route (default.css + fonts shared; index.css only where needed). Reference htmltoreact (success pattern) and gunsan (original HTML).'
+globs: ['**/userWeb/**', '**/user-web/**']
+---
+
+# User Web Rules
+
+## Scope and intent
+
+**When to apply this rule:** Any task that creates or modifies **user web pages** (`/userWeb/*`), including:
+
+- Converting HTML to React (new or replacement pages).
+- Adding or changing components, layout, or styles on existing user web pages.
+
+**Design principle:** User web is built the **htmltoreact way**: convert from HTML while **preserving** the original design, CSS class names, semantics, and accessibility. Do **not** rewrite styling from scratch with Tailwind or new CSS unless the original HTML/CSS is unavailable.
+
+**Reference implementations:**
+
+- **Success pattern:** `htmltoreact` project (gunsan HTML → React; design and accessibility preserved).
+- **Original source:** `gunsan` project (or the specific HTML/CSS source used for edream user web).
+
+---
+
+## 1. HTML-to-React conversion (primary workflow)
+
+### 1.1 Keep the source in the project
+
+**MUST:**
+
+- Place the **original HTML file(s)** for the page in the project (e.g. same repo or `userWeb/source/`) so they can be opened and compared during conversion.
+- Keep the **original CSS file(s)** (e.g. `css/main.css`, `css/common.css`) in the project; do not delete them after conversion.
+- When asking for conversion, **attach or reference the specific HTML and CSS files** (e.g. "Convert `main.html` to React using `css/main.css`, preserve class names and structure").
+- **Bundled CSS path (edream):** App code imports user-web styles from `src/styles/userWeb/` only (e.g. `@/styles/userWeb/default.css`, `portalIndex2.css`, `portalGunsanMain.css`, `portalContent.css`, `main.css`). Do **not** import `source/gunsan/css/*` in layouts or pages. The `source/gunsan` tree may be kept as optional reference HTML/CSS for diffing, or removed once equivalents exist under `src/styles/userWeb/`.
+- **포털 → 메인 헤더 CSS:** `app/userWeb/layout.tsx`에서 **`header.css`를 공통 import**해 `/userWeb/main`의 `MainHeader` 기준(로고 58px, 메뉴 사이 점 등)이 항상 로드된다. `app/userWeb/(portal)/layout.tsx`는 자식을 **`div.portalGunsanShell`**로 감싼다. **`portalGunsanMain.css`** 안의 `.header`·`.eduListWrap`·`.boardSection` 등은 **`.portalGunsanShell` 접두로 스코프**해, 포털에서 클라이언트 네비게이션으로 메인에 들어와도 포털용 규칙이 `MainHeader`를 덮어쓰지 않게 한다(`:root` 테마 변수도 `.portalGunsanShell`에 둔다).
+- **Static assets (edream) — 레이아웃·CSS·이미지는 전부 프로젝트 폴더로:** 런타임에 **`source/gunsan/` 등 원본 폴더를 직접 가리키지 않는다.** `app/userWeb/**/layout.tsx`에서 새 CSS를 붙이거나, `src/styles/userWeb/*.css`를 추가·수정할 때마다 그 CSS와 해당 페이지 HTML(참고용 `source/gunsan`) 안의 **`url(...)`, `src=`, `background-image`** 등으로 쓰이는 **이미지·아이콘·비디오 포스터**를 찾아 **`public/images/userWeb/`** 아래에 **동일한 상대 경로 구조**(예: `icon/ico_home_gr.png`)로 **복사**한다. User-web CSS에서는 **`url("/images/userWeb/...")`** 만 사용한다. 원본 트리가 크면 **`source/gunsan/images/*` → `public/images/userWeb/`** 전체 동기화를 주기적으로 수행하고, 레이아웃/스타일 변경 후 **한 번이라도 새 파일을 쓰면 그 파일도 반드시 복사**한다. 복사 없이 CSS만 옮기면 배경·아이콘·브레드크럼 홈 아이콘 등이 깨진다.
+
+**MUST NOT:**
+
+- Convert from memory or a vague description when the original HTML/CSS exists; always use the actual files as the source of truth.
+- Remove original HTML/CSS after conversion; keep them for future reference and diffing.
+
+### 1.2 Preserve markup and styling
+
+**MUST:**
+
+- Preserve **all class names** from the original HTML (e.g. `eduListWrap`, `cardSection`, `cardItem`, `boardList`, `inner`, `header`, `footer`). Map them 1:1 in JSX (`className="..."`).
+- Preserve **IDs** used for semantics or accessibility (e.g. `id="skip"`, `id="main_content"`).
+- **Import and use the original CSS** (e.g. `@import '../../css/main.css'` or equivalent path). Do not replace the designer’s CSS with Tailwind or new custom CSS for the same elements.
+- **Apply gunsan CSS in full without omitting any definitions**: include every class used in the original HTML (e.g. `.blind`, `.sr-only` for screen-reader-only content like `caption.blind`). If the original uses a utility class (e.g. `.blind` for visually hidden captions), ensure the same rule exists in the converted styles so markup behaves identically (e.g. caption not visible on screen, announced to screen readers).
+- Preserve **section → component mapping**: one `<section class="...">` in HTML should correspond to one React section/widget component that keeps the same class and DOM structure.
+- **CSS property parity (critical):** For each selector/class coming from the original HTML, do not introduce new visual properties that are not present in the referenced original CSS (e.g. do not force `color`, `text-decoration`, `font-weight`, or `background` for a class unless the original CSS for that class defines those properties). This prevents “looks red/underlined in React but not in HTML” mismatches.
+- **Main header by entry type:** `MainHeader` must match the gunsan source for that role: **학생 메인** → `source/gunsan/main.html` (영유아·초등·중등·고등·일반·커뮤니티)에서 **꿈이음센터 포털 바로가기** 버튼은 데스크톱·모바일 모두 표시. **학부모 메인** (`reqGbPosition=2` / `type=parent`) → 헤더·교육목록 사이드 등 배지 **표시 문구는 「학부모/일반」**(`badgeParent`, `data-theme`·`type=parent`·PNR 로직은 그대로). 상단 메뉴 구조는 **학생과 동일**(영유아·초등·중등·고등·일반·커뮤니티), 쿼리만 학부모용으로 두고 **꿈이음센터 포털 바로가기**는 학부모 메인(`/userWeb/main`)에서도 데스크톱·모바일 모두 표시. **학교 메인** (`reqGbPosition=5` / `type=school`) → 상단 메뉴에서 **영유아를 초등 왼쪽에 둔다**(학생·학부모 메인과 동일 순서). **학원 메인** (`reqGbPosition=3`) → **`headerTop`**: 좌측 `portalWrap` **바로가기** + `utilMenu`(로그인·회원가입/MY PAGE 등) — **`utilMenu`에 커뮤니티 링크 없음**, 공지·QnA·커뮤니티 경로를 헤더에 두지 않는다. **`navPc`·`moMenuNav`** 는 **`ACADEMY_MAIN_NAV`만**: **학원정보·가맹신청·통계정보** 세 항목. **가로 네비에 MY PAGE 탭 없음**(MY PAGE는 `utilMenu`). **멘토 메인** (`reqGbPosition=4` / `type=mentor`) → 동일하게 **커뮤니티 관련 헤더 노출 없음**; **`MENTOR_MAIN_NAV`만**: **멘토신청·멘토업무·통계자료**; `utilMenu` 커뮤니티 없음; 가로 네비에 MY PAGE 탭 없음. **로그인 모달** (`UserWebLoginModal`, 클래스 `badgeLogin` + `badgeParent` 등): 배지 텍스트는 `BADGE_LABEL_BY_TYPE`와 동일하게 학부모는 **「학부모/일반」 전체**가 보여야 한다. **`width: 70px` 고정으로 잘리지 않도록** 메인 헤더 `.header .badgeStudent`/`.badgeParent`와 같이 **`min-width: 70px`**, **`padding: 0 13px`**, **`white-space: nowrap`**, **`box-sizing: border-box`** 를 쓴다(`loginModal.css`, 포털 `portalIndex2LoginModal.css`, `index.css` 내 로그인 모달 `.badgeLogin` 블록).
+- **학생/학부모 MY PAGE 신청목록 카드:** 신청현황 `eduListWrap`에 **`eduListWrap--mainHtml`** 를 함께 쓴다(`main.css` 카드 규칙). **데이터·매핑**은 `src/widgets/userWeb/eduListCard/artpromShared.ts` 로 메인과 공유: **`.bizType`** = `proPartNm` → `proPart` 파이프 → (없으면) `-`, **`.infoCompany`** = `proDepaNm` → `proDepa`, **`cardDesc`** = 홍보(`PRO_TYPE` 03)면 `proSum` 우선·아니면 `etcNm`, **기간·대상(`infoPeople`+배지+`moreInfo`)** = 메인과 동일. **신청자 `li.infoName`:** gunsan과 동일 **`public/images/userWeb/icon/ico_name.png`**, `::before` **24×24**·배경 **24px auto**(부서 `ico_company`·기간·대상 아이콘과 동일 규격). 상단 **`.status` pill** 은 공고 `RUN_STA`가 아니라 **`appSttusCodeNm`(내 신청 상태)** 만 표시(`statusIng`/`statusReady`/`statusEnd` 매핑). **신청목록 카드에는 메인처럼 카드별 즐겨찾기(별) 토글을 두지 않음**. **상단 탭**에 **「즐겨찾기」** 를 **「신청현황」 바로 다음**에 둔다(나의정보 → 신청현황 → 즐겨찾기 → (학부모만) 자녀연동; `mypage_pr.css`의 `tabWrapper`/`tabLabel`/`tabInput`/`tabButton`과 동일 라디오 UI, 본문 `#content_favorites`). 제목 행에는 상태 텍스트를 넣지 않는다. **영·초·중·고·대·일** 배지 순서·축약·24×24(proType5 기타 미노출). **글씨·색(`main.css` `eduListWrap--mainHtml`·`#main_content` 패리티):** 제목 링크 **20px·26px·700**·**`#212121`**·`word-break: keep-all`·`:focus #000`. **`infoList li`** 본문·값 **#212121**(MY PAGE 전용으로 **`li`에 `#616161`만 주지 않음** — 메인은 `li`에 색 없이 본문 상속). 라벨 **`li > span`(기간·대상·부서 등)** **#212121**. **`moreInfo`** **#616161**·**`margin-left: 60px`**. **`cardDesc` #424242**·16px·700(높이 64px 등 MY 전용은 유지 가능). 상단 **`.bizType` #424242**·16px·700·배경 `#eee`; **`.status` pill**은 메인과 동일(`statusIng`/`statusReady`/`statusEnd` 배경·글색). 대상 **`.badge`** 글색 **`#fff`**·15px·**`border-radius: 4px`**·메인과 동일 배경색. **행 아이콘:** 기간 `ico_date`·대상 `ico_people`·부서 `ico_company`·신청 `ico_name` — 전부 **`/images/userWeb/icon/`**·**24px auto**(메인과 동일 PNG 자산; 틴트는 에셋에 맡김). **카드 박스**는 `main.css` **`.eduListWrap--mainHtml .cardItem`의 min-height:354px를 쓰지 않도록** `mypage_pr.css`에서 **`min-height: 0`**, 그리드는 **3열·gap 30px**(메인 40px와 구분). `mypage_pr.css`는 일반 `.mypagePrWrap .eduListWrap`보다 구체적인 **`.eduListWrap.eduListWrap--mainHtml`**(및 테마+mainHtml)로 타이포·배지 둥글기를 강제한다. 반응형은 **1024px 이하 2열·640px 1열** 유지.
+- **학생 메인 교육 목록 카드 부서 (`layoutMainHtml`):** `.infoCompany`에 보이는 부서는 사용자웹 목록 API `ArtpromUserListDTO.proDepaNm`(쿼리 `PRO_DEPA_NM`, `LETTCCMMNDETAILCODE` EDR007)을 **우선** 사용하고, 비어 있으면 `proDepa`로 보조한다. `EduListSection`의 `mapApiItemToCard`에서 `proDepaNm` / `pro_depa_nm` → `proDepa` / `pro_depa` 순으로 매핑한다.
+- **학생 메인 교육 목록 즐겨찾기 (`layoutMainHtml`·`btnWish`·`icoStar`):** 목록 API가 로그인 사용자 기준 **`favoriteYn`**(`Y`/`N`, 백엔드 `ArtpromUserListDTO`)을 내려주면 카드에 반영한다. **추가:** `POST /api/user/artprom/favorite` JSON **`{ proId }`**. **해제:** `DELETE /api/user/artprom/favorite/{proId}`. 엔드포인트 상수는 **`apiUser.ts` `USER_ARTPROM.FAVORITE` / `FAVORITE_BY_PRO_ID`**. **비로그인** 별 클릭 또는 즐겨찾기 API 응답 **401** → **`AlertModal`**(안내·`success`) **「로그인 후 이용해주세요.」** — 로그인 모달(`onRequireLogin`/`UserWebLoginModal`)은 **열지 않음**. 그 외 API 실패 → **`AlertModal`**(`danger`)로 메시지 안내. 채움 UI는 **`main.css`** `.btnWish.isFavorite` / `aria-pressed="true"` 시 **`ico_star_on.png`**. MY PAGE **신청목록** 카드에는 별 토글 없음. **MY PAGE 즐겨찾기 탭(`#content_favorites`):** `POST /api/user/artprom/my-favorite/list`(`USER_ARTPROM.MY_FAVORITE_LIST`), 카드는 메인과 유사하되 **`cardFooter`·「상세보기」버튼 없음**(신청현황과 구분). 상세는 **제목 `Link`·카드 영역 클릭**만(`buildArtpromBrowseDetailHref`). **신청현황과 맞춘 카드 박스**: `mypage_pr.css` **`eduListWrap--mainHtml` `.cardItem`** `display:flex`·`flex-direction:column`·**`min-height:400px`**, **`.cardBody`** `flex:1`+column, **`.cardDesc`** **`margin-top:auto`**. **신청자 행 자리**는 `infoName.mypageFavoriteCardSpacer`(`aria-hidden`). 별(해제) → `DELETE /favorite/{proId}` 후 목록에서 제거.
+- **일반 지원사업 상세 UI (`BizInfoSection`, `bizInfo2` 패리티):** 원본 **`source/gunsan/bizInfo2.html`**. `bizBg` 안 **`section.flex-content.bizInfoDetail`** + **`stickySidebar`**(프로필·분야별 체크 5개; 상세 페이지에서는 **표시용**이며 목록 필터와 양방향 동기화하지 않음) + **`rightContent`**(`headTit`「프로그램 정보」, 브레드크럼, **`mainBg`**). `article.bizInfo`: **`infoHead`**(`.bizType` ← `proPartNm`, 접수상태 ← `.status.statusIng|statusReady|statusEnd`), **`detailList`** 순서 **모집기간 → 사업대상 → 모집인원 → 담당부서 → 홈페이지**(`proPage`, 값 있을 때 **`itemValue` 안 링크**, `externalHref`). **「홍보 및 참고사항」`bizBox`에는 홈페이지 URL 행을 두지 않는다**(중복 방지; 홈페이지는 상단 `detailList`만). **「신청 및 참여방법」의 담당자** 한 줄은 **`proCharge`·`proTel`만** 조합한다(담당부서 문자열을 담당자 앞에 붙이지 않음 — 담당부서는 `detailList` 한 줄). 하단 **`bizBox`** 3개(사업개요·신청 및 참여방법·홍보 및 참고사항)는 **`ul>li>.tit/.con`** 패턴; 스타일은 **`biz.css`**의 **`.bizInfoDetail`** 스코프로 `BizInfoPr` 등 다른 `article.bizInfo`와 충돌하지 않게 한다. **메인 → 상세** 링크(`EduListSection` `buildDetailPath` 등)에는 **`grade`·`schoolGb`·`reqGbPosition`·`type`** 을 붙여 브레드크럼이 이어지게 한다.
+- **지원사업 상세 `bizInfo*` 통일·롤아웃:** `bizInfo2.html` 껍데기(**`section.flex-content.bizInfoDetail`**, 사이드바, 브레드크럼, `infoHead`, `detailList` 순서, `bizBox` 3개 `ul>li>.tit/.con`, `bizFile`)와 **동일 API·필드 규칙**을 **전 변형**에서 맞춘다. 회차·탐방국가·Pr 전용 버튼 등 **유형 전용 블록만** `mainBg` 안(보통 `article.bizInfo`의 `detailBox` 하단 등)에 두고, **전용 블록이 없으면** `BizInfoSection`과 동일 마크업만 쓴다. **구현 순서(우선):** Ct → Vd → Dm → Rc → Gc → Pr. 공통 포맷터·DTO 매핑은 `src/widgets/userWeb/bizInfo2/detailShared.ts`, 일정+신청인원 API 행 타입은 `bizInfo2/scheduleWithApply.ts`를 공유한다. **변형별 `proGb`·신청 경로:** Ct `03`→`bizInputCt`; Vd `04`→`bizInputVd`(쿼리 `proGb=04`); Dm `06`→`bizInputDm`(`proGb=06`); Rc `05`→`bizInputRc`(URL `type` 유지); Gc `07`→`bizInputGc`(`type` 유지). **Pr(`bizInfoPr`)** 는 통일 롤아웃 **마지막** 단계(별도 `biz_pr` 상세 마크업).
+- **bizInfo2 `detailBox` — `hakwonButton` + `submitButton` (`flex-sb`):** `default.css`의 `.flex-sb`는 `align-items: center`이다. **`biz_pr.css`** 의 `.bizInfo .hakwonButton` / `.submitButton`은 기본 **58px** 등으로 같다. **`biz.css`** 의 **`.bizInfoDetail .bizInfo .submitButton`** 만 `height`·`margin-top`을 덮어쓰면 오른쪽만 짧아지거나 아래로 밀려 **한쪽이 위로 튀어 보인다.** 따라서 **`biz.css`에서 `.bizInfoDetail .bizInfo .hakwonButton`과 `.submitButton`에 동일한 `margin-top`·`height`를 한 규칙으로 묶어** 둔다.
+- **「사업개요」`bizBox` — 사업내용 행:** 라벨 **「사업내용」** 아래 본문은 **`PRO_DESC` / API `proDesc` 값만** 표시한다. **`PRO_SUM` / `proSum`을 사업내용에 합치거나, 같은 `.con`에 이어 붙이지 않는다.** (사업기간 행은 `proFromDd`·`proToDd` 등 기존 매핑 유지.)
+- **「신청 및 참여방법」`bizBox`:** **「문의처」** 행(`proEnquiry` / `PRO_ENQUIRY`)은 **표시하지 않는다.** (참여방법·담당자 등만 gunsan `bizInfo2.html` 패턴에 맞게 유지.)
+- **학생 메인 교육 목록 카드 사업 성격 (`.bizType`, `layoutMainHtml`):** 표시 문자열은 `proPartNm`이 있으면 우선, 없으면 목록의 **`proPart`** 파이프 값(`Y|N|…` 5칸, 부족 시 `N` 패딩)을 `교육/학습`·`진로/진학`·`문화/예술/체험`·`복지/장학`·`기타`로 풀어 콤마로 이어 붙인다(상세 `PRO_PART_NM` 규칙과 동일). 그것도 없으면 사이드바에서 **단일** `PRO_PART` 필터만 켠 경우 해당 라벨을 쓴다. 구현은 `EduListSection`의 `mainHtmlNatureLabelFromProPartPipe` 및 `MAIN_HTML_PRO_PART_LABELS`를 따른다.
+- **커뮤니티·공지 레이아웃 (`notice2` / `noticeView2`):** `/userWeb/community` 목록은 `source/gunsan/notice2.html`과 동일하게 **`mainViewVisual` + `flex-content communityContainer` + `communitySidebar` + `rightContent`**(`headTit`, 브레드크럼, `filterSearchContainer`, `headInfo`, `mainViewTable`). 탭 전환은 **`?tab=notice|project|eumArchive|inquiry|guide`** 로만 처리하고(`eumArchive`=이음 아카이브·`USER_ARCHIVE_BBS_ID`, `project`=지원사업·`SUPPORT`), 구 **`mainViewTabs`** 알약 탭 UI는 쓰지 않는다. **`tab=eumArchive` 목록**은 **`eumArchive2.html`** 패리티(`archiveContainer` 그리드 등, §7 표); **이음 아카이브만** `filterSearchContainer`에서 **검색 조건 셀렉트는 두되 옵션은 제목만**, URL은 **`searchWrd`만**(`searchCnd` 없음), 목록은 **`GET /api/user/articles/archive`**만(`searchCondition` **`2`**·`searchKeyword`)·**`getUserArticleList`·`nttImgFileId` 강제 `null` 금지**. 상세 `/userWeb/community/[id]`는 **`bbsId`가 이음 아카이브(`USER_ARCHIVE_BBS_ID`)이면 `eumArchiveView.html`**(`archiveViewContainer`, `archiveDetail`·**`GET /api/user/articles/archive/detail`의 `nttImgFiles`**로 다중 이미지 시 **`swiper-button-prev`/`next`는 같은 글 내 이미지 전환**, **이전·다음 글**은 **`mainViewDetailNav`**(공지 상세와 동일 패턴)·`infoTable`(소개 `NTT_DATA6`·자료출처 `NTT_DATA5`: **trim 후 문자열 전체**가 URL로 인정될 때만 `<a target="_blank" rel="noopener noreferrer">`, **`new URL`로 `http:`/`https:`만**·`javascript:` 등 차단; **`www.…`**·스킴 없는 **`host.tld…`** 는 **`https://`** 접두·`community.css` **`.archiveExternalLink`**(색 **`#0b8e41` 고정**·**`var(--primary)` 미사용**—로그인 테마 빨강이 링크에 묻지 않게)·`detailContent`, `mainViewBtnArea`); **그 외**는 `noticeView2.html`과 같게 **`mainViewDetailHeader`**(공유·URL·인쇄), **`mainViewDetailInfo` dl**, **`article.mainViewDetailBody`** 안 **`bizFile` → `mainViewDetailText`** 순, **`mainViewDetailNav`**, **`mainViewBtnArea`**. 독립 공지 경로 `/userWeb/notice`는 동일 껍데기를 `NoticeCommunityChrome`의 **`shell="notice"`** 로 유지한다. **상세 여백·타이포 CSS 패리티:** `src/styles/userWeb/community.css`의 **`mainViewDetailHeader` / `mainViewDetailBody` / `mainViewDetailText`** 및 **`.archive*`** 는 **`source/gunsan/css/community.css`** 와 맞춘다(이음 아카이브 상세는 `.archiveDetail` 계열). 커뮤니티·공지 레이아웃이 **`biz_pr.css`** 를 함께 로드하므로 **`.bizFile`** 은 **`mainViewDetailBody .bizFile { margin-top: 0 }`**, **`.bizFile .title`** 은 **18px** 등으로 **스코프해 덮어쓴다** — 그렇지 않으면 첨부 라벨·위치가 원본보다 크고 아래로 밀린다.
+- **`mainViewTable` 목록(PC) 줄바꿈:** `default.css`의 **`body { word-break: break-all }`** 이 표 **`th`/`td`까지 상속**되면 PC에서 **작성일·`첨부파일` 헤더** 등이 글자/숫자 단위로 두 줄로 갈라진다. **`community.css`의 `.mainViewTable`** 에서 **`table-layout: fixed`**, **`th`는 `word-break: keep-all`**, **`td`는 `word-break: normal`**, 작성일·첨부·조회·번호·처리상태 열에는 **`white-space: nowrap`**(및 필요 시 **`min-width`**)로 **gunsan 목록과 같이 한 줄**을 유지한다. 제목 열은 **`.cellTitle a`만 `word-break: break-all`**(말줄임·긴 문자열)을 유지한다.
+- **포털·원본 HTML 색(`--primary`):** `source/gunsan/css/default.css`와 같이 기본 포인트 색은 **`#0B8E41`**. `src/styles/userWeb/default.css`의 **`:root { --primary; --primary-light }`** 를 따르고, **`header.css`에서 `:root`로 테마색을 전역 `!important` 덮어쓰지 않는다.** `LayoutWrapper`의 **`headerType="portal"`** 인 페이지는 로그인 계정의 `data-theme`을 루트에 적용하지 않아 포털·공지·커뮤니티 본문이 학생(빨강) 테마로 바뀌지 않게 한다. 로그인 메인 등은 **`data-theme="student"|…`** 로 `header.css` 테마색이 적용된다.
+- **스티키 푸터(`LayoutWrapper`):** `LayoutWrapper` 최상위는 **`class="userWebLayoutShell"`** + `src/styles/userWeb/common.css`에서 **`display: flex; flex-direction: column; min-height: 100vh`**(및 **`100dvh`**) + **`#main_content { flex: 1 0 auto }`** 로 짧은 본문에서도 푸터가 뷰포트 하단에 붙고, `body` 배경 흰색이 푸터 아래에 드러나지 않게 한다(학원 메인 등).
+- **로그인 메인 교육 목록 유형 필터 (`layoutMainHtml`):** `source/gunsan/main.html`과 같이 `eduListWrap` 상단에 **`flex-sb` + `optionWrap` + `optBtnWrap`** 으로 **전체·지원사업·교육사업·홍보** 토글 버튼을 둔다. 마크업은 **`role="group"`**, **`aria-labelledby="filter-title"`**, 숨김 라벨 **`#filter-title`**(`.blind`/`.sr-only`), 각 버튼 **`type="button"`** + **`aria-pressed`**(gunsan 스크립트와 동일: 전체는 단독 선택, 나머지는 다중 토글·전부 해제 시 전체로 복귀). 스타일은 **`src/styles/userWeb/main.css`** 의 **`.eduListWrap .optBtnWrap`**(테마는 `var(--primary)` / `var(--primary-light)`). **클라이언트 필터**는 `mapApiItemToCard`의 **`categoryClass`**(`biz` | `education` | `promo`)와 맞춘다. **서버 목록 필터**가 필요해지면 동일 유형 키로 API 요청 파라미터를 붙이면 된다.
+
+**MUST NOT:**
+
+- Invent new class names or replace original ones with Tailwind-only equivalents when the original CSS exists.
+- Drop or rename semantic/accessibility IDs (`#skip`, `#main_content`, etc.).
+
+**Example (correct):**
+
+```tsx
+// Layout: preserve #skip and #main_content from original HTML
+<>
+  <div id="skip">
+    <a href="#main_content">본문 바로가기</a>
+  </div>
+  <Header />
+  <main id="main_content">{children}</main>
+  <Footer />
+</>
+
+// Section: preserve original class names and structure
+<section className="eduListWrap">
+  <div className="inner">
+    <div className="tit">지금 신청가능한 교육 목록</div>
+    <div className="cardSection" aria-labelledby="sectionTitle">
+      <div className="cardGrid">...</div>
+    </div>
+  </div>
+</section>
+```
+
+**Example (wrong):**
+
+```tsx
+// ❌ Replacing original structure with Tailwind-only
+<main className="max-w-[1400px] mx-auto py-10">  // Original had id="main_content" and specific classes
+<section className="flex flex-col gap-4">        // Original had className="eduListWrap"
+```
+
+### 1.3 Preserve accessibility
+
+**MUST:**
+
+- Keep **skip link**: a link that targets `#main_content` (or the main content ID), e.g. inside a `div` with `id="skip"`.
+- Keep **ARIA and semantics** from the original: `aria-label`, `aria-labelledby`, `aria-hidden` where present (e.g. `aria-label="메뉴 열기"`, `aria-labelledby="sectionTitle"`).
+- Keep **screen-reader-only text** (e.g. `.blind` or `.sr-only`) for labels like "기간:", "장소:" so the meaning is announced.
+
+**Example (correct):**
+
+```tsx
+<li className="infoDate">
+  <span className="blind sr-only">기간:</span> {date}
+</li>
+<button type="button" className="menuOpen" aria-label="메뉴 열기">
+```
+
+### 1.4 Conversion checklist
+
+Before considering a conversion done, verify:
+
+- [ ] Original HTML (and CSS) file(s) are in the project and referenced.
+- [ ] Class names and IDs in React match the original HTML.
+- [ ] Original CSS is imported and applied (no full rewrite with Tailwind for the same UI).
+- [ ] Skip link and `main` ID are present; ARIA and `.blind`/`.sr-only` are preserved where they were in the source.
+- [ ] Section structure (e.g. `eduListWrap`, `cardSection`, `boardSection`) is preserved in components.
+
+### 1.5 Interactive components: vanilla scripts → React (behavior parity)
+
+**When this applies:** The original (e.g. gunsan) uses **vanilla HTML + script** (e.g. `new Swiper('.mainSwiper', {...})` in a `<script>` block). The user web is **React** (e.g. `swiper/react`). You cannot paste the original script as-is.
+
+**MUST:**
+
+- **Re-implement the intended behavior** in the React way. Preserve the same **user-visible behavior** (e.g. tab order: first slide link → second slide link → prev/play/next; when focus lands on a slide link, the carousel **shows that slide**).
+- Keep **original class names and DOM shape** where possible (e.g. `mainSwiper`, `visualItem`, `linkItem`). Use React components and refs for the library instance and event handlers.
+- If the React library behaves differently (e.g. inactive slides get `aria-hidden` or `tabindex="-1"` and are skipped by Tab), **add equivalent behavior** (e.g. keep slides in tab order; on focus of a slide link, call `slideTo` / `slideToLoop` so the active slide changes to match focus).
+
+**MUST NOT:**
+
+- **Copy-paste the original `<script>` block** or assume that the same `new Swiper(...)` options alone will yield the same behavior in React; lifecycle and DOM binding differ.
+- **Drop intended behavior** (e.g. "Tab moves to next slide and that slide is shown") because the original script does not explicitly show a `focus` → `slideTo` call; the original may rely on vanilla or DOM order. In React, implement that UX explicitly when the library does not.
+
+**Check before finishing:**
+
+- [ ] Tab order and focus behavior match the original (e.g. slide links in order, then controls).
+- [ ] Focusing a slide link results in that slide being shown (slideTo/slideToLoop or equivalent).
+- [ ] Class names and structure stay aligned with the original HTML for CSS and accessibility.
+
+### 1.6 Preserve element types when reimplementing behavior (buttons vs links)
+
+**When this applies:** The gunsan HTML uses a specific element (e.g. `<button>`, `<a>`) for an action. You need to reimplement the _behavior_ in React (e.g. navigation, form submit). The rule is: **preserve the original element type**; reimplement only the behavior.
+
+**Root cause of a past failure (do not repeat):**
+
+- **What happened:** On the qna page, the original gunsan `qna.html` had `<button type="button" class="btnPr">문의하기</button>`. The intended behavior was “navigate to the write page.” The implementation **replaced** the button with `<a>` / Next.js `<Link>` because “navigation ⇒ use a link” seemed semantically correct.
+- **Why it was wrong:** The project rule is **preserve gunsan markup first**. The original CSS (e.g. `.bizInput .btnPr`) was written for a `<button>`. Buttons and anchors have different default layout (e.g. `display`, how content is aligned). Replacing `<button>` with `<a>` changed how `.btnPr` applied (e.g. text alignment, padding), so the UI no longer matched the original even though the same class was used.
+- **Correct approach:** Keep `<button>` in React. Implement navigation with `onClick` and the router (e.g. `router.push(href)`). The DOM element and classes stay identical to gunsan; only the _behavior_ is reimplemented in the React way.
+
+**MUST:**
+
+- **Preserve the exact HTML element type** from the gunsan source for each interactive control: if the original has `<button>`, use `<button>` in JSX; if it has `<a href="...">`, use `<a>` or `<Link>`.
+- When the original uses **`<button>`** and the intended behavior is **navigation** (e.g. go to another page), keep `<button>` and trigger navigation in React (e.g. `onClick={() => router.push(href)}` or `onClick={() => window.location.href = href}`). Do **not** replace the button with `<a>` or `<Link>`.
+- When the original uses **`<a href="...">`**, use `<Link href="...">` (or `<a href="...">`) in React and preserve the same `href`/navigation target.
+
+**MUST NOT:**
+
+- **Do not** replace a `<button>` with an `<a>` or `<Link>` solely because the action is “go to another URL.” Preserving design parity requires preserving the element type; the existing CSS targets that element.
+- **Do not** assume “semantic HTML” (e.g. “navigation ⇒ anchor”) overrides the project rule. Here, **gunsan is the source of truth**: same element + same classes = same look and behavior.
+
+**Example (correct):**
+
+```tsx
+// Original (gunsan): <button type="button" class="btnPr">문의하기</button>
+// React: keep <button>, implement navigation in onClick
+const writeHref = themeQuery
+  ? `/userWeb/qna/write?${themeQuery}`
+  : '/userWeb/qna/write';
+<button type="button" className="btnPr" onClick={() => router.push(writeHref)}>
+  문의하기
+</button>;
+```
+
+**Example (wrong):**
+
+```tsx
+// ❌ Replacing <button> with Link changes element type; .btnPr styling (e.g. text alignment) may not match original
+<Link href={writeHref} className="btnPr">
+  문의하기
+</Link>
+```
+
+**Check before finishing:**
+
+- [ ] For every interactive control, the JSX element type matches the gunsan HTML (`<button>` vs `<a>` vs `<input>` etc.).
+- [ ] Navigation or other behavior is implemented via event handlers (e.g. `onClick` + `router.push`) when the original uses a button, not by swapping to a link.
+
+---
+
+## 2. Maintaining converted pages (height and structure)
+
+When **editing** existing user web pages (already converted from HTML), follow these so the design does not break.
+
+### 2.1 Responsive height
+
+**MUST:**
+
+- Use **viewport-based max height** (e.g. `max-h-[90vh]`, `max-h-[95vh]`) for modals, dialogs, or overlays—not fixed pixel heights.
+- Prefer **content-driven height** and spacing utilities (`mb-*`, `mt-*`, `gap-*`) when the user asks for "taller" or "higher" components.
+
+**MUST NOT:**
+
+- Use fixed pixel heights for responsive components (e.g. `h-[880px]`, `min-h-[900px]`) when the layout must work on mobile; this breaks small viewports.
+
+### 2.1.1 Theme (`data-theme`) and client-side navigation (layout stability)
+
+**When this applies:** User navigates from the **portal** (e.g. index2) to `/userWeb/main?reqGbPosition=…` / `type=…` via the Next.js **client router** instead of a full page load. A common symptom is **교육 목록 상단 여백이 새로고침보다 좁아 보임** or the **하단 `eduListWrap--mainHtml .visual` 영역**이 한 박자 늦게 맞춰짐 — often because `header.css` theme variables (`--primary`, `--primary-light`) were not yet applied on the wrapping element.
+
+**MUST:**
+
+- When the **URL already determines** entry type (`reqGbPosition`, `type`), **`data-theme` must be set on the first paint** (same value SSR and CSR can compute from `useSearchParams`), not only after `useEffect` “mounted”, so theme-dependent spacing and gradients (e.g. `main.css` `.eduListWrap--mainHtml .visual` using `var(--primary-light)`) do not lag behind on client transitions.
+- **Implementation reference:** `LayoutWrapper` applies `data-theme` when `themeAttr` is set **and** (`mounted` **or** `urlThemeOverride != null`). URL-driven themes apply immediately; themes that depend only on client-only auth/session without a stable URL may still wait until after mount for hydration safety.
+
+**MUST NOT:**
+
+- Reintroduce “always wait for mounted before `data-theme`” for routes that already carry `reqGbPosition` / `type` in the URL — that regresses portal → main spacing.
+
+### 2.1.2 진입 역할(학생·학부모 등) 단일 규칙 — 헤더·본문·쿼리 일치
+
+**When this applies:** 메인·교육 목록·`bizInfo*` 상세·`bizInput*` 신청 등에서 **배지·사이드 프로필·브레드크럼·`type`/`reqGbPosition` 쿼리**가 서로 어긋나면(예: 헤더는 학생, 본문만 학부모) 클라이언트 라우팅만 깨져 보이는 버그가 난다.
+
+**MUST:**
+
+- **표시 라벨(배지·브레드크럼·프로필 역할)** 은 **`src/shared/lib/userWebEntryFromUrl.ts`의 `userWebBadgeLabelFromUrl`** 과 동일한 우선순위를 쓴다. 특히 **`reqGbPosition=1`(학생)이면 URL에 `type=parent`가 같이 있어도 “학생”으로 고정**한다(`LayoutWrapper`·`EduListSection`·`BizInfo*`·`/userWeb/main`의 `entryType`과 맞출 것).
+- **메인으로 돌아가는 링크·홈 경로(`preserveMainQuery` 등)** 는 **`userWebNormalizeMainQueryConflict`** 로 `reqGbPosition=1`+`type=parent` 같은 모순을 정리한 뒤 쿼리를 만든다.
+- **지원사업 상세 → 신청 페이지 이동** 시 로그인 **`userSe`가 `SNR`이면 `type=student`·`reqGbPosition=1`**, **`PNR`이면 `type=parent`·`reqGbPosition=2`** 를 쓴다 — **`userWebSetTypeAndReqGbForBizNav`**. 그 외 역할·비로그인은 기존 URL의 `type`/`reqGbPosition`을 fallback으로 두고, 없으면 `type=parent` 등 기존 기본값을 유지한다.
+- **`proGb` 불일치 시 `bizInfoPr`로 `replace`하는 effect** 는 **`userWebPreserveTypeReqGbToParams`** 로 현재 주소의 `type`·`reqGbPosition`을 유지한다(무조건 `type=parent`만 넣지 않는다).
+
+**MUST NOT:**
+
+- `EduListSection` 등에서 **`type=parent`만 보고 학부모로 그리되 `reqGbPosition=1`은 무시하는** 별도 분기를 두지 않는다 — 반드시 `userWebBadgeLabelFromUrl`과 동일해야 한다.
+- 학생 플로우 신청 버튼에서 **항상 `type=parent`만 하드코딩**하지 않는다.
+
+**Reference:** `src/shared/lib/userWebEntryFromUrl.ts`, `LayoutWrapper.tsx`, `EduListSection`, `BizInfoCtSection` 등 `BizInfo*`, `app/userWeb/main/page.tsx`.
+
+### 2.2 List structure consistency (filled vs empty slots)
+
+**MUST:**
+
+- Use the **same HTML tag** for all list items (e.g. all `<a>` or all `<li>`), including empty/placeholder slots.
+- For empty slots that use `<a>`, disable interaction with `pointerEvents: "none"` and `cursor: "default"` so layout and accessibility stay consistent.
+- Keep **identical class names and structure** for filled and empty slots so heights and alignment match (e.g. paired sections like 공지사항 and 지원사업).
+- **Fixed-count preview rows (e.g. 포털 `index2` 하단 `boardWrap` — 공지사항·자료실 각 5줄):** API 결과가 5개 미만이어도 **항상 5개의 `<li>`**를 렌더링하고, 부족한 줄은 **같은 마크업**의 placeholder 데이터로 채운다(빈 제목·날짜 + 링크 없음). 한쪽이 0건이어도 두 컬럼 모두 5줄이므로 행 단위 높이는 맞춘다.
+- **빈 제목/날짜 셀:** 텍스트가 완전히 비면 일부 브라우저에서 라인박스가 달라질 수 있으므로, **같은 `<span class="subject">` / `<span class="date">` 구조를 유지한 채** 내용만 `\u00A0`(nbsp) 한 글자로 두어 **채운 행과 동일한 한 줄 높이**를 보장한다(선택·복사 방지가 필요하면 `aria-hidden` 등은 상황에 맞게).
+
+**MUST NOT:**
+
+- Use `<a>` for filled slots and `<div>` for empty slots; the mismatch causes height and alignment issues.
+- Rely on **arbitrary** `min-h-[XXXpx]` or fixed pixel heights **as a substitute** for correct DOM structure (same tags/classes for every row). After structure is correct, matching the original CSS (e.g. gunsan `index2.css` `.boardItem` padding) is preferred; do not add unrelated min-height hacks on unrelated wrappers.
+
+### 2.3 Form label and section title alignment (right-align)
+
+**MUST:**
+
+- **Form labels** (the “th” role: 아이디, 비밀번호, 학생정보 입력, etc.) in user-web forms must be **right-aligned**. Use `justify-content: flex-end` on `.formLabel` (and `text-align: right` / `justify-content: flex-end` in mobile breakpoints where the label is full-width).
+- **Section titles** (e.g. “학생정보 입력”, “학생정보”) must also be **right-aligned**. Use `text-align: right` on `.sectionTitle`.
+- Apply form-label alignment in all user-web CSS that defines `.formLabel`: `join_ac.css` (`.joinInput .formLabel`), `biz_pr.css` (`.bizInput .formLabel`), `biz.css` (`.bizInput .formLabel`), `main_ac.css` (`.eduListWrap.bizInput .formLabel`). Apply section-title alignment where `.sectionTitle` is defined: `join_ac.css`, `biz_pr.css`, `biz.css`.
+- **교육홍보 `bizInfo` 상세 (`biz_pr.css`):** `.detailItem`이 `display: flex`인 행에서 **`.bizInfo .itemLabel`** 에 **`flex-shrink: 0`** 을 둬 라벨이 좁아질 때 찌그러지지 않게 한다. 라벨 폭은 **고정 `width`보다** 패딩·내용 기준 자연 폭을 우선한다.
+
+**MUST NOT:**
+
+- Do not use `justify-content: center` (or `text-align: center` for label text) for form labels in user-web; the standard is right-align. Do not use left or center alignment for `.sectionTitle` in user-web forms.
+
+### 2.4 Theme-aware styling (calendar and colored content blocks)
+
+**When this applies:** Components that show “colored” areas by **who is viewing** (e.g. 접수현황 calendar event cells, highlighted cards). The design intent is: **viewer’s theme** (학부모 → 연보라, 학생 → 연분홍, etc.) for the content blocks, and **white or neutral background** for the container.
+
+**Principle:** `LayoutWrapper` sets `data-theme` (student / parent / academy / mentor) from login or URL `type`. `header.css` defines `--primary` and `--primary-light` per theme. Use these variables so the same page looks correct for each viewer without hardcoding role-specific hex colors.
+
+**MUST:**
+
+- For **content blocks** (e.g. calendar event cells, “글 들어가는 칸”): use **`var(--primary-light)`** for background and **`var(--primary)`** for border or accent. Do not hardcode participant-type colors (e.g. 학생=파란, 학부모=초록) when the requirement is “show in the viewer’s theme.”
+- Keep **container/canvas background** (e.g. calendar grid, card wrapper) **white** so the colored blocks sit on a neutral base.
+- Prefer **CSS** (e.g. `.calendarWrap .fc .fc-daygrid-event { background: var(--primary-light); border-color: var(--primary); }`) over per-event inline hex in component code when the goal is theme-by-viewer.
+
+**접수현황 달력 — `useYn` (마감·비가용):** `list01-options` 응답의 각 행에 **`useYn`**이 오면 반드시 반영한다. API에서 **`F`**(대소문자 무관; 비교는 `String(useYn).toUpperCase() === 'F'`)이면 **해당 일정의 글자색만 빨간색**으로 표시한다(예: `#c62828`, `calendar.css`의 일요일 헤더 빨강과 동일 계열). **배경**은 viewer 테마 유지(`var(--primary-light)` 등); 빨강은 **상태(마감)** 표시용이며 viewer 테마 색을 대체하는 용도가 아니다.
+
+**MUST (implementation):**
+
+- **`useYn`을 매핑**해 FullCalendar 이벤트에 전달한다(`extendedProps` 또는 파생 플래그).
+- **`F`일 때만** 추가 `classNames`(예: `fc-event-unavailable`)를 붙이고, **`calendar.css`**에서 해당 클래스에 `color`(및 `.fc-event-title` 등)를 지정한다. 기본 규칙이 `#333 !important`이므로 **같거나 더 구체적인 선택자 + `!important`**로 덮어쓴다.
+
+**MUST NOT:**
+
+- API가 `useYn`을 주는데 **매핑을 생략**하거나, F인데도 글자색을 기본 `#333`만 쓴다.
+- Do not use fixed hex colors for “viewer theme” areas when `--primary` / `--primary-light` are available; that prevents 학부모/학생 등에 맞춰 색이 바뀌는 동작. (**Exception:** fixed red for **`useYn` F** 마감 글자색은 §2.4 위 “접수현황 달력 — `useYn`” 규칙에 따른다 — viewer 테마 대체가 아님.)
+- Do not load or depend on `index.css` for calendar/theme styling; use route-specific CSS (e.g. `calendar.css`) and the variables already set by the layout’s `data-theme`.
+
+**Theme color reference (header.css):** student `#d63a3a`, parent `#774adf`, academy `#00b187`, **mentor `#0063c0`** (primary) with matching `--primary-light` per theme. Do not use the former mentor color `#2d3890`; it has been replaced by `#0063c0`.
+
+**Reference:** `src/styles/userWeb/header.css` (theme variables), `src/app/userWeb/careerConsulting/calendar/page.tsx` and `src/styles/userWeb/calendar.css` (접수현황 달력).
+
+---
+
+## 3. Why previous conversion failed (avoid these)
+
+The earlier edream user web conversion diverged from the design because:
+
+1. **No source in project:** Original HTML/CSS was not in the repo, so conversion was done from description, not from the actual markup.
+2. **Styling rewritten:** Rules required "Tailwind only, no Custom CSS," so the designer’s CSS was discarded and recreated, changing look and behavior.
+3. **Reference not used:** The gunsan/htmltoreact pattern was not used as the mandatory reference during conversion.
+4. **Structure changed:** Different tags for filled vs empty slots and fixed pixel heights were used, causing layout and responsive issues.
+5. **Element type swapped for “semantic” choice:** The original had `<button class="btnPr">` for an action that navigates to another page. It was implemented as `<a>`/`<Link>` because “navigation ⇒ link” was applied. The gunsan CSS was written for a button; using an anchor changed layout (e.g. text alignment) and broke design parity. See §1.6: preserve the original element type and reimplement behavior (e.g. `onClick` + `router.push`) instead of changing the element.
+
+**When converting or editing user web:** Always have the original HTML/CSS available, preserve class names and CSS, preserve **element types** (button vs link) and accessibility, and use htmltoreact + gunsan as the reference pattern.
+
+---
+
+## 4. CSS loading: route-specific, not a single global bundle
+
+**Principle:** In the original (gunsan), each HTML file loads its own set of stylesheets. There is no single "portal.css" that loads on every page. Edream user web must mirror this: **load only the CSS that each route actually needs.** Do not load page-specific CSS (e.g. `index.css` with `.modalContent { padding: 60px }`) on routes that do not use it, or styles will leak and break layout (e.g. change-history modal padding).
+
+### 4.1 Shared vs route-specific CSS
+
+**Shared (userWeb layout only):**
+
+- Load **only** a minimal base: reset + fonts. In edream this is `default.css` + `fonts.css` (gunsan과 동일: default.css 직접 사용, 폰트 별도). **Do not** import `portal.css` (or any bundle that includes `index.css`) in the userWeb layout.
+- Rationale: `index.css` contains styles for the portal root page (e.g. login modal, main swiper). If it is loaded globally for all userWeb routes, selectors like `.modalContent` apply everywhere and override route-specific modal styles (e.g. biz_pr change-history modal), causing UI mismatch with the original.
+
+**Route-specific (each route’s layout or page):**
+
+- Each route must import **only** the CSS files that the original HTML for that page would have loaded.
+- Example mapping (gunsan → edream):
+  - Portal root (e.g. index.html with login modal) → load `index.css` (e.g. in that route’s page or a dedicated layout).
+  - apply_pr.html → `main.css`, `biz_pr.css`, `mypage_pr.css` (no `index.css`).
+  - bizInput_pr.html, bizInfo_pr.html → `main.css`, `biz_pr.css`.
+  - bizInfo.html, bizInput.html → `main.css`, `biz.css`.
+  - **일반 지원사업 상세 `bizInfo`:** `bizInfo2.html` 구조·필드 매핑은 §1.2 **「일반 지원사업 상세 UI (`BizInfoSection`, `bizInfo2` 패리티)」** bullet을 따른다. (구버전 단일 `bizBoxInfoCon` 전용 문의 블록만으로 설명하지 않는다.)
+  - **`bizInfoCt`·`bizInfoVd`·`bizInfoDm` 등:** **`main.css`, `biz.css`** (`.bizInfoDetail`). **`biz_pr.css`만**으로 이 상세 껍데기를 대체하지 않는다.
+  - **`bizInfoRc`·`bizInfoGc`:** **`main.css`, `biz.css` 다음에 `biz_pr.css` 추가.** 회차/탐방국가 모달의 `.modalOverlay:not(.loginModal)`·`.modalContent` 등은 `biz_pr.css`에 있다. (프로젝트에 `work_mt.css` 등을 붙인 레이아웃이 있으면 그대로 유지.)
+  - **`bizInfoPr`:** **`main.css`, `biz_pr.css`** (기존 Pr 상세; `bizInfo2` 통일은 별도 작업).
+  - **공부의 명수 등 `bizInputGstudy`** → `main.css`, `biz.css` (일반 `bizInput`과 동일 계열).
+  - main (logged-in main) → `main.css` only.
+
+### 4.2 Rules
+
+**MUST:**
+
+- Keep the **userWeb layout** importing only `default.css` and `fonts.css` (or equivalent: default/reset + fonts). No `portal.css` or `index.css` in the shared layout.
+- In each **route layout** (e.g. `applyPr/layout.tsx`, `bizInputPr/layout.tsx`), import only the CSS files that route needs (e.g. `main.css`, `biz_pr.css`, `mypage_pr.css`).
+- For the **route that owns the portal root / login modal** (e.g. `/userWeb`), import `index.css` in that route’s page or a layout that wraps only that route so that `index.css` is not loaded on other routes.
+- When adding a **new route** converted from a gunsan HTML file, check which CSS that HTML file links; import the same set (and only that set) in the new route’s layout.
+- **Shared class names + multi-route imports:** If a route layout imports `mypage_pr.css` (or similar) together with `main.css`, **scope** rules that target shared gunsan classes (e.g. `.eduListWrap .cardGrid`, `.eduListWrap .cardItem`) to the MY PAGE-only wrapper (e.g. `.mypagePrWrap .eduListWrap …`). Otherwise Next.js can keep the stylesheet loaded after client navigation and **equal-specificity** rules (e.g. 4-column grid) override `.eduListWrap--mainHtml` (3-column) on `/userWeb/main`.
+- **교육 카드 `.badge`:** `main.css`의 `.eduListWrap .badge` vs `.eduListWrap--mainHtml .badge` 동특 충돌, `community.css` 단독 `.badge`, `portalGunsanMain.css`와의 순서 문제는 **§4.5**를 따른다.
+
+**MUST NOT:**
+
+- Import `portal.css` (or any bundle that includes `index.css`) in the userWeb layout so that it applies to all userWeb routes.
+- Import `index.css` in a route that does not use the portal root / login modal or other index-only UI (e.g. do not load it for applyPr, bizInputPr, bizInfoPr, etc.).
+- Rely on overriding global `.modalContent` or similar in a route-specific CSS file without first stopping the global load; fix the loading boundary so the wrong CSS is not loaded at all.
+
+### 4.3 Examples
+
+**Correct (shared layout):**
+
+```tsx
+// src/app/userWeb/layout.tsx
+import '@/styles/userWeb/default.css';
+import '@/styles/userWeb/fonts.css';
+
+export default function UserWebLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return <>{children}</>;
+}
+```
+
+**Correct (route that needs index.css — e.g. portal root):**
+
+```tsx
+// src/app/userWeb/page.tsx (portal root with login modal)
+'use client';
+import '@/styles/userWeb/index.css';
+// ... rest of page
+```
+
+**Correct (route that must not load index.css):**
+
+```tsx
+// src/app/userWeb/applyPr/layout.tsx
+import '@/styles/userWeb/main.css';
+import '@/styles/userWeb/biz_pr.css';
+import '@/styles/userWeb/mypage_pr.css';
+// no index.css
+```
+
+**Wrong (global bundle on all routes):**
+
+```tsx
+// ❌ src/app/userWeb/layout.tsx
+import '@/styles/userWeb/portal.css'; // includes index.css → .modalContent etc. apply on every route
+```
+
+### 4.4 Checklist for CSS loading
+
+When adding or changing userWeb routes or layouts, verify:
+
+- [ ] UserWeb layout imports only `default.css` and `fonts.css` (default + fonts), not `portal.css` or `index.css`.
+- [ ] Each route layout imports only the CSS files that the corresponding gunsan HTML file would have linked.
+- [ ] The route that renders the portal root / login modal is the only one that imports `index.css`.
+- [ ] No route receives `index.css` unless it actually uses the portal root UI (login modal, etc.).
+- [ ] 교육 카드 배지: `main.css`·`portalGunsanMain.css`·`community.css` 등에서 `.badge` / `.eduListWrap .badge` 충돌이 없는지, §4.5대로 특이성·스코프를 맞췄는지.
+
+### 4.5 교육 카드 배지 (`eduListWrap` · `.badge`) — 크기 깨짐 방지
+
+**When this applies:** 로그인 메인 등에서 교육 카드의 대상 배지(초·중·고·영·일 등)가 **24×24(한 글자)** 로 보여야 하는데, 커뮤니티·포털 등 **다른 라우트를 갔다 온 뒤** **62×26** 또는 **community용 큰 박스**처럼 보이는 경우.
+
+**Why it happens:**
+
+1. **동일 특이성 + 나중 규칙 승리:** 과거 `main.css`에서 `.eduListWrap .badge`(62×26)와 `.eduListWrap--mainHtml .badge`(24×24)가 둘 다 **클래스 2개**라 **특이성이 같았다**. 문서에 로드된 **스타일시트 순서**가 바뀌면(클라이언트 라우팅 후 `main.css` 잔존, `portalGunsanMain.css`와 섞임) **나중 규칙이 크기를 덮어쓸 수 있다**. **현재 코드베이스**에서는 `.eduListWrap .badge` 기본을 **24×24로 통일**해 이 충돌을 제거했다(`src/styles/userWeb/main.css`).
+2. **`kids` / `usual`:** `.eduListWrap .badge.kids`(및 `.usual` 공통 블록)는 **클래스 3개**라, 과거에는 62px 고정이 `.eduListWrap--mainHtml .badge`(2개)보다 **특이성에서 이길 수 있었다**. 지금은 동일 파일에서 **24×24로 맞춤**; 여전히 문제가 나면 **`.eduListWrap.eduListWrap--mainHtml .badge.kids`** 등으로 한 단계 올려 검증한다.
+3. **전역 `.badge`:** `community.css`의 단독 `.badge`는 교육 카드와 **클래스명이 겹쳤다**. **현재** 문의하기 탭 답변 배지는 **`.mainViewContainer .titleContainer .badge`** 로 스코프했다. 새 라우트에서도 교육 카드와 겹치지 않게 **단독 `.badge`를 추가하지 않는다**(§4.2와 같은 원칙).
+4. **포털 + 메인 CSS 동시 존재:** DevTools에 `portalGunsanMain.css`와 `main.css`가 **한 화면에 같이** 보이면, 이전 라우트에서 로드된 전역 CSS가 남아 있는 상태다(§4.2).
+
+**MUST (edream 현재 제품 기준 — 로그인 메인만 `EduListSection` + `layoutMainHtml`):**
+
+- 교육 카드 대상 배지는 **`main.css`의 `.eduListWrap .badge`·`.eduListWrap .badge.kids`/`.usual`를 24×24로 유지**한다(62×26 재도입 시 라우트 전환·동특 충돌 재발).
+- 필요 시 **특이성을 올려** 메인 HTML 전용 규칙을 보강한다: 예) **`.eduListWrap.eduListWrap--mainHtml .badge`**(및 `.elementary` 등) — `영`/`일`용 **`.eduListWrap.eduListWrap--mainHtml .badge.kids`** 패턴과 동일 계열.
+- 커뮤니티·QnA 등 **다른 UI의 배지**는 **`community.css` / `qna.css`처럼 페이지 맥락으로 스코프**한다; 교육 카드와 **단독 `.badge` 공유 금지**.
+
+**MUST NOT:**
+
+- “`--mainHtml`만 붙이면 된다”고만 가정하고 **`.eduListWrap .badge`와 특이성이 같은 규칙**을 같은 파일·다른 파일에 **나중 순서로 또 두지 않는다**(62×26 재등장).
+- 문제 재현 시 **`<section>`에 `eduListWrap--mainHtml` 유무**와 DevTools **Computed `width`/`height`의 최종 승자 규칙**을 확인하지 않고 임의로 `!important`만 추가한다.
+
+**Reference:** `src/styles/userWeb/main.css` (`.eduListWrap .badge` 24×24 통일, `.eduListWrap--mainHtml .badge`, `.eduListWrap.eduListWrap--mainHtml .badge.kids`), `src/styles/userWeb/community.css` (`.mainViewContainer .titleContainer .badge`), `src/styles/userWeb/portalGunsanMain.css` (`.eduListWrap .badge`), `src/widgets/userWeb/EduListSection/index.tsx` (`layoutMainHtml` → `eduListWrap--mainHtml`).
+
+---
+
+## 5. File and attachment handling (fileId precision)
+
+**When to apply:** Any user-web feature that displays, passes, or deletes files using a **file id** (e.g. from ARMUSER attaFiles, biznoFiles, userPic) or calls file/attachment delete APIs.
+
+### 5.1 File ID type and precision (MUST)
+
+- **Why**: Backend file ids (e.g. ARTFILE FILE_ID) can be 18+ digit numbers. JavaScript `Number` has limited integer precision (safe up to about 2^53). Using `Number(fileId)` or storing file id as `number` can **silently corrupt** the value (e.g. `813643461398888477` → `813643461398888400`). Then delete requests use the wrong id: the server finds no row, and may clear the entity’s file reference without deleting any file, so “deletion doesn’t work” and “all files disappear.”
+- **Backend**: Already returns file id as **string** (e.g. `@JsonFormat(Shape.STRING)` on FileDTO.fileId). Keep that contract.
+
+**MUST:**
+
+- Type **fileId** as **`string`** only in interfaces and state (backend sends string; keep it as string end-to-end).
+- In delete API helpers, accept **`fileId: string`** and use it directly in the URL (e.g. `${fileId}` in the path).
+- When reading from API response, keep file id as string (if the response type ever gives a number, coerce once with `String(f.fileId)` when assigning to state or passing to APIs).
+- For comparisons (e.g. filtering after delete), use **`String(a) === String(b)`** if either value might still be number; if both are already string, `a === b` is fine.
+
+**MUST NOT:**
+
+- **Never** use **`Number(fileId)`** when storing file id in state, building delete URLs, or passing file id to APIs. That causes precision loss and wrong or failed deletes.
+- **Never** type file id as **`number`** or **`string | number`** in user-web file/attachment code; use **`string`** only.
+
+```tsx
+// ✅ GOOD – fileId as string only
+const [confirmDeleteFile, setConfirmDeleteFile] = useState<{
+  type: 'atta' | 'bizno';
+  fileId: string;
+  seq: number;
+} | null>(null);
+
+// When setting from API response (backend sends string; coerce if needed)
+setConfirmDeleteFile({
+  type: 'atta',
+  fileId: typeof f.fileId === 'string' ? f.fileId : String(f.fileId),
+  seq: Number(seq),
+});
+
+// Delete API: accept string, use directly in URL
+const path = `${BASE}/${esntlId}/atta-file/${fileId}/${seq}`;
+```
+
+```tsx
+// ❌ BAD – Number(fileId) causes precision loss for 18+ digits
+fileId: Number(fileId),           // e.g. 813643461398888477 → 813643461398888400
+const path = `.../${fileId}/${seq}`;  // wrong id in URL → delete fails or wrong row
+```
+
+### 5.2 Checklist for file/attachment features
+
+When adding or changing file list display, delete buttons, or file/attachment APIs in user-web:
+
+- [ ] File item type uses **`fileId?: string`** only; not `number` or `string | number`.
+- [ ] Delete confirmation state stores **`fileId` as string** (coerce with `String(f.fileId)` when reading from API if needed).
+- [ ] Delete API accepts **`fileId: string`** and uses it directly in the URL.
+- [ ] No **`Number(fileId)`** anywhere for display, state, or API calls.
+
+**Reference:** For more detail (comparison patterns, confirmation dialogs, success messages), see admin-web file rules: `edream_frontend/.cursor/rules/admin-web/admin-web-file-upload-delete-rules.mdc`. User-web must follow the same file-id precision rules above.
+
+---
+
+## 5.3 Community archive images: hard-refresh-equivalent cache behavior (prompt spec)
+
+**When to apply:** User-web archive pages under community:
+- List: `/userWeb/community?tab=eumArchive`
+- Detail: `/userWeb/community/[id]?bbsId=...` where `bbsId` is the archive board (`USER_ARCHIVE_BBS_ID`)
+
+### Why this exists
+
+Browser image caching is URL-based. If the URL string does not change, users can see old images until cache expires, and may need Ctrl+F5.  
+**Product rule:** do not depend on user hard refresh; implement URL-level cache invalidation so normal reload/navigation reflects latest files.
+
+### MUST
+
+1. **Always wire `cacheBust` for archive image URLs when server exposes a file-identity field**
+   - Use `resolveArticleImageUrl(..., { cacheBust })`.
+   - Source values:
+     - Archive list cards: `nttImgSaveNm` (from archive list API row)
+     - Archive detail slides: per-file `saveNm` (from `nttImgFiles[]`)
+   - This appends `_cb=...` via `resolveArticleThumbnailUrl.ts` and forces the browser to fetch the updated bitmap when file storage identity changes.
+
+2. **List page uses 500px thumb policy for eum archive cards**
+   - Use `USER_EUM_ARCHIVE_LIST_THUMB_SIZE` as `thumbSize` on archive card previews.
+   - Do not use generic admin list thumb size (`ARTICLE_ARCHIVE_LIST_THUMB_SIZE`, 128) for this user-web archive list.
+
+3. **Detail page uses original image policy**
+   - For archive detail slideshow/full image URLs, omit `thumbSize` (pass only `cacheBust` when available).
+   - This keeps detail rendering on original file output instead of fixed-size thumb output.
+
+### MUST NOT
+
+- ❌ Build archive list/detail image URLs without `cacheBust` when `nttImgSaveNm` / `saveNm` exists in the API response.
+- ❌ Add `thumbSize` on archive detail slides when requirement is "show original."
+- ❌ Revert list cards back to 128 thumb for eum archive (`tab=eumArchive`).
+
+### Copy-paste patterns (correct)
+
+```ts
+// List (eum archive): 500 thumb + cache bust
+const cacheBust =
+  item.nttImgSaveNm != null && String(item.nttImgSaveNm).trim() !== ""
+    ? String(item.nttImgSaveNm)
+    : undefined;
+
+const url = resolveArticleImageUrl(item.nttImgFileId ?? "", {
+  thumbSize: USER_EUM_ARCHIVE_LIST_THUMB_SIZE,
+  cacheBust,
+});
+```
+
+```ts
+// Detail (archive slides): original + cache bust (no thumbSize)
+const cacheBust =
+  f.saveNm != null && String(f.saveNm).trim() !== ""
+    ? String(f.saveNm)
+    : undefined;
+
+return resolveArticleImageUrl(`${id}:${seq}`, { cacheBust });
+```
+
+### Verification checklist
+
+- [ ] `/userWeb/community?tab=eumArchive` card image URL includes `thumbSize=500` and `_cb` when save name is available.
+- [ ] `/userWeb/community/[id]` archive detail slide URL includes `_cb` when available and does **not** include `thumbSize`.
+- [ ] URL builder remains `resolveArticleImageUrl` (shared logic), not ad-hoc string concatenation.
+
+### Reference files
+
+- `src/entities/adminWeb/article/lib/resolveArticleThumbnailUrl.ts`
+- `src/widgets/userWeb/CommunitySection/index.tsx`
+- `src/widgets/userWeb/CommunityViewSection/index.tsx`
+- `src/entities/userWeb/article/api/userArticleApi.ts`
+
+---
+
+## 6. Form validation: AlertModal + focus (user-web standard)
+
+**When to apply:** Any user-web form (e.g. qna/write, mypagePr, apply forms) that has **required fields** or **client-side validation**. This is the **mandatory** pattern so users get a clear modal and are taken to the field that needs input.
+
+**Critical — do not skip:** User-web validation must **always** use the **AlertModal + focus** pattern. Using only inline error text (e.g. a `<p>` above the form) **without** a modal and **without** focusing the invalid field is **wrong** and must not be repeated.
+
+### 6.1 Required behavior
+
+**MUST:**
+
+1. **Show an AlertModal** when validation fails (missing required value, invalid format, or auth required). Use `AlertModal` from `@/shared/ui/userWeb` with `title`, `message`, `type` (e.g. `"danger"` for validation/error).
+2. **On "Confirm" (모달 확인), move focus** to the **first invalid field** (e.g. the empty required input or textarea). Use `requestAnimationFrame(() => document.getElementById("fieldId")?.focus())` or a ref (e.g. `inputRef.current?.focus()`) in the modal’s `onConfirm` callback.
+3. **Remember which field to focus** when opening the modal (e.g. a ref like `focusAfterAlertRef.current = "qnaTitle" | "qnaContent" | null`), then in `onConfirm` read that ref and focus the corresponding element before clearing the ref.
+4. **Use stable element IDs or refs** for focus targets (e.g. `id="qnaTitle"`, `id="qnaContent"`) so `document.getElementById(...)` or refs work after the modal closes.
+
+**MUST NOT:**
+
+1. **Do not** show **only** an inline error message (e.g. `<p className="formError">...</p>`) without also showing an AlertModal for the same validation failure.
+2. **Do not** show a validation modal without **focusing** the invalid field when the user clicks Confirm. The user must be taken to the field that needs input.
+3. **Do not** implement a new user-web form with required fields using a different pattern (e.g. only HTML5 `required` + browser default messages, or only inline text). Always use AlertModal + focus for consistency with mypagePr and qna/write.
+4. **Do not use the HTML5 `required` attribute** on inputs/textareas that you validate in JavaScript with AlertModal + focus. Reason: the browser runs constraint validation **before** firing the `submit` event. If the field is empty, the browser blocks submission and shows its own message, so your `onSubmit` handler never runs and the AlertModal never appears. Use **`aria-required="true"`** only (for accessibility); perform the actual validation inside `handleSubmit` and show AlertModal there.
+
+### 6.2 Reference implementation
+
+**Pattern (pseudo-code):**
+
+```tsx
+// State for modal
+const [showAlertModal, setShowAlertModal] = useState(false);
+const [alertTitle, setAlertTitle] = useState('');
+const [alertMessage, setAlertMessage] = useState('');
+const [alertType, setAlertType] = useState<AlertModalType>('danger');
+const focusAfterAlertRef = useRef<'fieldA' | 'fieldB' | null>(null);
+
+// On validation fail
+if (!requiredValue.trim()) {
+  focusAfterAlertRef.current = 'fieldA';
+  setAlertTitle('안내');
+  setAlertMessage('필수값을 입력해 주세요.');
+  setAlertType('danger');
+  setShowAlertModal(true);
+  return;
+}
+
+// In JSX: AlertModal with onConfirm that focuses
+<AlertModal
+  isOpen={showAlertModal}
+  title={alertTitle}
+  message={alertMessage}
+  type={alertType}
+  onConfirm={() => {
+    setShowAlertModal(false);
+    const which = focusAfterAlertRef.current;
+    focusAfterAlertRef.current = null;
+    if (which === 'fieldA') {
+      requestAnimationFrame(() => document.getElementById('fieldA')?.focus());
+    } else if (which === 'fieldB') {
+      requestAnimationFrame(() => document.getElementById('fieldB')?.focus());
+    }
+  }}
+/>;
+```
+
+**Concrete references in this repo:**
+
+- `src/widgets/userWeb/BizInputPrSection/index.tsx`: `showAlertModal`, `studyCertFocusAfterAlertRef`, `AlertModal` with `onConfirm` that focuses `certText` or `certFile`.
+- `src/widgets/userWeb/QnaWriteSection/index.tsx`: `showAlert`, `focusAfterAlertRef`, `AlertModal` with `onConfirm` that focuses `qnaTitle` or `qnaContent`. **No `required` on inputs** — only `aria-required="true"` so the submit handler runs and the modal appears.
+
+### 6.3 Checklist for form validation in user-web
+
+Before considering a user-web form with validation done:
+
+- [ ] On validation failure, an **AlertModal** is shown (not only inline text).
+- [ ] The modal has a clear **title** and **message** (e.g. "안내", "문의 제목을 입력해 주세요.").
+- [ ] When the user clicks **Confirm**, the modal closes and **focus moves** to the first invalid field (by `id` or ref).
+- [ ] A ref or similar is used to remember **which** field to focus when opening the modal.
+- [ ] Required-field labels use the red asterisk (e.g. `.requiredMark`) and **`aria-required="true"`** on the control (do **not** use HTML5 `required` — it prevents the submit handler from running and blocks the AlertModal).
+- [ ] The form fields that are validated in JS do **not** have the `required` attribute; validation runs in `handleSubmit` and triggers AlertModal + focus.
+
+**Remember:** User-web validation = **AlertModal + focus on confirm**. Never rely only on inline error text. Do **not** use HTML5 `required` on fields validated by AlertModal — use `aria-required="true"` only so the submit event always fires and your handler can show the modal.
+
+### 6.4 지원사업 신청 폼 하단 액션 (`초기화` · `임시저장` · `신청`)
+
+**When this applies:** 일반 지원사업 입력 페이지(예: `bizInput`, **공부의 명수** `bizInputGstudy`)처럼 `biz.css`의 `.bizInput` · `.formActions` 패턴을 쓰는 신청 폼.
+
+**MUST:**
+
+- 폼 하단에 **`div.formActions`** 를 두고, **일반 신청 폼**에서는 **`bizInput`과 동일한 버튼 구성**을 맞춘다. **멘토 공부의 명수 08·09**(`bizInputGstudyMentor`·`bizInputGstudyMentorLighthouse`)는 **임시저장 없이 초기화·신청만** 둔다(아래 멘토 전용 bullet).
+  - **초기화** — `type="button"`, `className="btnWhite"`. 프로필·읽기 전용 필드는 두고, **신청 입력·구분·첨부(임시 파일 목록) 등 편집 가능 영역만** 되돌린다. **MY PAGE에서 연 수정 흐름**(`fromMypage` 등)에서는 초기화 버튼을 **숨기는** 패턴을 `BizInputSection`과 동일하게 유지한다.
+  - **임시저장** — `type="button"`, `className="btnWhite"`. `proId` 등 최소 조건 검증 후 실패 시 **AlertModal**(`danger`). 성공·스텁 응답도 **AlertModal**로 안내.
+  - **신청** — `type="submit"`, `className="btnSubmit"`. `form`의 `onSubmit`에서 검증(필수·동의 등) 후 API 연동; 검증 실패는 §6.1대로 **AlertModal + 확인 시 해당 필드로 포커스**.
+- 임시저장·신청은 **이미 완료된 신청 수정 불가** 같은 정책이 있으면 `disabled` 또는 `canSaveOrApply` 플래그로 `BizInput`과 맞춘다.
+- **공부의 명수(`bizInputGstudy`) — 가구 구분 라디오(기초·차상위):** **신규 신청**에서 학생 `ARMUSER` 상세를 불러올 때 **`basicYn`이 Y(대소문자 무관)이면 `01` 기초생활수급자**, **그렇지 않고 `poorYn`이 Y이면 `02` 법적차상위계층**, **그 외는 `05` 일반**으로 초기 선택한다(기초 우선). 다자녀·다문화·기타는 프로필에서 자동 매핑하지 않는다. **MY PAGE `by-req-id` 로드** 시에는 저장된 `appsProGbn`이 우선한다.
+- **공부의 명수(`bizInputGstudy`) — 참여이유·기대효과의 「기타」:** 선택지 중 **「기타」는 라디오 값(`other`)만 의미한다**. 「기타」를 눌렀을 때 **추가 텍스트 입력란을 펼치지 않는다** (별도 기타 설명 필드 없음). 가구 구분 등 **명시적으로 자유 입력이 필요한 항목**만 예외적으로 보조 입력을 둔다.
+- **공부의 명수(`bizInputGstudy`) — `ARTAPPS.REQ_SUB` (DB `char(4)`):** 저장 시 **반드시 EDR006 공통코드 4자만** 보낸다. **중·고 구분 1순위는 사업 등록 `ARTPROM.PRO_TARGET`**(모집대상 코드, 예: `J1|J2|J3`는 중등만, `H1|H2|H3`는 고등만). **중등 코드만 포함** → 국어 **0101**, 영어 **0102**, 수학 **0103**, 사회 **0104**, 과학 **0105**; **고등 코드만 포함** → 국어 **0201**, 영어 **0202**, 수학 **0203**, 공통사회 **0204**, 공통과학 **0205**. **중·고 코드가 함께이거나 둘 다 없으면** `ARTAPPM.SCHOOL_GB`가 **`J`이면 중등 매핑**, 아니면 고등 매핑으로 본다. 화면 라벨도 고등 매핑이면 **공통사회·공통과학**, 중등 매핑이면 **사회·과학**. **`GET /api/user/artprom/{proId}`** 로 `proTarget`을 읽어 매핑한다(MY PAGE `by-req-id` 로드 시에도 동일 `proId`로 조회해 신청과목 복원). **영문 키(`korean` 등)를 API/DB에 넣지 않는다** — `REQ_SUB` 길이 초과로 insert/update 실패를 막기 위함. 구현 참고: `BizInputGstudySection`의 `isGstudyMiddleSchoolReqSubMapping` / `serializeGstudyApplySubjectForApi` / `normalizeGstudyApplySubjectFromApi` / `gstudyApplySubjectRadioOptions`.
+- **공부의 명수(`bizInputGstudy`) — `ARTAPPS` 희망시간(`appsJoinTime` / API `joinTime`, 복수 `|`):** **`REQ_SUB`와 동일한 중·고 판별**(`PRO_TARGET` 1순위, 애매하면 `SCHOOL_GB` `J` 보조 — `isGstudyMiddleSchoolReqSubMapping`). **중등 매핑** → 평일오후 **0301**, 평일저녁 **0302**, 주말오전 **0303**, 주말오후 **0304**, 주말저녁 **0305**; **고등 매핑** → 각각 **0401**~**0405**. 조회 시 DB에 **030x 또는 040x**가 저장되어 있어도 **동일 체크박스**로 복원한다(`parseGstudyHopeTimeFromApi` + `GSTUDY_JOIN_TIME_TO_HOPE`). 저장은 `serializeGstudyHopeTimeForApi`가 `proTarget`·`schoolGb`를 받는다.
+- **공부의 명수(`bizInputGstudy`) — `JOIN_CNT`·`BEF_JOIN` (참여 횟수·기존참여):** EDR006에서 **중학(`J`)·고등(`H`) 모두 동일 코드군**이다(`selectLetDetailCodeListByCategory`: `CODE LIKE '08%'` → `JOIN_CNT`, `'09%'` → `BEF_JOIN`). **고등 신청도 중등과 같은 코드만** 쓴다 — **참여 횟수** 주1회 **0801**, 주2회 **0802**; **기존참여**(복수는 `|` 구분) 신규 **0901**, 2025 **0902**, 2024 **0903**, 2023 **0904**. **`REQ_SUB`·희망시간처럼 접두를 바꾸지 않는다**(참여횟수·기존참여만 해당). 구현: `serializeGstudyJoinCntForApi` / `normalizeGstudyJoinCntFromApi`, `serializeGstudyBefJoinForApi` / `parseGstudyBefJoinFromApi`.
+- **공부의 명수(`bizInputGstudy`) — 참여이유·기대효과·학부모평가 (`appsSReason` / `appsSExpect` / `appsSAppr`):** **`PRO_TARGET`·`SCHOOL_GB`로 중·고 접두를 나누지 않는다.** **고등 학생 신청도 중학생과 동일한 EDR006 코드만** 쓴다 — **참여이유**(`sReason`, 복수 `|`) 옵션 순 **0501**~**0504**; **기대효과**(`sExpect`, 복수 `|`) **0601**~**0604**; **학부모평가**(`sAppr`, 단일) **0701**~**0705**. `REQ_SUB`(01/02)·희망시간(03/04)과 혼동하지 않는다. 구현: `serializeGstudyPartReasonForApi` / `parseGstudyPartReasonFromApi`, `serializeGstudyExpectEffectForApi` / `parseGstudyExpectEffectFromApi`, `serializeGstudyParentEvalForApi` / `normalizeGstudyParentEvalFromApi`.
+- **공부의 명수(`bizInputGstudy`) — 신청정보 라디오·동의:** **신청과목, 참여 횟수, 기존참여, 희망시간대, 참여이유, 기대효과, 학부모평가, 이용동의, 제공동의, 주의사항**은 **초기 로드 시 아무 항목도 미리 선택하지 않는다**(디폴트 선택 금지). 신청 제출 시 미선택이면 **AlertModal + 확인 후 해당 라디오 그룹으로 포커스**(§6.1). 동의는 **「동의」일 때만** 신청 통과; 미선택·「미동의」는 각각 안내 메시지로 구분한다.
+- **공부의 명수(`bizInputGstudy`) — 첨부파일 행 높이:** 첨부 `formRow`에 **`gstudyAttachRow`** 클래스를 두고, **`biz.css`**에서 **보호자명·학생명 등 한 줄 `input`/`select` 행**과 동일한 시각적 높이(`.formControl` 상하 패딩 8px + 필드 48px ≈ **64px**)를 맞춘다. **`@media (min-width: 769px)`** 만 적용해 모바일(`.formLabel` `width: 100%` 스택)과 겹치지 않게 한다. 라벨 텍스트·빈 안내 문구·파일 목록은 **`display: flex` + `align-items: center`** 로 **행 높이 안에서 세로 중앙**에 두며, 전역 `.fileListContainer { display: unset }` 는 이 행에서만 `!important`로 덮는다.
+- **공부의 명수(`bizInputGstudy`) — 신청정보 라디오·체크 행 높이:** **신청과목, 참여 횟수, 기존참여, 희망시간대, 참여이유, 기대효과, 학부모평가, 이용동의, 제공동의, 주의사항** 해당 `formRow`에 **`gstudyApplyRow`** 를 붙이고, **`biz.css`**(데스크톱 미디어쿼리)에서 **`gstudyAttachRow`와 동일한 `min-height: 64px`**·라벨 **`align-self: stretch`**·**`.formControl` `min-height: 64px` + `align-items: center`** 로 보호자명 등 입력 행과 맞춘다. 내용이 여러 줄로 늘어나는 행은 **최소 높이만** 동일하고 높이는 콘텐츠에 맞게 증가한다.
+- **멘토 공부의 명수 08(`bizInputGstudyMentor`)·09(`bizInputGstudyMentorLighthouse`) — 신청:** **임시저장 없음**; **`formActions`**: **초기화**·**신청** 만. **`POST /api/user/artappm/mentor-applications/{proId}`** 멀티파트: **`data`**(JSON `UserMentorApplicationRegisterRequest`), **`mentorApplicationFiles`**. **`sttusCode`는 항상 `A`**(ARTAPMM·DB 컬럼 길이 및 관리자 기본과 일치). **08:** **기타정보** 아래 **`신청정보`** — 희망 과목·희망 시간대(`reqSub`·`joinTime`, 공고 `GET /api/user/artprom/{proId}`의 `proTarget`·`schoolGb`와 `gstudyMentorSubjectTime.ts` 직렬화); 라벨 **두 줄·우측 정렬**인 **`신청동기/자기소개`**·**`자원봉사/멘토링 경력`**(`formLabelStack` 등); **`reqReason`**·**`career`**·**`collegeNm`**·**`leaveYn`**·**`majorNm`**·**`schoolLvl`**·**`studentId`**·**`hschoolNm`**·**`proGb` `08`**. **첨부**는 **`gstudyAttachRow`** + 다중 파일 패턴. **09:** 소속학교 **`collegeNm`**, 구분 **`reqPlay`**(현직/전직), **`reqReason`**·**`career`**, **`proGb` `09`**. 중복은 서버 응답 **`result` `50`**. **신청 성공:** `AlertModal` 확인 후 **`router.replace('/userWeb/main'`** + `reqGbPosition`·`type=mentor` 등 쿼리 유지**)로 교육 목록 복귀. 이동 콜백은 반드시 **`showAlert` 5번째 인자 `after`** 로 전달한다(별도 ref에 콜백을 넣은 뒤 `showAlert`만 호출하면 `showAlert`가 `after ?? null`로 ref를 덮어 확인 후 이동이 실행되지 않는다).
+- **청소년 자기계발 연수지원(`BizInputSection`) — 신청폼 행 높이:** **보호자명|연락처**, **학생명|성별** 등 `formRow.split` 에 **`bizStdSplitRow`** 를 붙여 각 **`fieldUnit`** 의 라벨·컨트롤을 **64px** 기준에 맞춘다. **생년월일, 계좌번호, 주소, 학교명, 활동범위** 단일 행에는 **`bizStdApplyRow`**, **첨부파일**에는 **`bizStdAttachRow`** 를 붙인다. **`biz.css`** 데스크톱 구간에서 **`gstudyApplyRow` / `gstudyAttachRow` 와 동일한 규칙**을 셀렉터로 공유하며, **`bizStdSplitRow`** 만 `fieldUnit` 전용 규칙을 추가한다.
+- **MY PAGE 신청현황 → 공부의 명수(proGb `08`):** 상세(상세보기) 링크는 **`/userWeb/bizInputGstudy`** 로 두고, 쿼리에 **`from=mypage`**, **`reqId`**, **`proId`**, **`proGb=08`**, (해당 시) **`reqEsntlId`** 를 넘긴다. 화면에서는 **`GET /api/user/artappm/by-req-id/{reqId}`** 로 신청 상세·`ARTAPPS` 확장 필드(`appsReqSub`, `appsJoinCnt` 등)·`fileList`를 받아 **신청 내역을 폼에 표시**한다. 하단 액션은 **`BizInputSection`과 동일 패턴**: **임시저장·신청**은 항상 보이되 **`sttusCode === "01"`** 일 때만 활성(`disabled` 아님); 그 외 상태는 필드 **조회 전용**이며 버튼은 비활성. **취소**는 MY PAGE 진입·내역 로드 후 **`ConfirmModal`** → **`PUT /api/user/artappm/by-req-id/{reqId}`** 로 `sttusCode` **`99`** 전송(`BizInputSection`의 신청 취소와 동일). `MypageSection.getDetailHref`에서 08은 **`bizInfo`가 아닌 `bizInputGstudy`** 로 연결한다.
+- **MY PAGE 멘토 신청현황(ARTAPMM):** 멘토(`themeType` mentor / 로그인 `MNR`)은 신청목록을 **`POST /api/user/artprom/my-applied/mentor/list`** 로 조회한다(`apiUser.ts` **`USER_ARTPROM.MY_APPLIED_MENTOR_LIST`**). 학생·학부모 등은 기존 **`POST /api/user/artprom/my-applied/list`**(`ARTAPPM`). 본문 JSON **`{ sttusCode? }`** — **ARTAPMM** 상태 필터: **01** 임시저장, **02** 신청, **03** 승인, **04** 완료, **11** 반려, **12** 중단, **99** 취소(**ARTAPPM**의 04=반려·05=중단과 **코드 의미가 다름**; 카드 pill 매핑·셀렉트 옵션을 멘토 전용으로 둔다). 카드 제목 링크: **proGb `08`** → **`/userWeb/bizInputGstudyMentor`**, **`09`** → **`/userWeb/bizInputGstudyMentorLighthouse`**; 쿼리 **`from=mypage`**, **`proId`**, **`proGb`**, **`reqId`**, (해당 시) **`reqEsntlId`**, **`reqGbPosition=4`**, **`type=mentor`**.
+- **MY PAGE 멘토 신청 상세(08·09):** `from=mypage`이고 **`reqId`**가 있으면 **`GET /api/user/artappm/mentor-application/by-req-id/{reqId}`**(`apiUser.ts` **`USER_ARTAPPM.MENTOR_APPLICATION_BY_REQ_ID`**)로 **`detail`**·**`fileList`**를 받아 **`BizInputGstudyMentor`·`BizInputGstudyMentorLighthouse`** 폼에 반영한다. 첨부 **`fileId`는 string** 유지(§5); 본인 외 **403**. **조회 전용**: 중복 신청 방지를 위해 **`formActions`(초기화·신청) 숨김**·필드 **`readOnly`/`disabled`**, 기등록 첨부는 **`/api/v1/files/view`** 링크로만 연다. **`reqSub`/`joinTime`** 복원은 **`gstudyMentorSubjectTime.ts`**의 **`parseGstudyMentorApplySubjectFromApi`**, **`parseGstudyMentorHopeTimeFromApi`**(공고 `proTarget`·`schoolGb` 로드 후 희망시간 재해석).
+- **MY PAGE 신청 카드 — 선정/미선정/예비(`resultGb`):** 신청자 옆 **`[선정]` / `[미선정]` / `[예비]`** 배지는 **`proGb`가 `01`(청소년 자기계발 연수지원)·`04`(1:1 원어민 화상영어)** 인 건에만 표시한다. 그 외 사업은 **`resultGb`가 있어도 배지를 렌더하지 않는다**(다른 사업에 빈 `resultGb`로 `[미선정]`이 붙는 것을 방지). 구현 참고: `MypageSection`의 `PRO_GB_SHOW_RESULT_SELECTION` · `shouldShowResultSelectionBadge`.
+
+**Reference:** `src/widgets/userWeb/BizInputSection/index.tsx`, `src/widgets/userWeb/BizInputGstudySection/index.tsx`, `src/widgets/userWeb/BizInputGstudyMentorSection/index.tsx`, `src/widgets/userWeb/BizInputGstudyMentorLighthouseSection/index.tsx`, `src/widgets/userWeb/gstudyMentorSubjectTime.ts`, `src/widgets/userWeb/MypageSection/index.tsx`.
+
+### 6.5 Application forms — student row UI by login role (SNR vs PNR)
+
+**When this applies:** Any **support-program application form** under `bizInput` (e.g. `BizInputSection`, `BizInputVdSection`, …) or **공부의 명수** (`BizInputGstudySection`) that displays **student identity** (name / linked child) and loads **ARMUSER** detail for the applicant child.
+
+**Objective (single rule to follow):** Keep **one consistent UX contract** across apply flows:
+
+| Logged-in role (`AuthService.getUserSe()`) | Student row control | Data source |
+| --- | --- | --- |
+| **SNR** (student) | Read-only **text `input`** (e.g. `className="inputField bgGray"`, `readOnly`) | Logged-in user: `UserArmuserService.getDetail(esntlId)` for **self** |
+| **PNR** (parent) | **`<select className="selectField">`** (combobox) listing linked children | `GET /api/user/armchil/children` → options; on change load `UserArmuserService.getDetail(selectedChildEsntlId)`; persist **`cEsntlId` = selected child** in save payload |
+
+**MUST:**
+
+1. **Branch on `userSe`, not on URL alone.** Use `SNR` → readonly input; `PNR` → `select`. Do not show a combobox for the student applying for themselves.
+2. **SNR:** Pre-fill the student row from **the logged-in member’s** detail. Do not allow editing the name field on the apply form (profile / MY PAGE is the source of truth).
+3. **PNR:** Provide a **placeholder option** (e.g. `value=""`, label like “이름을 선택해주세요”). Load the children list from the **standard** endpoint (`API_ENDPOINTS.USER_ARMCHIL.CHILDREN`). On selection change, refresh dependent student fields (contact, school, address, etc.) from **`getDetail(childEsntlId)`**.
+4. **MY PAGE edit (`fromMypage` / `reqId`):** When the application is not editable (`formFieldsLocked` / `sttusCode !== "01"`), **disable** the student `select` the same way as other locked fields (match `BizInputSection`: `disabled={fromMypage}` or equivalent plus lock rules).
+5. **Validation:** If PNR and no child selected, use **§6.1 AlertModal + focus** on the student `select` (`aria-required="true"`, no HTML5 `required` on JS-validated fields).
+6. **Reuse the canonical pattern** in `BizInputSection` (`studentNameReadonly` vs `studentSelect`) when adding or refactoring other apply screens.
+
+**MUST NOT:**
+
+1. Render **only** a readonly student name **input** for **PNR** without a **child picker** when multiple children may exist.
+2. Auto-pick the first child **without** exposing a `select`, unless product explicitly requires it **and** the UI still allows changing selection (prefer combobox for clarity).
+3. Use a **combobox for SNR** to “choose self” — redundant and confusing; use readonly input.
+
+**Reference implementations:** `src/widgets/userWeb/BizInputSection/index.tsx` (guardian + student sections; `studentSelect` / `studentNameReadonly`), `src/widgets/userWeb/BizInputGstudySection/index.tsx` (`gstudyStudentSelect` vs `gstudyStudentName`).
+
+**Implementation checklist (before merge):**
+
+- [ ] `SNR` → readonly `input`; `PNR` → `select` + `USER_ARMCHIL.CHILDREN`.
+- [ ] Change handler reloads student ARMUSER detail for the selected `esntlId`.
+- [ ] MY PAGE / read-only state disables `select` consistently.
+- [ ] Submit validation covers empty child selection for PNR (AlertModal + focus).
+
+---
+
+## 7. Quick reference
+
+| Task                                       | Do                                                                                                                                                             | Don’t                                                                                                                                        |
+| ------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| New page from HTML                         | Put HTML/CSS in project; convert keeping classes, IDs, CSS, accessibility                                                                                      | Convert from description only; replace original CSS with Tailwind                                                                            |
+| Styling                                    | Import and use original CSS; keep class names; **apply gunsan CSS in full** (include .blind, .sr-only and every class used in the HTML)                        | Invent new classes; omit utility/accessibility classes (e.g. .blind) from converted CSS                                                      |
+| **CSS loading**                            | **Shared layout: `default.css` + `fonts.css` only. Each route layout: only CSS that route needs (e.g. main + biz_pr). `index.css` only on portal-root route.** | **Load `portal.css` or `index.css` in userWeb layout (applies to all routes); load `index.css` on routes that don't use portal/login modal** |
+| **교육 카드 배지 (24×24)**                 | **§4.5: `main.css`의 `.eduListWrap .badge`(및 kids/usual) 24×24 유지; `community.css`는 `.mainViewContainer .titleContainer .badge` 스코프; 필요 시 `.eduListWrap.eduListWrap--mainHtml .badge`로 특이성 보강.** | **62×26 재도입, 교육 카드와 단독 `.badge` 공유, 다중 시트 순서에만 의존** |
+| Accessibility                              | Keep #skip, #main_content, aria-\*, .blind/.sr-only                                                                                                            | Drop or rename semantic IDs and ARIA                                                                                                         |
+| Modals/overlays                            | `max-h-[90vh]` (or similar), content-based height                                                                                                              | `h-[880px]`, `min-h-[900px]` for responsive UI                                                                                               |
+| List items (filled/empty)                  | Same tag and classes; disable interaction on empty `<a>`                                                                                                       | `<a>` for filled, `<div>` for empty; fix height with min-h only                                                                              |
+| **Form label / section title**             | **Right-align: `.formLabel` → `justify-content: flex-end`; `.sectionTitle` → `text-align: right`. See §2.3.**                                                  | **Do not use center/left alignment for form labels or section titles in user-web**                                                           |
+| **Theme-colored blocks (calendar, cards)** | **Use `var(--primary-light)` / `var(--primary)` for “글 들어가는 칸”; keep container background white. See §2.4.**                                             | **Do not hardcode hex for viewer theme; use CSS variables so 학부모/학생 등에 맞춰 색 적용**                                                 |
+| **Portal → main (`data-theme`)**           | **If URL has `reqGbPosition` / `type`, apply `data-theme` on first paint (see §2.1.1, `LayoutWrapper`).**                                                      | **Do not defer `data-theme` until after mount only when URL already fixes entry** — causes 교육 목록 여백/visual 깜빡임 on client navigation |
+| **접수현황 달력 `useYn`**                  | **Map `useYn` from `list01-options`; if `F`, red event text + conditional `classNames` + `calendar.css`. See §2.4.**                                        | **Do not omit `useYn` mapping or leave F rows at default `#333`.**                                                                          |
+| Swiper / carousel (from gunsan)            | React Swiper; same UX (tab order, focus → slideTo/slideToLoop); keep original classes/structure                                                                | Paste original `<script>`; ignore different tab/focus behavior in React                                                                      |
+| **Buttons vs links**                       | **Preserve original element: if gunsan has `<button>`, use `<button>`; implement navigation with `onClick` + `router.push`. See §1.6.**                        | **Do not replace `<button>` with `<a>`/Link just because the action is navigation; that breaks CSS and alignment**                           |
+| Reference                                  | htmltoreact (pattern), gunsan (original)                                                                                                                       | Ignore reference; implement from scratch                                                                                                     |
+| **File / attachment fileId**               | **Type and use `string` only for fileId; see §5**                                                                                                              | **Never `number` or `Number(fileId)`; causes wrong deletes and missing files**                                                               |
+| **공부의 명수 `REQ_SUB`**                 | **DB `char(4)` — `PRO_TARGET`으로 중·고 매핑(중등만 J1~J3→0101~0105, 고등만 H1~H3→0201~0205; 애매하면 `SCHOOL_GB` J 보조). §6.4**                         | **`korean` 등 영문을 `reqSub`로 전송**                                                                                                       |
+| **공부의 명수 희망시간 `joinTime`**       | **`REQ_SUB`와 동일 중·고 판별 — 중등 0301~0305, 고등 0401~0405; 조회 시 03·04 모두 동일 UI. §6.4**                                                            | **고등 사업인데 0301만 저장**                                                                                                                |
+| **공부의 명수 `JOIN_CNT`·`BEF_JOIN`**    | **중·고 공통 EDR006 `08%`/`09%` — 0801·0802, 0901~0904(중등과 동일). §6.4**                                                                                    | **`SCHOOL_GB`별로 참여횟수·기존참여 코드 접두를 바꾸지 않음**                                                                               |
+| **공부의 명수 이유·효과·평가**            | **`sReason`/`sExpect`/`sAppr` — 고등도 중학과 동일(0501~0504, 0601~0604, 0701~0705). §6.4**                                                                    | **고등용 별도 코드군(08xx 등)으로 분기**                                                                                                     |
+| **신청 폼 하단 (`formActions`)**          | **일반: 초기화·임시저장·신청** (`btnWhite` / `btnSubmit`), MY PAGE 시 초기화 숨김; **멘토 08·09: 임시저장 없음·초기화·신청만**; AlertModal + 포커스. §6.4**                    | **bizInput 계열 페이지에서 `formActions` 누락**                                                                                              |
+| **MY PAGE 선정 배지 (`resultGb`)**        | **`proGb` 01·04만 `[선정]`/`[미선정]`/`[예비]` 표시. §6.4**                                                                                                  | **다른 `proGb`에도 `resultGb` 배지 노출**                                                                                                    |
+| **Apply form — student row (SNR vs PNR)** | **§6.5: SNR = readonly name `input`; PNR = `select` + `armchil/children` + `getDetail(child)`.** | **PNR에 자녀 콤보 없이 읽기전용만; SNR에 본인 선택용 콤보** |
+| **자료실(아카이브)** | **`src/shared/config/apiUser.ts`의 `USER_ARCHIVE_BBS_ID` / `getArchiveBbsId` — 통합 `BBS_0000000000000025`(ARMBORD와 동일).** | **역할별 예전 BBS(0010·0013 등)로 분기하지 않음** |
+| **일반 자료실(커뮤니티)** | **`USER_GENERAL_ARCHIVE_BBS_ID` = `BBS_0000000000000024` — `/userWeb/community?tab=guide`, 사이드「일반 자료실」. UI는 `source/gunsan/archive2.html` / `archiveView2.html` 패리티: 브레드크럼 **홈→커뮤니티→자료실→현재**(`NoticeCommunityChrome` `breadcrumbMode="generalArchive"`), 목록 표는 thead `col*`·tbody **`cell*`**·첨부 **`cellFile` + `.fileIcon`**(`public/images/userWeb/icon/ico_file.png`), 검색 셀렉트는 **제목·내용·작성자**(전체 없음), 필터 `aria-label`은 원본과 같게.** | **Lucide만으로 첨부열 대체·브레드크럼 3단만 두기** |
+| **이음 아카이브(커뮤니티)** | **`tab=eumArchive` — `USER_ARCHIVE_BBS_ID`(`BBS_0000000000000025`). 사이드「이음 아카이브」는 `tab=project`(지원사업)와 분리. 목록: `eumArchive2.html` 패리티 + **`GET /api/user/articles/archive`**(검색 시 **`searchCondition` `2` 제목만**·조건 콤보는 **제목 한 항목만**·**`/articles` 목록 미사용**). 상세: `eumArchiveView.html` 패리티(`CommunityViewSection`) + **`GET /api/user/articles/archive/detail`**(현재·이전·다음 글). `infoTable`: **명칭** `NTT_DATA1` 없으면 `NTT_SJ`, **소개** `NTT_DATA6`만(표시 시 HTML 태그 제거·텍스트), **자료출처** `NTT_DATA5`만, **내용** `NTT_CN`. **소개·자료출처** 전체가 URL이면 **http/https만** 링크(`www.`·`host.tld`는 `https://` 보강, `javascript:` 차단); 링크 색 **`#0b8e41` 고정**(`var(--primary)` 금지). 이미지: **`nttImgFiles`**(있으면 `fileId:seq`별 `resolveArticleImageUrl`)·없으면 **`NTT_IMG_FILE_ID`**. **`archiveSwiper` 좌우 버튼**은 **같은 글 내 이미지** 이전/다음; **이전·다음 글**은 본문 아래 **`mainViewDetailNav`**(`Link`+`detailPath`). 브레드크럼 **`breadcrumbMode="eumArchive"`**. CSS·이미지: `community.css`, `public/images/userWeb/`.** | **이음 아카이브에 `tab=project` 사용·gunsan 경로 직참조·좌우 버튼을 글 이동으로 쓰거나 `mainViewDetailNav` 누락·검색 콤보에 제목 외 옵션·`/articles`로 목록 처리** |
+| **`/userWeb/bizInfo` (일반 상세)** | **`source/gunsan/bizInfo2.html`**, `BizInfoSection`, `biz.css` **`.bizInfoDetail`**. `detailList`에 홈페이지; 담당부서·상세 API 필드 매핑은 백엔드 정책에 따름(규칙에서 상세 담당부서 SQL/DTO 변경을 요구하지 않음); 담당자 줄에 부서 비포함; **「신청 및 참여방법」에 문의처(`proEnquiry`) 행 없음**. §1.2·§4.1. | **홈페이지 중복·담당자 앞에 부서 붙이기·문의처 행 추가** |
+| **`bizInfoCt` (03)** | **`BizInfoCtSection`**, `bizInfo2` 패리티; `proGb !== '03'` → `bizInfoPr`. 신청 `bizInputCt`, `type=parent`. `main`+`biz.css`. | **inner 전용·사업내용에 `proSum` 합침** |
+| **`bizInfoVd` (04)** | **`BizInfoVdSection`**, 동일 패리티; `proGb !== '04'` → `bizInfoPr`. 신청 `bizInputVd`+`proGb=04`, `type=parent`. `main`+`biz.css`. | **동상** |
+| **`bizInfoDm` (06)** | **`BizInfoDmSection`**, 동일 패리티; `proGb !== '06'` → `bizInfoPr`. 신청 `bizInputDm`+`proGb=06`, `type=parent`. `main`+`biz.css`. | **동상** |
+| **`bizInfoRc` (05)** | **`BizInfoRcSection`**, 패리티 + **회차** 모달(`SCHEDULE_WITH_APPLY`). `proGb !== '05'` → `bizInfoPr`. 신청 `bizInputRc`, URL `type` 유지. `main`+`biz`+`biz_pr`. | **모달 없이 `biz.css`만** |
+| **`bizInfoGc` (07)** | **`BizInfoGcSection`**, 패리티 + **탐방국가** 모달. `proGb !== '07'` → `bizInfoPr`. 신청 `bizInputGc`, `type` 유지. `main`+`biz`+`biz_pr`. | **동상** |
+| **`bizInfoPr`** | **`BizInfoPrSection`**, `main`+`biz_pr` (아직 `bizInfo2` 섹션과 별도). §1.2 롤아웃 마지막. | **`bizInfo2`와 혼동해 Ct~Gc 규칙을 그대로 적용** |
+
+---
+
+**Remember:** User web = HTML-to-React conversion with **design and accessibility preserved**. For file/attachment features, **keep fileId as string** and never use `Number(fileId)` so large ids are not corrupted (§5). Original CSS and class names stay; **CSS is loaded per route** (shared layout: `default.css` + `fonts.css` only; each route layout: only the CSS that route needs; `index.css` only on portal-root). **교육 카드 배지**는 §4.5 — 기본 24×24 통일·커뮤니티 스코프·62×26 재도입 금지. Reference htmltoreact and gunsan.

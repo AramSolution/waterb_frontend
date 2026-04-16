@@ -1,0 +1,214 @@
+---
+alwaysApply: false
+---
+
+# Excel Export Implementation Guide for List Pages
+
+## 🎯 Purpose
+
+Guide for implementing Excel download on admin list pages using **ExcelJS** and the shared helper `@/shared/lib/exceljsAdminExcel`. Follows FSD and matches backend Legacy (.Ajax) vs REST patterns.
+
+## 📊 Architecture
+
+**FSD structure:**
+
+```
+src/
+├── shared/lib/
+│   └── exceljsAdminExcel.ts    # Shared layout: title merge, header band, borders, download
+├── entities/{entity}/
+│   ├── api/{entity}Api.ts      # get{Entity}Excel (or equivalent)
+│   └── lib/
+│       ├── excelUtils.ts       # Entity-specific headers, dataRows, columnWidths
+│       └── index.ts
+├── features/{feature}/list/model/use{Entity}List.ts
+└── app/.../list/page.tsx
+```
+
+### Key components
+
+1. **Library:** `exceljs` (project dependency). Do **not** add SheetJS stack packages (e.g. community `xlsx` forks).
+2. **Shared layout:** `downloadAdminListExcelFile`, `addAdminStyledListSheet`, `writeWorkbookToXlsxDownload` from `@/shared/lib/exceljsAdminExcel`.
+3. **Sheet layout:** Row 1 merged title (#D9E1F2), row 2 headers (#365F91 / white text), row 3+ data with thin black borders.
+4. **API:** Dedicated Excel endpoint — **Legacy (.Ajax)** or **REST** per domain (see below).
+
+---
+
+## 🔌 API Endpoint Style: Legacy vs REST
+
+**Instruction:** When adding or changing an Excel list API, first determine whether the backend for that domain uses **Legacy (.Ajax)** or **REST**; then follow the matching pattern. Do not assume one style for all domains.
+
+**Context:** The backend may expose list/Excel APIs in one of two styles. The frontend **MUST** match the backend contract.
+
+### Decision Rule
+
+```
+Adding or updating an Excel list endpoint?
+├─ Does the backend expose a REST-style base path (e.g. /api/admin/artprom)?
+│  └─ YES → Use REST pattern: POST /api/admin/{domain}/excel-list
+│           Example: SUPPORT → LIST: "/api/admin/artprom/list", EXCEL_LIST: "/api/admin/artprom/excel-list"
+├─ Does the backend expose action-named .Ajax endpoints?
+│  └─ YES → Use Legacy pattern: POST /api/.../select{Entity}ExcelList.Ajax
+│           Example: MEMBER → ADMIN_EXCEL_LIST: "/api/admin/member/selectAdminUserMemberExcelList.Ajax"
+└─ When in doubt → Check the backend controller (e.g. ArtpromManageController vs MemberController)
+   and api.ts for the same domain to see which style is already used.
+```
+
+### Legacy style (.Ajax)
+
+- **When to use:** Backend uses action-based URLs (e.g. `selectXxxList.Ajax`, `selectXxxExcelList.Ajax`).
+- **Excel endpoint example:** `POST /api/admin/member/selectAdminUserMemberExcelList.Ajax`
+- **In `api.ts`:** Define `EXCEL_LIST: "/api/.../select{Entity}ExcelList.Ajax"`.
+- **MUST:** Use the exact path the backend exposes. Do not invent REST paths for legacy backends.
+
+### REST style
+
+- **When to use:** Backend uses resource-based paths (e.g. `POST /list`, `POST /excel-list` under a base path).
+- **Excel endpoint example:** `POST /api/admin/artprom/excel-list`
+- **In `api.ts`:** Define `BASE` or a prefix, and `EXCEL_LIST: "/api/admin/{domain}/excel-list"` (e.g. SUPPORT: `LIST: "/api/admin/artprom/list"`, `EXCEL_LIST: "/api/admin/artprom/excel-list"`, `BASE: "/api/admin/artprom"`).
+- **MUST:** Use the same base path and HTTP method as the backend (typically POST for list and excel-list). Do not use .Ajax for REST-style domains.
+
+### Reference (current codebase)
+
+- **Legacy:** MEMBER — `ADMIN_LIST`, `ADMIN_EXCEL_LIST` with `.Ajax` paths.
+- **REST:** SUPPORT (artprom) — `LIST: "/api/admin/artprom/list"`, `EXCEL_LIST: "/api/admin/artprom/excel-list"`, `BASE: "/api/admin/artprom"`; detail/delete use GET/DELETE on `BASE/{id}`.
+
+---
+
+## ✅ Implementation Checklist
+
+- [ ] Entity folder: `entities/{entity}/`, API + `lib/excelUtils.ts`
+- [ ] Backend style decided: Legacy vs REST; `api.ts` matches
+- [ ] `get{Entity}Excel` (or domain name) without pagination params (`length`, `start`)
+- [ ] `download{Entity}Excel` is **`async`** and uses `downloadAdminListExcelFile` (or builds a workbook with `addAdminStyledListSheet` + `writeWorkbookToXlsxDownload`)
+- [ ] Hook uses **`await download{Entity}Excel(...)`** inside `try`
+- [ ] UI button wired to `handleExcelDownload`
+
+---
+
+## 📋 Steps
+
+### Step 1: Dependency
+
+- Use existing **`exceljs`** in `package.json`.
+- **Do not** install or import SheetJS stack packages (e.g. `xlsx` and styled forks).
+
+### Step 2: API endpoint (`src/shared/config/api.ts`)
+
+Same as before: add `EXCEL_LIST` following Legacy or REST for that domain (see section above).
+
+### Step 3: API service method
+
+`entities/{entity}/api/{entity}Api.ts` — static method posting to `EXCEL_LIST`, params omit `length` / `start`, return typed response.
+
+### Step 4: Entity `excelUtils.ts`
+
+```typescript
+import { downloadAdminListExcelFile } from "@/shared/lib/exceljsAdminExcel";
+import { {Entity} } from "../api";
+
+export async function download{Entity}Excel(
+  items: {Entity}[],
+  fileName: string = "{defaultName}",
+): Promise<void> {
+  const headers = ["번호", /* ... */];
+  const dataRows = items.map((item, index) => [
+    index + 1,
+    /* map fields */
+  ]);
+  const columnWidths = [8, 15, /* match headers length */];
+
+  await downloadAdminListExcelFile("{Sheet display name}", fileName, {
+    title: fileName,
+    headers,
+    dataRows,
+    columnWidths,
+    // optional: centerDataColumnIndices: [0, 2],
+  });
+}
+```
+
+**Custom sheets:** `new ExcelJS.Workbook()`, `addAdminStyledListSheet(wb, sheetName, options)`, then `await writeWorkbookToXlsxDownload(wb, fileNameWithoutExt)`.
+
+**Reading .xlsx in browser:** `loadXlsxFirstSheetMatrix(buffer)` from the same module (used e.g. for uploads). Prefer **.xlsx** only unless you add another strategy for `.xls`.
+
+### Step 5: `entities/{entity}/lib/index.ts`
+
+```typescript
+export * from "./excelUtils";
+```
+
+### Step 6: Hook
+
+```typescript
+import { download{Entity}Excel } from "@/entities/{entity}/lib";
+
+const handleExcelDownload = async () => {
+  try {
+    setLoading(true);
+    // token check, params without pagination
+    const response = await {Entity}Service.get{Entity}Excel(params);
+    // parse itemList (array / data / Array)
+    if (itemList.length === 0) {
+      setError("다운로드할 데이터가 없습니다.");
+      return;
+    }
+    await download{Entity}Excel(itemList, "{fileName}");
+  } catch (err) {
+    /* ApiError / generic */
+  } finally {
+    setLoading(false);
+  }
+};
+```
+
+### Step 7: UI button
+
+Same green Excel button pattern; `onClick={handleExcelDownload}`, `disabled={loading}`.
+
+---
+
+## 🎨 Style (enforced by `exceljsAdminExcel`)
+
+| Area | Background | Text | Notes |
+|------|------------|------|--------|
+| Title row | #D9E1F2 | Black, bold 11pt | Merged |
+| Header row | #365F91 | White, bold 11pt | Centered |
+| Data | Default | Default | Thin black borders |
+
+Column width hints: 번호 8, ID 15, 이름 12–15, 이메일 30, 연락처 18, 날짜 12, 긴 텍스트 30–35 (character units, same spirit as former `wch`).
+
+---
+
+## 🚨 Avoid
+
+1. **SheetJS stack** — no `xlsx` or styled-fork imports; use `exceljs` only.
+2. **Pagination in Excel API params** — no `length` / `start`.
+3. **Forgetting `await`** on `download{Entity}Excel` — it returns `Promise<void>`.
+4. **Placing entity column mapping in `shared/lib`** — keep domain mapping in `entities/.../excelUtils.ts`; shared module only defines reusable layout helpers.
+
+---
+
+## 📝 Principles
+
+1. Excel generation lives in **`entities/{entity}/lib/excelUtils.ts`**; API in **`entities/{entity}/api`**; orchestration in **feature hook**.
+2. **Reuse** `downloadAdminListExcelFile` so new lists match existing admin Excel look.
+3. **Type** API responses and `dataRows` construction.
+
+---
+
+## 🔍 Debugging
+
+1. Is the hook **`await`**ing the download function?
+2. Is **`exceljs`** listed in `package.json` (and no SheetJS excel packages)?
+3. Correct **Excel endpoint** for Legacy vs REST?
+4. Response parsed correctly (`data` / `Array`)?
+5. **`columnWidths.length`** matches **`headers.length`**?
+
+---
+
+## 💡 Quick reference
+
+- **Shared helpers:** `@/shared/lib/exceljsAdminExcel`
+- **Entity util:** `entities/{entity}/lib/excelUtils.ts` → `export async function download{Entity}Excel`
+- **Hook:** `await download{Entity}Excel(itemList, "…")`

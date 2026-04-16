@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0" />
+    <link rel="stylesheet" href="css/default.css">
+    <link rel="stylesheet" href="css/biz_pr.css">
+    <link rel="stylesheet" href="css/mypage_pr.css">
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard-gov.min.css" />
+    <link  rel="stylesheet" href="https://hangeul.pstatic.net/hangeul_static/css/nanum-square-round.css">
+</head>
+<body>
+    <div id="skip">
+        <a href="#main_content">본문 바로가기</a>
+    </div>
+    <header class="header">
+        <div class="headerTop inner">
+            <div class="headerLogo">
+                <h1>
+                    <a href="/">
+                        <img src="images/logo.png" alt="군산시꿈이음센터">
+                    </a>
+                </h1>
+                <span class="badgeStudent">학부모</span>
+            </div>
+            <div class="utilMenu">
+                <div class="userLinks">
+                    <a href="#">로그인</a>
+                    <a href="#">회원가입</a>
+                    <a href="#" target="_blank" class="btnPortal">꿈이음센터포털 바로가기<img src="images/icon/ico_newtab_20_pr.png" alt="" aria-hidden="true"></a>
+                </div>
+                <button type="button" class="menuOpen" aria-label="메뉴 열기">
+                    <img src="images/icon/ico_menu_32.png" alt="메뉴 열기">
+                </button>
+            </div>
+        </div>
+        <nav class="navPc" aria-label="메인 메뉴">
+            <div class="inner">
+                <ul class="navList">
+                    <li>
+                        <a href="#" class="mainLink">초등학교</a>
+                        <div class="subMenu">
+                            <div class="inner">
+                                <ul class="subList">
+                                    <li><a href="#">1학년</a></li>
+                                    <li><a href="#">2학년</a></li>
+                                    <li><a href="#">3학년</a></li>
+                                    <li><a href="#">4학년</a></li>
+                                    <li><a href="#">5학년</a></li>
+                                    <li><a href="#">6학년</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </li>
+                    <li>
+                        <a href="#" class="mainLink">중학교</a>
+                        <div class="subMenu">
+                            <div class="inner">
+                                <ul class="subList">
+                                    <li><a href="#">1학년</a></li>
+                                    <li><a href="#">2학년</a></li>
+                                    <li><a href="#">3학년</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </li>
+                    <li>
+                        <a href="#" class="mainLink">고등학교</a>
+                        <div class="subMenu">
+                            <div class="inner">
+                                <ul class="subList">
+                                    <li><a href="#">1학년</a></li>
+                                    <li><a href="#">2학년</a></li>
+                                    <li><a href="#">3학년</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </li>
+                    <li><a href="#" class="mainLink">공지사항</a></li>
+                    <li><a href="#" class="mainLink">학원조회</a></li>
+                    <li><a href="#" class="mainLink">MY PAGE</a></li>
+                </ul>
+            </div>
+        </nav>
+        <div class="moMenu" id="mobileMenu">
+            <div class="moMenuInner">
+                <div class="moMenuHeader">
+                    <div class="logoArea">
+                        <img src="images/logo.png" alt="군산시꿈이음센터" height="32">
+                        <span class="badgeStudent">학생</span>
+                    </div>
+                    <button type="button" class="menuClose" aria-label="메뉴 닫기">
+                        <img src="images/icon/ico_close_32.png" alt="닫기">
+                    </button>
+                </div>
+                <div class="moMenuContent">
+                    <nav class="moMenuNav">
+                        <ul class="moNavList">
+                            <li class="navItem active">
+                                <button type="button" class="moMainLink">초등학교</button>
+                                <div class="moSubMenuPane">
+                                    <ul class="moSubList">
+                                        <li><a href="#">1학년</a></li>
+                                        <li><a href="#">2학년</a></li>
+                                        <li><a href="#">3학년</a></li>
+                                        <li><a href="#">4학년</a></li>
+                                        <li><a href="#">5학년</a></li>
+                                        <li><a href="#">6학년</a></li>
+                                    </ul>
+                                </div>
+                            </li>
+                            <li class="navItem">
+                                <button type="button" class="moMainLink">중학교</button>
+                                <div class="moSubMenuPane">
+                                    <ul class="moSubList">
+                                        <li><a href="#">1학년</a></li>
+                                        <li><a href="#">2학년</a></li>
+                                        <li><a href="#">3학년</a></li>
+                                    </ul>
+                                </div>
+                            </li>
+                            <li class="navItem">
+                                <button type="button" class="moMainLink">고등학교</button>
+                                <div class="moSubMenuPane">
+                                    <ul class="moSubList">
+                                        <li><a href="#">1학년</a></li>
+                                        <li><a href="#">2학년</a></li>
+                                        <li><a href="#">3학년</a></li>
+                                    </ul>
+                                </div>
+                            </li>
+                            <li class="navItem"><button type="button" class="moMainLink">공지사항</button></li>
+                            <li class="navItem"><button type="button" class="moMainLink">학원조회</button></li>
+                            <li class="navItem"><button type="button" class="moMainLink">MY PAGE</button></li>
+                        </ul>
+                        <div class="moMenuFooter">
+                            <a href="#" class="btn-login">로그인</a>
+                            <a href="#" class="btn-portal">꿈이음센터포털 바로가기</a>
+                        </div>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </header>
+    <main id="main_content" class="bizBg">
+        <section class="inner">
+            <div class="mainTitle">MY PAGE</div>
+            <div class="mainBg">
+                <div class="tabWrapper" role="radiogroup" aria-label="탐구 유형 선택">
+                    <label class="tabLabel">
+                        <input type="radio" name="mypageMenu" value="info" class="tabInput" checked>
+                        <div class="tabButton">
+                            <span class="iconCheck ico_radio_check_on" aria-hidden="true"></span> 
+                            <span>나의정보</span>
+                        </div>
+                    </label>
+                    <label class="tabLabel">
+                        <input type="radio" name="mypageMenu" value="status" class="tabInput">
+                        <div class="tabButton">
+                            <span class="iconCheck ico_radio_check_off" aria-hidden="true"></span>
+                            <span>신청현황</span>
+                        </div>
+                    </label>
+                    <label class="tabLabel">
+                        <input type="radio" name="mypageMenu" value="kids" class="tabInput">
+                        <div class="tabButton">
+                            <span class="iconCheck ico_radio_check_off" aria-hidden="true"></span>
+                            <span>자녀연동</span>
+                        </div>
+                    </label>
+                </div>
+                <div id="content_info" class="tabContent active">
+                    <div class="tit">기본 정보 수정</div>
+                    <div class="infoPlaceholder">
+                        회원가입 폼이랑 똑같은거 가지고 오면 됨,,
+                    </div>
+                </div>
+
+                <div id="content_status" class="tabContent">
+                    <div class="eduListWrap">
+                        <div class="flex-sb">
+                            <div class="tit">신청목록</div>
+                            <select class="input selectInput">
+                                <option>옵션1</option>
+                                <option>옵션2</option>
+                            </select>
+                        </div>
+                        <div class="cardSection">
+                            <div class="cardGrid">
+                                <article class="cardItem">
+                                    <div class="cardHeader">
+                                        <div class="badgeArea">
+                                            <span class="badge elementary">초등</span>
+                                            <span class="cardCategory biz">지원사업</span>
+                                        </div>
+                                        <div class="cardTitle">
+                                            <a href="#">
+                                                <span class="state ing">공고중</span>
+                                                청소년 자기계발 연수지원 [자기신청장학금]
+                                            </a>
+                                        </div>
+                                    </div>
+                                    <div class="cardBody">
+                                        <ul class="infoList">
+                                            <li class="infoDate">
+                                                <span class="blind">기간:</span> 2026.01.01 ~ 2026.01.10
+                                            </li>
+                                            <li class="infoLoc">
+                                                <span class="blind">장소:</span> 군산 센트럴영어학원
+                                            </li>
+                                            <li class="infoName">
+                                                <span class="blind">신청자:</span> 김아람 <span class="result select">[선정]</span>
+                                            </li>
+                                        </ul>
+                                        <p class="cardDesc">학생 스스로 자기계발 탐구영역을 정해서 신청하는 장학금으로 다양한 진로체험 기회 제공 및 자신감 향상 유도</p>
+                                    </div>
+                                    <div class="cardFooter">
+                                        <a href="#" class="btnDetail">상세보기</a>
+                                    </div>
+                                </article>
+                                <article class="cardItem">
+                                    <div class="cardHeader">
+                                        <div class="badgeArea">
+                                            <span class="badge elementary">초등</span>
+                                            <span class="cardCategory biz">지원사업</span>
+                                        </div>
+                                        <div class="cardTitle">
+                                            <a href="#">
+                                                <span class="state active">진행중</span>
+                                                청소년 자기계발 연수지원 [자기신청장학금]
+                                            </a>
+                                        </div>
+                                    </div>
+                                    <div class="cardBody">
+                                        <ul class="infoList">
+                                            <li class="infoDate">
+                                                <span class="blind">기간:</span> 2026.01.01 ~ 2026.01.10
+                                            </li>
+                                            <li class="infoLoc">
+                                                <span class="blind">장소:</span> 군산 센트럴영어학원
+                                            </li>
+                                            <li class="infoName">
+                                                <span class="blind">신청자:</span> 김아람 <span class="result unselect">[미선정]</span>
+                                            </li>
+                                        </ul>
+                                        <p class="cardDesc">학생 스스로 자기계발 탐구영역을 정해서 신청하는 장학금으로 다양한 진로체험 기회 제공 및 자신감 향상 유도</p>
+                                    </div>
+                                    <div class="cardFooter">
+                                        <a href="#" class="btnDetail">상세보기</a>
+                                    </div>
+                                </article>
+                                <article class="cardItem">
+                                    <div class="cardHeader">
+                                        <div class="badgeArea">
+                                            <span class="badge middle">중등</span>
+                                            <span class="cardCategory biz">지원사업</span>
+                                        </div>
+                                        <div class="cardTitle">
+                                            <a href="#">
+                                                <span class="state temp">임시저장</span>
+                                                청소년 자기계발 연수지원 제목이 길어지는 경우엔 두줄에서 자를거임 이렇게 보여집니다 아아아아아ㅋㅋㅋㅋㅋㅋㅋ
+                                            </a>
+                                        </div>
+                                    </div>
+                                    <div class="cardBody">
+                                        <ul class="infoList">
+                                            <li class="infoDate">
+                                                <span class="blind">기간:</span> 2026.01.01 ~ 2026.01.10
+                                            </li>
+                                            <li class="infoLoc">
+                                                <span class="blind">장소:</span> 군산 센트럴영어학원
+                                            </li>
+                                            <li class="infoName">
+                                                <span class="blind">신청자:</span> 김아람 <span class="result wait">[예비]</span>
+                                            </li>
+                                        </ul>
+                                        <p class="cardDesc">학생 스스로 자기계발 탐구영역을 정해서 신청하는 장학금으로 다양한 진로체험 기회 제공 및 자신감 향상 유도</p>
+                                    </div>
+                                    <div class="cardFooter">
+                                        <a href="#" class="btnDetail">상세보기</a>
+                                    </div>
+                                </article>
+                                <article class="cardItem">
+                                    <div class="cardHeader">
+                                        <div class="badgeArea">
+                                            <span class="badge elementary">초등</span>
+                                            <span class="cardCategory education">교육</span>
+                                        </div>
+                                        <div class="cardTitle">
+                                            <a href="#">
+                                                <span class="state approve">승인</span>
+                                                청소년 자기계발 연수지원 [자기신청장학금]
+                                            </a>
+                                        </div>
+                                    </div>
+                                    <div class="cardBody">
+                                        <ul class="infoList">
+                                            <li class="infoDate">
+                                                <span class="blind">기간:</span> 2026.01.01 ~ 2026.01.10
+                                            </li>
+                                            <li class="infoLoc">
+                                                <span class="blind">장소:</span> 군산 센트럴영어학원
+                                            </li>
+                                            <li class="infoName">
+                                                <span class="blind">신청자:</span> 김아람 <span class="result select">[선정]</span>
+                                            </li>
+                                        </ul>
+                                        <p class="cardDesc">학생 스스로 자기계발 탐구영역을 정해서 신청하는 장학금으로 다양한 진로체험 기회 제공 및 자신감 향상 유도</p>
+                                    </div>
+                                    <div class="cardFooter">
+                                        <a href="#" class="btnDetail">상세보기</a>
+                                    </div>
+                                </article>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="content_kids" class="tabContent">
+                    <div class="bizInput">
+                        <div class="sectionHeader mb-0">
+                            <div class="sectionTitle">자녀연동</div>
+                            <button type="button" class="btnApply btnPr" id="btnRegCert">자녀등록</button>
+                        </div>
+                        <div class="tableWrapper">
+                            <table class="certTable kidsCertTable">
+                                <caption class="blind">사진, 학생명, 연락처, 성별, 생년월일 상태를 포함한 수강 확인증 목록</caption>
+                                <thead>
+                                    <tr>
+                                        <th scope="col" class="colPhoto" >사진</th>
+                                        <th scope="col" class="colName" style="width: 240px;">학생명</th>
+                                        <th scope="col" class="colNum" style="width: 240px;">연락처</th>
+                                        <th scope="col" class="colSex" style="width: 240px;">성별</th>
+                                        <th scope="col" class="colBirth" style="width: 240px;">생년월일</th>
+                                        <th scope="col" class="colState" style="width: 120px;">상태</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td class="cellPhoto">
+                                            <div class="ellipsis"><img src="images/img_noImg.png" alt="프로필이미지"></div>
+                                        </td>
+                                        <td class="cellName">김아람</td>
+                                        <td class="cellNum">010-1234-5678</td>
+                                        <td class="cellSex">여</td>
+                                        <td class="cellBirth">2015-10-29</td>
+                                        <td class="cellState">
+                                            <div class="btnGroup">
+                                                <button type="button" class="btnDelete">삭제</button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="cellPhoto">
+                                            <div class="ellipsis"><img src="images/img_noImg.png" alt="프로필이미지"></div>
+                                        </td>
+                                        <td class="cellName">김아람</td>
+                                        <td class="cellNum">010-1234-5678</td>
+                                        <td class="cellSex">여</td>
+                                        <td class="cellBirth">2015-10-29</td>
+                                        <td class="cellState">
+                                            <div class="btnGroup">
+                                                <button type="button" class="btnDelete">삭제</button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <div class="modalOverlay" id="regCertModal" aria-hidden="true">
+            <div class="modalContent" role="dialog" aria-labelledby="regCertTitle">
+                <div class="modalHeader">
+                    <div id="modalTitle">자녀등록</div>
+                    <button type="button" class="closeBtn" id="closeRegCertModal" aria-label="닫기">&times;</button>
+                </div>
+                <div class="modalBody">
+                    <div class="formGrid bizInput">
+                        <div class="formRow">
+                            <label for="certName" class="formLabel">학생명</label>
+                            <div class="formControl">
+                                <input type="text" id="certName" class="inputField" placeholder="학생명을 입력해주세요">
+                            </div>
+                        </div>
+                        <div class="formRow">
+                            <label for="certNum" class="formLabel">연락처</label>
+                            <div class="formControl">
+                                <input type="text" id="certNum" class="inputField" placeholder="숫자만 입력해주세요">
+                            </div>
+                        </div>
+                        <div class="formRow">
+                            <label for="certSex" class="formLabel">성별</label>
+                            <div class="formControl">
+                                <div class="customGroup formControl" role="radiogroup" aria-labelledby="lblGender">
+                                    <label class="customItem">
+                                        <input type="radio" name="gender" class="customInput" checked>
+                                        <div class="customBox">
+                                            <span class="customIcon" aria-hidden="true"></span>
+                                            <span class="customText">남</span>
+                                        </div>
+                                    </label>
+                                    <label class="customItem">
+                                        <input type="radio" name="gender" class="customInput">
+                                        <div class="customBox">
+                                            <span class="customIcon" aria-hidden="true"></span>
+                                            <span class="customText">여</span>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="formRow">
+                            <label for="certId" class="formLabel">주민등록번호</label>
+                            <div class="formControl">
+                                <input type="text" id="cerId" class="inputField" placeholder="주민등록번호를 입력해주세요">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modalFooter">
+                        <button type="submit" class="btnSubmit">등록하기</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    <footer class="footer">
+        <div class="innerContainer inner">
+            <div class="footerInfoWrap">
+                <div class="footerLogo">
+                    <img src="images/logo_w.png" alt="군산시 꿈이음센터">
+                </div>
+                <div class="addressArea">
+                    <address>
+                        [54080] 전북특별자치도 군산시 조촌로 22 <span>|</span> 대표전화 : 063)450-2600
+                    </address>
+                    <p class="copyright">Copyright ⓒ 2025 GUNSAN COUNTY. All Rights Reserved.</p>
+                </div>
+            </div>
+            <div class="footerLinkWrap">
+                <div class="siteSelectBox">
+                    <select id="familySite" title="관련 사이트 선택" class="customSelect">
+                        <option value="">개인정보 처리방침</option>
+                        <option value="https://www.gunsan.go.kr">군산시청</option>
+                        <option value="#">교육지원사업</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </footer>
+</body>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const regCertModal = document.getElementById('regCertModal');
+    
+    const btnRegCert = document.getElementById('btnRegCert'); 
+    const openModal = (modal) => {
+        if (modal) {
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+    };
+
+    if (btnRegCert) btnRegCert.addEventListener('click', () => openModal(regCertModal));
+
+    document.querySelectorAll('.closeBtn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const modal = btn.closest('.modalOverlay');
+            modal.classList.remove('active');
+            document.body.style.overflow = 'auto';
+        });
+    });
+
+    window.addEventListener('click', (e) => {
+        if (e.target.classList.contains('modalOverlay')) {
+            e.target.classList.remove('active');
+            document.body.style.overflow = 'auto';
+        }
+    });
+
+    const btnApply = document.querySelector('.modalFooter .btnApply');
+    if (btnApply) {
+        btnApply.addEventListener('click', (e) => {
+            e.preventDefault();
+            alert('수강확인증 신청이 완료되었습니다.');
+            regCertModal.classList.remove('active');
+            document.body.style.overflow = 'auto';
+        });
+    }
+
+    const tabInputs = document.querySelectorAll('.tabInput');
+    const tabContents = document.querySelectorAll('.tabContent');
+
+    tabInputs.forEach(input => {
+        input.addEventListener('change', (e) => {
+            const targetValue = e.target.value;
+            tabContents.forEach(content => content.classList.remove('active'));
+            
+            const targetContent = document.getElementById(`content_${targetValue}`);
+            if (targetContent) targetContent.classList.add('active');
+        });
+    });
+});
+
+/* 탭 조작 */
+document.addEventListener('DOMContentLoaded', () => {
+const tabInputs = document.querySelectorAll('.tabInput');
+const tabContents = document.querySelectorAll('.tabContent');
+
+    tabInputs.forEach(input => {
+        input.addEventListener('change', (e) => {
+            const targetValue = e.target.value;
+
+            tabContents.forEach(content => {
+                content.classList.remove('active');
+            });
+
+            const targetContent = document.getElementById(`content_${targetValue}`);
+            if (targetContent) {
+                targetContent.classList.add('active');
+            }
+        });
+    });
+});
+/* 헤더 조작 */
+document.addEventListener('DOMContentLoaded', () => {
+    const menuOpen = document.querySelector('.menuOpen');
+    const menuClose = document.querySelector('.menuClose');
+    const moMenu = document.querySelector('.moMenu');
+    const moMenuBg = document.querySelector('.moMenuBg'); 
+
+    menuOpen.addEventListener('click', () => {
+        moMenu.classList.add('active');
+        document.body.style.overflow = 'hidden'; 
+        setTimeout(() => menuClose.focus(), 100); 
+    });
+
+    const closeMobileMenu = () => {
+        moMenu.classList.remove('active');
+        document.body.style.overflow = ''; 
+        menuOpen.focus();
+    };
+    menuClose.addEventListener('click', closeMobileMenu);
+    moMenuBg.addEventListener('click', closeMobileMenu);
+});
+
+/* 모바일 메뉴 접근성  */
+document.addEventListener('DOMContentLoaded', () => {
+    const navItems = document.querySelectorAll('.navItem');
+    const menuOpen = document.querySelector('.menuOpen');
+    const menuClose = document.querySelector('.menuClose');
+    const moMenu = document.querySelector('.moMenu');
+
+    menuOpen?.addEventListener('click', () => moMenu.classList.add('active'));
+    menuClose?.addEventListener('click', () => moMenu.classList.remove('active'));
+
+    navItems.forEach(item => {
+        const btn = item.querySelector('.moMainLink');
+        btn.addEventListener('click', () => {
+            navItems.forEach(li => li.classList.remove('active'));
+            item.classList.add('active');
+        });
+    });
+});
+</script>
+</html>
