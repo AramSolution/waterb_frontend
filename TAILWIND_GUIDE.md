@@ -599,4 +599,4 @@ className="!bg-red-600"  // background-color: #dc2626 !important
 
 **작성일:** 2025-01-19  
 **버전:** 1.0  
-**프로젝트:** edream_frontend
+**프로젝트:** waterb_frontend

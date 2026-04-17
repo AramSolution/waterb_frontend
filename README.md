@@ -1,4 +1,4 @@
-# edream_frontend
+# waterb_frontend
 
 Next.js 14 기반의 관리자 웹 애플리케이션입니다. Feature-Sliced Design (FSD) 아키텍처를 따르며, TypeScript와 Tailwind CSS를 사용합니다.
 
@@ -118,7 +118,7 @@ app → widgets → features → entities → shared
 
 프로젝트의 개발 규칙은 `.cursor/rules/` 디렉토리에 있습니다:
 
-- **공통 규칙**: `.cursor/rules/common/edream-front-rule.mdc`
+- **공통 규칙**: `.cursor/rules/common/waterb-front-rule.mdc`
 - **Admin Web 규칙**: `.cursor/rules/admin-web/`
 - **User Web 규칙**: `.cursor/rules/user-web/`
 

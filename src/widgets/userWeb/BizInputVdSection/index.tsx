@@ -7,7 +7,7 @@ import { AlertModal, ConfirmModal } from "@/shared/ui/userWeb";
 import type { AlertModalType } from "@/shared/ui/userWeb";
 import {
   apiClient,
-  downloadEdreamAttachmentOrOpenView,
+  downloadWaterbAttachmentOrOpenView,
   TokenUtils,
   openSirenPassBlankWindow,
   tryCloseSirenPassWindow,
@@ -22,7 +22,7 @@ import SchoolSearchModal, {
   type SchoolItem,
 } from "@/widgets/userWeb/SchoolSearchModal";
 
-/** 확장자별 파일 아이콘 클래스 (biz_pr.css .file.hwp/.img/.pdf 등) */
+/** ?�장?�별 ?�일 ?�이�??�래??(biz_pr.css .file.hwp/.img/.pdf ?? */
 function getFileTypeClass(filename: string): string {
   if (!filename) return "";
   const ext = filename.split(".").pop()?.toLowerCase() ?? "";
@@ -36,7 +36,7 @@ function getFileTypeClass(filename: string): string {
   return "";
 }
 
-/** 생년월일 8자리 → input[type=date] 형식 (YYYY-MM-DD) */
+/** ?�년?�일 8?�리 ??input[type=date] ?�식 (YYYY-MM-DD) */
 function formatBrthdyForInput(brthdy: string | undefined): string {
   if (!brthdy || brthdy.length < 8) return "";
   const d = brthdy.replace(/\D/g, "").slice(0, 8);
@@ -55,10 +55,10 @@ export interface BizInputVdSectionProps {
   initialReqEsntlId?: string;
 }
 
-/** gunsan bizInput과 동일: 첨부파일 아이콘은 userWeb/icon (ico_file_add, ico_file_del) */
+/** gunsan bizInput�??�일: 첨�??�일 ?�이콘�? userWeb/icon (ico_file_add, ico_file_del) */
 const ICON = "/images/userWeb/icon";
 
-/** "1반", "11반" 등에서 숫자만 추출 (학급 반 번호) — BizInputPrSection과 동일 */
+/** "1�?, "11�? ?�에???�자�?추출 (?�급 �?번호) ??BizInputPrSection�??�일 */
 function parseClassNumber(classNm: string): number {
   const digits = (classNm || "").replace(/\D/g, "");
   if (!digits) return 0;
@@ -66,14 +66,14 @@ function parseClassNumber(classNm: string): number {
   return Number.isNaN(n) ? 0 : n;
 }
 
-/** 반 표시: "2" → "2반", "2반" → "2반" — BizInputPrSection과 동일 */
+/** �??�시: "2" ??"2�?, "2�? ??"2�? ??BizInputPrSection�??�일 */
 function formatClassLabel(classNm: string): string {
   const s = (classNm ?? "").trim();
   if (!s) return "";
-  return /반\s*$/.test(s) ? s : `${s}반`;
+  return /�?s*$/.test(s) ? s : `${s}�?;
 }
 
-/** 본인인증: 폼에 hidden input 추가 (청소년 자기계발 연수지원 bizInput과 동일) */
+/** 본인?�증: ?�에 hidden input 추�? (�?��???�기계발 ?�수지??bizInput�??�일) */
 function addHiddenInput(formId: string, name: string, value: string) {
   const form = document.getElementById(formId);
   if (!form) return;
@@ -84,7 +84,7 @@ function addHiddenInput(formId: string, name: string, value: string) {
   form.appendChild(input);
 }
 
-/** 본인인증: 토큰 요청 후 reqCBAForm 생성 (청소년 자기계발 연수지원 bizInput과 동일) */
+/** 본인?�증: ?�큰 ?�청 ??reqCBAForm ?�성 (�?��???�기계발 ?�수지??bizInput�??�일) */
 async function fetchCertToken(): Promise<void> {
   const params = new URLSearchParams();
   params.append("srvNo", "017001");
@@ -117,7 +117,7 @@ async function fetchCertToken(): Promise<void> {
   addHiddenInput("reqCBAForm", "certDate", response.data.certDate);
 }
 
-/** 본인인증: 클릭 직후 빈 팝업을 연 뒤 createToken (팝업 차단 방지) */
+/** 본인?�증: ?�릭 직후 �??�업??????createToken (?�업 차단 방�?) */
 async function createCertToken(): Promise<void> {
   const passPopup = openSirenPassBlankWindow();
   if (!passPopup || passPopup.closed) return;
@@ -139,9 +139,9 @@ async function createCertToken(): Promise<void> {
 }
 
 /**
- * 1:1 원어민 화상영어(04) 전용 신청 폼.
- * 보호자 본인인증(인증하기) — 청소년 자기계발 연수지원(bizInput)과 동일.
- * API: BY_STUDENT 로드, POST /api/user/artappm/ (학교구분·학교소재지 미전송).
+ * 1:1 ?�어�??�상?�어(04) ?�용 ?�청 ??
+ * 보호??본인?�증(?�증?�기) ??�?��???�기계발 ?�수지??bizInput)�??�일.
+ * API: BY_STUDENT 로드, POST /api/user/artappm/ (?�교구분·?�교?�재지 미전??.
  */
 const BizInputVdSection: React.FC<BizInputVdSectionProps> = ({
   proId,
@@ -246,7 +246,7 @@ const BizInputVdSection: React.FC<BizInputVdSectionProps> = ({
     setPendingFiles([]);
   };
 
-  /** 저장된 학교명으로 NEIS 학교 조회 후 학년/반 옵션 설정 (BY_STUDENT 로드 시) */
+  /** ?�?�된 ?�교명으�?NEIS ?�교 조회 ???�년/�??�션 ?�정 (BY_STUDENT 로드 ?? */
   const fetchGradeOptionsBySchoolName = useCallback((name: string) => {
     const schoolNm = (name ?? "").trim();
     if (!schoolNm) return;
@@ -294,7 +294,7 @@ const BizInputVdSection: React.FC<BizInputVdSectionProps> = ({
         setGradeOptions(
           grades.map((g) => ({
             value: String(parseInt(g.replace(/\D/g, ""), 10) || 0),
-            label: `${g}학년`,
+            label: `${g}?�년`,
           })),
         );
         setClassOptions([]);
@@ -307,7 +307,7 @@ const BizInputVdSection: React.FC<BizInputVdSectionProps> = ({
       .finally(() => setClassLoading(false));
   }, []);
 
-  /** 보호자: 학부모(PNR)=로그인자, 학생(SNR)=마이페이지 자녀연동 보호자(PARENTS[0]) */
+  /** 보호?? ?��?�?PNR)=로그?�자, ?�생(SNR)=마이?�이지 ?��??�동 보호??PARENTS[0]) */
   useEffect(() => {
     const esntlId = AuthService.getEsntlId();
     if (!esntlId) return;
@@ -337,8 +337,8 @@ const BizInputVdSection: React.FC<BizInputVdSectionProps> = ({
             if (!snParentLinkAlertShownRef.current) {
               snParentLinkAlertShownRef.current = true;
               showAlertModal(
-                "자녀 연동이 필요합니다",
-                "학부모님이 마이페이지에서 자녀 연동을 완료한 뒤 다시 신청해 주세요.",
+                "?��? ?�동???�요?�니??,
+                "?��?모님??마이?�이지?�서 ?��? ?�동???�료?????�시 ?�청??주세??",
                 "danger",
               );
             }
@@ -373,7 +373,7 @@ const BizInputVdSection: React.FC<BizInputVdSectionProps> = ({
       .catch(() => {});
   }, []);
 
-  /** 자녀 목록 로드 (학부모만) */
+  /** ?��? 목록 로드 (?��?모만) */
   useEffect(() => {
     if (AuthService.getUserSe() === "SNR") return;
     apiClient
@@ -386,7 +386,7 @@ const BizInputVdSection: React.FC<BizInputVdSectionProps> = ({
       .catch(() => setChildren([]));
   }, []);
 
-  /** MY PAGE 진입 시 해당 자녀로 초기 선택 */
+  /** MY PAGE 진입 ???�당 ?��?�?초기 ?�택 */
   useEffect(() => {
     if (initialReqEsntlIdAppliedRef.current || !initialReqEsntlId) return;
     if (
@@ -410,7 +410,7 @@ const BizInputVdSection: React.FC<BizInputVdSectionProps> = ({
         : []
       : children;
 
-  /** 학생 선택 시: fromMypage+proId면 BY_STUDENT 로드, 아니면 자녀 상세만 로드 */
+  /** ?�생 ?�택 ?? fromMypage+proId�?BY_STUDENT 로드, ?�니�??��? ?�세�?로드 */
   useEffect(() => {
     if (!selectedStudentId) {
       setStudentName("");
@@ -642,7 +642,7 @@ const BizInputVdSection: React.FC<BizInputVdSectionProps> = ({
     fetchGradeOptionsBySchoolName,
   ]);
 
-  /** 학교검색 모달에서 학교 선택 시: 학교명 반영 후 해당 학교 학년/반 옵션 조회 (BizInputPrSection·공공형 진로진학과 동일) */
+  /** ?�교검??모달?�서 ?�교 ?�택 ?? ?�교�?반영 ???�당 ?�교 ?�년/�??�션 조회 (BizInputPrSection·공공??진로진학�??�일) */
   const handleSchoolSelect = (school: SchoolItem) => {
     const code = school.sdSchulCode ?? "";
     setSchoolNm(school.schulNm ?? "");
@@ -684,7 +684,7 @@ const BizInputVdSection: React.FC<BizInputVdSectionProps> = ({
         setGradeOptions(
           grades.map((g) => ({
             value: String(parseInt(g.replace(/\D/g, ""), 10) || 0),
-            label: `${g}학년`,
+            label: `${g}?�년`,
           })),
         );
         setClassOptions([]);
@@ -697,7 +697,7 @@ const BizInputVdSection: React.FC<BizInputVdSectionProps> = ({
       .finally(() => setClassLoading(false));
   };
 
-  /** 학년 변경 시 해당 학년 반 목록으로 classOptions 갱신 (BizInputPrSection과 동일) */
+  /** ?�년 변�????�당 ?�년 �?목록?�로 classOptions 갱신 (BizInputPrSection�??�일) */
   useEffect(() => {
     if (!schoolId || !schoolLvl || classListForSchool.length === 0) {
       if (!schoolId) setClassOptions([]);
@@ -722,12 +722,12 @@ const BizInputVdSection: React.FC<BizInputVdSectionProps> = ({
   const canSaveOrApply =
     loadedSttusCode === "" || (loadedSttusCode === "01" && fromMypage);
 
-  /** 기존 첨부파일 1건 삭제 (reqId 기준) */
+  /** 기존 첨�??�일 1�???�� (reqId 기�?) */
   const removeExistingFile = (fileId: string, seq: number) => {
     if (!canSaveOrApply) {
       showAlertModal(
-        "알림",
-        "이미 신청 완료된 지원사업은 수정할 수 없습니다.",
+        "?�림",
+        "?��? ?�청 ?�료??지?�사?��? ?�정?????�습?�다.",
         "danger",
       );
       return;
@@ -753,14 +753,14 @@ const BizInputVdSection: React.FC<BizInputVdSectionProps> = ({
           );
         } else {
           showAlertModal(
-            "알림",
-            res?.message ?? "파일 삭제에 실패했습니다.",
+            "?�림",
+            res?.message ?? "?�일 ??��???�패?�습?�다.",
             "danger",
           );
         }
       })
       .catch(() => {
-        showAlertModal("알림", "파일 삭제 중 오류가 발생했습니다.", "danger");
+        showAlertModal("?�림", "?�일 ??�� �??�류가 발생?�습?�다.", "danger");
       });
   };
 
@@ -854,22 +854,22 @@ const BizInputVdSection: React.FC<BizInputVdSectionProps> = ({
         const result = res?.result ?? "";
         if (result === "50") {
           showAlertModal(
-            "알림",
+            "?�림",
             (res as { message?: string })?.message ??
               (isUpdate
-                ? "수정은 MY PAGE에서만 가능합니다."
-                : "동일한 지원사업 신청 건이 이미 존재합니다."),
+                ? "?�정?� MY PAGE?�서�?가?�합?�다."
+                : "?�일??지?�사???�청 건이 ?��? 존재?�니??"),
             "danger",
           );
           return;
         }
         if (result === "00") {
           if (sttusCode === "99") {
-            showAlertModal("취소 완료", "신청이 취소되었습니다.", "success");
+            showAlertModal("취소 ?�료", "?�청??취소?�었?�니??", "success");
           } else if (sttusCode === "02") {
-            showAlertModal("신청 완료", "신청이 완료되었습니다.", "success");
+            showAlertModal("?�청 ?�료", "?�청???�료?�었?�니??", "success");
           } else {
-            showAlertModal("임시저장", "임시저장되었습니다.", "success");
+            showAlertModal("?�시?�??, "?�시?�?�되?�습?�다.", "success");
           }
           setLoadedSttusCode(sttusCode);
           setPendingFiles([]);
@@ -888,35 +888,35 @@ const BizInputVdSection: React.FC<BizInputVdSectionProps> = ({
           return;
         } else {
           showAlertModal(
-            "알림",
-            (res as { message?: string })?.message ?? "저장에 실패했습니다.",
+            "?�림",
+            (res as { message?: string })?.message ?? "?�?�에 ?�패?�습?�다.",
             "danger",
           );
         }
       })
       .catch(() => {
-        showAlertModal("알림", "저장 중 오류가 발생했습니다.", "danger");
+        showAlertModal("?�림", "?�??�??�류가 발생?�습?�다.", "danger");
       });
   };
 
   const handleSubmitArtappm = (sttusCode: "01" | "02" | "99") => {
     if (!proId) {
       showAlertModal(
-        "알림",
-        "지원사업을 선택하고 학생을 선택해주세요.",
+        "?�림",
+        "지?�사?�을 ?�택?�고 ?�생???�택?�주?�요.",
         "danger",
       );
       return;
     }
     if (!selectedStudentId) {
-      showAlertModal("알림", "학생을 선택한 후 저장해 주세요.", "danger");
+      showAlertModal("?�림", "?�생???�택?????�?�해 주세??", "danger");
       focusAfterAlertRef.current = "studentSelect";
       return;
     }
     if (AuthService.getUserSe() === "SNR" && !linkedParentEsntlId.trim()) {
       showAlertModal(
-        "자녀 연동이 필요합니다",
-        "학부모님이 마이페이지에서 자녀 연동을 완료한 뒤 다시 신청해 주세요.",
+        "?��? ?�동???�요?�니??,
+        "?��?모님??마이?�이지?�서 ?��? ?�동???�료?????�시 ?�청??주세??",
         "danger",
       );
       return;
@@ -933,8 +933,8 @@ const BizInputVdSection: React.FC<BizInputVdSectionProps> = ({
         .then((res) => {
           if (res.detail) {
             showAlertModal(
-              "알림",
-              "수정은 MY PAGE에서만 가능합니다.\n이미 신청 완료된 지원사업은 수정할 수 없습니다.",
+              "?�림",
+              "?�정?� MY PAGE?�서�?가?�합?�다.\n?��? ?�청 ?�료??지?�사?��? ?�정?????�습?�다.",
               "danger",
             );
             return;
@@ -946,8 +946,8 @@ const BizInputVdSection: React.FC<BizInputVdSectionProps> = ({
     }
     if (!canSaveOrApply) {
       showAlertModal(
-        "알림",
-        "이미 신청 완료된 지원사업은 수정할 수 없습니다.",
+        "?�림",
+        "?��? ?�청 ?�료??지?�사?��? ?�정?????�습?�다.",
         "danger",
       );
       return;
@@ -957,21 +957,21 @@ const BizInputVdSection: React.FC<BizInputVdSectionProps> = ({
 
   const handleTempSave = () => {
     if (!schoolNm?.trim()) {
-      showAlertModal("안내", "학교를 검색하여 선택해 주세요.", "danger");
+      showAlertModal("?�내", "?�교�?검?�하???�택??주세??", "danger");
       return;
     }
     if (!schoolLvl) {
-      showAlertModal("안내", "학년을 선택해 주세요.", "danger", "schoolLvl");
+      showAlertModal("?�내", "?�년???�택??주세??", "danger", "schoolLvl");
       return;
     }
     if (!schoolNo && classOptions.length > 0) {
-      showAlertModal("안내", "반을 선택해 주세요.", "danger", "schoolNo");
+      showAlertModal("?�내", "반을 ?�택??주세??", "danger", "schoolNo");
       return;
     }
     handleSubmitArtappm("01");
   };
 
-  /** 본인인증 토큰 준비 (청소년 자기계발 연수지원과 동일, 마운트 시 1회) */
+  /** 본인?�증 ?�큰 준�?(�?��???�기계발 ?�수지?�과 ?�일, 마운????1?? */
   useEffect(() => {
     fetchCertToken();
   }, []);
@@ -979,29 +979,29 @@ const BizInputVdSection: React.FC<BizInputVdSectionProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!guardianCertified) {
-      showAlertModal("안내", "보호자 인증을 완료해 주세요.", "danger");
+      showAlertModal("?�내", "보호???�증???�료??주세??", "danger");
       return;
     }
     if (!schoolNm?.trim()) {
-      showAlertModal("안내", "학교를 검색하여 선택해 주세요.", "danger");
+      showAlertModal("?�내", "?�교�?검?�하???�택??주세??", "danger");
       return;
     }
     if (!schoolLvl) {
-      showAlertModal("안내", "학년을 선택해 주세요.", "danger", "schoolLvl");
+      showAlertModal("?�내", "?�년???�택??주세??", "danger", "schoolLvl");
       return;
     }
     if (!schoolNo && classOptions.length > 0) {
-      showAlertModal("안내", "반을 선택해 주세요.", "danger", "schoolNo");
+      showAlertModal("?�내", "반을 ?�택??주세??", "danger", "schoolNo");
       return;
     }
     if (!schoolGb) {
-      showAlertModal("안내", "학교구분을 선택해 주세요.", "danger", "schoolGb");
+      showAlertModal("?�내", "?�교구분???�택??주세??", "danger", "schoolGb");
       return;
     }
     if (!schoolAddr?.trim()) {
       showAlertModal(
-        "안내",
-        "학교소재지를 입력해 주세요.",
+        "?�내",
+        "?�교?�재지�??�력??주세??",
         "danger",
         "schoolAddr",
       );
@@ -1048,7 +1048,7 @@ const BizInputVdSection: React.FC<BizInputVdSectionProps> = ({
                       className="sectionTitle"
                       id="bizVdGuardianSectionTitle"
                     >
-                      학부모정보
+                      ?��?모정�?
                     </div>
                     <span
                       className={`subTextBlue ${!guardianCertified ? "certRequired" : ""}`.trim()}
@@ -1056,8 +1056,8 @@ const BizInputVdSection: React.FC<BizInputVdSectionProps> = ({
                       aria-live="polite"
                     >
                       {guardianCertified
-                        ? "인증이 완료되었습니다."
-                        : "보호자를 인증하세요"}
+                        ? "?�증???�료?�었?�니??"
+                        : "보호?��? ?�증?�세??}
                     </span>
                   </div>
                   <button
@@ -1093,8 +1093,8 @@ const BizInputVdSection: React.FC<BizInputVdSectionProps> = ({
 
                         const mismatchAlert = () =>
                           showAlertModal(
-                            "알림",
-                            "로그인한 보호자와 인증한 본인이 일치하지 않습니다. 로그인한 계정의 보호자만 인증할 수 있습니다.",
+                            "?�림",
+                            "로그?�한 보호?��? ?�증??본인???�치?��? ?�습?�다. 로그?�한 계정??보호?�만 ?�증?????�습?�다.",
                             "danger",
                           );
 
@@ -1121,8 +1121,8 @@ const BizInputVdSection: React.FC<BizInputVdSectionProps> = ({
                               const parentId = fromList;
                               if (!parentId) {
                                 showAlertModal(
-                                  "알림",
-                                  "연동된 보호자 정보를 찾을 수 없습니다. 마이페이지에서 자녀 연동을 확인한 뒤 다시 시도해 주세요.",
+                                  "?�림",
+                                  "?�동??보호???�보�?찾을 ???�습?�다. 마이?�이지?�서 ?��? ?�동???�인?????�시 ?�도??주세??",
                                   "danger",
                                 );
                                 return;
@@ -1138,8 +1138,8 @@ const BizInputVdSection: React.FC<BizInputVdSectionProps> = ({
                                 setGuardianCertified(true);
                                 setGuardianCertDi(certDi);
                                 showAlertModal(
-                                  "알림",
-                                  "본인인증이 완료되었습니다.",
+                                  "?�림",
+                                  "본인?�증???�료?�었?�니??",
                                   "success",
                                 );
                               } else {
@@ -1148,8 +1148,8 @@ const BizInputVdSection: React.FC<BizInputVdSectionProps> = ({
                             })
                             .catch(() => {
                               showAlertModal(
-                                "알림",
-                                "본인인증 확인 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.",
+                                "?�림",
+                                "본인?�증 ?�인 �??�류가 발생?�습?�다. ?�시 ???�시 ?�도??주세??",
                                 "danger",
                               );
                             })
@@ -1166,8 +1166,8 @@ const BizInputVdSection: React.FC<BizInputVdSectionProps> = ({
                               setGuardianCertified(true);
                               setGuardianCertDi(certDi);
                               showAlertModal(
-                                "알림",
-                                "본인인증이 완료되었습니다.",
+                                "?�림",
+                                "본인?�증???�료?�었?�니??",
                                 "success",
                               );
                             } else {
@@ -1181,16 +1181,16 @@ const BizInputVdSection: React.FC<BizInputVdSectionProps> = ({
                       };
                       createCertToken();
                     }}
-                    aria-label="보호자 본인인증 하기"
+                    aria-label="보호??본인?�증 ?�기"
                   >
-                    인증하기
+                    ?�증?�기
                   </button>
                 </div>
                 <div className="formGrid bizInput">
                   <div className="formRow split">
                     <div className="fieldUnit">
                       <label htmlFor="guardianName" className="formLabel">
-                        보호자명
+                        보호?�명
                       </label>
                       <div className="formControl">
                         <input
@@ -1201,13 +1201,13 @@ const BizInputVdSection: React.FC<BizInputVdSectionProps> = ({
                           onChange={(e) => setGuardianName(e.target.value)}
                           readOnly
                           aria-readonly="true"
-                          aria-label="보호자명"
+                          aria-label="보호?�명"
                         />
                       </div>
                     </div>
                     <div className="fieldUnit">
                       <label htmlFor="guardianContact" className="formLabel">
-                        연락처
+                        ?�락�?
                       </label>
                       <div className="formControl">
                         <input
@@ -1218,7 +1218,7 @@ const BizInputVdSection: React.FC<BizInputVdSectionProps> = ({
                           onChange={(e) => setGuardianContact(e.target.value)}
                           readOnly
                           aria-readonly="true"
-                          aria-label="연락처"
+                          aria-label="?�락�?
                         />
                       </div>
                     </div>
@@ -1226,7 +1226,7 @@ const BizInputVdSection: React.FC<BizInputVdSectionProps> = ({
                   <div className="formRow split">
                     <div className="fieldUnit">
                       <label htmlFor="guardianBirth" className="formLabel">
-                        생년월일
+                        ?�년?�일
                       </label>
                       <div className="formControl">
                         <input
@@ -1237,7 +1237,7 @@ const BizInputVdSection: React.FC<BizInputVdSectionProps> = ({
                           onChange={(e) => setGuardianBirth(e.target.value)}
                           readOnly
                           aria-readonly="true"
-                          aria-label="생년월일"
+                          aria-label="?�년?�일"
                         />
                       </div>
                     </div>
@@ -1247,7 +1247,7 @@ const BizInputVdSection: React.FC<BizInputVdSectionProps> = ({
 
               <section className="formSection">
                 <div className="sectionHeader">
-                  <div className="sectionTitle">학생정보</div>
+                  <div className="sectionTitle">?�생?�보</div>
                 </div>
                 <div className="formGrid bizInput">
                   <div className="formRow split">
@@ -1260,7 +1260,7 @@ const BizInputVdSection: React.FC<BizInputVdSectionProps> = ({
                         <span className="requiredMark" aria-hidden="true">
                           *
                         </span>
-                        학생명
+                        ?�생�?
                       </label>
                       <div className="formControl">
                         {children.length > 0 ? (
@@ -1274,9 +1274,9 @@ const BizInputVdSection: React.FC<BizInputVdSectionProps> = ({
                             }
                             disabled={fromMypage}
                             aria-required="true"
-                            aria-label="학생명 선택"
+                            aria-label="?�생�??�택"
                           >
-                            <option value="">학생을 선택하세요</option>
+                            <option value="">?�생???�택?�세??/option>
                             {studentSelectOptions.map((c) => (
                               <option
                                 key={c.esntlId ?? ""}
@@ -1295,20 +1295,20 @@ const BizInputVdSection: React.FC<BizInputVdSectionProps> = ({
                             onChange={(e) => setStudentName(e.target.value)}
                             readOnly
                             aria-readonly="true"
-                            aria-label="학생명"
+                            aria-label="?�생�?
                           />
                         )}
                       </div>
                     </div>
                     <div className="fieldUnit">
-                      <span className="formLabel">성별</span>
+                      <span className="formLabel">?�별</span>
                       <div className="formControl">
                         <div
                           className="customGroup"
                           role="radiogroup"
                           id="studentGender"
                           aria-required="true"
-                          aria-label="성별"
+                          aria-label="?�별"
                         >
                           <label className="customItem">
                             <input
@@ -1322,7 +1322,7 @@ const BizInputVdSection: React.FC<BizInputVdSectionProps> = ({
                             />
                             <div className="customBox">
                               <span className="customIcon" aria-hidden="true" />
-                              <span className="customText">남</span>
+                              <span className="customText">??/span>
                             </div>
                           </label>
                           <label className="customItem">
@@ -1337,7 +1337,7 @@ const BizInputVdSection: React.FC<BizInputVdSectionProps> = ({
                             />
                             <div className="customBox">
                               <span className="customIcon" aria-hidden="true" />
-                              <span className="customText">여</span>
+                              <span className="customText">??/span>
                             </div>
                           </label>
                         </div>
@@ -1347,7 +1347,7 @@ const BizInputVdSection: React.FC<BizInputVdSectionProps> = ({
                   <div className="formRow split">
                     <div className="fieldUnit">
                       <label htmlFor="studentContact" className="formLabel">
-                        연락처
+                        ?�락�?
                       </label>
                       <div className="formControl">
                         <input
@@ -1358,13 +1358,13 @@ const BizInputVdSection: React.FC<BizInputVdSectionProps> = ({
                           onChange={(e) => setStudentContact(e.target.value)}
                           readOnly
                           aria-readonly="true"
-                          aria-label="학생 연락처"
+                          aria-label="?�생 ?�락�?
                         />
                       </div>
                     </div>
                     <div className="fieldUnit">
                       <label htmlFor="studentBirth" className="formLabel">
-                        생년월일
+                        ?�년?�일
                       </label>
                       <div className="formControl">
                         <input
@@ -1375,7 +1375,7 @@ const BizInputVdSection: React.FC<BizInputVdSectionProps> = ({
                           onChange={(e) => setStudentBirth(e.target.value)}
                           readOnly
                           aria-readonly="true"
-                          aria-label="생년월일"
+                          aria-label="?�년?�일"
                         />
                       </div>
                     </div>
@@ -1402,7 +1402,7 @@ const BizInputVdSection: React.FC<BizInputVdSectionProps> = ({
                   <div className="formRow split">
                     <div className="fieldUnit">
                       <label htmlFor="lowIncome" className="formLabel">
-                        저소득층
+                        ?�?�득�?
                       </label>
                       <div className="formControl">
                         <input
@@ -1411,7 +1411,7 @@ const BizInputVdSection: React.FC<BizInputVdSectionProps> = ({
                           className="inputField bgGray"
                           value={lowIncome}
                           readOnly
-                          aria-label="저소득층 (읽기전용)"
+                          aria-label="?�?�득�?(?�기?�용)"
                         />
                       </div>
                     </div>
@@ -1421,24 +1421,24 @@ const BizInputVdSection: React.FC<BizInputVdSectionProps> = ({
 
               <section className="formSection">
                 <div className="sectionHeader">
-                  <div className="sectionTitle">학교정보</div>
+                  <div className="sectionTitle">?�교?�보</div>
                 </div>
                 <div className="formGrid bizInput">
                   <div className="formRow">
                     <span className="formLabel" id="lblSchoolNameVd">
-                      학교명
+                      ?�교�?
                     </span>
                     <div className="formControl">
                       <input
                         type="text"
                         className="inputField bgGray"
                         readOnly
-                        title="학교명 및 학년정보"
-                        aria-label="학교명 및 학년정보"
+                        title="?�교�?�??�년?�보"
+                        aria-label="?�교�?�??�년?�보"
                         value={[
                           schoolNm,
-                          schoolLvl ? `${schoolLvl}학년` : "",
-                          schoolNo ? `${schoolNo}반` : "",
+                          schoolLvl ? `${schoolLvl}?�년` : "",
+                          schoolNo ? `${schoolNo}�? : "",
                         ]
                           .filter(Boolean)
                           .join(" ")}
@@ -1447,13 +1447,13 @@ const BizInputVdSection: React.FC<BizInputVdSectionProps> = ({
                     </div>
                   </div>
                   <div className="formRow">
-                    <span className="formLabel">학교구분</span>
+                    <span className="formLabel">?�교구분</span>
                     <div className="formControl">
                       <div
                         className="customGroup"
                         role="radiogroup"
                         id="schoolGb"
-                        aria-label="학교구분 (읽기전용)"
+                        aria-label="?�교구분 (?�기?�용)"
                         aria-readonly="true"
                       >
                         <label className="customItem">
@@ -1465,11 +1465,11 @@ const BizInputVdSection: React.FC<BizInputVdSectionProps> = ({
                             checked={schoolGb === "rural"}
                             disabled
                             readOnly
-                            aria-label="농어촌"
+                            aria-label="?�어�?
                           />
                           <div className="customBox">
                             <span className="customIcon" aria-hidden="true" />
-                            <span className="customText">농어촌</span>
+                            <span className="customText">?�어�?/span>
                           </div>
                         </label>
                         <label className="customItem">
@@ -1481,11 +1481,11 @@ const BizInputVdSection: React.FC<BizInputVdSectionProps> = ({
                             checked={schoolGb === "urban"}
                             disabled
                             readOnly
-                            aria-label="시내권"
+                            aria-label="?�내�?
                           />
                           <div className="customBox">
                             <span className="customIcon" aria-hidden="true" />
-                            <span className="customText">시내권</span>
+                            <span className="customText">?�내�?/span>
                           </div>
                         </label>
                       </div>
@@ -1494,7 +1494,7 @@ const BizInputVdSection: React.FC<BizInputVdSectionProps> = ({
                   <div className="formRow">
                     <div className="fieldUnit">
                       <label htmlFor="schoolAddr" className="formLabel">
-                        학교소재지
+                        ?�교?�재지
                       </label>
                       <div className="formControl">
                         <input
@@ -1504,19 +1504,19 @@ const BizInputVdSection: React.FC<BizInputVdSectionProps> = ({
                           value={schoolAddr}
                           readOnly
                           aria-readonly="true"
-                          aria-label="학교소재지 (읽기전용)"
+                          aria-label="?�교?�재지 (?�기?�용)"
                         />
                       </div>
                     </div>
                   </div>
                   <div className="formRow">
                     <span className="formLabel">
-                      첨부파일
+                      첨�??�일
                       {canSaveOrApply && (
                         <label
                           className="btnFileAdd"
                           htmlFor="bizVdFileInput"
-                          aria-label="파일 추가"
+                          aria-label="?�일 추�?"
                         >
                           <img
                             src={`${ICON}/ico_file_add.png`}
@@ -1536,19 +1536,19 @@ const BizInputVdSection: React.FC<BizInputVdSectionProps> = ({
                         accept=".hwp,.hwpx,.pdf,.doc,.docx,.jpg,.jpeg,.png,.gif"
                         onChange={handleFileSelect}
                         disabled={!canSaveOrApply}
-                        aria-label="첨부파일 선택"
+                        aria-label="첨�??�일 ?�택"
                       />
                       <div className="formControl fileListContainer">
                         {existingFiles.length === 0 &&
                         pendingFiles.length === 0 ? (
                           <span className="fileListEmpty">
-                            첨부된 파일이 없습니다.
+                            첨�????�일???�습?�다.
                           </span>
                         ) : (
                           <>
                             {existingFiles.map((f) => {
                               const viewUrl = `${API_CONFIG.BASE_URL}${API_ENDPOINTS.FILES.VIEW}?fileId=${encodeURIComponent(f.fileId)}&seq=${encodeURIComponent(f.seq)}`;
-                              const label = f.orgfNm ?? `파일 ${f.seq}`;
+                              const label = f.orgfNm ?? `?�일 ${f.seq}`;
                               const typeClass = getFileTypeClass(label);
                               return (
                                 <div
@@ -1561,7 +1561,7 @@ const BizInputVdSection: React.FC<BizInputVdSectionProps> = ({
                                       className="fileLink"
                                       onClick={(e) => {
                                         e.preventDefault();
-                                        void downloadEdreamAttachmentOrOpenView(
+                                        void downloadWaterbAttachmentOrOpenView(
                                           f.fileId,
                                           f.seq,
                                           viewUrl,
@@ -1585,7 +1585,7 @@ const BizInputVdSection: React.FC<BizInputVdSectionProps> = ({
                                         });
                                         setShowDeleteFileConfirm(true);
                                       }}
-                                      aria-label={`${label} 파일 삭제`}
+                                      aria-label={`${label} ?�일 ??��`}
                                     >
                                       <img
                                         src={`${ICON}/ico_file_del.png`}
@@ -1611,7 +1611,7 @@ const BizInputVdSection: React.FC<BizInputVdSectionProps> = ({
                                       type="button"
                                       className="btnFileDel"
                                       onClick={() => removePendingFile(p.id)}
-                                      aria-label={`${label} 파일 제거`}
+                                      aria-label={`${label} ?�일 ?�거`}
                                     >
                                       <img
                                         src={`${ICON}/ico_file_del.png`}
@@ -1637,26 +1637,26 @@ const BizInputVdSection: React.FC<BizInputVdSectionProps> = ({
                     type="button"
                     className="btnWhite"
                     onClick={handleReset}
-                    aria-label="입력 내용 초기화"
+                    aria-label="?�력 ?�용 초기??
                   >
-                    초기화
+                    초기??
                   </button>
                 )}
                 <button
                   type="button"
                   className="btnWhite"
                   onClick={handleTempSave}
-                  aria-label="임시저장"
+                  aria-label="?�시?�??
                   disabled={!canSaveOrApply}
                 >
-                  임시저장
+                  ?�시?�??
                 </button>
                 <button
                   type="submit"
                   className="btnSubmit"
                   disabled={!canSaveOrApply}
                 >
-                  신청
+                  ?�청
                 </button>
                 {fromMypage && (
                   <button
@@ -1665,15 +1665,15 @@ const BizInputVdSection: React.FC<BizInputVdSectionProps> = ({
                     onClick={() => {
                       if (loadedSttusCode === "99") {
                         showAlertModal(
-                          "알림",
-                          "이미 취소된 건입니다.",
+                          "?�림",
+                          "?��? 취소??건입?�다.",
                           "danger",
                         );
                         return;
                       }
                       setShowCancelConfirm(true);
                     }}
-                    aria-label="신청 취소"
+                    aria-label="?�청 취소"
                   >
                     취소
                   </button>
@@ -1699,10 +1699,10 @@ const BizInputVdSection: React.FC<BizInputVdSectionProps> = ({
       />
       <ConfirmModal
         isOpen={showDeleteFileConfirm}
-        title="확인"
-        message="첨부파일을 삭제하시겠습니까?"
-        cancelText="닫기"
-        confirmText="삭제"
+        title="?�인"
+        message="첨�??�일????��?�시겠습?�까?"
+        cancelText="?�기"
+        confirmText="??��"
         onCancel={() => {
           setShowDeleteFileConfirm(false);
           setFileToDelete(null);
@@ -1717,9 +1717,9 @@ const BizInputVdSection: React.FC<BizInputVdSectionProps> = ({
       />
       <ConfirmModal
         isOpen={showCancelConfirm}
-        title="확인"
-        message="신청을 취소하시겠습니까?"
-        cancelText="닫기"
+        title="?�인"
+        message="?�청??취소?�시겠습?�까?"
+        cancelText="?�기"
         confirmText="취소"
         onCancel={() => setShowCancelConfirm(false)}
         onConfirm={() => {

@@ -8,6 +8,7 @@ const SECONDS_PER_DAY = 86400;
 export const REMEMBER_LOGIN_MAX_AGE_SEC = REMEMBER_DAYS * SECONDS_PER_DAY;
 
 function cookieBaseName(userSe: string): string {
+  // [WATERB_MIGRATION_C] 키 접두어 `edream_` — 배포 후 바꾸면 기존 브라우저에 저장된 "아이디 기억"이 끊김. 필요 시 마이그레이션 전략 후 변경.
   return `edream_remember_login_id_${userSe}`;
 }
 

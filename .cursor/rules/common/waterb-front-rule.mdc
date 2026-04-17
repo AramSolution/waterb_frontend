@@ -2,7 +2,7 @@
 alwaysApply: true
 ---
 
-# edream_frontend Project Rules
+# waterb_frontend Project Rules
 
 ## 🎯 Project Overview
 
@@ -1340,7 +1340,7 @@ export function useMemberList() {
 - ✅ Frontend entity API definitions (`src/entities/**/api/*.ts`)
 
 **Backend Code (❌ FORBIDDEN to modify):**
-- ❌ **NEVER** modify files in `edream_backend/` workspace
+- ❌ **NEVER** modify files in `waterb_backend/` workspace
 - ❌ **NEVER** modify SQL files (`.xml`, `.sql`) in backend resources
 - ❌ **NEVER** modify Java files (`.java`) in backend source
 - ❌ **NEVER** modify backend configuration files (`application.yml`, `application.properties`)
@@ -1363,7 +1363,7 @@ export function useMemberList() {
 - ❌ **NEVER** modify backend SQL queries to fix frontend issues
 - ❌ **NEVER** change backend date format handling when frontend can handle conversion
 - ❌ **NEVER** modify backend API parameters when frontend can transform data
-- ❌ **NEVER** touch any files outside `edream_frontend/` workspace without explicit request
+- ❌ **NEVER** touch any files outside `waterb_frontend/` workspace without explicit request
 - ❌ **NEVER** make "helpful" backend changes "just in case"
 
 **Why this is CRITICAL:**
@@ -1384,7 +1384,7 @@ User Request: "프론트 쪽을 요구했는데, 너가 백엔드를 마음대�
 프론트 관련된거를 말할때는 프론트만 수정하는거야"
 
 AI Action: 
-- Modified backend SQL file: edream_backend/src/main/resources/.../ArtpromManage_SQL_mysql.xml
+- Modified backend SQL file: waterb_backend/src/main/resources/.../ArtpromManage_SQL_mysql.xml
 - Changed DATE_FORMAT to STR_TO_DATE in SQL queries
 - User had to explicitly request restoration: "아니 백엔드는 절대로 건드리면 안돼. 다시 원상복구해놓고 프론트쪽에서 변경해"
 
@@ -1413,7 +1413,7 @@ Result:
 
 4. **Missing Workspace Awareness:**
    - AI doesn't check workspace boundaries before editing
-   - Edits files in `edream_backend/` when only `edream_frontend/` is in scope
+   - Edits files in `waterb_backend/` when only `waterb_frontend/` is in scope
    - Doesn't verify file paths against request scope
 
 5. **Pattern Matching Without Context:**
@@ -1429,8 +1429,8 @@ Result:
   - [ ] Asked for clarification if scope is ambiguous
 
 - [ ] **Workspace Verification**
-  - [ ] Verified target files are in `edream_frontend/` workspace
-  - [ ] Confirmed no files in `edream_backend/` workspace need modification
+  - [ ] Verified target files are in `waterb_frontend/` workspace
+  - [ ] Confirmed no files in `waterb_backend/` workspace need modification
   - [ ] Checked file paths against workspace roots
 
 - [ ] **File Type Verification**
@@ -1454,7 +1454,7 @@ Result:
 ```
 User requests code changes?
 ├─ Does request explicitly mention "frontend" or "프론트"?
-│  ├─ YES → Work ONLY in edream_frontend/ workspace
+│  ├─ YES → Work ONLY in waterb_frontend/ workspace
 │  │  ├─ Verify file is in src/ directory
 │  │  ├─ Verify file extension is .ts, .tsx, .css, or frontend config
 │  │  └─ If unsure, ask for clarification
@@ -1474,13 +1474,13 @@ User requests code changes?
    ```
    User: "프론트 쪽을 수정해줘"
    → Scope: Frontend only
-   → Workspace: edream_frontend/
+   → Workspace: waterb_frontend/
    ```
 
 2. **Step 2: Verify Target Files**
    ```
    Target: src/features/adminWeb/support/list/model/useSupportList.ts
-   → Check: Is this in edream_frontend/ workspace? ✅ YES
+   → Check: Is this in waterb_frontend/ workspace? ✅ YES
    → Check: Is this a frontend file (.ts)? ✅ YES
    → Action: ALLOW modification
    ```
@@ -1521,7 +1521,7 @@ const params: SupportListParams = {
 
 ```sql
 -- ❌ WRONG: Don't modify backend SQL
--- edream_backend/src/main/resources/.../ArtpromManage_SQL_mysql.xml
+-- waterb_backend/src/main/resources/.../ArtpromManage_SQL_mysql.xml
 -- Changed DATE_FORMAT to STR_TO_DATE ❌ FORBIDDEN
 
 -- ✅ CORRECT: Backend SQL remains unchanged
@@ -1553,11 +1553,11 @@ const params: SupportListParams = {
 3. **Mistake: Not Verifying Workspace Before Editing**
    ```bash
    # ❌ WRONG: Edited file without checking workspace
-   # File: edream_backend/src/main/resources/.../ArtpromManage_SQL_mysql.xml
-   # Should have checked: Is this in edream_frontend/ workspace? NO
+   # File: waterb_backend/src/main/resources/.../ArtpromManage_SQL_mysql.xml
+   # Should have checked: Is this in waterb_frontend/ workspace? NO
    
    # ✅ CORRECT: Verify workspace first
-   # Check: File path contains "edream_backend" → STOP, don't modify
+   # Check: File path contains "waterb_backend" → STOP, don't modify
    ```
 
 **Prevention Strategy:**

@@ -20,6 +20,7 @@ RUN npm ci
 COPY . .
 
 # NEXT_PUBLIC_* 빌드 타임 환경변수 (번들에 포함됨)
+# [WATERB_MIGRATION_B] EDREAM_REWRITE_* 이름·값 — next.config.js rewrites·docker-compose·백엔드 context-path와 함께 일괄 변경
 ARG NEXT_PUBLIC_API_BASE_URL
 ARG NEXT_PUBLIC_PAGE_SIZE
 ARG EDREAM_REWRITE_DESTINATION

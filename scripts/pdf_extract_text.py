@@ -4,7 +4,7 @@ import sys
 
 def main():
     pdf_path = r"z:\Document\Untitled_20260130_103030.pdf"
-    out_path = r"C:\Users\kyj\eclipse-workspace5.0\edream_frontend\scripts\extracted_text.txt"
+    out_path = r"C:\Users\kyj\eclipse-workspace5.0\waterb_frontend\scripts\extracted_text.txt"
     try:
         try:
             from pypdf import PdfReader

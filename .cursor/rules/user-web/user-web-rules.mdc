@@ -18,7 +18,7 @@ globs: ['**/userWeb/**', '**/user-web/**']
 **Reference implementations:**
 
 - **Success pattern:** `htmltoreact` project (gunsan HTML → React; design and accessibility preserved).
-- **Original source:** `gunsan` project (or the specific HTML/CSS source used for edream user web).
+- **Original source:** `gunsan` project (or the specific HTML/CSS source used for waterb user web).
 
 ---
 
@@ -31,9 +31,9 @@ globs: ['**/userWeb/**', '**/user-web/**']
 - Place the **original HTML file(s)** for the page in the project (e.g. same repo or `userWeb/source/`) so they can be opened and compared during conversion.
 - Keep the **original CSS file(s)** (e.g. `css/main.css`, `css/common.css`) in the project; do not delete them after conversion.
 - When asking for conversion, **attach or reference the specific HTML and CSS files** (e.g. "Convert `main.html` to React using `css/main.css`, preserve class names and structure").
-- **Bundled CSS path (edream):** App code imports user-web styles from `src/styles/userWeb/` only (e.g. `@/styles/userWeb/default.css`, `portalIndex2.css`, `portalGunsanMain.css`, `portalContent.css`, `main.css`). Do **not** import `source/gunsan/css/*` in layouts or pages. The `source/gunsan` tree may be kept as optional reference HTML/CSS for diffing, or removed once equivalents exist under `src/styles/userWeb/`.
+- **Bundled CSS path (waterb):** App code imports user-web styles from `src/styles/userWeb/` only (e.g. `@/styles/userWeb/default.css`, `portalIndex2.css`, `portalGunsanMain.css`, `portalContent.css`, `main.css`). Do **not** import `source/gunsan/css/*` in layouts or pages. The `source/gunsan` tree may be kept as optional reference HTML/CSS for diffing, or removed once equivalents exist under `src/styles/userWeb/`.
 - **포털 → 메인 헤더 CSS:** `app/userWeb/layout.tsx`에서 **`header.css`를 공통 import**해 `/userWeb/main`의 `MainHeader` 기준(로고 58px, 메뉴 사이 점 등)이 항상 로드된다. `app/userWeb/(portal)/layout.tsx`는 자식을 **`div.portalGunsanShell`**로 감싼다. **`portalGunsanMain.css`** 안의 `.header`·`.eduListWrap`·`.boardSection` 등은 **`.portalGunsanShell` 접두로 스코프**해, 포털에서 클라이언트 네비게이션으로 메인에 들어와도 포털용 규칙이 `MainHeader`를 덮어쓰지 않게 한다(`:root` 테마 변수도 `.portalGunsanShell`에 둔다).
-- **Static assets (edream) — 레이아웃·CSS·이미지는 전부 프로젝트 폴더로:** 런타임에 **`source/gunsan/` 등 원본 폴더를 직접 가리키지 않는다.** `app/userWeb/**/layout.tsx`에서 새 CSS를 붙이거나, `src/styles/userWeb/*.css`를 추가·수정할 때마다 그 CSS와 해당 페이지 HTML(참고용 `source/gunsan`) 안의 **`url(...)`, `src=`, `background-image`** 등으로 쓰이는 **이미지·아이콘·비디오 포스터**를 찾아 **`public/images/userWeb/`** 아래에 **동일한 상대 경로 구조**(예: `icon/ico_home_gr.png`)로 **복사**한다. User-web CSS에서는 **`url("/images/userWeb/...")`** 만 사용한다. 원본 트리가 크면 **`source/gunsan/images/*` → `public/images/userWeb/`** 전체 동기화를 주기적으로 수행하고, 레이아웃/스타일 변경 후 **한 번이라도 새 파일을 쓰면 그 파일도 반드시 복사**한다. 복사 없이 CSS만 옮기면 배경·아이콘·브레드크럼 홈 아이콘 등이 깨진다.
+- **Static assets (waterb) — 레이아웃·CSS·이미지는 전부 프로젝트 폴더로:** 런타임에 **`source/gunsan/` 등 원본 폴더를 직접 가리키지 않는다.** `app/userWeb/**/layout.tsx`에서 새 CSS를 붙이거나, `src/styles/userWeb/*.css`를 추가·수정할 때마다 그 CSS와 해당 페이지 HTML(참고용 `source/gunsan`) 안의 **`url(...)`, `src=`, `background-image`** 등으로 쓰이는 **이미지·아이콘·비디오 포스터**를 찾아 **`public/images/userWeb/`** 아래에 **동일한 상대 경로 구조**(예: `icon/ico_home_gr.png`)로 **복사**한다. User-web CSS에서는 **`url("/images/userWeb/...")`** 만 사용한다. 원본 트리가 크면 **`source/gunsan/images/*` → `public/images/userWeb/`** 전체 동기화를 주기적으로 수행하고, 레이아웃/스타일 변경 후 **한 번이라도 새 파일을 쓰면 그 파일도 반드시 복사**한다. 복사 없이 CSS만 옮기면 배경·아이콘·브레드크럼 홈 아이콘 등이 깨진다.
 
 **MUST NOT:**
 
@@ -308,7 +308,7 @@ When **editing** existing user web pages (already converted from HTML), follow t
 
 ## 3. Why previous conversion failed (avoid these)
 
-The earlier edream user web conversion diverged from the design because:
+The earlier waterb user web conversion diverged from the design because:
 
 1. **No source in project:** Original HTML/CSS was not in the repo, so conversion was done from description, not from the actual markup.
 2. **Styling rewritten:** Rules required "Tailwind only, no Custom CSS," so the designer’s CSS was discarded and recreated, changing look and behavior.
@@ -322,19 +322,19 @@ The earlier edream user web conversion diverged from the design because:
 
 ## 4. CSS loading: route-specific, not a single global bundle
 
-**Principle:** In the original (gunsan), each HTML file loads its own set of stylesheets. There is no single "portal.css" that loads on every page. Edream user web must mirror this: **load only the CSS that each route actually needs.** Do not load page-specific CSS (e.g. `index.css` with `.modalContent { padding: 60px }`) on routes that do not use it, or styles will leak and break layout (e.g. change-history modal padding).
+**Principle:** In the original (gunsan), each HTML file loads its own set of stylesheets. There is no single "portal.css" that loads on every page. Waterb user web must mirror this: **load only the CSS that each route actually needs.** Do not load page-specific CSS (e.g. `index.css` with `.modalContent { padding: 60px }`) on routes that do not use it, or styles will leak and break layout (e.g. change-history modal padding).
 
 ### 4.1 Shared vs route-specific CSS
 
 **Shared (userWeb layout only):**
 
-- Load **only** a minimal base: reset + fonts. In edream this is `default.css` + `fonts.css` (gunsan과 동일: default.css 직접 사용, 폰트 별도). **Do not** import `portal.css` (or any bundle that includes `index.css`) in the userWeb layout.
+- Load **only** a minimal base: reset + fonts. In waterb this is `default.css` + `fonts.css` (gunsan과 동일: default.css 직접 사용, 폰트 별도). **Do not** import `portal.css` (or any bundle that includes `index.css`) in the userWeb layout.
 - Rationale: `index.css` contains styles for the portal root page (e.g. login modal, main swiper). If it is loaded globally for all userWeb routes, selectors like `.modalContent` apply everywhere and override route-specific modal styles (e.g. biz_pr change-history modal), causing UI mismatch with the original.
 
 **Route-specific (each route’s layout or page):**
 
 - Each route must import **only** the CSS files that the original HTML for that page would have loaded.
-- Example mapping (gunsan → edream):
+- Example mapping (gunsan → waterb):
   - Portal root (e.g. index.html with login modal) → load `index.css` (e.g. in that route’s page or a dedicated layout).
   - apply_pr.html → `main.css`, `biz_pr.css`, `mypage_pr.css` (no `index.css`).
   - bizInput_pr.html, bizInfo_pr.html → `main.css`, `biz_pr.css`.
@@ -428,7 +428,7 @@ When adding or changing userWeb routes or layouts, verify:
 3. **전역 `.badge`:** `community.css`의 단독 `.badge`는 교육 카드와 **클래스명이 겹쳤다**. **현재** 문의하기 탭 답변 배지는 **`.mainViewContainer .titleContainer .badge`** 로 스코프했다. 새 라우트에서도 교육 카드와 겹치지 않게 **단독 `.badge`를 추가하지 않는다**(§4.2와 같은 원칙).
 4. **포털 + 메인 CSS 동시 존재:** DevTools에 `portalGunsanMain.css`와 `main.css`가 **한 화면에 같이** 보이면, 이전 라우트에서 로드된 전역 CSS가 남아 있는 상태다(§4.2).
 
-**MUST (edream 현재 제품 기준 — 로그인 메인만 `EduListSection` + `layoutMainHtml`):**
+**MUST (waterb 현재 제품 기준 — 로그인 메인만 `EduListSection` + `layoutMainHtml`):**
 
 - 교육 카드 대상 배지는 **`main.css`의 `.eduListWrap .badge`·`.eduListWrap .badge.kids`/`.usual`를 24×24로 유지**한다(62×26 재도입 시 라우트 전환·동특 충돌 재발).
 - 필요 시 **특이성을 올려** 메인 HTML 전용 규칙을 보강한다: 예) **`.eduListWrap.eduListWrap--mainHtml .badge`**(및 `.elementary` 등) — `영`/`일`용 **`.eduListWrap.eduListWrap--mainHtml .badge.kids`** 패턴과 동일 계열.
@@ -498,7 +498,7 @@ When adding or changing file list display, delete buttons, or file/attachment AP
 - [ ] Delete API accepts **`fileId: string`** and uses it directly in the URL.
 - [ ] No **`Number(fileId)`** anywhere for display, state, or API calls.
 
-**Reference:** For more detail (comparison patterns, confirmation dialogs, success messages), see admin-web file rules: `edream_frontend/.cursor/rules/admin-web/admin-web-file-upload-delete-rules.mdc`. User-web must follow the same file-id precision rules above.
+**Reference:** For more detail (comparison patterns, confirmation dialogs, success messages), see admin-web file rules: `waterb_frontend/.cursor/rules/admin-web/admin-web-file-upload-delete-rules.mdc`. User-web must follow the same file-id precision rules above.
 
 ---
 

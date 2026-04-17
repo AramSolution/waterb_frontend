@@ -1,6 +1,6 @@
 services:
   frontend:
-    container_name: edream_frontend_dev
+    container_name: waterb_frontend_dev
     build:
       context: .
       dockerfile: Dockerfile.dev
@@ -23,7 +23,7 @@ services:
 
   nginx:
     image: nginx:alpine
-    container_name: edream_nginx_dev
+    container_name: waterb_nginx_dev
     restart: unless-stopped
     ports:
       - "80:80"

@@ -20,7 +20,7 @@ import {
   USER_BOARD_BBS_IDS,
   USER_GENERAL_ARCHIVE_BBS_ID,
 } from "@/shared/config/apiUser";
-import { apiClient, downloadEdreamAttachment } from "@/shared/lib";
+import { apiClient, downloadWaterbAttachment } from "@/shared/lib";
 import {
   NoticeCommunityChrome,
   type CommunityChromeActiveNav,
@@ -34,28 +34,28 @@ const TAB_IDS = ["notice", "project", "eumArchive", "inquiry", "guide"] as const
 type TabId = (typeof TAB_IDS)[number];
 
 const TAB_HEAD: Record<TabId, string> = {
-  notice: "공지사항",
-  project: "지원사업",
-  eumArchive: "이음 아카이브",
+  notice: "공�??�항",
+  project: "지?�사??,
+  eumArchive: "?�음 ?�카?�브",
   inquiry: "1:1 문의",
-  guide: "일반 자료실",
+  guide: "?�반 ?�료??,
 };
 
 const SEARCH_CONDITIONS = [
-  { value: "all" as const, label: "전체" },
-  { value: "title" as const, label: "제목" },
-  { value: "author" as const, label: "작성자" },
-  { value: "content" as const, label: "내용" },
+  { value: "all" as const, label: "?�체" },
+  { value: "title" as const, label: "?�목" },
+  { value: "author" as const, label: "?�성?? },
+  { value: "content" as const, label: "?�용" },
 ];
-/** `archive2.html` 검색 셀렉트 — 전체 없음 */
+/** `archive2.html` 검???�?�트 ???�체 ?�음 */
 const GUIDE_SEARCH_CONDITIONS = [
-  { value: "title" as const, label: "제목" },
-  { value: "content" as const, label: "내용" },
-  { value: "author" as const, label: "작성자" },
+  { value: "title" as const, label: "?�목" },
+  { value: "content" as const, label: "?�용" },
+  { value: "author" as const, label: "?�성?? },
 ];
-/** 이음 아카이브 — 셀렉트는 유지, 옵션은 제목만(API `searchCondition` 2) */
+/** ?�음 ?�카?�브 ???�?�트???��?, ?�션?� ?�목�?API `searchCondition` 2) */
 const EUM_ARCHIVE_SEARCH_CONDITIONS = [
-  { value: "title" as const, label: "제목" },
+  { value: "title" as const, label: "?�목" },
 ];
 type SearchCondition = (typeof SEARCH_CONDITIONS)[number]["value"];
 
@@ -100,7 +100,7 @@ function buildCommunityListUrl(
   }
   const kw = opts?.searchWrd?.trim() ?? "";
   if (kw) {
-    /* 이음 아카이브는 제목 검색만 — 조건 쿼리 없음 */
+    /* ?�음 ?�카?�브???�목 검?�만 ??조건 쿼리 ?�음 */
     if (tab !== "eumArchive") {
       qs.set("searchCnd", opts?.searchCnd ?? "all");
     }
@@ -148,7 +148,7 @@ function tabToActiveNav(tab: TabId): CommunityChromeActiveNav {
 }
 
 /**
- * 커뮤니티 목록 — `notice2.html` 레이아웃; `tab=guide`는 `archive2.html`, `tab=eumArchive`는 `eumArchive2.html` 카드 그리드·검색·브레드크럼 패리티.
+ * 커�??�티 목록 ??`notice2.html` ?�이?�웃; `tab=guide`??`archive2.html`, `tab=eumArchive`??`eumArchive2.html` 카드 그리?�·�??�·브?�드?�럼 ?�리??
  * ?tab=notice | project | eumArchive | inquiry | guide
  */
 export default function CommunitySection() {
@@ -251,14 +251,14 @@ export default function CommunitySection() {
       const files = detail.attacheFiles ?? [];
       if (files.length === 0) return;
       const f = files[0];
-      await downloadEdreamAttachment(
+      await downloadWaterbAttachment(
         String(f.fileId),
         f.seq,
         f.orgfNm ?? undefined,
       );
     } catch (err) {
       const msg =
-        err instanceof Error ? err.message : "파일을 다운로드하지 못했습니다.";
+        err instanceof Error ? err.message : "?�일???�운로드?��? 못했?�니??";
       alert(msg);
     } finally {
       setAttachDownloadingNttId(null);
@@ -369,7 +369,7 @@ export default function CommunitySection() {
           if (!cancelled) {
             setList([]);
             setRecordsTotal(0);
-            setError("목록을 불러오지 못했습니다.");
+            setError("목록??불러?��? 못했?�니??");
           }
         })
         .finally(() => {
@@ -435,14 +435,14 @@ export default function CommunitySection() {
         <div
           className="communityPagination"
           role="navigation"
-          aria-label="페이지 네비게이션"
+          aria-label="?�이지 ?�비게이??
         >
           <button
             type="button"
             className="communityPageNavBtn"
             disabled={loading || firstDisabled}
             onClick={() => goToPage(1)}
-            aria-label="첫 페이지"
+            aria-label="�??�이지"
           >
             {"<<"}
           </button>
@@ -451,11 +451,11 @@ export default function CommunitySection() {
             className="communityPageNavBtn"
             disabled={loading || prevDisabled}
             onClick={() => goToPage(activePageForUi - 1)}
-            aria-label="이전 페이지"
+            aria-label="?�전 ?�이지"
           >
             {"<"}
           </button>
-          <div className="communityPageNumbers" aria-label="페이지 번호">
+          <div className="communityPageNumbers" aria-label="?�이지 번호">
             {Array.from({ length: end - start + 1 }).map((_, i) => {
               const p = start + i;
               const isActive = p === activePageForUi;
@@ -477,7 +477,7 @@ export default function CommunitySection() {
             className="communityPageNavBtn"
             disabled={loading || nextDisabled}
             onClick={() => goToPage(activePageForUi + 1)}
-            aria-label="다음 페이지"
+            aria-label="?�음 ?�이지"
           >
             {">"}
           </button>
@@ -486,7 +486,7 @@ export default function CommunitySection() {
             className="communityPageNavBtn"
             disabled={loading || lastDisabled}
             onClick={() => goToPage(totalPages)}
-            aria-label="마지막 페이지"
+            aria-label="마�?�??�이지"
           >
             {">>"}
           </button>
@@ -502,16 +502,16 @@ export default function CommunitySection() {
           번호
         </th>
         <th scope="col" className="colTitle" style={{ width: "40%" }}>
-          제목
+          ?�목
         </th>
         <th scope="col" className="colName" style={{ width: "15%" }}>
-          작성자
+          ?�성??
         </th>
         <th scope="col" className="colDate" style={{ width: "15%" }}>
-          등록일
+          ?�록??
         </th>
         <th scope="col" className="colFile" style={{ width: "10%" }}>
-          첨부파일
+          첨�??�일
         </th>
         <th scope="col" className="colView" style={{ width: "10%" }}>
           조회
@@ -534,7 +534,7 @@ export default function CommunitySection() {
       return (
         <tr>
           <td colSpan={6} className="colEmpty">
-            {loading ? "잠시만 기다려 주세요." : "등록된 글이 없습니다."}
+            {loading ? "?�시�?기다??주세??" : "?�록??글???�습?�다."}
           </td>
         </tr>
       );
@@ -550,7 +550,7 @@ export default function CommunitySection() {
       return (
         <tr key={item.nttId ?? index} className={isNotice ? "isNotice" : ""}>
           <td className="cellNum">
-            {isNotice ? <span className="badgeNotice">공지</span> : rowNum}
+            {isNotice ? <span className="badgeNotice">공�?</span> : rowNum}
           </td>
           <td className="cellTitle">
             <Link href={href} className="ellipsis">
@@ -564,8 +564,8 @@ export default function CommunitySection() {
               <button
                 type="button"
                 className="mainViewCellFileButton"
-                aria-label="첨부파일 다운로드"
-                title="첨부파일 다운로드"
+                aria-label="첨�??�일 ?�운로드"
+                title="첨�??�일 ?�운로드"
                 disabled={attachDownloadingNttId === item.nttId}
                 onClick={(e) => {
                   e.preventDefault();
@@ -597,7 +597,7 @@ export default function CommunitySection() {
       return (
         <tr>
           <td colSpan={6} className="colEmpty">
-            {loading ? "잠시만 기다려 주세요." : "등록된 글이 없습니다."}
+            {loading ? "?�시�?기다??주세??" : "?�록??글???�습?�다."}
           </td>
         </tr>
       );
@@ -619,16 +619,16 @@ export default function CommunitySection() {
       return (
         <tr key={item.nttId ?? index} className={isNotice ? "isNotice" : ""}>
           <td className="cellNum">
-            {isNotice ? <span className="badgeNotice">공지</span> : rowNum}
+            {isNotice ? <span className="badgeNotice">공�?</span> : rowNum}
           </td>
           <td className="cellStatus">
             {isNotice ? (
-              <span className="sr-only">공지</span>
+              <span className="sr-only">공�?</span>
             ) : (
               <div
                 className={`badge ${answered ? "statusComplete" : "statusWaiting"}`}
               >
-                {answered ? "답변완료" : "답변대기"}
+                {answered ? "?��??�료" : "?��??��?}
               </div>
             )}
           </td>
@@ -644,8 +644,8 @@ export default function CommunitySection() {
               <button
                 type="button"
                 className="mainViewCellFileButton"
-                aria-label="첨부파일 다운로드"
-                title="첨부파일 다운로드"
+                aria-label="첨�??�일 ?�운로드"
+                title="첨�??�일 ?�운로드"
                 disabled={attachDownloadingNttId === item.nttId}
                 onClick={(e) => {
                   e.preventDefault();
@@ -684,7 +684,7 @@ export default function CommunitySection() {
             className="colEmpty"
             style={{ textAlign: "center", padding: 40 }}
           >
-            {loading ? "잠시만 기다려 주세요." : "등록된 글이 없습니다."}
+            {loading ? "?�시�?기다??주세??" : "?�록??글???�습?�다."}
           </p>
         </div>
       );
@@ -739,8 +739,8 @@ export default function CommunitySection() {
 
   const tableSummary =
     activeTab === "inquiry"
-      ? "1:1 문의 목록이며 번호, 처리상태, 질문, 작성자, 작성일, 첨부파일 정보를 제공합니다."
-      : `${headTit} 목록이며 번호, 제목, 작성자, 등록일, 첨부파일, 조회수 정보를 제공합니다.`;
+      ? "1:1 문의 목록?�며 번호, 처리?�태, 질문, ?�성?? ?�성?? 첨�??�일 ?�보�??�공?�니??"
+      : `${headTit} 목록?�며 번호, ?�목, ?�성?? ?�록?? 첨�??�일, 조회???�보�??�공?�니??`;
 
   return (
     <NoticeCommunityChrome
@@ -761,19 +761,19 @@ export default function CommunitySection() {
         className="filterSearchContainer"
         aria-label={
           activeTab === "guide"
-            ? "프로그램 검색 및 필터"
-            : `${headTit} 검색`
+            ? "?�로그램 검??�??�터"
+            : `${headTit} 검??
         }
         onSubmit={applySearch}
       >
         <div className="filterBar">
           <div className="filterGroupWrap">
-            <fieldset className="filterGroup" aria-label="검색">
-              <div className="filterTitle">검색</div>
+            <fieldset className="filterGroup" aria-label="검??>
+              <div className="filterTitle">검??/div>
               <div className="inputWrap">
                 <div className="searchFilter">
                   <label htmlFor="communitySearchType" className="blind">
-                    검색 조건 선택
+                    검??조건 ?�택
                   </label>
                   <select
                     id="communitySearchType"
@@ -784,7 +784,7 @@ export default function CommunitySection() {
                     }
                     aria-label={
                       activeTab === "eumArchive"
-                        ? "검색 조건(제목만)"
+                        ? "검??조건(?�목�?"
                         : undefined
                     }
                   >
@@ -798,14 +798,14 @@ export default function CommunitySection() {
                 <input
                   type="search"
                   name="q"
-                  placeholder="검색어를 입력해 주세요"
-                  title="검색어 입력"
+                  placeholder="검?�어�??�력??주세??
+                  title="검?�어 ?�력"
                   className="searchInput"
                   value={searchInput}
                   onChange={(e) => setSearchInput(e.target.value)}
                 />
                 <button type="submit" className="btnSearch">
-                  검색
+                  검??
                 </button>
               </div>
             </fieldset>
@@ -819,22 +819,22 @@ export default function CommunitySection() {
           }
         >
           <div className="count">
-            총 게시물 <b>{recordsTotal}</b>개
+            �?게시�?<b>{recordsTotal}</b>�?
           </div>
           <div className="listCountWrap">
             <label htmlFor="communityPageSize" className="blind">
-              게시물 출력 개수 선택
+              게시�?출력 개수 ?�택
             </label>
             <select
               id="communityPageSize"
               className="input inputSelect"
-              title="게시물 출력 개수 선택"
+              title="게시�?출력 개수 ?�택"
               value={pageSizeParam}
               onChange={(e) => onPageSizeChange(Number(e.target.value))}
             >
               {PAGE_SIZE_OPTIONS.map((n) => (
                 <option key={n} value={n}>
-                  {n}개
+                  {n}�?
                 </option>
               ))}
             </select>
@@ -850,7 +850,7 @@ export default function CommunitySection() {
             <>
               <div className="mainViewTableWrapper">
                 <table className="mainViewTable" summary={tableSummary}>
-                  <caption className="blind">{headTit} 리스트</caption>
+                  <caption className="blind">{headTit} 리스??/caption>
                   {activeTab === "inquiry" ? (
                     <>
                       <thead>
@@ -859,19 +859,19 @@ export default function CommunitySection() {
                             번호
                           </th>
                           <th scope="col" className="colStatus" style={{ width: "10%" }}>
-                            처리상태
+                            처리?�태
                           </th>
                           <th scope="col" className="colTitle" style={{ width: "45%" }}>
                             질문
                           </th>
                           <th scope="col" className="colName" style={{ width: "10%" }}>
-                            작성자
+                            ?�성??
                           </th>
                           <th scope="col" className="colDate" style={{ width: "15%" }}>
-                            작성일
+                            ?�성??
                           </th>
                           <th scope="col" className="colFile" style={{ width: "10%" }}>
-                            첨부파일
+                            첨�??�일
                           </th>
                         </tr>
                       </thead>

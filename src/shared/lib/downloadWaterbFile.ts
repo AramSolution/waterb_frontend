@@ -1,7 +1,7 @@
 import { API_CONFIG, FILES } from "@/shared/config/api";
 
 /** GET /api/v1/files/download 전체 URL (apiClient BASE_URL과 동일 규칙) */
-export function buildEdreamFileDownloadUrl(
+export function buildWaterbFileDownloadUrl(
   fileId: string | number,
   seq: string | number,
 ): string {
@@ -51,7 +51,7 @@ function fileNameFromContentDisposition(
  * 로그인 시에만 `Authorization`에 sessionStorage accessToken 전달.
  * fileId는 JSON 문자열로 온 값을 그대로 넘기면 됨 (BigInt 정밀도 이슈 없음)
  */
-export async function downloadEdreamAttachment(
+export async function downloadWaterbAttachment(
   fileId: string | number,
   seq: string | number,
   fallbackFileName?: string,
@@ -59,7 +59,7 @@ export async function downloadEdreamAttachment(
   if (typeof window === "undefined") return;
 
   const token = sessionStorage.getItem("accessToken");
-  const url = buildEdreamFileDownloadUrl(fileId, seq);
+  const url = buildWaterbFileDownloadUrl(fileId, seq);
 
   const headers: Record<string, string> = {
     Accept: "application/octet-stream,*/*",
@@ -105,7 +105,7 @@ export async function downloadEdreamAttachment(
  * 비로그인이고 다운로드 실패 시에만 `viewUrl` 새 창(미리보기).
  * 로그인 상태에서 다운로드 실패 시 알림만 함.
  */
-export async function downloadEdreamAttachmentOrOpenView(
+export async function downloadWaterbAttachmentOrOpenView(
   fileId: string | number,
   seq: string | number,
   viewUrl: string,
@@ -114,7 +114,7 @@ export async function downloadEdreamAttachmentOrOpenView(
   if (typeof window === "undefined") return;
   const token = sessionStorage.getItem("accessToken");
   try {
-    await downloadEdreamAttachment(fileId, seq, fallbackFileName);
+    await downloadWaterbAttachment(fileId, seq, fallbackFileName);
     return;
   } catch (err) {
     const msg =

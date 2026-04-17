@@ -1,4 +1,10 @@
-/** NEXT_PUBLIC_API_BASE_URL: origin만(권장) 또는 이미 /edream 포함 — 중복 슬래시 방지 */
+/**
+ * [WATERB_MIGRATION_B] `edream` 경로·`EDREAM_CERT_SIREN`·`resolveEdreamApiBaseUrl` 이름 등은 백엔드
+ * `server.servlet.context-path`, `next.config.js` rewrites, `nginx` location과 반드시 함께 `/waterb`(또는 확정값)로 일괄 변경.
+ * 전역 검색: `edream`, `EDREAM_`, `/edream`
+ *
+ * NEXT_PUBLIC_API_BASE_URL: origin만(권장) 또는 이미 /edream 포함 — 중복 슬래시 방지
+ */
 function resolveEdreamApiBaseUrl(): string {
   const raw = (process.env.NEXT_PUBLIC_API_BASE_URL || "")
     .trim()

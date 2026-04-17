@@ -5,6 +5,9 @@ const path = require("path");
 const turbopackRoot = path.join(__dirname);
 
 /**
+ * [WATERB_MIGRATION_B] 이 파일의 `/edream`, `EDREAM_REWRITE_*`, `resolveBackendEdreamBaseUrl` —
+ * `api.ts`, `Dockerfile` ARG/ENV, `docker-compose.yml`, 백엔드 context-path, `nginx`와 동시에 일괄 변경.
+ *
  * NEXT_PUBLIC_API_BASE_URL과 동일한 백엔드로 /edream 프록시 (로컬 상대경로 axios용).
  * 우선순위: EDREAM_REWRITE_DESTINATION > NEXT_PUBLIC_API_BASE_URL 기반 > test3
  * Docker(dev.uaram): nginx가 먼저 /edream을 백엔드로 넘기면 Next rewrite는 타지 않음.

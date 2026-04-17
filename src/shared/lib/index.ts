@@ -4,7 +4,7 @@ export * from "./articleContent";
 export * from "./sessionManager";
 export * from "./duplicateLoginManager";
 export * from "./apiClient";
-export * from "./downloadEdreamFile";
+export * from "./downloadWaterbFile";
 export * from "./sirenPassPopup";
 export * from "./rememberLoginId";
 export * from "./decodeDisplayText";

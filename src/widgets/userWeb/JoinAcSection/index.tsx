@@ -13,14 +13,14 @@ import type {
 } from "@/entities/adminWeb/armuser/api";
 import { API_ENDPOINTS, API_CONFIG } from "@/shared/config/apiUser";
 import { ApiError } from "@/shared/lib/apiClient";
-import { apiClient, downloadEdreamAttachmentOrOpenView } from "@/shared/lib";
+import { apiClient, downloadWaterbAttachmentOrOpenView } from "@/shared/lib";
 import { AlertModal, ConfirmModal } from "@/shared/ui/userWeb";
 import type { AlertModalType } from "@/shared/ui/userWeb";
 
 const IMG = "/images/userWeb";
 const ICON = "/images/userWeb/icon";
 
-/** 확장자로 gunsan 스타일 파일 타입 클래스 반환 (.file.hwp, .file.pdf 등) */
+/** ?�장?�로 gunsan ?��????�일 ?�???�래??반환 (.file.hwp, .file.pdf ?? */
 function getFileTypeClass(filename: string): string {
   if (!filename) return "";
   const ext = filename.split(".").pop()?.toLowerCase() ?? "";
@@ -35,12 +35,12 @@ function getFileTypeClass(filename: string): string {
 }
 
 /**
- * 학원 회원가입 폼
- * join_ac.html 구조·클래스명 유지 (join_ac.css)
- * 원본: source/gunsan/join_ac.html
- * 학생/학부모 JoinStudentSection, JoinParentSection 패턴 참고
- * mode="mypage": MY PAGE 나의정보에서 사용 시 상단 제목·section 래퍼 없이 폼만 렌더
- * initialData: MY PAGE에서 GET 상세 조회 후 전달 시 폼 초기값으로 사용
+ * ?�원 ?�원가????
+ * join_ac.html 구조·?�래?�명 ?��? (join_ac.css)
+ * ?�본: source/gunsan/join_ac.html
+ * ?�생/?��?�?JoinStudentSection, JoinParentSection ?�턴 참고
+ * mode="mypage": MY PAGE ?�의?�보?�서 ?�용 ???�단 ?�목·section ?�퍼 ?�이 ?�만 ?�더
+ * initialData: MY PAGE?�서 GET ?�세 조회 ???�달 ????초기값으�??�용
  */
 const JoinAcSection: React.FC<{
   mode?: "join" | "mypage";
@@ -62,17 +62,17 @@ const JoinAcSection: React.FC<{
   const [email, setEmail] = useState("");
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState("");
-  /** 학원소개 (PROFILE_DESC 저장용) */
+  /** ?�원?�개 (PROFILE_DESC ?�?�용) */
   const [profileDesc, setProfileDesc] = useState("");
-  /** 첨부파일 (여러 개) */
+  /** 첨�??�일 (?�러 �? */
   const [pendingAttachFiles, setPendingAttachFiles] = useState<
     { id: string; file: File }[]
   >([]);
-  /** 사업자등록증 (1개) */
+  /** ?�업?�등록증 (1�? */
   const [bizCertFile, setBizCertFile] = useState<File | null>(null);
-  /** 회원가입: 약관 페이지 본인인증 후 전달된 데이터로 채운 경우 수정 불가 */
+  /** ?�원가?? ?��? ?�이지 본인?�증 ???�달???�이?�로 채운 경우 ?�정 불�? */
   const [certDataFromJoin, setCertDataFromJoin] = useState(false);
-  /** 회원가입: 본인인증 완료 후 저장된 DI(개인식별코드) - 가입 API 전송용 */
+  /** ?�원가?? 본인?�증 ?�료 ???�?�된 DI(개인?�별코드) - 가??API ?�송??*/
   const [certDi, setCertDi] = useState("");
   const [isCheckingUserId, setIsCheckingUserId] = useState(false);
   const [checkedUserId, setCheckedUserId] = useState("");
@@ -80,7 +80,7 @@ const JoinAcSection: React.FC<{
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  /** 회원가입: 약관 페이지 본인인증 후 sessionStorage에 저장된 데이터 적용 (대표이사, 연락처) */
+  /** ?�원가?? ?��? ?�이지 본인?�증 ??sessionStorage???�?�된 ?�이???�용 (?�?�이?? ?�락�? */
   useEffect(() => {
     if (mode !== "join" || typeof window === "undefined") return;
     let cancelled = false;
@@ -113,19 +113,19 @@ const JoinAcSection: React.FC<{
                 else window.location.href = "/";
               };
               showAlert(
-                "알림",
-                "이미 본인인증으로 가입된 회원입니다.",
+                "?�림",
+                "?��? 본인?�증?�로 가?�된 ?�원?�니??",
                 "danger",
               );
             }
           } catch {
-            // 중복확인 실패는 UX 차단하지 않음
+            // 중복?�인 ?�패??UX 차단?��? ?�음
           }
         })();
       }
       if (userName || celNo) setCertDataFromJoin(true);
     } catch {
-      // 파싱 오류 등 무시
+      // ?�싱 ?�류 ??무시
     }
     return () => {
       cancelled = true;
@@ -145,14 +145,14 @@ const JoinAcSection: React.FC<{
   const [confirmUnlinkService, setConfirmUnlinkService] = useState<
     "naver" | "kakao" | null
   >(null);
-  /** MY PAGE: 기존 첨부파일/사업자등록증 삭제 확인 (type, fileId, seq). fileId는 18자리 정밀도 유지를 위해 string */
+  /** MY PAGE: 기존 첨�??�일/?�업?�등록증 ??�� ?�인 (type, fileId, seq). fileId??18?�리 ?��????��?�??�해 string */
   const [confirmDeleteFile, setConfirmDeleteFile] = useState<{
     type: "atta" | "bizno";
     fileId: string;
     seq: number;
   } | null>(null);
 
-  /** MY PAGE: 상세 조회 데이터로 폼 초기값 채우기 */
+  /** MY PAGE: ?�세 조회 ?�이?�로 ??초기�?채우�?*/
   useEffect(() => {
     if (mode !== "mypage" || !initialData?.detail) return;
     const d = initialData.detail;
@@ -217,7 +217,7 @@ const JoinAcSection: React.FC<{
     }
   }, []);
 
-  /** MY PAGE: 백엔드 OAuth 리다이렉트 후 연결 결과 쿼리 처리 */
+  /** MY PAGE: 백엔??OAuth 리다?�렉?????�결 결과 쿼리 처리 */
   useEffect(() => {
     if (mode !== "mypage" || typeof window === "undefined") return;
     const params = new URLSearchParams(window.location.search);
@@ -230,24 +230,24 @@ const JoinAcSection: React.FC<{
     const q = params.toString();
     window.history.replaceState(null, "", q ? `${path}?${q}` : path);
     if (ok === "ok") {
-      showAlert("알림", "SNS 계정이 연결되었습니다.");
+      showAlert("?�림", "SNS 계정???�결?�었?�니??");
       onDetailUpdated?.();
     } else if (oauthErr) {
       const msg =
         oauthErr === "already_linked"
-          ? "이미 다른 계정에 연결된 SNS 계정입니다."
+          ? "?��? ?�른 계정???�결??SNS 계정?�니??"
           : oauthErr === "user_mismatch"
-            ? "본인 확인에 실패했습니다. 다시 로그인 후 시도해 주세요."
+            ? "본인 ?�인???�패?�습?�다. ?�시 로그?????�도??주세??"
             : oauthErr === "invalid_link_token"
-              ? "연결 시간이 만료되었거나 유효하지 않은 요청입니다. 다시 시도해 주세요."
+              ? "?�결 ?�간??만료?�었거나 ?�효?��? ?��? ?�청?�니?? ?�시 ?�도??주세??"
               : oauthErr === "no_oauth_id"
-                ? "SNS에서 계정 식별 정보를 받지 못했습니다."
+                ? "SNS?�서 계정 ?�별 ?�보�?받�? 못했?�니??"
                 : oauthErr === "cancelled"
-                  ? "SNS 연결을 취소했습니다."
+                  ? "SNS ?�결??취소?�습?�다."
                   : oauthErr === "no_code"
-                    ? "SNS 인증 코드를 받지 못했습니다. 다시 시도해 주세요."
-                    : "SNS 연결에 실패했습니다.";
-      showAlert("알림", msg, "danger");
+                    ? "SNS ?�증 코드�?받�? 못했?�니?? ?�시 ?�도??주세??"
+                    : "SNS ?�결???�패?�습?�다.";
+      showAlert("?�림", msg, "danger");
     }
   }, [mode, showAlert, onDetailUpdated]);
 
@@ -262,7 +262,7 @@ const JoinAcSection: React.FC<{
     [],
   );
 
-  /** MY PAGE: 서버에 저장된 사진 삭제 시 확인 후 API 호출 */
+  /** MY PAGE: ?�버???�?�된 ?�진 ??�� ???�인 ??API ?�출 */
   const handleConfirmDeleteUserPic = useCallback(async () => {
     setShowConfirmDeletePic(false);
     const esntlId = initialData?.detail?.esntlId;
@@ -279,15 +279,15 @@ const JoinAcSection: React.FC<{
         URL.revokeObjectURL(logoPreview);
       setLogoPreview("");
       if (fileInputRef.current) fileInputRef.current.value = "";
-      showAlert("삭제 완료", "사진로고가 삭제되었습니다.");
+      showAlert("??�� ?�료", "?�진로고가 ??��?�었?�니??");
       onDetailUpdated?.();
     } catch (e) {
-      console.error("사진로고 삭제 실패:", e);
+      console.error("?�진로고 ??�� ?�패:", e);
       showAlert(
-        "삭제 실패",
+        "??�� ?�패",
         e instanceof Error
           ? e.message
-          : "사진로고 삭제 중 오류가 발생했습니다.",
+          : "?�진로고 ??�� �??�류가 발생?�습?�다.",
         "danger",
       );
     }
@@ -331,14 +331,14 @@ const JoinAcSection: React.FC<{
   const handleCheckUserId = useCallback(async () => {
     const trimmedUserId = userId.trim();
     if (!trimmedUserId) {
-      showAlert("알림", "아이디를 입력하세요.", "danger", "academyUserId");
+      showAlert("?�림", "?�이?��? ?�력?�세??", "danger", "academyUserId");
       return;
     }
     const emailLike = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailLike.test(trimmedUserId)) {
       showAlert(
-        "알림",
-        "이메일 형식을 확인해주세요.",
+        "?�림",
+        "?�메???�식???�인?�주?�요.",
         "danger",
         "academyUserId",
       );
@@ -350,8 +350,8 @@ const JoinAcSection: React.FC<{
       const res = await UserMemberService.checkMemberId(trimmedUserId);
       if (res.result === "01") {
         showAlert(
-          "알림",
-          res.message || "아이디 중복 확인에 실패했습니다.",
+          "?�림",
+          res.message || "?�이??중복 ?�인???�패?�습?�다.",
           "danger",
           "academyUserId",
         );
@@ -361,8 +361,8 @@ const JoinAcSection: React.FC<{
         setCheckedUserId("");
         setIsDuplicateUserId(true);
         showAlert(
-          "알림",
-          "이미 사용 중인 아이디입니다. 다른 아이디를 입력해 주세요.",
+          "?�림",
+          "?��? ?�용 중인 ?�이?�입?�다. ?�른 ?�이?��? ?�력??주세??",
           "danger",
           "academyUserId",
         );
@@ -371,22 +371,22 @@ const JoinAcSection: React.FC<{
       if (res.exist === 0) {
         setCheckedUserId(trimmedUserId);
         setIsDuplicateUserId(false);
-        showAlert("알림", "사용 가능한 아이디입니다.", "success");
+        showAlert("?�림", "?�용 가?�한 ?�이?�입?�다.", "success");
         return;
       }
       showAlert(
-        "알림",
-        res.message || "아이디 중복 확인에 실패했습니다.",
+        "?�림",
+        res.message || "?�이??중복 ?�인???�패?�습?�다.",
         "danger",
         "academyUserId",
       );
     } catch (err) {
-      console.error("학원 회원가입 아이디 중복확인 실패:", err);
+      console.error("?�원 ?�원가???�이??중복?�인 ?�패:", err);
       showAlert(
-        "알림",
+        "?�림",
         err instanceof ApiError
-          ? err.message || "아이디 중복 확인에 실패했습니다."
-          : "아이디 중복 확인 중 오류가 발생했습니다.",
+          ? err.message || "?�이??중복 ?�인???�패?�습?�다."
+          : "?�이??중복 ?�인 �??�류가 발생?�습?�다.",
         "danger",
         "academyUserId",
       );
@@ -395,7 +395,7 @@ const JoinAcSection: React.FC<{
     }
   }, [showAlert, userId]);
 
-  /** MY PAGE: 기존 첨부파일 또는 사업자등록증 삭제 확인 후 API 호출 */
+  /** MY PAGE: 기존 첨�??�일 ?�는 ?�업?�등록증 ??�� ?�인 ??API ?�출 */
   const handleConfirmDeleteFile = useCallback(async () => {
     const payload = confirmDeleteFile;
     setConfirmDeleteFile(null);
@@ -408,21 +408,21 @@ const JoinAcSection: React.FC<{
           payload.fileId,
           payload.seq,
         );
-        showAlert("삭제 완료", "첨부파일이 삭제되었습니다.");
+        showAlert("??�� ?�료", "첨�??�일????��?�었?�니??");
       } else {
         await UserArmuserService.deleteBiznoFile(
           esntlId,
           payload.fileId,
           payload.seq,
         );
-        showAlert("삭제 완료", "사업자등록증이 삭제되었습니다.");
+        showAlert("??�� ?�료", "?�업?�등록증????��?�었?�니??");
       }
       onDetailUpdated?.();
     } catch (e) {
-      console.error("파일 삭제 실패:", e);
+      console.error("?�일 ??�� ?�패:", e);
       showAlert(
-        "삭제 실패",
-        e instanceof Error ? e.message : "파일 삭제 중 오류가 발생했습니다.",
+        "??�� ?�패",
+        e instanceof Error ? e.message : "?�일 ??�� �??�류가 발생?�습?�다.",
         "danger",
       );
     }
@@ -523,15 +523,15 @@ const JoinAcSection: React.FC<{
       e.preventDefault();
 
       if (!userId.trim()) {
-        showAlert("알림", "아이디를 입력하세요.", "danger", "academyUserId");
+        showAlert("?�림", "?�이?��? ?�력?�세??", "danger", "academyUserId");
         return;
       }
       if (mode !== "mypage") {
         const emailLike = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailLike.test(userId.trim())) {
           showAlert(
-            "알림",
-            "아이디는 이메일 형식으로 입력해주세요.",
+            "?�림",
+            "?�이?�는 ?�메???�식?�로 ?�력?�주?�요.",
             "danger",
             "academyUserId",
           );
@@ -539,8 +539,8 @@ const JoinAcSection: React.FC<{
         }
         if (checkedUserId !== userId.trim()) {
           showAlert(
-            "알림",
-            "아이디 중복 확인을 해주세요.",
+            "?�림",
+            "?�이??중복 ?�인???�주?�요.",
             "danger",
             "academyUserId",
           );
@@ -550,8 +550,8 @@ const JoinAcSection: React.FC<{
       if (mode !== "mypage") {
         if (!password) {
           showAlert(
-            "알림",
-            "비밀번호를 입력하세요.",
+            "?�림",
+            "비�?번호�??�력?�세??",
             "danger",
             "academyPassword",
           );
@@ -559,8 +559,8 @@ const JoinAcSection: React.FC<{
         }
         if (!passwordConfirm) {
           showAlert(
-            "알림",
-            "비밀번호 확인을 입력하세요.",
+            "?�림",
+            "비�?번호 ?�인???�력?�세??",
             "danger",
             "academyPasswordConfirm",
           );
@@ -568,8 +568,8 @@ const JoinAcSection: React.FC<{
         }
         if (password !== passwordConfirm) {
           showAlert(
-            "알림",
-            "비밀번호와 비밀번호 확인이 일치하지 않습니다.",
+            "?�림",
+            "비�?번호?� 비�?번호 ?�인???�치?��? ?�습?�다.",
             "danger",
             "academyPasswordConfirm",
           );
@@ -578,8 +578,8 @@ const JoinAcSection: React.FC<{
       } else if (password || passwordConfirm) {
         if (password !== passwordConfirm) {
           showAlert(
-            "알림",
-            "비밀번호와 비밀번호 확인이 일치하지 않습니다.",
+            "?�림",
+            "비�?번호?� 비�?번호 ?�인???�치?��? ?�습?�다.",
             "danger",
             "academyPasswordConfirm",
           );
@@ -587,28 +587,28 @@ const JoinAcSection: React.FC<{
         }
       }
       if (!academyNm.trim()) {
-        showAlert("알림", "학원명을 입력하세요.", "danger", "academyNm");
+        showAlert("?�림", "?�원명을 ?�력?�세??", "danger", "academyNm");
         return;
       }
       if (!bizNo.trim()) {
         showAlert(
-          "알림",
-          "사업자등록번호를 입력하세요.",
+          "?�림",
+          "?�업?�등록번?��? ?�력?�세??",
           "danger",
           "academyBizNo",
         );
         return;
       }
       if (!ceoNm.trim()) {
-        showAlert("알림", "대표이사를 입력하세요.", "danger", "academyCeoNm");
+        showAlert("?�림", "?�?�이?��? ?�력?�세??", "danger", "academyCeoNm");
         return;
       }
       if (!telno.trim()) {
-        showAlert("알림", "연락처를 입력하세요.", "danger", "academyTelno");
+        showAlert("?�림", "?�락처�? ?�력?�세??", "danger", "academyTelno");
         return;
       }
       if (!email.trim()) {
-        showAlert("알림", "이메일주소를 입력하세요.", "danger", "academyEmail");
+        showAlert("?�림", "?�메?�주?��? ?�력?�세??", "danger", "academyEmail");
         return;
       }
 
@@ -617,7 +617,7 @@ const JoinAcSection: React.FC<{
         if (mode === "mypage") {
           const esntlId = initialData?.detail?.esntlId?.trim();
           if (!esntlId) {
-            showAlert("알림", "회원 정보를 불러올 수 없습니다.", "danger");
+            showAlert("?�림", "?�원 ?�보�?불러?????�습?�다.", "danger");
             return;
           }
           const updateRequest: ArmuserUpdateRequest = {
@@ -652,11 +652,11 @@ const JoinAcSection: React.FC<{
             },
           );
           if (res.result === "01") {
-            showAlert("알림", res.message || "수정에 실패했습니다.", "danger");
+            showAlert("?�림", res.message || "?�정???�패?�습?�다.", "danger");
             return;
           }
           onDetailUpdated?.();
-          showAlert("알림", "수정이 완료되었습니다.", "success");
+          showAlert("?�림", "?�정???�료?�었?�니??", "success");
         } else {
           const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
           const request: ArmuserInsertRequest = {
@@ -691,48 +691,48 @@ const JoinAcSection: React.FC<{
           );
           if (res.result === "50") {
             showAlert(
-              "알림",
-              res.message || "이미 사용 중인 아이디입니다.",
+              "?�림",
+              res.message || "?��? ?�용 중인 ?�이?�입?�다.",
               "danger",
               "academyUserId",
             );
             return;
           }
           if (res.result === "01") {
-            showAlert("알림", res.message || "등록에 실패했습니다.", "danger");
+            showAlert("?�림", res.message || "?�록???�패?�습?�다.", "danger");
             return;
           }
           if (res.result === "51") {
             showAlert(
-              "알림",
-              res.message || "이미 본인인증으로 가입된 회원입니다.",
+              "?�림",
+              res.message || "?��? 본인?�증?�로 가?�된 ?�원?�니??",
               "danger",
             );
             return;
           }
           afterAlertCloseRef.current = handleReset;
-          showAlert("알림", "신청이 완료되었습니다.", "success");
+          showAlert("?�림", "?�청???�료?�었?�니??", "success");
         }
       } catch (err) {
         console.error(
-          mode === "mypage" ? "학원 정보 수정 실패:" : "학원 회원가입 실패:",
+          mode === "mypage" ? "?�원 ?�보 ?�정 ?�패:" : "?�원 ?�원가???�패:",
           err,
         );
         if (err instanceof ApiError) {
           showAlert(
-            "알림",
+            "?�림",
             err.message ||
               (mode === "mypage"
-                ? "수정 중 오류가 발생했습니다."
-                : "회원가입 중 오류가 발생했습니다."),
+                ? "?�정 �??�류가 발생?�습?�다."
+                : "?�원가??�??�류가 발생?�습?�다."),
             "danger",
           );
         } else {
           showAlert(
-            "알림",
+            "?�림",
             mode === "mypage"
-              ? "수정 중 오류가 발생했습니다."
-              : "회원가입 중 오류가 발생했습니다.",
+              ? "?�정 �??�류가 발생?�습?�다."
+              : "?�원가??�??�류가 발생?�습?�다.",
             "danger",
           );
         }
@@ -783,24 +783,24 @@ const JoinAcSection: React.FC<{
                 }`}
               >
                 {initialData?.detail?.mberSttus === "P"
-                  ? "사용"
+                  ? "?�용"
                   : initialData?.detail?.mberSttus === "D"
-                    ? "탈퇴"
-                    : "신청"}
+                    ? "?�퇴"
+                    : "?�청"}
               </div>
             )}
             <div className="sectionHeader">
-              <div className="sectionTitle">학원정보 입력</div>
+              <div className="sectionTitle">?�원?�보 ?�력</div>
             </div>
             <div className="formGrid">
-              {/* 아이디 / 학원명 */}
+              {/* ?�이??/ ?�원�?*/}
               <div className="formRow split">
                 <div className="fieldUnit">
                   <label htmlFor="academyUserId" className="formLabel">
                     <span className="requiredMark" aria-hidden="true">
                       *
                     </span>
-                    아이디
+                    ?�이??
                   </label>
                   <div className="formControl">
                     {mode === "join" ? (
@@ -809,7 +809,7 @@ const JoinAcSection: React.FC<{
                           type="text"
                           id="academyUserId"
                           className="inputField"
-                          placeholder="이메일 형식으로 입력해주세요"
+                          placeholder="?�메???�식?�로 ?�력?�주?�요"
                           value={userId}
                           onChange={handleUserIdChange}
                           style={
@@ -836,7 +836,7 @@ const JoinAcSection: React.FC<{
                               : undefined
                           }
                         >
-                          {isCheckingUserId ? "확인 중..." : "중복확인"}
+                          {isCheckingUserId ? "?�인 �?.." : "중복?�인"}
                         </button>
                       </div>
                     ) : (
@@ -844,7 +844,7 @@ const JoinAcSection: React.FC<{
                         type="text"
                         id="academyUserId"
                         className="inputField"
-                        placeholder="이메일 형식으로 입력해주세요"
+                        placeholder="?�메???�식?�로 ?�력?�주?�요"
                         value={userId}
                         onChange={handleUserIdChange}
                         readOnly
@@ -858,35 +858,35 @@ const JoinAcSection: React.FC<{
                     <span className="requiredMark" aria-hidden="true">
                       *
                     </span>
-                    학원명
+                    ?�원�?
                   </label>
                   <div className="formControl">
                     <input
                       type="text"
                       id="academyNm"
                       className="inputField"
-                      placeholder="학원명을 입력해주세요"
+                      placeholder="?�원명을 ?�력?�주?�요"
                       value={academyNm}
                       onChange={(e) => setAcademyNm(e.target.value)}
                     />
                   </div>
                 </div>
               </div>
-              {/* 비밀번호 / 비밀번호 확인 */}
+              {/* 비�?번호 / 비�?번호 ?�인 */}
               <div className="formRow split">
                 <div className="fieldUnit">
                   <label htmlFor="academyPassword" className="formLabel">
                     <span className="requiredMark" aria-hidden="true">
                       *
                     </span>
-                    비밀번호
+                    비�?번호
                   </label>
                   <div className="formControl">
                     <input
                       type="password"
                       id="academyPassword"
                       className="inputField"
-                      placeholder="비밀번호를 입력해주세요"
+                      placeholder="비�?번호�??�력?�주?�요"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                     />
@@ -897,35 +897,35 @@ const JoinAcSection: React.FC<{
                     <span className="requiredMark" aria-hidden="true">
                       *
                     </span>
-                    비밀번호 확인
+                    비�?번호 ?�인
                   </label>
                   <div className="formControl">
                     <input
                       type="password"
                       id="academyPasswordConfirm"
                       className="inputField"
-                      placeholder="비밀번호를 다시 입력해주세요"
+                      placeholder="비�?번호�??�시 ?�력?�주?�요"
                       value={passwordConfirm}
                       onChange={(e) => setPasswordConfirm(e.target.value)}
                     />
                   </div>
                 </div>
               </div>
-              {/* 사업자등록번호 / 대표이사 */}
+              {/* ?�업?�등록번??/ ?�?�이??*/}
               <div className="formRow split">
                 <div className="fieldUnit">
                   <label htmlFor="academyBizNo" className="formLabel">
                     <span className="requiredMark" aria-hidden="true">
                       *
                     </span>
-                    사업자등록번호
+                    ?�업?�등록번??
                   </label>
                   <div className="formControl">
                     <input
                       type="text"
                       id="academyBizNo"
                       className="inputField"
-                      placeholder="사업자등록번호를 입력해주세요"
+                      placeholder="?�업?�등록번?��? ?�력?�주?�요"
                       value={bizNo}
                       onChange={(e) => setBizNo(e.target.value)}
                     />
@@ -936,14 +936,14 @@ const JoinAcSection: React.FC<{
                     <span className="requiredMark" aria-hidden="true">
                       *
                     </span>
-                    대표이사
+                    ?�?�이??
                   </label>
                   <div className="formControl">
                     <input
                       type="text"
                       id="academyCeoNm"
                       className={`inputField${certDataFromJoin ? " bgGray" : ""}`}
-                      placeholder="대표이사를 입력해주세요"
+                      placeholder="?�?�이?��? ?�력?�주?�요"
                       value={ceoNm}
                       onChange={(e) => setCeoNm(e.target.value)}
                       readOnly={certDataFromJoin}
@@ -952,21 +952,21 @@ const JoinAcSection: React.FC<{
                   </div>
                 </div>
               </div>
-              {/* 연락처 / 사무실번호 */}
+              {/* ?�락�?/ ?�무?�번??*/}
               <div className="formRow split">
                 <div className="fieldUnit">
                   <label htmlFor="academyTelno" className="formLabel">
                     <span className="requiredMark" aria-hidden="true">
                       *
                     </span>
-                    연락처
+                    ?�락�?
                   </label>
                   <div className="formControl">
                     <input
                       type="tel"
                       id="academyTelno"
                       className={`inputField${certDataFromJoin ? " bgGray" : ""}`}
-                      placeholder="숫자만 입력해주세요"
+                      placeholder="?�자�??�력?�주?�요"
                       value={telno}
                       onChange={handleTelnoChange}
                       readOnly={certDataFromJoin}
@@ -976,35 +976,35 @@ const JoinAcSection: React.FC<{
                 </div>
                 <div className="fieldUnit">
                   <label htmlFor="academyOfficeTelno" className="formLabel">
-                    사무실번호
+                    ?�무?�번??
                   </label>
                   <div className="formControl">
                     <input
                       type="tel"
                       id="academyOfficeTelno"
                       className="inputField"
-                      placeholder="숫자만 입력해주세요"
+                      placeholder="?�자�??�력?�주?�요"
                       value={officeTelno}
                       onChange={handleOfficeTelnoChange}
                     />
                   </div>
                 </div>
               </div>
-              {/* 이메일주소 / 회원팩스번호 */}
+              {/* ?�메?�주??/ ?�원?�스번호 */}
               <div className="formRow split">
                 <div className="fieldUnit">
                   <label htmlFor="academyEmail" className="formLabel">
                     <span className="requiredMark" aria-hidden="true">
                       *
                     </span>
-                    이메일주소
+                    ?�메?�주??
                   </label>
                   <div className="formControl">
                     <input
                       type="email"
                       id="academyEmail"
                       className="inputField"
-                      placeholder="이메일을 입력해주세요"
+                      placeholder="?�메?�을 ?�력?�주?�요"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                     />
@@ -1012,21 +1012,21 @@ const JoinAcSection: React.FC<{
                 </div>
                 <div className="fieldUnit">
                   <label htmlFor="academyFaxNo" className="formLabel">
-                    회원팩스번호
+                    ?�원?�스번호
                   </label>
                   <div className="formControl">
                     <input
                       type="tel"
                       id="academyFaxNo"
                       className="inputField"
-                      placeholder="숫자만 입력해주세요"
+                      placeholder="?�자�??�력?�주?�요"
                       value={faxNo}
                       onChange={handleFaxNoChange}
                     />
                   </div>
                 </div>
               </div>
-              {/* 우편번호, 주소, 상세주소 (다른 회원가입과 동일 UI) */}
+              {/* ?�편번호, 주소, ?�세주소 (?�른 ?�원가?�과 ?�일 UI) */}
               <div className="formRow">
                 <label className="formLabel" id="lblAcademyAddress">
                   주소
@@ -1037,10 +1037,10 @@ const JoinAcSection: React.FC<{
                       type="text"
                       className="inputField bgGray addressZip"
                       readOnly
-                      title="우편번호"
+                      title="?�편번호"
                       value={zip}
-                      placeholder="우편번호"
-                      aria-label="우편번호"
+                      placeholder="?�편번호"
+                      aria-label="?�편번호"
                     />
                     <input
                       type="text"
@@ -1055,27 +1055,27 @@ const JoinAcSection: React.FC<{
                       type="button"
                       className="btnSearch"
                       onClick={handleAddressSearch}
-                      title="주소 검색"
-                      aria-label="주소 검색"
+                      title="주소 검??
+                      aria-label="주소 검??
                     >
-                      주소검색
+                      주소검??
                     </button>
                   </div>
                   <input
                     type="text"
                     className="inputField"
-                    placeholder="상세주소를 입력해주세요"
+                    placeholder="?�세주소�??�력?�주?�요"
                     value={detailAddress}
                     onChange={(e) => setDetailAddress(e.target.value)}
-                    aria-label="상세주소"
+                    aria-label="?�세주소"
                   />
                 </div>
               </div>
-              {/* 사진로고 (이미지 선택 시 미리보기) */}
+              {/* ?�진로고 (?��?지 ?�택 ??미리보기) */}
               <div className="formRow">
                 <div className="fieldUnit">
                   <label htmlFor="academyLogoInput" className="formLabel">
-                    사진로고
+                    ?�진로고
                   </label>
                   <div className="formControl">
                     <div className="imageUploadContainer">
@@ -1091,7 +1091,7 @@ const JoinAcSection: React.FC<{
                         htmlFor="academyLogoInput"
                         className="btnImageAdd"
                         role="button"
-                        aria-label="이미지 파일 첨부하기"
+                        aria-label="?��?지 ?�일 첨�??�기"
                       >
                         <img
                           src={logoPreview || `${IMG}/img_noImg.png`}
@@ -1109,17 +1109,17 @@ const JoinAcSection: React.FC<{
                           }}
                           className={logoPreview ? "cursor-pointer" : undefined}
                         />
-                        <span className="srOnly">이미지 첨부하기</span>
+                        <span className="srOnly">?��?지 첨�??�기</span>
                       </label>
                       {logoPreview && (
                         <button
                           type="button"
                           className="btnImageDel"
-                          aria-label="첨부된 이미지 삭제"
+                          aria-label="첨�????��?지 ??��"
                           onClick={handleLogoRemove}
                         >
                           <span className="iconDel sr-only" aria-hidden="true">
-                            삭제
+                            ??��
                           </span>
                         </button>
                       )}
@@ -1127,25 +1127,25 @@ const JoinAcSection: React.FC<{
                   </div>
                 </div>
               </div>
-              {/* 학원소개 (PROFILE_DESC 저장) - bizInput 목적/활동내용 UI */}
+              {/* ?�원?�개 (PROFILE_DESC ?�?? - bizInput 목적/?�동?�용 UI */}
               <div className="formRow">
                 <label htmlFor="academyProfileDesc" className="formLabel">
-                  학원소개
+                  ?�원?�개
                 </label>
                 <div className="formControl">
                   <textarea
                     id="academyProfileDesc"
                     className="textAreaField"
-                    placeholder="학원소개 내용을 입력해주세요"
+                    placeholder="?�원?�개 ?�용???�력?�주?�요"
                     value={profileDesc}
                     onChange={(e) => setProfileDesc(e.target.value)}
                   />
                 </div>
               </div>
-              {/* 첨부파일 (여러 개) - bizInput처럼 라벨 높이 줄임 */}
+              {/* 첨�??�일 (?�러 �? - bizInput처럼 ?�벨 ?�이 줄임 */}
               <div className="formRow formRowFile">
                 <span className="formLabel">
-                  첨부파일
+                  첨�??�일
                   <input
                     ref={attachFileInputRef}
                     type="file"
@@ -1157,7 +1157,7 @@ const JoinAcSection: React.FC<{
                   <label
                     htmlFor="academyAttachInput"
                     className="btnFileAdd"
-                    aria-label="파일 첨부하기"
+                    aria-label="?�일 첨�??�기"
                   >
                     <img
                       src={`${ICON}/ico_file_add.png`}
@@ -1177,7 +1177,7 @@ const JoinAcSection: React.FC<{
                       const viewUrl = base
                         ? `${base}/api/v1/files/view?fileId=${encodeURIComponent(String(fileId))}&seq=${encodeURIComponent(String(seq))}`
                         : "#";
-                      const label = f.orgfNm?.trim() || "첨부파일";
+                      const label = f.orgfNm?.trim() || "첨�??�일";
                       const typeClass = getFileTypeClass(label);
                       return (
                         <div
@@ -1189,7 +1189,7 @@ const JoinAcSection: React.FC<{
                             className="fileLink"
                             onClick={(e) => {
                               e.preventDefault();
-                              void downloadEdreamAttachmentOrOpenView(
+                              void downloadWaterbAttachmentOrOpenView(
                                 String(fileId),
                                 Number(seq),
                                 viewUrl,
@@ -1202,7 +1202,7 @@ const JoinAcSection: React.FC<{
                           <button
                             type="button"
                             className="btnFileDel"
-                            aria-label={`${label} 파일 삭제`}
+                            aria-label={`${label} ?�일 ??��`}
                             onClick={(ev) => {
                               ev.preventDefault();
                               ev.stopPropagation();
@@ -1231,7 +1231,7 @@ const JoinAcSection: React.FC<{
                         <button
                           type="button"
                           className="btnFileDel"
-                          aria-label={`${label} 파일 삭제`}
+                          aria-label={`${label} ?�일 ??��`}
                           onClick={() => removeAttachFile(id)}
                         >
                           <img
@@ -1246,15 +1246,15 @@ const JoinAcSection: React.FC<{
                   {!(mode === "mypage" && initialData?.attaFiles?.length) &&
                     pendingAttachFiles.length === 0 && (
                       <span className="fileListEmpty">
-                        첨부된 파일이 없습니다.
+                        첨�????�일???�습?�다.
                       </span>
                     )}
                 </div>
               </div>
-              {/* 사업자등록증 (1개) - bizInput처럼 라벨 높이 줄임 */}
+              {/* ?�업?�등록증 (1�? - bizInput처럼 ?�벨 ?�이 줄임 */}
               <div className="formRow formRowFile">
                 <span className="formLabel">
-                  사업자등록증
+                  ?�업?�등록증
                   <input
                     ref={bizCertInputRef}
                     type="file"
@@ -1265,7 +1265,7 @@ const JoinAcSection: React.FC<{
                   <label
                     htmlFor="academyBizCertInput"
                     className="btnFileAdd"
-                    aria-label="파일 첨부하기"
+                    aria-label="?�일 첨�??�기"
                   >
                     <img
                       src={`${ICON}/ico_file_add.png`}
@@ -1287,7 +1287,7 @@ const JoinAcSection: React.FC<{
                       const viewUrl = base
                         ? `${base}/api/v1/files/view?fileId=${encodeURIComponent(String(fileId))}&seq=${encodeURIComponent(String(seq))}`
                         : "#";
-                      const label = f.orgfNm?.trim() || "사업자등록증";
+                      const label = f.orgfNm?.trim() || "?�업?�등록증";
                       const typeClass = getFileTypeClass(label);
                       return (
                         <div
@@ -1299,7 +1299,7 @@ const JoinAcSection: React.FC<{
                             className="fileLink"
                             onClick={(e) => {
                               e.preventDefault();
-                              void downloadEdreamAttachmentOrOpenView(
+                              void downloadWaterbAttachmentOrOpenView(
                                 String(fileId),
                                 Number(seq),
                                 viewUrl,
@@ -1312,7 +1312,7 @@ const JoinAcSection: React.FC<{
                           <button
                             type="button"
                             className="btnFileDel"
-                            aria-label={`${label} 파일 삭제`}
+                            aria-label={`${label} ?�일 ??��`}
                             onClick={(ev) => {
                               ev.preventDefault();
                               ev.stopPropagation();
@@ -1340,7 +1340,7 @@ const JoinAcSection: React.FC<{
                       <button
                         type="button"
                         className="btnFileDel"
-                        aria-label={`${bizCertFile.name} 파일 삭제`}
+                        aria-label={`${bizCertFile.name} ?�일 ??��`}
                         onClick={removeBizCert}
                       >
                         <img
@@ -1354,22 +1354,22 @@ const JoinAcSection: React.FC<{
                   {!(mode === "mypage" && initialData?.biznoFiles?.length) &&
                     !bizCertFile && (
                       <span className="fileListEmpty">
-                        첨부된 파일이 없습니다.
+                        첨�????�일???�습?�다.
                       </span>
                     )}
                 </div>
               </div>
               {mode === "mypage" && (
                 <div className="formRow mypageSnsLinkRow">
-                  <span className="formLabel">간편로그인연결</span>
+                  <span className="formLabel">간편로그?�연�?/span>
                   <div className="formControl mypageSnsLinkControl">
                     <div className="mypageSnsLinkItem">
                       <span className="mypageSnsLinkBadge mypageBadgeNaver">
                         <img
                           src="/images/userWeb/icon/ico_sns_naver.png"
-                          alt="네이버"
+                          alt="?�이�?
                         />
-                        네이버
+                        ?�이�?
                       </span>
                       {String(initialData?.detail?.naverAuthId ?? "").trim() !==
                       "" ? (
@@ -1378,7 +1378,7 @@ const JoinAcSection: React.FC<{
                           className="btnSearch mypageSnsConnectBtn mypageSnsUnlinkBtn"
                           onClick={() => setConfirmUnlinkService("naver")}
                         >
-                          해지
+                          ?��?
                         </button>
                       ) : (
                         <button
@@ -1394,14 +1394,14 @@ const JoinAcSection: React.FC<{
                               if (url) window.location.href = url;
                             } catch {
                               showAlert(
-                                "알림",
-                                "네이버 연결 중 오류가 발생했습니다.",
+                                "?�림",
+                                "?�이�??�결 �??�류가 발생?�습?�다.",
                                 "danger",
                               );
                             }
                           }}
                         >
-                          연결
+                          ?�결
                         </button>
                       )}
                     </div>
@@ -1409,9 +1409,9 @@ const JoinAcSection: React.FC<{
                       <span className="mypageSnsLinkBadge mypageBadgeKakao">
                         <img
                           src="/images/userWeb/icon/ico_sns_kakao.png"
-                          alt="카카오"
+                          alt="카카??
                         />
-                        카카오
+                        카카??
                       </span>
                       {String(initialData?.detail?.kakaoAuthId ?? "").trim() !==
                       "" ? (
@@ -1420,7 +1420,7 @@ const JoinAcSection: React.FC<{
                           className="btnSearch mypageSnsConnectBtn mypageSnsUnlinkBtn"
                           onClick={() => setConfirmUnlinkService("kakao")}
                         >
-                          해지
+                          ?��?
                         </button>
                       ) : (
                         <button
@@ -1436,14 +1436,14 @@ const JoinAcSection: React.FC<{
                               if (url) window.location.href = url;
                             } catch {
                               showAlert(
-                                "알림",
-                                "카카오 연결 중 오류가 발생했습니다.",
+                                "?�림",
+                                "카카???�결 �??�류가 발생?�습?�다.",
                                 "danger",
                               );
                             }
                           }}
                         >
-                          연결
+                          ?�결
                         </button>
                       )}
                       {mode === "mypage" && (
@@ -1452,7 +1452,7 @@ const JoinAcSection: React.FC<{
                           className="mypageWithdrawPlain"
                           onClick={(e) => e.preventDefault()}
                         >
-                          회원탈퇴
+                          ?�원?�퇴
                         </a>
                       )}
                     </div>
@@ -1464,20 +1464,20 @@ const JoinAcSection: React.FC<{
           <div className="formActions">
             {mode !== "mypage" && (
               <button type="button" className="btnWhite" onClick={handleReset}>
-                초기화
+                초기??
               </button>
             )}
             <button
               type="submit"
               className="btnSubmit"
               disabled={submitLoading}
-              aria-label={mode === "mypage" ? "저장하기" : "신청하기"}
+              aria-label={mode === "mypage" ? "?�?�하�? : "?�청?�기"}
             >
               {submitLoading
-                ? "처리 중..."
+                ? "처리 �?.."
                 : mode === "mypage"
-                  ? "저장하기"
-                  : "신청하기"}
+                  ? "?�?�하�?
+                  : "?�청?�기"}
             </button>
           </div>
         </form>
@@ -1496,10 +1496,10 @@ const JoinAcSection: React.FC<{
       />
       <ConfirmModal
         isOpen={showConfirmDeletePic}
-        title="사진로고 삭제"
-        message="사진로고를 삭제하시겠습니까?"
-        confirmText="삭제"
-        cancelText="닫기"
+        title="?�진로고 ??��"
+        message="?�진로고�???��?�시겠습?�까?"
+        confirmText="??��"
+        cancelText="?�기"
         onConfirm={handleConfirmDeleteUserPic}
         onCancel={() => setShowConfirmDeletePic(false)}
       />
@@ -1507,21 +1507,21 @@ const JoinAcSection: React.FC<{
         isOpen={!!confirmDeleteFile}
         title={
           confirmDeleteFile?.type === "atta"
-            ? "첨부파일 삭제"
-            : "사업자등록증 삭제"
+            ? "첨�??�일 ??��"
+            : "?�업?�등록증 ??��"
         }
-        message="해당 파일을 삭제하시겠습니까?"
-        confirmText="삭제"
-        cancelText="닫기"
+        message="?�당 ?�일????��?�시겠습?�까?"
+        confirmText="??��"
+        cancelText="?�기"
         onConfirm={handleConfirmDeleteFile}
         onCancel={() => setConfirmDeleteFile(null)}
       />
       <ConfirmModal
         isOpen={confirmUnlinkService !== null}
-        title="간편로그인 연결 해지"
-        message="연결을 해지하시겠습니까?"
-        confirmText="해지"
-        cancelText="닫기"
+        title="간편로그???�결 ?��?"
+        message="?�결???��??�시겠습?�까?"
+        confirmText="?��?"
+        cancelText="?�기"
         onConfirm={async () => {
           const svc = confirmUnlinkService;
           setConfirmUnlinkService(null);
@@ -1529,18 +1529,18 @@ const JoinAcSection: React.FC<{
           try {
             await AuthService.unlinkOAuthLink(svc);
             showAlert(
-              "알림",
+              "?�림",
               svc === "naver"
-                ? "네이버 연결 해지되었습니다."
-                : "카카오 연결 해지되었습니다.",
+                ? "?�이�??�결 ?��??�었?�니??"
+                : "카카???�결 ?��??�었?�니??",
             );
             onDetailUpdated?.();
           } catch {
             showAlert(
-              "알림",
+              "?�림",
               svc === "naver"
-                ? "네이버 연결 해지 중 오류가 발생했습니다."
-                : "카카오 연결 해지 중 오류가 발생했습니다.",
+                ? "?�이�??�결 ?��? �??�류가 발생?�습?�다."
+                : "카카???�결 ?��? �??�류가 발생?�습?�다.",
               "danger",
             );
           }
@@ -1561,7 +1561,7 @@ const JoinAcSection: React.FC<{
   return (
     <>
       <section className="inner">
-        <div className="mainTitle">회원가입</div>
+        <div className="mainTitle">?�원가??/div>
         {formBlock}
       </section>
       {modals}

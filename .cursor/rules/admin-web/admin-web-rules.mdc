@@ -2099,7 +2099,7 @@ import {
 
 - Same mechanism: **`cacheBust`** → `_cb` query param.  
 - User list may use **`nttImgSaveNm`**; admin detail rows use per-attachment **`saveNm` → `serverSaveNm`**.  
-- If you add **`cacheBust` to admin list thumbnails** (`ArticleListThumbnailCell` or similar), pass a field that changes when the representative image file changes (mirror the user-web rule in `edream-front-rule.mdc`).
+- If you add **`cacheBust` to admin list thumbnails** (`ArticleListThumbnailCell` or similar), pass a field that changes when the representative image file changes (mirror the user-web rule in `waterb-front-rule.mdc`).
 
 ### Verification checklist (before merging archive admin changes)
 

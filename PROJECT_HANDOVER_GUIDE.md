@@ -1,4 +1,4 @@
-# edream_frontend 프로젝트 인수인계 가이드
+# waterb_frontend 프로젝트 인수인계 가이드
 
 ## 📋 목차
 
@@ -49,13 +49,13 @@
 │     │  └─ user-web-rules.mdc
 │     │
 │     └─ NO → 공통 규칙 확인
-│        └─ edream-front-rule.mdc
+│        └─ waterb-front-rule.mdc
 │
 └─ 공통 작업
    ├─ FSD 구조 확인?
-   │  └─ edream-front-rule.mdc
+   │  └─ waterb-front-rule.mdc
    ├─ 라우팅 (상세 페이지)?
-   │  └─ edream-front-rule.mdc (Query Parameter)
+   │  └─ waterb-front-rule.mdc (Query Parameter)
    └─ 리스트-상세 상태 유지?
       └─ admin-web-list-detail-state-persistence.mdc
 ```
@@ -114,7 +114,7 @@
 
 ### 프로젝트 소개
 
-**edream_frontend**는 Next.js 14 기반의 관리자 웹 애플리케이션입니다. Feature-Sliced Design (FSD) 아키텍처를 따르며, TypeScript와 Tailwind CSS를 사용합니다.
+**waterb_frontend**는 Next.js 14 기반의 관리자 웹 애플리케이션입니다. Feature-Sliced Design (FSD) 아키텍처를 따르며, TypeScript와 Tailwind CSS를 사용합니다.
 
 ### 주요 특징
 
@@ -128,7 +128,7 @@
 ### 프로젝트 구조
 
 ```
-edream_frontend/
+waterb_frontend/
 ├── src/
 │   ├── app/              # Next.js App Router (라우팅 레이어)
 │   │   ├── adminWeb/     # 관리자 웹 페이지
@@ -1062,7 +1062,7 @@ export default function DetailPage() {
 
 ### 주요 파일 위치
 
-- **메인 규칙**: `.cursor/rules/common/edream-front-rule.mdc`
+- **메인 규칙**: `.cursor/rules/common/waterb-front-rule.mdc`
 - **Admin Web 규칙**: `.cursor/rules/admin-web/admin-web-rules.mdc`
 - **User Web 규칙**: `.cursor/rules/user-web/user-web-rules.mdc`
 - **API 설정**: `src/shared/config/api.ts`
@@ -1085,7 +1085,7 @@ export default function DetailPage() {
 
 ## 마무리
 
-이 가이드는 edream_frontend 프로젝트의 핵심 내용을 다룹니다. 개발 시 다음을 기억하세요:
+이 가이드는 waterb_frontend 프로젝트의 핵심 내용을 다룹니다. 개발 시 다음을 기억하세요:
 
 1. **FSD 아키텍처 준수**: 레이어별 의존성 규칙을 지키세요
 2. **app 레이어 순수성**: 라우팅만 담당, UI 마크업 금지
@@ -1098,5 +1098,5 @@ export default function DetailPage() {
 ---
 
 **작성일**: 2025-01-22  
-**프로젝트**: edream_frontend  
+**프로젝트**: waterb_frontend  
 **버전**: 1.0.0

@@ -1,6 +1,12 @@
 /**
  * 사용자웹 전용 API 엔드포인트 + 공통(API_CONFIG, CODE, FILES) re-export
  * 사용자 페이지 수정 시 이 파일만 변경하면 되므로 관리자웹과 충돌을 줄일 수 있음.
+ *
+ * [WATERB_MIGRATION_B] `EDREAM_CERT_SIREN` re-export — `api.ts`에서 상수·이름 변경 시 이 import와
+ * 모든 사용처(`grep EDREAM_CERT_SIREN`)를 함께 수정.
+ *
+ * [WATERB_MIGRATION_C] `USER_GPKI` 아래 절대 URL(`…/edream/api/v1/…`)은 외부 행정망 연계 엔드포인트다.
+ * 경로가 실제로 바뀔 때만 수정하고, 운영/인증 담당과 확인할 것.
  */
 export { API_CONFIG, CODE, FILES, EDREAM_CERT_SIREN } from "./api";
 

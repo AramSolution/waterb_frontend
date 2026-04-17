@@ -10,7 +10,7 @@ import { SUPPORT_CHARGE_DEPT_CODE_ID } from "@/features/adminWeb/support/lib/sup
 import {
   ApiError,
   TokenUtils,
-  downloadEdreamAttachment,
+  downloadWaterbAttachment,
   decodeDisplayText,
 } from "@/shared/lib";
 import { formatPhoneWithHyphen } from "@/shared/lib/inputValidation";
@@ -34,18 +34,18 @@ export function useSupportUpdate() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const proId = searchParams?.get("proId") || "";
-  const from = searchParams?.get("from") || ""; // study: 스터디사업 상세(청소년 전용 필드 비노출)
+  const from = searchParams?.get("from") || ""; // study: ?�터?�사???�세(�?��???�용 ?�드 비노�?
 
   const [formData, setFormData] = useState<SupportRegisterFormData>({
     businessNm: "",
     businessCode: "",
-    statusCode: "01", // 기본값: 접수예정
+    statusCode: "01", // 기본�? ?�수?�정
     targetName: "",
     recruitTarget: [],
     proNature: [false, false, false, false, false],
     recruitStartDate: "",
     recruitEndDate: "",
-    recruitCount: "0", // 모집인원수 기본값 0
+    recruitCount: "0", // 모집?�원??기본�?0
     businessPeriodStart: "",
     businessPeriodEnd: "",
     businessSummary: "",
@@ -53,7 +53,7 @@ export function useSupportUpdate() {
     etcNm: "",
     applyMethod: "",
     homepage: "",
-    reqGb: [false, false, false, false, false], // [학생, 학부모, 학원, 멘토, 학교]
+    reqGb: [false, false, false, false, false], // [?�생, ?��?�? ?�원, 멘토, ?�교]
     chargeDept: "",
     chargePerson: "",
     contact: "",
@@ -72,26 +72,26 @@ export function useSupportUpdate() {
   const [messageDialogType, setMessageDialogType] = useState<
     "danger" | "success"
   >("success");
-  /** true: 저장(수정) 성공 후 확인 시 목록으로 이동. 첨부/홍보 파일 삭제 성공은 false로 상세 유지 */
+  /** true: ?�???�정) ?�공 ???�인 ??목록?�로 ?�동. 첨�?/?�보 ?�일 ??�� ?�공?� false�??�세 ?��? */
   const [messageDialogNavigateToList, setMessageDialogNavigateToList] =
     useState(false);
 
-  // 첨부파일 관련 상태
+  // 첨�??�일 관???�태
   const [selectedFiles, setSelectedFiles] = useState<
     { id: string; file: File }[]
   >([]);
   const [selectedPromoFile, setSelectedPromoFile] = useState<File | null>(null);
-  // 상세 조회 시 기존 파일 그룹 ID (수정 시 새 파일 추가/홍보파일 교체에 사용)
+  // ?�세 조회 ??기존 ?�일 그룹 ID (?�정 ?????�일 추�?/?�보?�일 교체???�용)
   const [existingProFileId, setExistingProFileId] = useState("");
   const [existingFileId, setExistingFileId] = useState("");
-  // 상세 조회 시 기존 홍보파일·첨부파일 목록 (화면 표시용)
+  // ?�세 조회 ??기존 ?�보?�일·첨�??�일 목록 (?�면 ?�시??
   const [existingProFileList, setExistingProFileList] = useState<
     SupportFileItem[]
   >([]);
   const [existingFileList, setExistingFileList] = useState<SupportFileItem[]>(
     [],
   );
-  // 상세 조회 시 기존 proGb 값 (수정 시 유지)
+  // ?�세 조회 ??기존 proGb �?(?�정 ???��?)
   const [existingProGb, setExistingProGb] = useState<string>("");
 
   const [chargeDeptOptions, setChargeDeptOptions] = useState<
@@ -99,7 +99,7 @@ export function useSupportUpdate() {
   >([]);
   const [chargeDeptLoading, setChargeDeptLoading] = useState(true);
 
-  // 파일 삭제 확인 다이얼로그 관련 상태
+  // ?�일 ??�� ?�인 ?�이?�로�?관???�태
   const [showDeleteConfirmDialog, setShowDeleteConfirmDialog] = useState(false);
   const [deleteConfirmType, setDeleteConfirmType] = useState<
     "proFile" | "file"
@@ -126,7 +126,7 @@ export function useSupportUpdate() {
           })),
         );
       } catch (err) {
-        console.error("담당부서 코드 조회 실패:", err);
+        console.error("?�당부??코드 조회 ?�패:", err);
         if (!cancelled) setChargeDeptOptions([]);
       } finally {
         if (!cancelled) setChargeDeptLoading(false);
@@ -139,11 +139,11 @@ export function useSupportUpdate() {
     };
   }, []);
 
-  // 상세 정보 조회
+  // ?�세 ?�보 조회
   useEffect(() => {
     const fetchDetail = async () => {
       if (!proId) {
-        setError("사업ID가 필요합니다.");
+        setError("?�업ID가 ?�요?�니??");
         setDetailLoading(false);
         return;
       }
@@ -153,7 +153,7 @@ export function useSupportUpdate() {
         setError("");
 
         if (!TokenUtils.isTokenValid()) {
-          setError("로그인이 필요합니다. 다시 로그인해주세요.");
+          setError("로그?�이 ?�요?�니?? ?�시 로그?�해주세??");
           setTimeout(() => {
             window.location.href = "/adminWeb/login";
           }, 2000);
@@ -169,7 +169,7 @@ export function useSupportUpdate() {
         if (response.result === "00" && response.detail) {
           const detail = response.detail;
 
-          // 사업대상 문자열을 배열로 변환 (DB 형식 E1|J1|H1|T1 그대로 사용)
+          // ?�업?�??문자?�을 배열�?변??(DB ?�식 E1|J1|H1|T1 그�?�??�용)
           const recruitTargetArray = detail.proTarget
             ? detail.proTarget
                 .split("|")
@@ -177,7 +177,7 @@ export function useSupportUpdate() {
                 .filter((v) => v !== "")
             : [];
 
-          // REQ_GB 파싱: y|y|n|n|n 형식 -> [학생, 학부모, 학원, 멘토, 학교] boolean 배열
+          // REQ_GB ?�싱: y|y|n|n|n ?�식 -> [?�생, ?��?�? ?�원, 멘토, ?�교] boolean 배열
           const parseReqGb = (reqGb: string): boolean[] => {
             if (!reqGb) return [false, false, false, false, false];
             const parts = reqGb.split("|");
@@ -195,7 +195,7 @@ export function useSupportUpdate() {
           setFormData({
             businessNm: decodeDisplayText(detail.proNm || ""),
             businessCode: detail.proId || "",
-            statusCode: detail.runSta || "01", // 진행상태 (runSta 사용)
+            statusCode: detail.runSta || "01", // 진행?�태 (runSta ?�용)
             targetName: decodeDisplayText(
               (detail as any).proTargetNm || "",
             ),
@@ -206,7 +206,7 @@ export function useSupportUpdate() {
             ),
             recruitStartDate: detail.recruitStartDate || "",
             recruitEndDate: detail.recruitEndDate || "",
-            recruitCount: detail.recCnt?.toString() || "0", // 모집인원수 없으면 0
+            recruitCount: detail.recCnt?.toString() || "0", // 모집?�원???�으�?0
             businessPeriodStart: fromYYYYMMDD(
               (detail as { proFromDd?: string }).proFromDd,
             ),
@@ -239,7 +239,7 @@ export function useSupportUpdate() {
                   ),
                 )
               : "",
-            // 스터디사업 전용 필드
+            // ?�터?�사???�용 ?�드
             basicYn: (detail as any).basicYn || "",
             poorYn: (detail as any).poorYn || "",
             singleYn: (detail as any).singleYn || "",
@@ -247,7 +247,7 @@ export function useSupportUpdate() {
           });
           setExistingProFileId(detail.proFileId ?? "");
           setExistingFileId(detail.fileId ?? "");
-          // 기존 proGb 값 저장 (수정 시 유지)
+          // 기존 proGb �??�??(?�정 ???��?)
           setExistingProGb(detail.proGb || "");
           const res = response as {
             proFileList?: SupportFileItem[];
@@ -258,23 +258,23 @@ export function useSupportUpdate() {
           );
           setExistingFileList(Array.isArray(res.fileList) ? res.fileList : []);
         } else {
-          setError("지원사업 정보를 불러올 수 없습니다.");
+          setError("지?�사???�보�?불러?????�습?�다.");
         }
       } catch (err) {
-        console.error("지원사업 상세 조회 실패:", err);
+        console.error("지?�사???�세 조회 ?�패:", err);
         if (err instanceof ApiError) {
           if (err.status === 401) {
-            setError("인증에 실패했습니다. 다시 로그인해주세요.");
+            setError("?�증???�패?�습?�다. ?�시 로그?�해주세??");
             setTimeout(() => {
               window.location.href = "/adminWeb/login";
             }, 2000);
           } else {
             setError(
-              err.message || "지원사업 정보를 불러오는 중 오류가 발생했습니다.",
+              err.message || "지?�사???�보�?불러?�는 �??�류가 발생?�습?�다.",
             );
           }
         } else {
-          setError("지원사업 정보를 불러오는 중 오류가 발생했습니다.");
+          setError("지?�사???�보�?불러?�는 �??�류가 발생?�습?�다.");
         }
       } finally {
         setDetailLoading(false);
@@ -304,8 +304,7 @@ export function useSupportUpdate() {
       [name]: nextValue,
     }));
 
-    // 에러 메시지 초기화
-    if (errors[name as keyof ValidationErrors]) {
+    // ?�러 메시지 초기??    if (errors[name as keyof ValidationErrors]) {
       setErrors((prev) => ({
         ...prev,
         [name]: undefined,
@@ -330,8 +329,7 @@ export function useSupportUpdate() {
       }
     });
 
-    // 에러 메시지 초기화
-    if (errors.recruitTarget) {
+    // ?�러 메시지 초기??    if (errors.recruitTarget) {
       setErrors((prev) => ({
         ...prev,
         recruitTarget: undefined,
@@ -339,12 +337,10 @@ export function useSupportUpdate() {
     }
   };
 
-  // 스터디사업: 사업구분(마중물/희망) 체크박스 변경 핸들러
-  const handleProgramTypeChange = (value: string, checked: boolean) => {
+  // ?�터?�사?? ?�업구분(마중�??�망) 체크박스 변�??�들??  const handleProgramTypeChange = (value: string, checked: boolean) => {
     setFormData((prev) => {
       if (checked) {
-        // 하나만 선택 가능: 새 값으로 대체
-        return {
+        // ?�나�??�택 가?? ??값으�??��?        return {
           ...prev,
           programType: [value],
         };
@@ -364,8 +360,7 @@ export function useSupportUpdate() {
     }
   };
 
-  // 신청구분 체크박스 변경 핸들러
-  const handleReqGbChange = (index: number, checked: boolean) => {
+  // ?�청구분 체크박스 변�??�들??  const handleReqGbChange = (index: number, checked: boolean) => {
     setFormData((prev) => {
       const newReqGb = [...prev.reqGb];
       newReqGb[index] = checked;
@@ -394,11 +389,10 @@ export function useSupportUpdate() {
     }
   };
 
-  // 그룹별 전체 선택/해제 핸들러
-  const handleGroupSelectAll = (groupValues: string[], checked: boolean) => {
+  // 그룹�??�체 ?�택/?�제 ?�들??  const handleGroupSelectAll = (groupValues: string[], checked: boolean) => {
     setFormData((prev) => {
       if (checked) {
-        // 그룹 내 모든 항목 추가 (중복 제거)
+        // 그룹 ??모든 ??�� 추�? (중복 ?�거)
         const newTargets = [...prev.recruitTarget];
         groupValues.forEach((value) => {
           if (!newTargets.includes(value)) {
@@ -410,7 +404,7 @@ export function useSupportUpdate() {
           recruitTarget: newTargets,
         };
       } else {
-        // 그룹 내 모든 항목 제거
+        // 그룹 ??모든 ??�� ?�거
         return {
           ...prev,
           recruitTarget: prev.recruitTarget.filter(
@@ -420,8 +414,7 @@ export function useSupportUpdate() {
       }
     });
 
-    // 에러 메시지 초기화
-    if (errors.recruitTarget) {
+    // ?�러 메시지 초기??    if (errors.recruitTarget) {
       setErrors((prev) => ({
         ...prev,
         recruitTarget: undefined,
@@ -429,7 +422,7 @@ export function useSupportUpdate() {
     }
   };
 
-  // 그룹 전체 선택 상태 확인
+  // 그룹 ?�체 ?�택 ?�태 ?�인
   const isGroupAllSelected = (groupValues: string[]): boolean => {
     return groupValues.every((value) => formData.recruitTarget.includes(value));
   };
@@ -458,7 +451,7 @@ export function useSupportUpdate() {
     setSelectedPromoFile(null);
   };
 
-  // 홍보파일 삭제 확인 다이얼로그 표시
+  // ?�보?�일 ??�� ?�인 ?�이?�로�??�시
   const handleDeleteProFileClick = (
     fileId: string | number,
     seq: string | number,
@@ -468,7 +461,7 @@ export function useSupportUpdate() {
     setShowDeleteConfirmDialog(true);
   };
 
-  // 첨부파일 삭제 확인 다이얼로그 표시
+  // 첨�??�일 ??�� ?�인 ?�이?�로�??�시
   const handleDeleteFileClick = (
     fileId: string | number,
     seq: string | number,
@@ -478,7 +471,7 @@ export function useSupportUpdate() {
     setShowDeleteConfirmDialog(true);
   };
 
-  /** 저장된 홍보파일 1건 삭제 (API 호출 후 목록에서 제거) */
+  /** ?�?�된 ?�보?�일 1�???�� (API ?�출 ??목록?�서 ?�거) */
   const deleteExistingProFile = async (
     fileId: string | number,
     seq: string | number,
@@ -496,34 +489,34 @@ export function useSupportUpdate() {
           if (next.length === 0) setExistingProFileId("");
           return next;
         });
-        setMessageDialogTitle("삭제 완료");
+        setMessageDialogTitle("??�� ?�료");
         setMessageDialogMessage(
-          response.message || "홍보파일이 삭제되었습니다.",
+          response.message || "?�보?�일????��?�었?�니??",
         );
         setMessageDialogNavigateToList(false);
         setMessageDialogType("success");
         setShowMessageDialog(true);
       } else {
-        setMessageDialogTitle("삭제 실패");
+        setMessageDialogTitle("??�� ?�패");
         setMessageDialogMessage(
-          response.message || "홍보파일 삭제에 실패했습니다.",
+          response.message || "?�보?�일 ??��???�패?�습?�다.",
         );
         setMessageDialogType("danger");
         setShowMessageDialog(true);
       }
     } catch (err) {
-      setMessageDialogTitle("삭제 실패");
+      setMessageDialogTitle("??�� ?�패");
       setMessageDialogMessage(
         err instanceof ApiError
           ? err.message
-          : "홍보파일 삭제 중 오류가 발생했습니다.",
+          : "?�보?�일 ??�� �??�류가 발생?�습?�다.",
       );
       setMessageDialogType("danger");
       setShowMessageDialog(true);
     }
   };
 
-  /** 저장된 첨부파일 1건 삭제 (API 호출 후 목록에서 제거) */
+  /** ?�?�된 첨�??�일 1�???�� (API ?�출 ??목록?�서 ?�거) */
   const deleteExistingFile = async (
     fileId: string | number,
     seq: string | number,
@@ -541,27 +534,27 @@ export function useSupportUpdate() {
           if (next.length === 0) setExistingFileId("");
           return next;
         });
-        setMessageDialogTitle("삭제 완료");
+        setMessageDialogTitle("??�� ?�료");
         setMessageDialogMessage(
-          response.message || "첨부파일이 삭제되었습니다.",
+          response.message || "첨�??�일????��?�었?�니??",
         );
         setMessageDialogNavigateToList(false);
         setMessageDialogType("success");
         setShowMessageDialog(true);
       } else {
-        setMessageDialogTitle("삭제 실패");
+        setMessageDialogTitle("??�� ?�패");
         setMessageDialogMessage(
-          response.message || "첨부파일 삭제에 실패했습니다.",
+          response.message || "첨�??�일 ??��???�패?�습?�다.",
         );
         setMessageDialogType("danger");
         setShowMessageDialog(true);
       }
     } catch (err) {
-      setMessageDialogTitle("삭제 실패");
+      setMessageDialogTitle("??�� ?�패");
       setMessageDialogMessage(
         err instanceof ApiError
           ? err.message
-          : "첨부파일 삭제 중 오류가 발생했습니다.",
+          : "첨�??�일 ??�� �??�류가 발생?�습?�다.",
       );
       setMessageDialogType("danger");
       setShowMessageDialog(true);
@@ -572,64 +565,62 @@ export function useSupportUpdate() {
     const newErrors: ValidationErrors = {};
     let isValid = true;
 
-    // 사업명 필수 체크
+    // ?�업�??�수 체크
     if (!formData.businessNm || formData.businessNm.trim() === "") {
-      newErrors.businessNm = "사업명을 입력해주세요.";
+      newErrors.businessNm = "?�업명을 ?�력?�주?�요.";
       isValid = false;
     }
 
     if (!formData.businessPeriodStart || formData.businessPeriodStart.trim() === "") {
-      newErrors.businessPeriodStart = "시작일을 선택해주세요.";
+      newErrors.businessPeriodStart = "?�작?�을 ?�택?�주?�요.";
       isValid = false;
     }
     if (!formData.businessPeriodEnd || formData.businessPeriodEnd.trim() === "") {
-      newErrors.businessPeriodEnd = "종료일을 선택해주세요.";
+      newErrors.businessPeriodEnd = "종료?�을 ?�택?�주?�요.";
       isValid = false;
     }
     if (formData.businessPeriodStart && formData.businessPeriodEnd) {
       if (formData.businessPeriodStart > formData.businessPeriodEnd) {
-        newErrors.businessPeriodEnd = "종료일은 시작일 이후여야 합니다.";
+        newErrors.businessPeriodEnd = "종료?��? ?�작???�후?�야 ?�니??";
         isValid = false;
       }
     }
 
-    // 모집기간 시작일 필수 체크
+    // 모집기간 ?�작???�수 체크
     if (!formData.recruitStartDate || formData.recruitStartDate.trim() === "") {
-      newErrors.recruitStartDate = "시작일을 선택해주세요.";
+      newErrors.recruitStartDate = "?�작?�을 ?�택?�주?�요.";
       isValid = false;
     }
 
-    // 모집기간 종료일 필수 체크
+    // 모집기간 종료???�수 체크
     if (!formData.recruitEndDate || formData.recruitEndDate.trim() === "") {
-      newErrors.recruitEndDate = "종료일을 선택해주세요.";
+      newErrors.recruitEndDate = "종료?�을 ?�택?�주?�요.";
       isValid = false;
     }
 
-    // 모집기간 날짜 순서 검증
-    if (formData.recruitStartDate && formData.recruitEndDate) {
+    // 모집기간 ?�짜 ?�서 검�?    if (formData.recruitStartDate && formData.recruitEndDate) {
       if (formData.recruitStartDate > formData.recruitEndDate) {
-        newErrors.recruitEndDate = "종료일은 시작일 이후여야 합니다.";
+        newErrors.recruitEndDate = "종료?��? ?�작???�후?�야 ?�니??";
         isValid = false;
       }
     }
 
-    // 기타내용 최대 512자
-    if (formData.etcNm && formData.etcNm.trim().length > 512) {
-      newErrors.etcNm = "기타내용은 512자 이내로 입력해주세요.";
+    // 기�??�용 최�? 512??    if (formData.etcNm && formData.etcNm.trim().length > 512) {
+      newErrors.etcNm = "기�??�용?� 512???�내�??�력?�주?�요.";
       isValid = false;
     }
 
-    // 스터디사업인 경우 사업구분(마중물/희망) 필수 체크
+    // ?�터?�사?�인 경우 ?�업구분(마중�??�망) ?�수 체크
     if (existingProGb === "02") {
       if (!formData.programType || formData.programType.length === 0) {
-        newErrors.programType = "사업구분을 선택해주세요.";
+        newErrors.programType = "?�업구분???�택?�주?�요.";
         isValid = false;
       }
     }
 
-    // 신청구분: 화면에 노출되는 학생·학부모 중 하나 이상
+    // ?�청구분: ?�면???�출?�는 ?�생·?��?�?�??�나 ?�상
     if (!formData.reqGb[0] && !formData.reqGb[1]) {
-      newErrors.reqGb = "학생 또는 학부모/일반을 하나 이상 선택해주세요.";
+      newErrors.reqGb = "?�생 ?�는 ?��?�??�반???�나 ?�상 ?�택?�주?�요.";
       isValid = false;
     }
 
@@ -671,7 +662,7 @@ export function useSupportUpdate() {
       setLoading(true);
       setError("");
 
-      // REQ_GB 변환: [학생, 학부모, 학원, 멘토, 학교] — 5자리
+      // REQ_GB 변?? [?�생, ?��?�? ?�원, 멘토, ?�교] ??5?�리
       const reqGbString = [
         formData.reqGb[0],
         formData.reqGb[1],
@@ -682,18 +673,18 @@ export function useSupportUpdate() {
         .map((checked) => (checked ? "Y" : "N"))
         .join("|");
 
-      // 스터디사업: proGb=02, eduGb=01/02(마중물/희망)
+      // ?�터?�사?? proGb=02, eduGb=01/02(마중�??�망)
       const eduGbCode = formData.programType[0] || "";
 
-      // 백엔드 API 호출 (새 홍보사진·첨부파일 전달 시 ARTFILE 저장 후 PRO_FILE_ID, FILE_ID 반영)
+      // 백엔??API ?�출 (???�보?�진·첨�??�일 ?�달 ??ARTFILE ?�????PRO_FILE_ID, FILE_ID 반영)
       const response = await SupportService.updateSupport({
         proId: proId,
-        proGb: existingProGb || "01", // 기존 proGb 값 유지 (없으면 기본값: 01)
+        proGb: existingProGb || "01", // 기존 proGb �??��? (?�으�?기본�? 01)
         proType: "01",
         eduGb: eduGbCode,
         proNm: formData.businessNm.trim(),
         proTargetNm: formData.targetName.trim() || undefined,
-        proTarget: formData.recruitTarget.join(","), // ELEMENTARY_1,HIGH_1 형식 (내부에서 E1,H1로 변환)
+        proTarget: formData.recruitTarget.join(","), // ELEMENTARY_1,HIGH_1 ?�식 (?��??�서 E1,H1�?변??
         recFromDd: formData.recruitStartDate,
         recToDd: formData.recruitEndDate,
         recCnt: formData.recruitCount ? parseInt(formData.recruitCount, 10) : 0,
@@ -704,8 +695,8 @@ export function useSupportUpdate() {
         etcNm: formData.etcNm.trim().slice(0, 512),
         proFileId: existingProFileId,
         fileId: existingFileId,
-        runSta: formData.statusCode || "01", // RUN_STA: 01/02/04/99 (샘플업무)
-        sttusCode: "A", // 사용여부 A(사용)/D(삭제)
+        runSta: formData.statusCode || "01", // RUN_STA: 01/02/04/99 (?�플?�무)
+        sttusCode: "A", // ?�용?��? A(?�용)/D(??��)
         reqGb: reqGbString,
         proPart: ynPipeFromBooleans(formData.proNature),
         proDepa: formData.chargeDept.trim(),
@@ -713,7 +704,7 @@ export function useSupportUpdate() {
         proTel: formData.contact.trim(),
         proHow: formData.applyMethod.trim(),
         proPage: formData.homepage.trim(),
-        // 스터디사업 전용 필드 (없으면 N으로 처리)
+        // ?�터?�사???�용 ?�드 (?�으�?N?�로 처리)
         basicYn: formData.basicYn || "N",
         poorYn: formData.poorYn || "N",
         singleYn: formData.singleYn || "N",
@@ -725,33 +716,33 @@ export function useSupportUpdate() {
       });
 
       if (response.result === "00") {
-        setMessageDialogTitle("수정 완료");
+        setMessageDialogTitle("?�정 ?�료");
         setMessageDialogMessage(
-          response.message || "지원사업이 성공적으로 수정되었습니다.",
+          response.message || "지?�사?�이 ?�공?�으�??�정?�었?�니??",
         );
         setMessageDialogNavigateToList(true);
         setMessageDialogType("success");
         setShowMessageDialog(true);
       } else {
-        setMessageDialogTitle("수정 실패");
+        setMessageDialogTitle("?�정 ?�패");
         setMessageDialogMessage(
-          response.message || "지원사업 수정 중 오류가 발생했습니다.",
+          response.message || "지?�사???�정 �??�류가 발생?�습?�다.",
         );
         setMessageDialogType("danger");
         setShowMessageDialog(true);
       }
     } catch (err) {
-      console.error("지원사업 수정 오류:", err);
+      console.error("지?�사???�정 ?�류:", err);
       if (err instanceof ApiError) {
-        setMessageDialogTitle("수정 실패");
+        setMessageDialogTitle("?�정 ?�패");
         setMessageDialogMessage(
-          err.message || "지원사업 수정 중 오류가 발생했습니다.",
+          err.message || "지?�사???�정 �??�류가 발생?�습?�다.",
         );
         setMessageDialogType("danger");
       } else {
-        setMessageDialogTitle("수정 실패");
+        setMessageDialogTitle("?�정 ?�패");
         setMessageDialogMessage(
-          "지원사업 수정 중 알 수 없는 오류가 발생했습니다.",
+          "지?�사???�정 �??????�는 ?�류가 발생?�습?�다.",
         );
         setMessageDialogType("danger");
       }
@@ -770,28 +761,28 @@ export function useSupportUpdate() {
     setMessageDialogNavigateToList(false);
   };
 
-  /** 저장된 홍보/첨부 파일 다운로드 (파일명 클릭 시) */
+  /** ?�?�된 ?�보/첨�? ?�일 ?�운로드 (?�일�??�릭 ?? */
   const downloadExistingAttachment = async (
     fileId: string | number,
     seq: string | number,
     fallbackFileName?: string,
   ) => {
     if (fileId === "" || fileId == null || seq === "" || seq == null) {
-      setMessageDialogTitle("다운로드 실패");
-      setMessageDialogMessage("파일 정보가 올바르지 않습니다.");
+      setMessageDialogTitle("?�운로드 ?�패");
+      setMessageDialogMessage("?�일 ?�보가 ?�바르�? ?�습?�다.");
       setMessageDialogType("danger");
       setMessageDialogNavigateToList(false);
       setShowMessageDialog(true);
       return;
     }
     try {
-      await downloadEdreamAttachment(fileId, seq, fallbackFileName);
+      await downloadWaterbAttachment(fileId, seq, fallbackFileName);
     } catch (err) {
-      setMessageDialogTitle("다운로드 실패");
+      setMessageDialogTitle("?�운로드 ?�패");
       setMessageDialogMessage(
         err instanceof Error
           ? err.message
-          : "파일 다운로드 중 오류가 발생했습니다.",
+          : "?�일 ?�운로드 �??�류가 발생?�습?�다.",
       );
       setMessageDialogType("danger");
       setMessageDialogNavigateToList(false);
@@ -838,8 +829,7 @@ export function useSupportUpdate() {
     handleSubmit,
     handleMessageDialogClose,
     handleCancel,
-    // 삭제 확인 다이얼로그
-    showDeleteConfirmDialog,
+    // ??�� ?�인 ?�이?�로�?    showDeleteConfirmDialog,
     setShowDeleteConfirmDialog,
     deleteConfirmType,
     fileToDelete,
