@@ -59,22 +59,22 @@ type DetailState = {
   replyContent?: string | null;
   replyDate?: string | null;
   replyNtcrNm?: string | null;
-  /** ?�음 ?�카?�브 ???�???��?지 ?�일 그룹 ID (`nttImgFiles` ?�을 ???�일 URL?? */
+  /** 이음 아카이브 — 대표 이미지 파일 그룹 ID (`nttImgFiles` 없을 때 단일 URL용) */
   nttImgFileId?: string | null;
-  /** ?�음 ?�카?�브 ??그룹 ???��?지 목록(?�라?�더, seq ?�름차순) */
+  /** 이음 아카이브 — 그룹 내 이미지 목록(슬라이더, seq 오름차순) */
   nttImgFiles?: AttacheFileItem[];
-  /** ?�음 ?�카?�브 infoTable: 명칭 NTT_DATA1·?�개 NTT_DATA6·?�료출처 NTT_DATA5 */
+  /** 이음 아카이브 infoTable: 명칭 NTT_DATA1·소개 NTT_DATA6·자료출처 NTT_DATA5 */
   nttData1?: string | null;
   nttData5?: string | null;
   nttData6?: string | null;
 };
 
 const TAB_HEAD: Record<string, string> = {
-  notice: "공�??�항",
-  project: "지?�사??,
-  eumArchive: "?�음 ?�카?�브",
+  notice: "공지사항",
+  project: "지원사업",
+  eumArchive: "이음 아카이브",
   inquiry: "1:1 문의",
-  guide: "?�반 ?�료??,
+  guide: "일반 자료실",
 };
 
 function fileDownloadHref(fileId: string, seq: number): string {
@@ -100,7 +100,7 @@ function fileTypeForIcon(ext: string): string {
 
 const EUM_ARCHIVE_PLACEHOLDER_IMG = "/images/userWeb/img_noImg.png";
 
-/** ?�음 ?�카?�브 ?�단 ?��?지 ?�라?�드 URL 목록(1???�상). */
+/** 이음 아카이브 상단 이미지 슬라이드 URL 목록(1장 이상). */
 function buildEumArchiveImageSlides(detail: DetailState): string[] {
   const files = detail.nttImgFiles ?? [];
   const urls = files
@@ -132,19 +132,19 @@ function stripHtml(html: string | null | undefined): string {
 
 function displayArchiveMeta(v: string | null | undefined): string {
   const t = (v ?? "").trim();
-  return t === "" ? "?? : t;
+  return t === "" ? "—" : t;
 }
 
 /**
- * ?�음 ?�카?�브 infoTable ?�개·?�료출처: trim ??문자???�체가 ?��? URL???�만 href.
- * `http:` / `https:`�??�용(`javascript:` ??차단). `www.`·?�킴 ?�는 host.tld??`https://` 보강.
+ * 이음 아카이브 infoTable 소개·자료출처: trim 후 문자열 전체가 외부 URL일 때만 href.
+ * `http:` / `https:`만 허용(`javascript:` 등 차단). `www.`·스킴 없는 host.tld는 `https://` 보강.
  */
 const ARCHIVE_WHOLE_STRING_WWW = /^www\.[^\s]+$/i;
 const ARCHIVE_WHOLE_STRING_HOST =
   /^[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,62}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,62}[a-zA-Z0-9])?)+(?:\/[^\s]*)?$/i;
 
 function safeExternalHrefFromWholeDisplayText(displayText: string): string | null {
-  if (!displayText || displayText === "??) return null;
+  if (!displayText || displayText === "—") return null;
   const t = displayText.trim();
   if (!t) return null;
 
@@ -257,7 +257,7 @@ function listTabToActiveNav(tab: string): CommunityChromeActiveNav {
 }
 
 /**
- * 커�??�티 ?�세 ??source/gunsan/noticeView2.html ?�이?�웃
+ * 커뮤니티 상세 — source/gunsan/noticeView2.html 레이아웃
  */
 export default function CommunityViewSection() {
   const params = useParams();
@@ -279,7 +279,7 @@ export default function CommunityViewSection() {
 
   const listTab = getListTabFromBbsId(detail?.bbsId ?? bbsIdParam);
   const listHref = `/userWeb/community?tab=${listTab}&page=${page}`;
-  const headTit = TAB_HEAD[listTab] ?? "공�??�항";
+  const headTit = TAB_HEAD[listTab] ?? "공지사항";
   const activeNav = listTabToActiveNav(listTab);
 
   const detailPath = useCallback(
@@ -291,13 +291,13 @@ export default function CommunityViewSection() {
   useEffect(() => {
     if (!nttIdParam || !bbsIdParam) {
       setLoading(false);
-      setError("?�못???�근?�니??");
+      setError("잘못된 접근입니다.");
       return;
     }
     const nttId = parseInt(nttIdParam, 10);
     if (Number.isNaN(nttId)) {
       setLoading(false);
-      setError("?�못??게시글 번호?�니??");
+      setError("잘못된 게시글 번호입니다.");
       return;
     }
 
@@ -311,7 +311,7 @@ export default function CommunityViewSection() {
       ? getArchiveArticleDetailNav(bbsIdParam, nttId).then((nav) => {
           const mapped = mapArchiveNavToDetailState(nav);
           if (!mapped) {
-            throw new ApiError(404, "게시글??찾을 ???�습?�다.");
+            throw new ApiError(404, "게시글을 찾을 수 없습니다.");
           }
           return mapped;
         })
@@ -331,8 +331,8 @@ export default function CommunityViewSection() {
           setDetail(null);
           setError(
             err instanceof ApiError && err.status === 404
-              ? "게시글??찾을 ???�습?�다."
-              : "게시글??불러?��? 못했?�니??",
+              ? "게시글을 찾을 수 없습니다."
+              : "게시글을 불러오지 못했습니다.",
           );
         }
       })
@@ -371,7 +371,7 @@ export default function CommunityViewSection() {
         await navigator.share({ title, url });
       }
     } catch {
-      /* 취소 ??*/
+      /* 취소 등 */
     }
   }, []);
 
@@ -398,10 +398,10 @@ export default function CommunityViewSection() {
   if (loading) {
     return wrap(
       <>
-        <p className="loading">?�시�?기다??주세??</p>
+        <p className="loading">잠시만 기다려 주세요.</p>
         <div className="mainViewBtnArea">
           <Link href={listHref} className="btnList">
-            목록?�로
+            목록으로
           </Link>
         </div>
       </>,
@@ -411,17 +411,17 @@ export default function CommunityViewSection() {
   if (error || !detail) {
     return wrap(
       <>
-        <p className="loading">{error ?? "게시글??찾을 ???�습?�다."}</p>
+        <p className="loading">{error ?? "게시글을 찾을 수 없습니다."}</p>
         <div className="mainViewBtnArea">
           <Link href={listHref} className="btnList">
-            목록?�로
+            목록으로
           </Link>
         </div>
       </>,
     );
   }
 
-  const badgeLabel = detail.noticeAt === "Y" ? "공�?" : "";
+  const badgeLabel = detail.noticeAt === "Y" ? "공지" : "";
   const title = detail.nttSj ?? "";
   const infoView = detail.rdcnt != null ? String(detail.rdcnt) : "0";
   const bodyHtml = getArticleContentHtml(detail.nttCn);
@@ -429,7 +429,7 @@ export default function CommunityViewSection() {
   const files = attacheFiles.map((f) => {
     const ext = fileExt(f.orgfNm ?? "");
     return {
-      name: f.orgfNm ?? "?�일",
+      name: f.orgfNm ?? "파일",
       fileId: String(f.fileId),
       seq: f.seq,
       type: fileTypeForIcon(ext),
@@ -470,7 +470,7 @@ export default function CommunityViewSection() {
           <button
             type="button"
             className="btnAction"
-            aria-label={copyDone ? "URL 복사?? : "URL 복사"}
+            aria-label={copyDone ? "URL 복사됨" : "URL 복사"}
             onClick={() => void handleCopyUrl()}
           >
             <i className="icoAttachment" aria-hidden />
@@ -478,7 +478,7 @@ export default function CommunityViewSection() {
           <button
             type="button"
             className="btnAction"
-            aria-label="?�이지 ?�쇄?�기"
+            aria-label="페이지 인쇄하기"
             onClick={handlePrint}
           >
             <i className="icoPrint" aria-hidden />
@@ -491,7 +491,7 @@ export default function CommunityViewSection() {
                 <button
                   type="button"
                   className="swiper-button-prev"
-                  aria-label="?�전 ?��?지"
+                  aria-label="이전 이미지"
                   disabled={!canPrevImg}
                   onClick={() =>
                     setEumArchiveImgIdx((i) => (i > 0 ? i - 1 : i))
@@ -509,7 +509,7 @@ export default function CommunityViewSection() {
                 <button
                   type="button"
                   className="swiper-button-next"
-                  aria-label="?�음 ?��?지"
+                  aria-label="다음 이미지"
                   disabled={!canNextImg}
                   onClick={() =>
                     setEumArchiveImgIdx((i) =>
@@ -522,7 +522,7 @@ export default function CommunityViewSection() {
             <div className="infoArea">
               <table className="infoTable">
                 <caption className="blind">
-                  ?�물 ?�세 ?�보: 명칭, ?�개, ?�료출처 ?�함
+                  유물 상세 정보: 명칭, 소개, 자료출처 포함
                 </caption>
                 <colgroup>
                   <col style={{ width: "30%" }} />
@@ -534,13 +534,13 @@ export default function CommunityViewSection() {
                     <td>{nameDisplay}</td>
                   </tr>
                   <tr>
-                    <th scope="row">?�개</th>
+                    <th scope="row">소개</th>
                     <td className="archiveIntroCell">
                       {renderArchiveMetaWithOptionalLink(introDisplay)}
                     </td>
                   </tr>
                   <tr>
-                    <th scope="row">?�료출처</th>
+                    <th scope="row">자료출처</th>
                     <td>
                       {renderArchiveMetaWithOptionalLink(sourceDisplay)}
                     </td>
@@ -550,7 +550,7 @@ export default function CommunityViewSection() {
             </div>
           </div>
           <section className="detailContent">
-            <div className="contentTitle">?�용</div>
+            <div className="contentTitle">내용</div>
             <div className="contentText">
               {bodyHtml ? (
                 <div
@@ -558,7 +558,7 @@ export default function CommunityViewSection() {
                   dangerouslySetInnerHTML={{ __html: bodyHtml }}
                 />
               ) : (
-                <p>?�용???�습?�다.</p>
+                <p>내용이 없습니다.</p>
               )}
             </div>
           </section>
@@ -567,7 +567,7 @@ export default function CommunityViewSection() {
           <div className="mainViewDetailNav">
             {detail.nextArticle?.nttId != null && (
               <div className="navRow next">
-                <span className="navLabel">?�음글</span>
+                <span className="navLabel">다음글</span>
                 <Link
                   href={detailPath(detail.nextArticle.nttId, bbsForNav)}
                   className="navTitle"
@@ -578,7 +578,7 @@ export default function CommunityViewSection() {
             )}
             {detail.prevArticle?.nttId != null && (
               <div className="navRow prev">
-                <span className="navLabel">?�전글</span>
+                <span className="navLabel">이전글</span>
                 <Link
                   href={detailPath(detail.prevArticle.nttId, bbsForNav)}
                   className="navTitle"
@@ -591,7 +591,7 @@ export default function CommunityViewSection() {
         ) : null}
         <div className="mainViewBtnArea">
           <Link href={listHref} className="btnList">
-            목록?�로
+            목록으로
           </Link>
         </div>
       </div>,
@@ -623,7 +623,7 @@ export default function CommunityViewSection() {
             <button
               type="button"
               className="btnAction"
-              aria-label={copyDone ? "URL 복사?? : "URL 복사"}
+              aria-label={copyDone ? "URL 복사됨" : "URL 복사"}
               onClick={() => void handleCopyUrl()}
             >
               <i className="icoAttachment" aria-hidden />
@@ -631,7 +631,7 @@ export default function CommunityViewSection() {
             <button
               type="button"
               className="btnAction"
-              aria-label="?�이지 ?�쇄?�기"
+              aria-label="페이지 인쇄하기"
               onClick={handlePrint}
             >
               <i className="icoPrint" aria-hidden />
@@ -640,11 +640,11 @@ export default function CommunityViewSection() {
         </div>
         <div className="mainViewDetailInfo">
           <dl>
-            <dt>?�성??/dt>
+            <dt>작성자</dt>
             <dd className="infoName">{detail.ntcrNm ?? ""}</dd>
-            <dt>?�성??/dt>
+            <dt>작성일</dt>
             <dd className="infoDate">{detail.ntcrDt ?? ""}</dd>
-            <dt>조회??/dt>
+            <dt>조회수</dt>
             <dd className="infoView">조회 {infoView}</dd>
           </dl>
         </div>
@@ -652,7 +652,7 @@ export default function CommunityViewSection() {
       <article className="mainViewDetailBody">
         <div className="bizFile">
           <div className="title" id="communityFileDownloadTitle">
-            첨�??�일
+            첨부파일
           </div>
           {files.length > 0 ? (
             <ul
@@ -666,7 +666,7 @@ export default function CommunityViewSection() {
                     <a
                       href={viewUrl}
                       className={`file ${file.type}`}
-                      title={`${file.name} ?�운로드`}
+                      title={`${file.name} 다운로드`}
                       onClick={(e) => {
                         e.preventDefault();
                         void downloadWaterbAttachmentOrOpenView(
@@ -679,7 +679,7 @@ export default function CommunityViewSection() {
                     >
                       <span className="fileIcon" aria-hidden />
                       <span className="fileName">{file.name}</span>
-                      <span className="sr-only">(?�운로드)</span>
+                      <span className="sr-only">(다운로드)</span>
                     </a>
                   </li>
                 );
@@ -700,14 +700,14 @@ export default function CommunityViewSection() {
               dangerouslySetInnerHTML={{ __html: bodyHtml }}
             />
           ) : (
-            <p>?�용???�습?�다.</p>
+            <p>내용이 없습니다.</p>
           )}
         </div>
       </article>
       {hasReply && (
         <div className="replyBox">
           <div className="replyHeader">
-            <div className="adminLabel">관리자 ?��?</div>
+            <div className="adminLabel">관리자 답변</div>
             <div className="replyDate">{detail.replyDate ?? ""}</div>
           </div>
           <div
@@ -722,7 +722,7 @@ export default function CommunityViewSection() {
         <div className="mainViewDetailNav">
           {detail.nextArticle?.nttId != null && (
             <div className="navRow next">
-              <span className="navLabel">?�음글</span>
+              <span className="navLabel">다음글</span>
               <Link
                 href={detailPath(detail.nextArticle.nttId, bbsForNav)}
                 className="navTitle"
@@ -733,7 +733,7 @@ export default function CommunityViewSection() {
           )}
           {detail.prevArticle?.nttId != null && (
             <div className="navRow prev">
-              <span className="navLabel">?�전글</span>
+              <span className="navLabel">이전글</span>
               <Link
                 href={detailPath(detail.prevArticle.nttId, bbsForNav)}
                 className="navTitle"
@@ -746,7 +746,7 @@ export default function CommunityViewSection() {
       )}
       <div className="mainViewBtnArea">
         <Link href={listHref} className="btnList">
-          목록?�로
+          목록으로
         </Link>
       </div>
     </>,

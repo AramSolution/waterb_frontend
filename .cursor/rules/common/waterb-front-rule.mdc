@@ -18,6 +18,49 @@ This is a **Next.js 14** project using **TypeScript**, **Tailwind CSS**, and **F
 
 ---
 
+## 🌐 Text encoding & Korean UI copy (CRITICAL — never corrupt non-ASCII text)
+
+Korean (Hangul) and other non-ASCII strings in this repo **must remain valid UTF-8**. Corruption shows up as `�` (U+FFFD), `?` runs, Latin mojibake (`Ã«`, `ê²Œ`), or **parse errors** when `//` comments swallow the next statement on the same line.
+
+### Prompt-writing techniques (English instructions for AI / humans)
+
+Use these whenever you ask an assistant to edit this codebase:
+
+1. **Do not ask the model to “retype” or “rewrite from memory”** any Korean (or other non-English) user-facing string. Instead:
+   - **Copy verbatim** from an existing file, design doc, or ticket; or
+   - **Point to exact file + line range** and say “keep this string byte-for-byte” / “only change surrounding code.”
+
+2. **Prefer structural edits over paraphrasing UI copy.** Example: “Replace the `onClick` handler; **do not change** the `title` or `children` text.”
+
+3. **If mirroring another project** (e.g. a sibling repo with the same feature): say **“Overwrite this file from the reference path using UTF-8 read/write; then apply only the following renames: …”** — not “translate the labels.”
+
+4. **Avoid pasting Korean through channels that strip encoding** (some chat UIs, email clients, or RTF). Paste into the editor first, verify characters, then commit.
+
+5. **Explicitly forbid destructive patterns in prompts:** e.g. “Do not merge a line comment with code on the same line (`// ... const x`).” “Do not put `*/` inside a block comment body except the real closing sequence.”
+
+6. **After any bulk replace or merge**, ask for: **UTF-8 verification** (no U+FFFD) and **`tsc --noEmit`** — corrupted TS/TSX often fails parse before typecheck.
+
+### Source-code rules (TypeScript / TSX / JSX)
+
+**MUST:**
+
+- ✅ Save all text files as **UTF-8** (project default in VS Code / Cursor; avoid “ANSI” / system default on Windows for source).
+- ✅ Keep **one statement per line** after `//` line comments: put `// comment` and `const` / `if` / `useEffect` / `} catch` on **separate** lines. A `//` comment runs to end-of-line; anything after it on that line is commented out and can **silently delete** code (classic `implicit any` / `void` hook bugs).
+- ✅ In `/** ... */` block comments, ensure the substring **`*/` does not appear** in the comment text before the intended closing. If needed, split the comment or shorten the text (premature `*/` ends the comment and breaks the rest of the file).
+- ✅ When copying large files, use **UTF-8 read/write** in scripts (no legacy “system encoding” APIs).
+
+**MUST NOT:**
+
+- ❌ Append code on the same line after a `//` comment (merge bug).
+- ❌ Rely on re-typing Korean labels in the agent chat without a verbatim source.
+- ❌ Introduce **U+FFFD** or long runs of `?` as placeholder “fixes” for unreadable text — restore from git, reference project, or product copy.
+
+### Optional hygiene
+
+- Consider `* text=auto` / `eol=lf` in `.gitattributes` for consistent line endings across OS (reduces odd merge artifacts; UTF-8 is separate but often paired in teams).
+
+---
+
 ## 🏗️ Architecture Pattern: Feature-Sliced Design (FSD)
 
 ### Directory Structure
@@ -1697,6 +1740,7 @@ widgets/admin/layout/
 
 ### Before Committing
 
+- [ ] No corrupted text: no `�` (U+FFFD), no accidental `//` + code on same line breaking statements; Korean/UI strings copied verbatim when edited with AI
 - [ ] No `any` types
 - [ ] No console.log (or properly handled)
 - [ ] No hardcoded values

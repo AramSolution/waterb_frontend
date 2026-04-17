@@ -29,11 +29,11 @@ type ArticleDetailFilesResponse = {
   attacheFiles?: { fileId: string; seq: number; orgfNm: string | null }[];
 };
 
-/** `qna2.html` 검???�?�트 ???�목·?�용·?�성??*/
+/** `qna2.html` 검색 셀렉트 — 제목·내용·작성자 */
 const QNA_SEARCH_CONDITIONS = [
-  { value: "title" as const, label: "?�목" },
-  { value: "content" as const, label: "?�용" },
-  { value: "author" as const, label: "?�성?? },
+  { value: "title" as const, label: "제목" },
+  { value: "content" as const, label: "내용" },
+  { value: "author" as const, label: "작성자" },
 ];
 type SearchCondition = (typeof QNA_SEARCH_CONDITIONS)[number]["value"];
 
@@ -97,8 +97,8 @@ function parseRecordsTotal(
 }
 
 /**
- * 묻고?�하기·자료실 ??`qna2.html` / 커�??�티 `mainViewTable` ?�이?�웃.
- * ?tab=archive ???�음 ?�카?�브(BBS) 목록. ?tab= ?�략 ??1:1 문의.
+ * 묻고답하기·자료실 — `qna2.html` / 커뮤니티 `mainViewTable` 레이아웃.
+ * ?tab=archive → 이음 아카이브(BBS) 목록. ?tab= 생략 → 1:1 문의.
  */
 export default function QnaSection() {
   const router = useRouter();
@@ -238,7 +238,7 @@ export default function QnaSection() {
       );
     } catch (err) {
       const msg =
-        err instanceof Error ? err.message : "?�일???�운로드?��? 못했?�니??";
+        err instanceof Error ? err.message : "파일을 다운로드하지 못했습니다.";
       alert(msg);
     } finally {
       setAttachDownloadingNttId(null);
@@ -279,7 +279,7 @@ export default function QnaSection() {
         if (!cancelled) {
           setList([]);
           setRecordsTotal(0);
-          setError("목록??불러?��? 못했?�니??");
+          setError("목록을 불러오지 못했습니다.");
         }
       })
       .finally(() => {
@@ -350,7 +350,7 @@ export default function QnaSection() {
     return `/userWeb/qna/pw?${q.toString()}`;
   };
 
-  const headTit = activeTab === "qna" ? "1:1 문의" : "?�료??;
+  const headTit = activeTab === "qna" ? "1:1 문의" : "자료실";
   const activeNav: CommunityChromeActiveNav =
     activeTab === "qna" ? "qna" : "eumArchive";
   const breadcrumbMode: CommunityBreadcrumbMode =
@@ -374,14 +374,14 @@ export default function QnaSection() {
         <div
           className="communityPagination"
           role="navigation"
-          aria-label="?�이지 ?�비게이??
+          aria-label="페이지 네비게이션"
         >
           <button
             type="button"
             className="communityPageNavBtn"
             disabled={loading || firstDisabled}
             onClick={() => goToPage(1)}
-            aria-label="�??�이지"
+            aria-label="첫 페이지"
           >
             {"<<"}
           </button>
@@ -390,11 +390,11 @@ export default function QnaSection() {
             className="communityPageNavBtn"
             disabled={loading || prevDisabled}
             onClick={() => goToPage(activePageForUi - 1)}
-            aria-label="?�전 ?�이지"
+            aria-label="이전 페이지"
           >
             {"<"}
           </button>
-          <div className="communityPageNumbers" aria-label="?�이지 번호">
+          <div className="communityPageNumbers" aria-label="페이지 번호">
             {Array.from({ length: end - start + 1 }).map((_, i) => {
               const p = start + i;
               const isActive = p === activePageForUi;
@@ -416,7 +416,7 @@ export default function QnaSection() {
             className="communityPageNavBtn"
             disabled={loading || nextDisabled}
             onClick={() => goToPage(activePageForUi + 1)}
-            aria-label="?�음 ?�이지"
+            aria-label="다음 페이지"
           >
             {">"}
           </button>
@@ -425,7 +425,7 @@ export default function QnaSection() {
             className="communityPageNavBtn"
             disabled={loading || lastDisabled}
             onClick={() => goToPage(totalPages)}
-            aria-label="마�?�??�이지"
+            aria-label="마지막 페이지"
           >
             {">>"}
           </button>
@@ -435,8 +435,8 @@ export default function QnaSection() {
   };
 
   const tableSummaryQna =
-    "1:1문의 목록?�며 번호,처리?�태,질문,?�성???�성??첨�??�일 ?�보�??�공?�니??";
-  const tableSummaryArchive = `${headTit} 목록?�며 번호, ?�목, ?�성?? ?�록?? 첨�??�일, 조회???�보�??�공?�니??`;
+    "1:1문의 목록이며 번호,처리상태,질문,작성자,작성일,첨부파일 정보를 제공합니다.";
+  const tableSummaryArchive = `${headTit} 목록이며 번호, 제목, 작성자, 등록일, 첨부파일, 조회수 정보를 제공합니다.`;
 
   return (
     <NoticeCommunityChrome
@@ -449,17 +449,17 @@ export default function QnaSection() {
     >
       <form
         className="filterSearchContainer"
-        aria-label={`${headTit} 검??}
+        aria-label={`${headTit} 검색`}
         onSubmit={applySearch}
       >
         <div className="filterBar">
           <div className="filterGroupWrap">
-            <fieldset className="filterGroup" aria-label="검??>
-              <div className="filterTitle">검??/div>
+            <fieldset className="filterGroup" aria-label="검색">
+              <div className="filterTitle">검색</div>
               <div className="inputWrap">
                 <div className="searchFilter">
                   <label htmlFor="qnaSearchType" className="blind">
-                    검??조건 ?�택
+                    검색 조건 선택
                   </label>
                   <select
                     id="qnaSearchType"
@@ -479,14 +479,14 @@ export default function QnaSection() {
                 <input
                   type="search"
                   name="q"
-                  placeholder="검?�어�??�력??주세??
-                  title="검?�어 ?�력"
+                  placeholder="검색어를 입력해 주세요"
+                  title="검색어 입력"
                   className="searchInput"
                   value={searchInput}
                   onChange={(e) => setSearchInput(e.target.value)}
                 />
                 <button type="submit" className="btnSearch">
-                  검??
+                  검색
                 </button>
               </div>
             </fieldset>
@@ -496,22 +496,22 @@ export default function QnaSection() {
       <div>
         <div className="headInfo flex-sb mb-24">
           <div className="count">
-            �?게시�?<b>{recordsTotal}</b>�?
+            총 게시물 <b>{recordsTotal}</b>개
           </div>
           <div className="listCountWrap">
             <label htmlFor="qnaPageSize" className="blind">
-              게시�?출력 개수 ?�택
+              게시물 출력 개수 선택
             </label>
             <select
               id="qnaPageSize"
               className="input inputSelect"
-              title="게시�?출력 개수 ?�택"
+              title="게시물 출력 개수 선택"
               value={pageSizeParam}
               onChange={(e) => onPageSizeChange(Number(e.target.value))}
             >
               {PAGE_SIZE_OPTIONS.map((n) => (
                 <option key={n} value={n}>
-                  {n}�?
+                  {n}개
                 </option>
               ))}
             </select>
@@ -524,7 +524,7 @@ export default function QnaSection() {
               summary={activeTab === "qna" ? tableSummaryQna : tableSummaryArchive}
             >
               <caption className="blind">
-                {activeTab === "qna" ? "묻고?�하�?리스?? : `${headTit} 리스??}
+                {activeTab === "qna" ? "묻고답하기 리스트" : `${headTit} 리스트`}
               </caption>
               {activeTab === "qna" ? (
                 <>
@@ -534,19 +534,19 @@ export default function QnaSection() {
                         번호
                       </th>
                       <th scope="col" className="colStatus" style={{ width: "10%" }}>
-                        처리?�태
+                        처리상태
                       </th>
                       <th scope="col" className="colTitle" style={{ width: "45%" }}>
                         질문
                       </th>
                       <th scope="col" className="colName" style={{ width: "10%" }}>
-                        ?�성??
+                        작성자
                       </th>
                       <th scope="col" className="colDate" style={{ width: "15%" }}>
-                        ?�성??
+                        작성일
                       </th>
                       <th scope="col" className="colFile" style={{ width: "10%" }}>
-                        첨�??�일
+                        첨부파일
                       </th>
                     </tr>
                   </thead>
@@ -554,7 +554,7 @@ export default function QnaSection() {
                     {loading && (
                       <tr>
                         <td colSpan={6} className="colEmpty">
-                          목록??불러?�는 중입?�다.
+                          목록을 불러오는 중입니다.
                         </td>
                       </tr>
                     )}
@@ -568,7 +568,7 @@ export default function QnaSection() {
                     {!loading && !error && list.length === 0 && (
                       <tr>
                         <td colSpan={6} className="colEmpty">
-                          ?�록??글???�습?�다.
+                          등록된 글이 없습니다.
                         </td>
                       </tr>
                     )}
@@ -595,19 +595,19 @@ export default function QnaSection() {
                           >
                             <td className="cellNum">
                               {isNotice ? (
-                                <span className="badgeNotice">공�?</span>
+                                <span className="badgeNotice">공지</span>
                               ) : (
                                 rowNum
                               )}
                             </td>
                             <td className="cellStatus">
                               {isNotice ? (
-                                <span className="sr-only">공�?</span>
+                                <span className="sr-only">공지</span>
                               ) : (
                                 <div
                                   className={`badge ${answered ? "statusComplete" : "statusWaiting"}`}
                                 >
-                                  {answered ? "?��??�료" : "?��??��?}
+                                  {answered ? "답변완료" : "답변대기"}
                                 </div>
                               )}
                             </td>
@@ -623,8 +623,8 @@ export default function QnaSection() {
                                 <button
                                   type="button"
                                   className="mainViewCellFileButton"
-                                  aria-label="첨�??�일 ?�운로드"
-                                  title="첨�??�일 ?�운로드"
+                                  aria-label="첨부파일 다운로드"
+                                  title="첨부파일 다운로드"
                                   disabled={
                                     attachDownloadingNttId === item.nttId
                                   }
@@ -651,16 +651,16 @@ export default function QnaSection() {
                         번호
                       </th>
                       <th scope="col" className="colTitle" style={{ width: "40%" }}>
-                        ?�목
+                        제목
                       </th>
                       <th scope="col" className="colName" style={{ width: "15%" }}>
-                        ?�성??
+                        작성자
                       </th>
                       <th scope="col" className="colDate" style={{ width: "15%" }}>
-                        ?�록??
+                        등록일
                       </th>
                       <th scope="col" className="colFile" style={{ width: "10%" }}>
-                        첨�??�일
+                        첨부파일
                       </th>
                       <th scope="col" className="colView" style={{ width: "10%" }}>
                         조회
@@ -671,7 +671,7 @@ export default function QnaSection() {
                     {loading && (
                       <tr>
                         <td colSpan={6} className="colEmpty">
-                          목록??불러?�는 중입?�다.
+                          목록을 불러오는 중입니다.
                         </td>
                       </tr>
                     )}
@@ -685,7 +685,7 @@ export default function QnaSection() {
                     {!loading && !error && list.length === 0 && (
                       <tr>
                         <td colSpan={6} className="colEmpty">
-                          ?�록???�료가 ?�습?�다.
+                          등록된 자료가 없습니다.
                         </td>
                       </tr>
                     )}
@@ -714,7 +714,7 @@ export default function QnaSection() {
                           >
                             <td className="cellNum">
                               {isNotice ? (
-                                <span className="badgeNotice">공�?</span>
+                                <span className="badgeNotice">공지</span>
                               ) : (
                                 rowNum
                               )}
@@ -731,8 +731,8 @@ export default function QnaSection() {
                                 <button
                                   type="button"
                                   className="mainViewCellFileButton"
-                                  aria-label="첨�??�일 ?�운로드"
-                                  title="첨�??�일 ?�운로드"
+                                  aria-label="첨부파일 다운로드"
+                                  title="첨부파일 다운로드"
                                   disabled={
                                     attachDownloadingNttId === item.nttId
                                   }

@@ -60,7 +60,7 @@ type ArticleDetailResponse = {
 export interface QnaViewSectionProps {
   postId: string;
   tab: TabType;
-  /** 목록 쿼리 (tab, page, pageSize, search, type, reqGbPosition ?? */
+  /** 목록 쿼리 (tab, page, pageSize, search, type, reqGbPosition 등) */
   listQuery: string;
 }
 
@@ -95,7 +95,7 @@ function themeQueryFromListQuery(listQuery: string): string {
 }
 
 /**
- * 묻고?�하기·자료실 ?�세 ??`qnaView2.html` / `noticeView2.html` ?�이?�웃.
+ * 묻고답하기·자료실 상세 — `qnaView2.html` / `noticeView2.html` 레이아웃.
  */
 export default function QnaViewSection({
   postId,
@@ -126,13 +126,13 @@ export default function QnaViewSection({
   useEffect(() => {
     if (!postId || postId.trim() === "") {
       setLoading(false);
-      setError("?�못???�근?�니??");
+      setError("잘못된 접근입니다.");
       return;
     }
     const nttId = parseInt(postId, 10);
     if (Number.isNaN(nttId)) {
       setLoading(false);
-      setError("?�못??게시글 번호?�니??");
+      setError("잘못된 게시글 번호입니다.");
       return;
     }
 
@@ -153,8 +153,8 @@ export default function QnaViewSection({
           setDetail(null);
           setError(
             err instanceof ApiError && err.status === 404
-              ? "?�당 게시글??찾을 ???�습?�다."
-              : "게시글??불러?��? 못했?�니??",
+              ? "해당 게시글을 찾을 수 없습니다."
+              : "게시글을 불러오지 못했습니다.",
           );
         }
       })
@@ -167,7 +167,7 @@ export default function QnaViewSection({
   }, [postId, bbsId]);
 
   const themeQuery = useMemo(() => themeQueryFromListQuery(listQuery), [listQuery]);
-  const headTit = tab === "qna" ? "1:1 문의" : "?�료??;
+  const headTit = tab === "qna" ? "1:1 문의" : "자료실";
   const activeNav: CommunityChromeActiveNav = tab === "qna" ? "qna" : "eumArchive";
   const breadcrumbMode: CommunityBreadcrumbMode =
     tab === "archive" ? "eumArchive" : "default";
@@ -213,7 +213,7 @@ export default function QnaViewSection({
         await navigator.share({ title, url });
       }
     } catch {
-      /* 취소 ??*/
+      /* 취소 등 */
     }
   }, []);
 
@@ -239,13 +239,13 @@ export default function QnaViewSection({
           className="btnList"
           onClick={() => router.push(listHref)}
         >
-          목록?�로
+          목록으로
         </button>
       );
     }
     return (
       <Link href={listHref} className="btnList" role="button" key={key}>
-        목록?�로
+        목록으로
       </Link>
     );
   };
@@ -253,7 +253,7 @@ export default function QnaViewSection({
   if (loading) {
     return wrap(
       <>
-        <p className="loading">?�시�?기다??주세??</p>
+        <p className="loading">잠시만 기다려 주세요.</p>
         <div className="mainViewBtnArea">{renderListControl("loading")}</div>
       </>,
     );
@@ -263,7 +263,7 @@ export default function QnaViewSection({
     return wrap(
       <>
         <p className="loading">
-          {error ?? "?�당 게시글??찾을 ???�습?�다."}
+          {error ?? "해당 게시글을 찾을 수 없습니다."}
         </p>
         <div className="mainViewBtnArea">{renderListControl("error")}</div>
       </>,
@@ -280,7 +280,7 @@ export default function QnaViewSection({
   const files = (detail.attacheFiles ?? []).map((f) => {
     const ext = fileExt(f.orgfNm ?? "");
     return {
-      name: f.orgfNm ?? "?�일",
+      name: f.orgfNm ?? "파일",
       fileId: String(f.fileId),
       seq: f.seq,
       type: fileTypeForIcon(ext),
@@ -300,7 +300,7 @@ export default function QnaViewSection({
             <span
               className={`badge ${answered ? "statusComplete" : "statusWaiting"}`}
             >
-              {answered ? "?��??�료" : "?��??��?}
+              {answered ? "답변완료" : "답변대기"}
             </span>
           </div>
         ) : null}
@@ -321,7 +321,7 @@ export default function QnaViewSection({
             <button
               type="button"
               className="btnAction"
-              aria-label={copyDone ? "URL 복사?? : "URL 복사"}
+              aria-label={copyDone ? "URL 복사됨" : "URL 복사"}
               onClick={() => void handleCopyUrl()}
             >
               <i className="icoAttachment" aria-hidden />
@@ -329,7 +329,7 @@ export default function QnaViewSection({
             <button
               type="button"
               className="btnAction"
-              aria-label="?�이지 ?�쇄?�기"
+              aria-label="페이지 인쇄하기"
               onClick={handlePrint}
             >
               <i className="icoPrint" aria-hidden />
@@ -338,11 +338,11 @@ export default function QnaViewSection({
         </div>
         <div className="mainViewDetailInfo">
           <dl>
-            <dt>?�성??/dt>
+            <dt>작성자</dt>
             <dd className="infoName">{detail.ntcrNm ?? ""}</dd>
-            <dt>?�성??/dt>
+            <dt>작성일</dt>
             <dd className="infoDate">{detail.ntcrDt ?? ""}</dd>
-            <dt>조회??/dt>
+            <dt>조회수</dt>
             <dd className="infoView">조회 {infoView}</dd>
           </dl>
         </div>
@@ -350,7 +350,7 @@ export default function QnaViewSection({
       <article className="mainViewDetailBody">
         <div className="bizFile">
           <div className="title" id="qnaViewFileDownloadTitle">
-            첨�??�일
+            첨부파일
           </div>
           {files.length > 0 ? (
             <ul
@@ -364,7 +364,7 @@ export default function QnaViewSection({
                     <a
                       href={viewUrl}
                       className={`file ${file.type}`}
-                      title={`${file.name} ?�운로드`}
+                      title={`${file.name} 다운로드`}
                       onClick={(e) => {
                         e.preventDefault();
                         void downloadWaterbAttachmentOrOpenView(
@@ -377,7 +377,7 @@ export default function QnaViewSection({
                     >
                       <span className="fileIcon" aria-hidden />
                       <span className="fileName">{file.name}</span>
-                      <span className="sr-only">(?�운로드)</span>
+                      <span className="sr-only">(다운로드)</span>
                     </a>
                   </li>
                 );
@@ -398,13 +398,13 @@ export default function QnaViewSection({
               dangerouslySetInnerHTML={{ __html: bodyHtml }}
             />
           ) : (
-            <p>?�용???�습?�다.</p>
+            <p>내용이 없습니다.</p>
           )}
         </div>
         {isQna && hasReply ? (
           <div className="replyBox">
             <div className="replyHeader">
-              <div className="adminLabel">관리자 ?��?</div>
+              <div className="adminLabel">관리자 답변</div>
               <div className="replyDate">{detail.replyDate ?? ""}</div>
             </div>
             <div
@@ -420,7 +420,7 @@ export default function QnaViewSection({
         <div className="mainViewDetailNav">
           {detail.nextArticle?.nttId != null && (
             <div className="navRow next">
-              <span className="navLabel">?�음글</span>
+              <span className="navLabel">다음글</span>
               <Link
                 href={detailPath(detail.nextArticle.nttId, bbsForNav)}
                 className="navTitle"
@@ -431,7 +431,7 @@ export default function QnaViewSection({
           )}
           {detail.prevArticle?.nttId != null && (
             <div className="navRow prev">
-              <span className="navLabel">?�전글</span>
+              <span className="navLabel">이전글</span>
               <Link
                 href={detailPath(detail.prevArticle.nttId, bbsForNav)}
                 className="navTitle"

@@ -22,53 +22,61 @@ import type {
 } from "./types";
 
 export interface SupportApplicationRegisterFormData {
-  // ?�단 ?�보
-  programTitle: string; // ?�로그램 ?�목
-  status: string; // ?�태 (01:?�시?�?? 02:?�청, 03:?�인, 04:?�료, 11:반려, 12:중단, 99:취소)
-  selectionStatus: string; // ?�정?��? (N:미선?? Y:?�정, R:?�비)
+  // 상단 정보
+  programTitle: string; // 프로그램 제목
+  status: string; // 상태 (01:임시저장, 02:신청, 03:승인, 04:완료, 11:반려, 12:중단, 99:취소)
+  selectionStatus: string; // 선정여부 (N:미선정, Y:선정, R:예비)
 
-  // ?�형
-  applicationType: string; // 1?�탐구형 / 모둠 ?�구??
-  // 보호???�보 (?�택 ??armuser BRTHDY ?�용)
-  parentName: string; // 보호?�명
-  parentEsntlId: string; // 보호??고유ID
-  parentBirthDate: string; // 보호???�년?�일 (BRTHDY)
-  parentPhone: string; // 보호???�락�?
-  // ?�교?�보
-  schoolName: string; // ?�교�?  schoolCode: string; // ?�교 KEY�?(sdSchulCode)
-  schoolGb: string; // ?�교구분 코드 (E, J, H, U, T)
-  gradeInfo: string; // ?�년?�보 (?�년)
-  gradeInfo2: string; // ?�년?�보2 (�?
+  // 유형
+  applicationType: string; // 1인탐구형 / 모둠 탐구형
 
-  // ?�생?�보
-  studentName: string; // ?�생�?  studentEsntlId: string; // ?�생 고유ID
-  studentGender: string; // ?�별 (????
-  studentPhone: string; // ?�생 ?�락�?  studentBirthDate: string; // ?�생 ?�년?�일 (BRTHDY ?�시??
-  studentPostalCode: string; // ?�편번호
+  // 보호자 정보 (선택 시 armuser BRTHDY 사용)
+  parentName: string; // 보호자명
+  parentEsntlId: string; // 보호자 고유ID
+  parentBirthDate: string; // 보호자 생년월일 (BRTHDY)
+  parentPhone: string; // 보호자 연락처
+
+  // 학교정보
+  schoolName: string; // 학교명
+  schoolCode: string; // 학교 KEY값 (sdSchulCode)
+  schoolGb: string; // 학교구분 코드 (E, J, H, U, T)
+  gradeInfo: string; // 학년정보 (학년)
+  gradeInfo2: string; // 학년정보2 (반)
+
+  // 학생정보
+  studentName: string; // 학생명
+  studentEsntlId: string; // 학생 고유ID
+  studentGender: string; // 성별 (남/여)
+  studentPhone: string; // 학생 연락처
+  studentBirthDate: string; // 학생 생년월일 (BRTHDY 표시용)
+  studentPostalCode: string; // 우편번호
   studentAddress: string; // 주소
-  studentDetailAddress: string; // ?�세주소
+  studentDetailAddress: string; // 상세주소
   accountNumber: string; // 계좌번호
-  bankName: string; // ?�?�명
-  depositorName: string; // ?�금�?
-  // ?�청분야
-  humanitiesField: string; // ?�문분야
+  bankName: string; // 은행명
+  depositorName: string; // 예금주
+
+  // 신청분야
+  humanitiesField: string; // 인문분야
   scienceField: string; // 과학분야
-  artsField: string; // ?�체?�분??  characterField: string; // ?�성분야
-  otherField: string; // 기�?
-  humanitiesChecked: boolean; // ?�문분야 체크 ?��?
-  scienceChecked: boolean; // 과학분야 체크 ?��?
-  artsChecked: boolean; // ?�체?�분??체크 ?��?
-  characterChecked: boolean; // ?�성분야 체크 ?��?
-  otherChecked: boolean; // 기�? 체크 ?��?
+  artsField: string; // 예체능분야
+  characterField: string; // 인성분야
+  otherField: string; // 기타
+  humanitiesChecked: boolean; // 인문분야 체크 여부
+  scienceChecked: boolean; // 과학분야 체크 여부
+  artsChecked: boolean; // 예체능분야 체크 여부
+  characterChecked: boolean; // 인성분야 체크 여부
+  otherChecked: boolean; // 기타 체크 여부
 
-  // ?�동계획??  activityScope: string; // ?�동범위 (군산 ????
+  // 활동계획서
+  activityScope: string; // 활동범위 (군산 내/외)
   purpose: string; // 목적
-  activityContent: string; // ?�동?�용
-  budgetPlan: string; // ?�산 ?�용계획
+  activityContent: string; // 활동내용
+  budgetPlan: string; // 예산 사용계획
 
-  // 기�?
-  other: string; // 기�?
-  reaDesc: string; // ?�유 (REA_DESC, VARCHAR 2048)
+  // 기타
+  other: string; // 기타
+  reaDesc: string; // 사유 (REA_DESC, VARCHAR 2048)
 }
 
 export interface ValidationErrors {
@@ -101,8 +109,8 @@ export interface ValidationErrors {
 const formatClassLabel = (className?: string): string => {
   const value = (className || "").trim();
   if (!value) return "";
-  if (value.includes("�?)) return value;
-  if (/^\d+$/.test(value)) return `${value}�?;
+  if (value.includes("반")) return value;
+  if (/^\d+$/.test(value)) return `${value}반`;
   return value;
 };
 
@@ -110,7 +118,7 @@ export function useSupportApplicationRegister(
   businessId?: string,
   options?: {
     mode?: SupportApplicationMode;
-    /** 지?�사?�신청ID(REQ_ID). ?�세 모드 ??GET by-req-id API ?�출???�용 */
+    /** 지원사업신청ID(REQ_ID). 상세 모드 시 GET by-req-id API 호출에 사용 */
     reqId?: string;
   },
 ) {
@@ -120,8 +128,9 @@ export function useSupportApplicationRegister(
 
   const [formData, setFormData] = useState<SupportApplicationRegisterFormData>({
     programTitle: "",
-    status: "02", // 기본�? ?�청
-    selectionStatus: "N", // 기본�? 미선??    applicationType: "INDIVIDUAL", // 기본�? 1?�탐구형 (?�쪽)
+    status: "02", // 기본값: 신청
+    selectionStatus: "N", // 기본값: 미선정
+    applicationType: "INDIVIDUAL", // 기본값: 1인탐구형 (왼쪽)
     parentName: "",
     parentEsntlId: "",
     parentBirthDate: "",
@@ -133,7 +142,7 @@ export function useSupportApplicationRegister(
     gradeInfo2: "",
     studentName: "",
     studentEsntlId: "",
-    studentGender: "M", // 기본�? ??(?�쪽)
+    studentGender: "M", // 기본값: 남 (왼쪽)
     studentPhone: "",
     studentBirthDate: "",
     studentPostalCode: "",
@@ -152,7 +161,7 @@ export function useSupportApplicationRegister(
     artsChecked: false,
     characterChecked: false,
     otherChecked: false,
-    activityScope: "INSIDE", // 기본�? 군산 ??(?�쪽)
+    activityScope: "INSIDE", // 기본값: 군산 내 (왼쪽)
     purpose: "",
     activityContent: "",
     budgetPlan: "",
@@ -164,36 +173,36 @@ export function useSupportApplicationRegister(
   const [error, setError] = useState("");
   const [errors, setErrors] = useState<ValidationErrors>({});
 
-  // 메시지 ?�이?�로�?관???�태
+  // 메시지 다이얼로그 관련 상태
   const [showMessageDialog, setShowMessageDialog] = useState(false);
   const [messageDialogTitle, setMessageDialogTitle] = useState("");
   const [messageDialogMessage, setMessageDialogMessage] = useState("");
   const [messageDialogType, setMessageDialogType] = useState<
     "danger" | "success"
   >("success");
-  /** true: ?�록/?�정 ?�???�공 ???�인 ???�청목록?�로 ?�동. 첨�??�일 ??�� ?�공?� false(?�세 ?��?) */
+  /** true: 등록/수정 저장 성공 후 확인 시 신청목록으로 이동. 첨부파일 삭제 성공은 false(상세 유지) */
   const [messageDialogNavigateToList, setMessageDialogNavigateToList] =
     useState(false);
 
-  // 첨�??�일 관???�태
+  // 첨부파일 관련 상태
   const [selectedFiles, setSelectedFiles] = useState<
     { id: string; file: File }[]
   >([]);
   const [existingFiles, setExistingFiles] = useState<ArtappmFileItem[]>([]);
 
-  // ?�일 ??�� ?�인 ?�이?�로�?관???�태
+  // 파일 삭제 확인 다이얼로그 관련 상태
   const [showDeleteConfirmDialog, setShowDeleteConfirmDialog] = useState(false);
   const [fileToDelete, setFileToDelete] = useState<ArtappmFileItem | null>(
     null,
   );
 
-  // ?�??목록 관???�태
+  // 은행 목록 관련 상태
   const [bankOptions, setBankOptions] = useState<SelectOption[]>([
-    { value: "", label: "?�택?�세?? },
+    { value: "", label: "선택하세요" },
   ]);
   const [bankLoading, setBankLoading] = useState(true);
 
-  // ?�??목록 조회 (ARM002)
+  // 은행 목록 조회 (ARM002)
   useEffect(() => {
     let cancelled = false;
 
@@ -203,17 +212,19 @@ export function useSupportApplicationRegister(
         const list = await CmmCodeService.getDetailCodeListByCodeId("ARM002");
         if (cancelled) return;
 
-        // codeNm?�로 ?�시?�고, code 값을 ?�??        const options: SelectOption[] = [
-          { value: "", label: "?�택?�세?? },
+        // codeNm으로 표시하고, code 값을 저장
+        const options: SelectOption[] = [
+          { value: "", label: "선택하세요" },
           ...list.map((item) => ({
-            value: item.code, // code 값을 ?�??            label: item.codeNm || item.code, // codeNm?�로 ?�시
+            value: item.code, // code 값을 저장
+            label: item.codeNm || item.code, // codeNm으로 표시
           })),
         ];
         setBankOptions(options);
       } catch (err) {
         if (!cancelled) {
-          console.error("?�??목록 조회 ?�패:", err);
-          // ?�러 발생 ??기본 ?�션�??��?
+          console.error("은행 목록 조회 실패:", err);
+          // 에러 발생 시 기본 옵션만 유지
         }
       } finally {
         if (!cancelled) setBankLoading(false);
@@ -226,7 +237,7 @@ export function useSupportApplicationRegister(
     };
   }, []);
 
-  // ?�교 검??모달 관???�태
+  // 학교 검색 모달 관련 상태
   const [showSchoolModal, setShowSchoolModal] = useState(false);
   const [schoolSearchKeyword, setSchoolSearchKeyword] = useState("");
   const [schoolList, setSchoolList] = useState<SchoolItem[]>([]);
@@ -236,7 +247,7 @@ export function useSupportApplicationRegister(
   const [schoolLoading, setSchoolLoading] = useState(false);
   const schoolPageSize = 15;
 
-  // 보호??검??모달 관???�태
+  // 보호자 검색 모달 관련 상태
   const [showParentModal, setShowParentModal] = useState(false);
   const [parentSearchKeyword, setParentSearchKeyword] = useState("");
   const [parentList, setParentList] = useState<ArmuserDTO[]>([]);
@@ -246,28 +257,28 @@ export function useSupportApplicationRegister(
   const [parentLoading, setParentLoading] = useState(false);
   const parentPageSize = 15;
 
-  // ?�생 콤보박스 ?�션 (부�??�택 ???�당 부모의 ?��? 목록 from /api/admin/armchil/children)
+  // 학생 콤보박스 옵션 (부모 선택 시 해당 부모의 자녀 목록 from /api/admin/armchil/children)
   const [studentList, setStudentList] = useState<ArmchilChildDTO[]>([]);
   const [studentLoading, setStudentLoading] = useState(false);
 
-  // ?�급 ?�보 관???�태
+  // 학급 정보 관련 상태
   const [classOptions, setClassOptions] = useState<SelectOption[]>([
-    { value: "", label: "?�택" },
+    { value: "", label: "선택" },
   ]);
   const [classOptions2, setClassOptions2] = useState<SelectOption[]>([
-    { value: "", label: "?�택" },
+    { value: "", label: "선택" },
   ]);
   const [classLoading, setClassLoading] = useState(false);
 
-  // ?�교구분 코드 매핑 (EDR002: 초등?�교=E, 중학�?J, 고등?�교=H, ?�?�교=U, 기�?=T)
+  // 학교구분 코드 매핑 (EDR002: 초등학교=E, 중학교=J, 고등학교=H, 대학교=U, 기타=T)
   const [schoolGbMapping, setSchoolGbMapping] = useState<Map<string, string>>(
     new Map(),
   );
 
-  // ?�세 모드?�서 ?�본 ?�세 ?�이??보�? (update ??기존 �??��???
+  // 상세 모드에서 원본 상세 데이터 보관 (update 시 기존 값 유지용)
   const [detailData, setDetailData] = useState<any | null>(null);
 
-  // ?�교구분 코드 조회 (EDR002)
+  // 학교구분 코드 조회 (EDR002)
   useEffect(() => {
     let cancelled = false;
 
@@ -276,8 +287,8 @@ export function useSupportApplicationRegister(
         const list = await CmmCodeService.getDetailCodeListByCodeId("EDR002");
         if (cancelled) return;
 
-        // ?�교종류�?-> 코드 매핑 ?�성
-        // ?? "초등?�교" -> "E", "중학�? -> "J"
+        // 학교종류명 -> 코드 매핑 생성
+        // 예: "초등학교" -> "E", "중학교" -> "J"
         const mapping = new Map<string, string>();
         list.forEach((item) => {
           if (item.codeNm && item.code) {
@@ -286,7 +297,7 @@ export function useSupportApplicationRegister(
         });
         setSchoolGbMapping(mapping);
       } catch (err) {
-        console.error("?�교구분 코드 조회 ?�패:", err);
+        console.error("학교구분 코드 조회 실패:", err);
       }
     }
 
@@ -301,12 +312,12 @@ export function useSupportApplicationRegister(
     schoolSearchKeywordRef.current = schoolSearchKeyword;
   }, [schoolSearchKeyword]);
 
-  // ?�교 목록 조회
+  // 학교 목록 조회
   const fetchSchoolList = useCallback(async () => {
     try {
       setSchoolLoading(true);
       const response = await NeisService.getGunsanSchools({
-        page: schoolCurrentPage - 1, // 0부???�작
+        page: schoolCurrentPage - 1, // 0부터 시작
         size: schoolPageSize,
         text: schoolSearchKeywordRef.current || undefined,
       });
@@ -335,7 +346,7 @@ export function useSupportApplicationRegister(
       setSchoolTotalElements(total);
       setSchoolTotalPages(Math.ceil(total / schoolPageSize) || 1);
     } catch (err) {
-      console.error("?�교 목록 조회 ?�패:", err);
+      console.error("학교 목록 조회 실패:", err);
       setSchoolList([]);
       setSchoolTotalElements(0);
       setSchoolTotalPages(0);
@@ -349,14 +360,14 @@ export function useSupportApplicationRegister(
     fetchSchoolListRef.current = fetchSchoolList;
   }, [fetchSchoolList]);
 
-  // ?�이지 변�????�동 조회 (모달???�려?�을 ?�만)
+  // 페이지 변경 시 자동 조회 (모달이 열려있을 때만)
   useEffect(() => {
     if (showSchoolModal) {
       fetchSchoolListRef.current();
     }
   }, [schoolCurrentPage, showSchoolModal, fetchSchoolListRef]);
 
-  // ?�교 검??(Enter ???�는 버튼 ?�릭)
+  // 학교 검색 (Enter 키 또는 버튼 클릭)
   const handleSchoolSearch = () => {
     setSchoolCurrentPage(1);
     fetchSchoolListRef.current();
@@ -370,23 +381,29 @@ export function useSupportApplicationRegister(
     }
   };
 
-  // ?�교 ?�택 ???�급 ?�보 조회
+  // 학교 선택 시 학급 정보 조회
   const handleSchoolSelect = async (school: SchoolItem) => {
     const schoolCode = school.sdSchulCode || "";
     const schoolName = school.schulNm || "";
-    const schoolTypeName = school.schulKndScNm || ""; // "초등?�교", "중학�? ??
-    // ?�교종류명을 코드�?변??    // ?? "초등?�교" -> "E", "중학�? -> "J"
+    const schoolTypeName = school.schulKndScNm || ""; // "초등학교", "중학교" 등
+
+    // 학교종류명을 코드로 변환
+    // 예: "초등학교" -> "E", "중학교" -> "J"
     const schoolGbCode = schoolGbMapping.get(schoolTypeName) || "";
 
     setFormData((prev) => ({
       ...prev,
-      schoolName: schoolName, // ?�교�??�??      schoolCode: schoolCode, // ?�교 KEY ?�??      schoolGb: schoolGbCode, // ?�교구분 코드 ?�??(E, J, H, U, T)
-      gradeInfo: "", // 초기??      gradeInfo2: "", // 초기??    }));
+      schoolName: schoolName, // 학교명 저장
+      schoolCode: schoolCode, // 학교 KEY 저장
+      schoolGb: schoolGbCode, // 학교구분 코드 저장 (E, J, H, U, T)
+      gradeInfo: "", // 초기화
+      gradeInfo2: "", // 초기화
+    }));
 
     setShowSchoolModal(false);
     setSchoolSearchKeyword("");
 
-    // ?�급 ?�보 조회
+    // 학급 정보 조회
     if (schoolCode) {
       try {
         setClassLoading(true);
@@ -394,7 +411,7 @@ export function useSupportApplicationRegister(
           sdSchulCode: schoolCode,
         });
 
-        // ?�년 목록 ?�성 (중복 ?�거)
+        // 학년 목록 생성 (중복 제거)
         const gradeSet = new Set<string>();
         classList.forEach((item) => {
           if (item.grade) {
@@ -403,30 +420,31 @@ export function useSupportApplicationRegister(
         });
 
         const gradeOptions: SelectOption[] = [
-          { value: "", label: "?�택" },
+          { value: "", label: "선택" },
           ...Array.from(gradeSet)
             .sort()
             .map((grade) => ({
               value: grade,
-              label: `${grade}?�년`,
+              label: `${grade}학년`,
             })),
         ];
 
         setClassOptions(gradeOptions);
-        setClassOptions2([{ value: "", label: "?�택" }]); // �?목록 초기??      } catch (err) {
-        console.error("?�급 ?�보 조회 ?�패:", err);
-        setClassOptions([{ value: "", label: "?�택" }]);
-        setClassOptions2([{ value: "", label: "?�택" }]);
+        setClassOptions2([{ value: "", label: "선택" }]); // 반 목록 초기화
+      } catch (err) {
+        console.error("학급 정보 조회 실패:", err);
+        setClassOptions([{ value: "", label: "선택" }]);
+        setClassOptions2([{ value: "", label: "선택" }]);
       } finally {
         setClassLoading(false);
       }
     }
   };
 
-  // ?�년 ?�택 ??�?목록 ?�데?�트
+  // 학년 선택 시 반 목록 업데이트
   useEffect(() => {
     if (!formData.gradeInfo || !formData.schoolCode) {
-      setClassOptions2([{ value: "", label: "?�택" }]);
+      setClassOptions2([{ value: "", label: "선택" }]);
       return;
     }
 
@@ -437,12 +455,13 @@ export function useSupportApplicationRegister(
           sdSchulCode: formData.schoolCode,
         });
 
-        // ?�택???�년???�당?�는 �?목록 ?�터�?        const filteredClasses = classList.filter(
+        // 선택한 학년에 해당하는 반 목록 필터링
+        const filteredClasses = classList.filter(
           (item) => item.grade === formData.gradeInfo,
         );
 
         const classOptions2List: SelectOption[] = [
-          { value: "", label: "?�택" },
+          { value: "", label: "선택" },
           ...filteredClasses
             .map((item) => ({
               value: item.classNm || "",
@@ -452,12 +471,14 @@ export function useSupportApplicationRegister(
         ];
 
         setClassOptions2(classOptions2List);
-        // ?�세 모드가 ?�니�? ?�직 ?�생???�택?��? ?��? ?�태?�서�?반을 초기??        // ???�생 ?�택?�로 ?�해 ?�년/?�교가 바�?경우?�는 gradeInfo2�??��?
+        // 상세 모드가 아니고, 아직 학생이 선택되지 않은 상태에서만 반을 초기화
+        // → 학생 선택으로 인해 학년/학교가 바뀐 경우에는 gradeInfo2를 유지
         if (mode !== "detail" && !formData.studentEsntlId) {
-          setFormData((prev) => ({ ...prev, gradeInfo2: "" })); // �?초기??        }
+          setFormData((prev) => ({ ...prev, gradeInfo2: "" })); // 반 초기화
+        }
       } catch (err) {
-        console.error("�??�보 조회 ?�패:", err);
-        setClassOptions2([{ value: "", label: "?�택" }]);
+        console.error("반 정보 조회 실패:", err);
+        setClassOptions2([{ value: "", label: "선택" }]);
       } finally {
         setClassLoading(false);
       }
@@ -466,7 +487,7 @@ export function useSupportApplicationRegister(
     fetchClassList();
   }, [formData.gradeInfo, formData.schoolCode, formData.studentEsntlId, mode]);
 
-  // ?�교 모달 ?�기
+  // 학교 모달 열기
   const handleOpenSchoolModal = () => {
     setShowSchoolModal(true);
     setSchoolSearchKeyword("");
@@ -474,18 +495,21 @@ export function useSupportApplicationRegister(
     fetchSchoolListRef.current();
   };
 
-  // ?�교 모달 ?�기
+  // 학교 모달 닫기
   const handleCloseSchoolModal = () => {
     setShowSchoolModal(false);
     setSchoolSearchKeyword("");
   };
 
-  // 보호??목록 조회
+  // 보호자 목록 조회
   const fetchParentList = useCallback(async () => {
     try {
       setParentLoading(true);
       const response = await ArmuserService.getList({
-        userSe: "PNR", // ?��?�?        mberSttus: "P", // ?�용�??�원�?        searchCondition: parentSearchKeywordRef.current ? "1" : undefined, // ?�름?�로 검??        searchKeyword: parentSearchKeywordRef.current || undefined,
+        userSe: "PNR", // 학부모
+        mberSttus: "P", // 사용중 회원만
+        searchCondition: parentSearchKeywordRef.current ? "1" : undefined, // 이름으로 검색
+        searchKeyword: parentSearchKeywordRef.current || undefined,
         lengthPage: parentPageSize,
         startIndex: (parentCurrentPage - 1) * parentPageSize,
       });
@@ -504,7 +528,7 @@ export function useSupportApplicationRegister(
       setParentTotalElements(total);
       setParentTotalPages(Math.ceil(total / parentPageSize) || 1);
     } catch (err) {
-      console.error("보호??목록 조회 ?�패:", err);
+      console.error("보호자 목록 조회 실패:", err);
       setParentList([]);
       setParentTotalElements(0);
       setParentTotalPages(0);
@@ -523,14 +547,14 @@ export function useSupportApplicationRegister(
     fetchParentListRef.current = fetchParentList;
   }, [fetchParentList]);
 
-  // ?�이지 변�????�동 조회 (모달???�려?�을 ?�만)
+  // 페이지 변경 시 자동 조회 (모달이 열려있을 때만)
   useEffect(() => {
     if (showParentModal) {
       fetchParentListRef.current();
     }
   }, [parentCurrentPage, showParentModal, fetchParentListRef]);
 
-  // 보호??검??(Enter ???�는 버튼 ?�릭)
+  // 보호자 검색 (Enter 키 또는 버튼 클릭)
   const handleParentSearch = () => {
     setParentCurrentPage(1);
     fetchParentListRef.current();
@@ -544,18 +568,19 @@ export function useSupportApplicationRegister(
     }
   };
 
-  // 보호???�택
+  // 보호자 선택
   const handleParentSelect = (parent: ArmuserDTO) => {
-    console.log("?�택??보호??", parent);
+    console.log("선택한 보호자:", parent);
     setFormData((prev) => {
-      // ?�년?�일 ?�맷??(YYYY-MM-DD ?�식?�로 변??
+      // 생년월일 포맷팅 (YYYY-MM-DD 형식으로 변환)
       let formattedBirthDate = prev.parentBirthDate;
       if (parent.brthdy) {
-        // YYYY-MM-DD ?�식?�면 그�?�??�용
+        // YYYY-MM-DD 형식이면 그대로 사용
         if (parent.brthdy.includes("-")) {
           formattedBirthDate = parent.brthdy;
         } else {
-          // YYYYMMDD ?�식?�면 YYYY-MM-DD�?변??          const cleaned = parent.brthdy.replace(/-/g, "");
+          // YYYYMMDD 형식이면 YYYY-MM-DD로 변환
+          const cleaned = parent.brthdy.replace(/-/g, "");
           if (cleaned.length === 8) {
             formattedBirthDate = `${cleaned.slice(0, 4)}-${cleaned.slice(4, 6)}-${cleaned.slice(6, 8)}`;
           }
@@ -581,7 +606,7 @@ export function useSupportApplicationRegister(
         studentDetailAddress: "",
       };
 
-      console.log("?�정??보호???�보 (DB 컬럼�?기�?):", {
+      console.log("설정된 보호자 정보 (DB 컬럼명 기준):", {
         pEsntlId: newData.parentEsntlId, // P_ESNTL_ID 컬럼
         pUserNm: newData.parentName, // P_USER_NM 컬럼
       });
@@ -593,7 +618,7 @@ export function useSupportApplicationRegister(
     fetchStudentList(parent.esntlId || "");
   };
 
-  // 보호??모달 ?�기
+  // 보호자 모달 열기
   const handleOpenParentModal = () => {
     setShowParentModal(true);
     setParentSearchKeyword("");
@@ -601,13 +626,13 @@ export function useSupportApplicationRegister(
     fetchParentListRef.current();
   };
 
-  // 보호??모달 ?�기
+  // 보호자 모달 닫기
   const handleCloseParentModal = () => {
     setShowParentModal(false);
     setParentSearchKeyword("");
   };
 
-  // ?�생(?��?) 목록 조회: ?�택???��?모의 ?��?�?/api/admin/armchil/children �?조회
+  // 학생(자녀) 목록 조회: 선택된 학부모의 자녀만 /api/admin/armchil/children 로 조회
   const fetchStudentList = useCallback(async (pEsntlId: string) => {
     if (!pEsntlId || !pEsntlId.trim()) {
       setStudentList([]);
@@ -620,14 +645,14 @@ export function useSupportApplicationRegister(
         response.data && Array.isArray(response.data) ? response.data : [];
       setStudentList(list);
     } catch (err) {
-      console.error("?��? 목록 조회 ?�패:", err);
+      console.error("자녀 목록 조회 실패:", err);
       setStudentList([]);
     } finally {
       setStudentLoading(false);
     }
   }, []);
 
-  // ?�생 ?�택(콤보박스) ??/api/shared/armuser/{esntlId} �??�세 조회 ???�에 반영 + SCHOOL_ID�??�교/?�급 ?�팅
+  // 학생 선택(콤보박스) 시 /api/shared/armuser/{esntlId} 로 상세 조회 후 폼에 반영 + SCHOOL_ID로 학교/학급 세팅
   const handleStudentSelect = useCallback(async (esntlId: string) => {
     const id = esntlId?.trim();
     if (!id) return;
@@ -636,7 +661,7 @@ export function useSupportApplicationRegister(
       const response = await ArmuserService.getDetail(id);
       const student = response.detail;
       if (!student) {
-        setError("?�생 ?�보�?불러?????�습?�다.");
+        setError("학생 정보를 불러올 수 없습니다.");
         return;
       }
       let formattedBirthDate = "";
@@ -656,7 +681,8 @@ export function useSupportApplicationRegister(
       const schoolGb = student.schoolGb || "";
       const gradeInfo =
         student.schoolLvl != null ? String(student.schoolLvl) : "";
-      // �?SCHOOL_NO)?� classOptions2??value(item.classNm) ?�맷�??�일?�게 ?�자 문자?�로 ?�??      const gradeInfo2 =
+      // 반(SCHOOL_NO)은 classOptions2의 value(item.classNm) 포맷과 동일하게 숫자 문자열로 저장
+      const gradeInfo2 =
         student.schoolNo != null ? String(student.schoolNo) : "";
 
       setFormData((prev) => ({
@@ -687,17 +713,17 @@ export function useSupportApplicationRegister(
             if (item.grade) gradeSet.add(item.grade);
           });
           const gradeOptions: SelectOption[] = [
-            { value: "", label: "?�택" },
+            { value: "", label: "선택" },
             ...Array.from(gradeSet)
               .sort()
-              .map((grade) => ({ value: grade, label: `${grade}?�년` })),
+              .map((grade) => ({ value: grade, label: `${grade}학년` })),
           ];
           setClassOptions(gradeOptions);
           const filteredClasses = classList.filter(
             (item) => item.grade === gradeInfo,
           );
           const classOptions2List: SelectOption[] = [
-            { value: "", label: "?�택" },
+            { value: "", label: "선택" },
             ...filteredClasses
               .map((item) => ({
                 value: item.classNm || "",
@@ -707,37 +733,39 @@ export function useSupportApplicationRegister(
           ];
           setClassOptions2(classOptions2List);
         } catch (err) {
-          console.error("?�급 ?�보 조회 ?�패:", err);
-          setClassOptions([{ value: "", label: "?�택" }]);
-          setClassOptions2([{ value: "", label: "?�택" }]);
+          console.error("학급 정보 조회 실패:", err);
+          setClassOptions([{ value: "", label: "선택" }]);
+          setClassOptions2([{ value: "", label: "선택" }]);
         } finally {
           setClassLoading(false);
         }
       } else {
-        setClassOptions([{ value: "", label: "?�택" }]);
-        setClassOptions2([{ value: "", label: "?�택" }]);
+        setClassOptions([{ value: "", label: "선택" }]);
+        setClassOptions2([{ value: "", label: "선택" }]);
       }
     } catch (err) {
-      console.error("?�생 ?�세 조회 ?�패:", err);
-      setError("?�생 ?�보�?불러?�는 �??�류가 발생?�습?�다.");
+      console.error("학생 상세 조회 실패:", err);
+      setError("학생 정보를 불러오는 중 오류가 발생했습니다.");
     } finally {
       setStudentLoading(false);
     }
   }, []);
 
-  // ?�화번호 ?�맷???�수 (?�면 ?�시??
+  // 전화번호 포맷팅 함수 (화면 표시용)
   const formatPhoneNumber = (value: string): string => {
-    // ?�자�?추출
+    // 숫자만 추출
     const numbers = value.replace(/[^\d]/g, "");
 
-    // 길이???�라 ?�맷??    if (numbers.length <= 3) {
+    // 길이에 따라 포맷팅
+    if (numbers.length <= 3) {
       return numbers;
     } else if (numbers.length <= 7) {
       return `${numbers.slice(0, 3)}-${numbers.slice(3)}`;
     } else if (numbers.length <= 11) {
       return `${numbers.slice(0, 3)}-${numbers.slice(3, 7)}-${numbers.slice(7)}`;
     } else {
-      // 11?�리 초과 ??11?�리까�?�?      return `${numbers.slice(0, 3)}-${numbers.slice(3, 7)}-${numbers.slice(7, 11)}`;
+      // 11자리 초과 시 11자리까지만
+      return `${numbers.slice(0, 3)}-${numbers.slice(3, 7)}-${numbers.slice(7, 11)}`;
     }
   };
 
@@ -748,7 +776,7 @@ export function useSupportApplicationRegister(
   ) => {
     const { name, value } = e.target;
 
-    // ?�락�??�드??경우 ?�맷???�용 (?�면 ?�시??
+    // 연락처 필드인 경우 포맷팅 적용 (화면 표시용)
     if (name === "parentPhone" || name === "studentPhone") {
       const formattedValue = formatPhoneNumber(value);
       setFormData((prev) => ({
@@ -762,7 +790,8 @@ export function useSupportApplicationRegister(
       }));
     }
 
-    // ?�러 메시지 초기??    if (errors[name as keyof ValidationErrors]) {
+    // 에러 메시지 초기화
+    if (errors[name as keyof ValidationErrors]) {
       setErrors((prev) => ({
         ...prev,
         [name]: undefined,
@@ -810,38 +839,38 @@ export function useSupportApplicationRegister(
     setSelectedFiles((prev) => prev.filter((item) => item.id !== id));
   };
 
-  // 기존 첨�??�일 ??�� ?�인 ?�이?�로�??�시
+  // 기존 첨부파일 삭제 확인 다이얼로그 표시
   const handleDeleteFileClick = (file: ArtappmFileItem) => {
-    console.log("handleDeleteFileClick ?�출??", file);
+    console.log("handleDeleteFileClick 호출됨:", file);
     setFileToDelete(file);
     setShowDeleteConfirmDialog(true);
-    console.log("showDeleteConfirmDialog ?�정??", true);
+    console.log("showDeleteConfirmDialog 설정됨:", true);
   };
 
-  // 기존 첨�??�일 ??�� (?�세 모드 ?�용). ??��/?�세 모두 reqId 기반.
+  // 기존 첨부파일 삭제 (상세 모드 전용). 삭제/상세 모두 reqId 기반.
   const deleteExistingFile = async (file: ArtappmFileItem) => {
-    console.log("deleteExistingFile 직접 ?�출??", file);
+    console.log("deleteExistingFile 직접 호출됨:", file);
     const reqId = detailData?.reqId;
     if (!reqId || !reqId.trim()) {
       setError(
-        "첨�??�일????��?�기 ?�한 ?�세 ?�보가 ?�습?�다. ?�이지�??�로고침??주세??",
+        "첨부파일을 삭제하기 위한 상세 정보가 없습니다. 페이지를 새로고침해 주세요.",
       );
       return;
     }
 
-    // fileId?� seq�?문자?�로 변??(18?�리 ?�자 ?��???문제 ?�결)
+    // fileId와 seq를 문자열로 변환 (18자리 숫자 정밀도 문제 해결)
     const fileId = file.fileId != null ? String(file.fileId) : null;
     const seq = file.seq != null ? String(file.seq) : null;
 
     if (!fileId || !seq) {
-      console.error("??��???�일??fileId ?�는 seq가 ?�효?��? ?�습?�다.", {
+      console.error("삭제할 파일의 fileId 또는 seq가 유효하지 않습니다.", {
         file,
         fileId,
         seq,
         fileIdType: typeof file.fileId,
         seqType: typeof file.seq,
       });
-      setError("??��???�일 ?�보가 ?�바르�? ?�습?�다.");
+      setError("삭제할 파일 정보가 올바르지 않습니다.");
       return;
     }
 
@@ -849,7 +878,7 @@ export function useSupportApplicationRegister(
       setLoading(true);
       setError("");
 
-      console.log("첨�??�일 ??�� ?�청:", {
+      console.log("첨부파일 삭제 요청:", {
         reqId,
         fileId,
         seq,
@@ -861,10 +890,10 @@ export function useSupportApplicationRegister(
         seq: Number(seq),
       });
 
-      console.log("첨�??�일 ??�� ?�답:", response);
+      console.log("첨부파일 삭제 응답:", response);
 
       if (response.result === "00") {
-        // ??�� ?�공 ???�세 ?�보�??�시 불러?�???�일 목록 갱신 (REQ_ID 기�?)
+        // 삭제 성공 시 상세 정보를 다시 불러와서 파일 목록 갱신 (REQ_ID 기준)
         const refetchReqId = detailData?.reqId;
         if (mode === "detail" && refetchReqId) {
           try {
@@ -873,14 +902,14 @@ export function useSupportApplicationRegister(
                 reqId: refetchReqId,
               });
 
-            // 첨�??�일 목록 갱신
+            // 첨부파일 목록 갱신
             const files: ArtappmFileItem[] =
               (detailResponse && (detailResponse.files as ArtappmFileItem[])) ||
               [];
             setExistingFiles(files || []);
 
-            // fileId 콘솔 출력 (?�일 ??�� ??
-            console.log("=== ?�일 ??�� ???�조??- ?�일 ?�보 ===");
+            // fileId 콘솔 출력 (파일 삭제 후)
+            console.log("=== 파일 삭제 후 재조회 - 파일 정보 ===");
             if (detailResponse.detail) {
               console.log(
                 "ARTAPPM.FILE_ID (그룹 fileId):",
@@ -888,33 +917,33 @@ export function useSupportApplicationRegister(
               );
             }
             if (files && files.length > 0) {
-              console.log("?��? 첨�??�일 목록:");
+              console.log("남은 첨부파일 목록:");
               files.forEach((file, index) => {
-                console.log(`  ?�일 ${index + 1}:`, {
+                console.log(`  파일 ${index + 1}:`, {
                   fileId: file.fileId,
                   seq: file.seq,
                   orgfNm: file.orgfNm,
                 });
               });
             } else {
-              console.log("첨�??�일 ?�음");
+              console.log("첨부파일 없음");
             }
             console.log("====================================");
 
-            // ?�공 메시지 ?�시 (?�인 ??목록?�로 가지 ?�음)
-            setMessageDialogTitle("??�� ?�료");
+            // 성공 메시지 표시 (확인 시 목록으로 가지 않음)
+            setMessageDialogTitle("삭제 완료");
             setMessageDialogMessage(
-              response.message || "첨�??�일????��?�었?�니??",
+              response.message || "첨부파일이 삭제되었습니다.",
             );
             setMessageDialogNavigateToList(false);
             setMessageDialogType("success");
             setShowMessageDialog(true);
           } catch (refreshErr) {
-            console.error("??�� ???�세 ?�보 갱신 ?�류:", refreshErr);
-            // 갱신 ?�패?�도 ?�론??목록?�서�??�거
+            console.error("삭제 후 상세 정보 갱신 오류:", refreshErr);
+            // 갱신 실패해도 프론트 목록에서만 제거
             setExistingFiles((prev) =>
               prev.filter((f) => {
-                // String() 변?�으�?비교 (18?�리 ?�자 ?��???문제 ?�결)
+                // String() 변환으로 비교 (18자리 숫자 정밀도 문제 해결)
                 return !(
                   String(f.fileId) === String(fileId) &&
                   String(f.seq) === String(seq)
@@ -923,62 +952,63 @@ export function useSupportApplicationRegister(
             );
           }
         } else {
-          // ?�록 모드???�는 ?�론??목록?�서�??�거
+          // 등록 모드일 때는 프론트 목록에서만 제거
           setExistingFiles((prev) =>
             prev.filter((f) => {
-              // String() 변?�으�?비교 (18?�리 ?�자 ?��???문제 ?�결)
+              // String() 변환으로 비교 (18자리 숫자 정밀도 문제 해결)
               return !(
                 String(f.fileId) === String(fileId) &&
                 String(f.seq) === String(seq)
               );
             }),
           );
-          // ?�공 메시지 ?�시 (?�인 ??목록?�로 가지 ?�음)
-          setMessageDialogTitle("??�� ?�료");
+          // 성공 메시지 표시 (확인 시 목록으로 가지 않음)
+          setMessageDialogTitle("삭제 완료");
           setMessageDialogMessage(
-            response.message || "첨�??�일????��?�었?�니??",
+            response.message || "첨부파일이 삭제되었습니다.",
           );
           setMessageDialogNavigateToList(false);
           setMessageDialogType("success");
           setShowMessageDialog(true);
         }
       } else {
-        // ??�� ?�패 ??        const errorMsg = response.message || "첨�??�일 ??��???�패?�습?�다.";
-        setMessageDialogTitle("??�� ?�패");
+        // 삭제 실패 시
+        const errorMsg = response.message || "첨부파일 삭제에 실패했습니다.";
+        setMessageDialogTitle("삭제 실패");
         setMessageDialogMessage(errorMsg);
         setMessageDialogType("danger");
         setShowMessageDialog(true);
-        console.error("첨�??�일 ??�� ?�패:", errorMsg, response);
+        console.error("첨부파일 삭제 실패:", errorMsg, response);
         setError(errorMsg);
       }
     } catch (err) {
-      console.error("첨�??�일 ??�� ?�류:", err);
-      setMessageDialogTitle("??�� ?�패");
+      console.error("첨부파일 삭제 오류:", err);
+      setMessageDialogTitle("삭제 실패");
       setMessageDialogMessage(
         err instanceof Error
           ? err.message
-          : "첨�??�일 ??�� �??�류가 발생?�습?�다.",
+          : "첨부파일 삭제 중 오류가 발생했습니다.",
       );
       setMessageDialogType("danger");
       setShowMessageDialog(true);
       if (err instanceof Error) {
         setError(err.message);
       } else {
-        setError("첨�??�일 ??�� �??�류가 발생?�습?�다.");
+        setError("첨부파일 삭제 중 오류가 발생했습니다.");
       }
     } finally {
       setLoading(false);
     }
   };
 
-  /** ?�세 모드 ?�버 ?�??첨�? ?�운로드 (?�일�??�릭 ?? */
+  /** 상세 모드 서버 저장 첨부 다운로드 (파일명 클릭 시) */
   const downloadExistingSupportApplicationAttachment = useCallback(
     async (file: ArtappmFileItem) => {
       const fileId = file.fileId != null ? String(file.fileId).trim() : "";
       const seqNum = file.seq != null ? Number(file.seq) : Number.NaN;
       if (!fileId || Number.isNaN(seqNum)) {
-        setMessageDialogTitle("?�운로드 ?�패");
-        setMessageDialogMessage("?�일 ?�보가 ?�바르�? ?�습?�다.");
+        setMessageDialogTitle("다운로드 실패");
+        setMessageDialogMessage("파일 정보가 올바르지 않습니다.");
         setMessageDialogNavigateToList(false);
         setMessageDialogType("danger");
         setShowMessageDialog(true);
@@ -991,11 +1021,11 @@ export function useSupportApplicationRegister(
           file.orgfNm || file.saveNm || undefined,
         );
       } catch (err) {
-        setMessageDialogTitle("?�운로드 ?�패");
+        setMessageDialogTitle("다운로드 실패");
         setMessageDialogMessage(
           err instanceof Error
             ? err.message
-            : "?�일 ?�운로드 �??�류가 발생?�습?�다.",
+            : "파일 다운로드 중 오류가 발생했습니다.",
         );
         setMessageDialogNavigateToList(false);
         setMessageDialogType("danger");
@@ -1009,69 +1039,69 @@ export function useSupportApplicationRegister(
     const newErrors: ValidationErrors = {};
     let isValid = true;
 
-    // 보호?�명 ?�수 체크 (보호??검???�수)
+    // 보호자명 필수 체크 (보호자 검색 필수)
     if (!formData.parentName || formData.parentName.trim() === "") {
-      newErrors.parentName = "보호?��? 검?�하???�택?�주?�요.";
+      newErrors.parentName = "보호자를 검색하여 선택해주세요.";
       isValid = false;
     }
 
-    // 보호??고유ID ?�수 체크
+    // 보호자 고유ID 필수 체크
     if (!formData.parentEsntlId || formData.parentEsntlId.trim() === "") {
-      newErrors.parentName = "보호?��? 검?�하???�택?�주?�요.";
+      newErrors.parentName = "보호자를 검색하여 선택해주세요.";
       isValid = false;
     }
 
-    // 보호???�년?�일 ?�수
+    // 보호자 생년월일 필수
     if (!formData.parentBirthDate || formData.parentBirthDate.trim() === "") {
-      newErrors.parentBirthDate = "보호???�년?�일???�력?�주?�요.";
+      newErrors.parentBirthDate = "보호자 생년월일을 입력해주세요.";
       isValid = false;
     }
 
-    // 보호???�락�??�수
+    // 보호자 연락처 필수
     if (!formData.parentPhone || formData.parentPhone.trim() === "") {
-      newErrors.parentPhone = "보호???�락처�? ?�력?�주?�요.";
+      newErrors.parentPhone = "보호자 연락처를 입력해주세요.";
       isValid = false;
     }
 
-    // ?�교�??�수
+    // 학교명 필수
     if (!formData.schoolName || formData.schoolName.trim() === "") {
-      newErrors.schoolName = "?�교명을 ?�택?�주?�요.";
+      newErrors.schoolName = "학교명을 선택해주세요.";
       isValid = false;
     }
 
-    // ?�년 ?�수
+    // 학년 필수
     if (!formData.gradeInfo || formData.gradeInfo.trim() === "") {
-      newErrors.gradeInfo = "?�년???�택?�주?�요.";
+      newErrors.gradeInfo = "학년을 선택해주세요.";
       isValid = false;
     }
 
-    // ?�생�??�수 체크 (?�생 검???�수)
+    // 학생명 필수 체크 (학생 검색 필수)
     if (!formData.studentName || formData.studentName.trim() === "") {
-      newErrors.studentName = "?�생??검?�하???�택?�주?�요.";
+      newErrors.studentName = "학생을 검색하여 선택해주세요.";
       isValid = false;
     }
 
-    // ?�생 고유ID ?�수 체크
+    // 학생 고유ID 필수 체크
     if (!formData.studentEsntlId || formData.studentEsntlId.trim() === "") {
-      newErrors.studentName = "?�생??검?�하???�택?�주?�요.";
+      newErrors.studentName = "학생을 검색하여 선택해주세요.";
       isValid = false;
     }
 
-    // ?�생 ?�락�??�수
+    // 학생 연락처 필수
     if (!formData.studentPhone || formData.studentPhone.trim() === "") {
-      newErrors.studentPhone = "?�생 ?�락처�? ?�력?�주?�요.";
+      newErrors.studentPhone = "학생 연락처를 입력해주세요.";
       isValid = false;
     }
 
-    // ?�생 ?�년?�일 ?�수
+    // 학생 생년월일 필수
     if (!formData.studentBirthDate || formData.studentBirthDate.trim() === "") {
-      newErrors.studentBirthDate = "?�생 ?�년?�일???�력?�주?�요.";
+      newErrors.studentBirthDate = "학생 생년월일을 입력해주세요.";
       isValid = false;
     }
 
-    // ?�생 주소(?�로�? ?�수
+    // 학생 주소(도로명) 필수
     if (!formData.studentAddress || formData.studentAddress.trim() === "") {
-      newErrors.studentAddress = "주소�??�력?�주?�요.";
+      newErrors.studentAddress = "주소를 입력해주세요.";
       isValid = false;
     }
 
@@ -1109,15 +1139,16 @@ export function useSupportApplicationRegister(
       setLoading(true);
       setError("");
 
-      // ?�짜 ?�식 변??(YYYY-MM-DD -> YYYYMMDD)
+      // 날짜 형식 변환 (YYYY-MM-DD -> YYYYMMDD)
       const formatDate = (dateStr: string | undefined): string | undefined => {
         if (!dateStr) return undefined;
         return dateStr.replace(/-/g, "");
       };
 
-      // ?�청분야 ?�식 변??
-      // �?분야�?"Y|?�용|" ?�는 "N||" ?�태�?직렬??      // - 체크박스 체크 + ?�스???�음: "Y|?�스??"
-      // - �??? "N||"
+      // 신청분야 형식 변환:
+      // 각 분야를 "Y|내용|" 또는 "N||" 형태로 직렬화
+      // - 체크박스 체크 + 텍스트 있음: "Y|텍스트|"
+      // - 그 외: "N||"
       const getFieldValue = (
         checked: boolean,
         fieldText: string | undefined,
@@ -1128,8 +1159,8 @@ export function useSupportApplicationRegister(
         return "N||";
       };
 
-      // ?�섯 �?분야�?구분???�이 그�?�??�어 붙임
-      // ?? N||Y|222|Y|333|Y|444|Y|555|
+      // 다섯 개 분야를 구분자 없이 그대로 이어 붙임
+      // 예: N||Y|222|Y|333|Y|444|Y|555|
       const reqPart =
         getFieldValue(formData.humanitiesChecked, formData.humanitiesField) +
         getFieldValue(formData.scienceChecked, formData.scienceField) +
@@ -1137,52 +1168,58 @@ export function useSupportApplicationRegister(
         getFieldValue(formData.characterChecked, formData.characterField) +
         getFieldValue(formData.otherChecked, formData.otherField);
 
-      // formData�?ArtappmInsertRequest ?�식?�로 변??      // ?�버�? 보호???�보 ?�인 (DB 컬럼�?기�?)
-      console.log("보호???�보 (DB 컬럼�?기�?):", {
+      // formData를 ArtappmInsertRequest 형식으로 변환
+      // 디버깅: 보호자 정보 확인 (DB 컬럼명 기준)
+      console.log("보호자 정보 (DB 컬럼명 기준):", {
         pEsntlId: formData.parentEsntlId, // P_ESNTL_ID 컬럼
         pUserNm: formData.parentName, // P_USER_NM 컬럼
       });
 
-      // �?문자??체크 �?�??�인
+      // 빈 문자열 체크 및 값 확인
       const pEsntlIdValue = formData.parentEsntlId?.trim() || "";
       const pUserNmValue = formData.parentName?.trim() || "";
 
-      console.log("보호???�보 �??�인:", {
+      console.log("보호자 정보 값 확인:", {
         pEsntlId: pEsntlIdValue,
         pEsntlIdLength: pEsntlIdValue.length,
         pUserNm: pUserNmValue,
         pUserNmLength: pUserNmValue.length,
       });
 
-      // ?�생 고유ID ?�인
+      // 학생 고유ID 확인
       const studentEsntlIdValue = formData.studentEsntlId?.trim() || "";
 
       const requestData: ArtappmInsertRequest = {
-        proId: businessId || "", // ?�업코드
-        proType: formData.applicationType === "INDIVIDUAL" ? "01" : "02", // 01:1?�탐구형, 02:모둠 ?�구??        reqEsntlId: pEsntlIdValue, // ?�청???��?�? ID ??REQ_ESNTL_ID
-        cEsntlId: studentEsntlIdValue, // ?�생 ID ??C_ESNTL_ID
-        pEsntlId: pEsntlIdValue, // ?��?모ID (보호??고유ID) - P_ESNTL_ID 컬럼
-        headNm: pUserNmValue, // ?��?주명 (보호?�명)
-        pUserNm: pUserNmValue, // 보호?�명 - P_USER_NM 컬럼
-        mbtlnum: formData.parentPhone?.replace(/-/g, ""), // 보호???�락�?(?�이???�거)
-        brthdy: formatDate(formData.parentBirthDate), // 보호???�년?�일 (YYYYMMDD ?�식)
-        schoolId: formData.schoolCode?.trim() || undefined, // ?�교 ID (?�세 조회 ???�교명·학?�·반 ?�시??
-        schoolGb: formData.schoolGb, // ?�교구분 코드 (E, J, H, U, T)
-        schoolNm: formData.schoolName, // ?�교�?        schoolLvl: formData.gradeInfo
+        proId: businessId || "", // 사업코드
+        proType: formData.applicationType === "INDIVIDUAL" ? "01" : "02", // 01:1인탐구형, 02:모둠 탐구형
+        reqEsntlId: pEsntlIdValue, // 신청자(학부모) ID → REQ_ESNTL_ID
+        cEsntlId: studentEsntlIdValue, // 학생 ID → C_ESNTL_ID
+        pEsntlId: pEsntlIdValue, // 학부모ID (보호자 고유ID) - P_ESNTL_ID 컬럼
+        headNm: pUserNmValue, // 세대주명 (보호자명)
+        pUserNm: pUserNmValue, // 보호자명 - P_USER_NM 컬럼
+        mbtlnum: formData.parentPhone?.replace(/-/g, ""), // 보호자 연락처 (하이픈 제거)
+        brthdy: formatDate(formData.parentBirthDate), // 보호자 생년월일 (YYYYMMDD 형식)
+        schoolId: formData.schoolCode?.trim() || undefined, // 학교 ID (상세 조회 시 학교명·학년·반 표시용)
+        schoolGb: formData.schoolGb, // 학교구분 코드 (E, J, H, U, T)
+        schoolNm: formData.schoolName, // 학교명
+        schoolLvl: formData.gradeInfo
           ? parseInt(formData.gradeInfo)
-          : undefined, // ?�년
+          : undefined, // 학년
         schoolNo: formData.gradeInfo2
           ? parseInt(formData.gradeInfo2)
-          : undefined, // �?        payBankCode: formData.bankName, // ?�?�코??        payBank: formData.accountNumber, // 계좌번호
-        holderNm: formData.depositorName, // ?�금�?        reqPart: reqPart, // ?�청분야 (?�식: N||Y|?�스??N||N||N||N||)
-        playPart: formData.activityScope === "INSIDE" ? "1" : "2", // ?�동범위 (1:군산 ?? 2:군산 ??
+          : undefined, // 반
+        payBankCode: formData.bankName, // 은행코드
+        payBank: formData.accountNumber, // 계좌번호
+        holderNm: formData.depositorName, // 예금주
+        reqPart: reqPart, // 신청분야 (형식: N||Y|텍스트|N||N||N||N||)
+        playPart: formData.activityScope === "INSIDE" ? "1" : "2", // 활동범위 (1:군산 내, 2:군산 외)
         reqObj: formData.purpose, // 목적
-        reqPlay: formData.activityContent, // ?�동?�용
-        reqPlan: formData.budgetPlan, // ?�산 ?�용계획
-        reqDesc: formData.other, // 기�?
-        reaDesc: formData.reaDesc?.trim() || undefined, // ?�유 (REA_DESC)
-        sttusCode: formData.status || "01", // ?�태코드 (01:?�시?�?? 02:?�청, 03:?�인, 04:?�료, 11:반려, 12:중단, 99:취소)
-        // ?�정?��? ??결과구분(RESULT_GB) N:미선?? Y:?�정, R:?�비
+        reqPlay: formData.activityContent, // 활동내용
+        reqPlan: formData.budgetPlan, // 예산 사용계획
+        reqDesc: formData.other, // 기타
+        reaDesc: formData.reaDesc?.trim() || undefined, // 사유 (REA_DESC)
+        sttusCode: formData.status || "01", // 상태코드 (01:임시저장, 02:신청, 03:승인, 04:완료, 11:반려, 12:중단, 99:취소)
+        // 선정여부 → 결과구분(RESULT_GB) N:미선정, Y:선정, R:예비
         resultGb:
           formData.selectionStatus ||
           (mode === "detail" ? detailData?.resultGb : undefined),
@@ -1190,40 +1227,40 @@ export function useSupportApplicationRegister(
           mode === "detail"
             ? detailData?.reqDt ||
               new Date().toISOString().slice(0, 19).replace("T", " ")
-            : new Date().toISOString().slice(0, 19).replace("T", " "), // ?�청?�시
-        certYn: "Y", // ?�플?�무 ?�청?�록 ???�증?��? 무조�?Y
+            : new Date().toISOString().slice(0, 19).replace("T", " "), // 신청일시
+        certYn: "Y", // 청소년자기계발연수지원 신청등록 시 인증여부 무조건 Y
       };
 
-      // ?�세 모드?�서??PK, ?�일/결과 관???�드 �?기�? ?�드�?기존 값으�?보존 (detailData 기�?)
+      // 상세 모드에서는 PK, 파일/결과 관련 필드 및 기타 필드를 기존 값으로 보존 (detailData 기준)
       if (mode === "detail") {
-        requestData.reqId = detailData?.reqId ?? reqId ?? ""; // ?�정 ???�수 (백엔??WHERE REQ_ID)
+        requestData.reqId = detailData?.reqId ?? reqId ?? ""; // 수정 시 필수 (백엔드 WHERE REQ_ID)
         requestData.proSeq = detailData?.proSeq;
-        // ?�청??부모·학??C_ESNTL_ID????�?requestData) ?��? (detail??구형 req=?�생 ??��?�기 금�?)
+        // 신청자=부모·학생=C_ESNTL_ID는 폼 값(requestData) 유지 (detail의 구형 req=학생 덮어쓰기 금지)
 
-        // ?�자?� ??UI???�는 ?�드???�본 �??��? (?�증?��?????�� Y)
-        requestData.certYn = "Y"; // ?�정 ?�에???�증?��? 무조�?Y
+        // 다자녀 등 UI에 없는 필드는 원본 값 유지 (인증여부는 항상 Y)
+        requestData.certYn = "Y"; // 수정 시에도 인증여부 무조건 Y
         requestData.mchilYn = detailData?.mchilYn ?? requestData.mchilYn;
         requestData.mchilNm = detailData?.mchilNm ?? requestData.mchilNm;
-        requestData.schoolId = detailData?.schoolId ?? requestData.schoolId; // ?�세 조회 ???�교 ID�??�교명·학?�·반 ?�시
+        requestData.schoolId = detailData?.schoolId ?? requestData.schoolId; // 상세 조회 시 학교 ID로 학교명·학년·반 표시
 
-        // ?�일/결과/?�시/?�유 ?�도 ?��?
+        // 파일/결과/일시/사유 등도 유지
         requestData.fileId = detailData?.fileId ?? requestData.fileId;
         requestData.aprrDt = detailData?.aprrDt ?? requestData.aprrDt;
         requestData.chgDt = detailData?.chgDt ?? requestData.chgDt;
         requestData.stopDt = detailData?.stopDt ?? requestData.stopDt;
       }
 
-      // ?�버�? ?�송???�이???�인
-      console.log("?�송??requestData:", JSON.stringify(requestData, null, 2));
-      console.log("pEsntlId �?(P_ESNTL_ID 컬럼):", requestData.pEsntlId);
-      console.log("pEsntlId ?�??", typeof requestData.pEsntlId);
-      console.log("pUserNm �?(P_USER_NM 컬럼):", requestData.pUserNm);
-      console.log("pUserNm ?�??", typeof requestData.pUserNm);
+      // 디버깅: 전송할 데이터 확인
+      console.log("전송할 requestData:", JSON.stringify(requestData, null, 2));
+      console.log("pEsntlId 값 (P_ESNTL_ID 컬럼):", requestData.pEsntlId);
+      console.log("pEsntlId 타입:", typeof requestData.pEsntlId);
+      console.log("pUserNm 값 (P_USER_NM 컬럼):", requestData.pUserNm);
+      console.log("pUserNm 타입:", typeof requestData.pUserNm);
 
-      // 첨�??�일 배열 ?�성
+      // 첨부파일 배열 생성
       const files = selectedFiles.map((item) => item.file);
 
-      // API ?�출 (?�록 / ?�정 분기)
+      // API 호출 (등록 / 수정 분기)
       const response =
         mode === "detail"
           ? await SupportApplicationService.updateArtappm(
@@ -1236,21 +1273,21 @@ export function useSupportApplicationRegister(
             );
 
       if (response.result === "00") {
-        // ?�공
+        // 성공
         const successMessage =
           response.message ||
           (mode === "detail"
-            ? "?�청???�정?�었?�니??"
-            : "?�청???�록?�었?�니??");
+            ? "신청이 수정되었습니다."
+            : "신청이 등록되었습니다.");
 
-        setMessageDialogTitle(mode === "detail" ? "?�정 ?�료" : "?�록 ?�료");
+        setMessageDialogTitle(mode === "detail" ? "수정 완료" : "등록 완료");
         setMessageDialogMessage(successMessage);
         setMessageDialogNavigateToList(true);
         setMessageDialogType("success");
         setShowMessageDialog(true);
 
         if (mode === "detail") {
-          // ?�정 모드: ?�이지 ?��? + ?�세 ?�조?�로 첨�??�일 목록 ?�로고침 (REQ_ID 기�?)
+          // 수정 모드: 페이지 유지 + 상세 재조회로 첨부파일 목록 새로고침 (REQ_ID 기준)
           const refetchReqId = detailData?.reqId;
           if (refetchReqId) {
             try {
@@ -1264,8 +1301,8 @@ export function useSupportApplicationRegister(
                 [];
               setExistingFiles(files || []);
 
-              // fileId 콘솔 출력 (?�?????�조??
-              console.log("=== ?�?????�조??- ?�일 ?�보 ===");
+              // fileId 콘솔 출력 (저장 후 재조회)
+              console.log("=== 저장 후 재조회 - 파일 정보 ===");
               if (detailResponse.detail) {
                 console.log(
                   "ARTAPPM.FILE_ID (그룹 fileId):",
@@ -1273,50 +1310,51 @@ export function useSupportApplicationRegister(
                 );
               }
               if (files && files.length > 0) {
-                console.log("첨�??�일 목록:");
+                console.log("첨부파일 목록:");
                 files.forEach((file, index) => {
-                  console.log(`  ?�일 ${index + 1}:`, {
+                  console.log(`  파일 ${index + 1}:`, {
                     fileId: file.fileId,
                     seq: file.seq,
                     orgfNm: file.orgfNm,
                   });
                 });
               } else {
-                console.log("첨�??�일 ?�음");
+                console.log("첨부파일 없음");
               }
               console.log("====================================");
             } catch (err) {
-              console.error("?�?????�세 ?�조??�??�류가 발생?�습?�다:", err);
-              // ?�조???�패??치명?�이지 ?�으므�??�러 메시지로만 ?�시
+              console.error("저장 후 상세 재조회 중 오류가 발생했습니다:", err);
+              // 재조회 실패는 치명적이지 않으므로 에러 메시지로만 표시
               if (err instanceof Error) {
                 setError(
                   err.message ||
-                    "?�?????�세 ?�보�??�시 불러?�는 �??�류가 발생?�습?�다.",
+                    "저장 후 상세 정보를 다시 불러오는 중 오류가 발생했습니다.",
                 );
               }
             }
           }
-          // ?�로 추�??�던 ?�일 목록?� 초기??          setSelectedFiles([]);
+          // 새로 추가했던 파일 목록은 초기화
+          setSelectedFiles([]);
         }
-        // ?�록 모드???�이?�로�??�인 ??목록?�로 ?�동 (handleMessageDialogClose?�서 처리)
+        // 등록 모드는 다이얼로그 확인 후 목록으로 이동 (handleMessageDialogClose에서 처리)
       } else {
-        // ?�패
-        const errorPrefix = mode === "detail" ? "?�청 ?�정" : "?�청 ?�록";
-        setMessageDialogTitle(mode === "detail" ? "?�정 ?�패" : "?�록 ?�패");
+        // 실패
+        const errorPrefix = mode === "detail" ? "신청 수정" : "신청 등록";
+        setMessageDialogTitle(mode === "detail" ? "수정 실패" : "등록 실패");
         setMessageDialogMessage(
-          response.message || `${errorPrefix} �??�류가 발생?�습?�다.`,
+          response.message || `${errorPrefix} 중 오류가 발생했습니다.`,
         );
         setMessageDialogType("danger");
         setShowMessageDialog(true);
       }
     } catch (err) {
-      const actionLabel = mode === "detail" ? "?�청 ?�정" : "?�청 ?�록";
-      console.error(`${actionLabel} ?�류:`, err);
-      setMessageDialogTitle(mode === "detail" ? "?�정 ?�패" : "?�록 ?�패");
+      const actionLabel = mode === "detail" ? "신청 수정" : "신청 등록";
+      console.error(`${actionLabel} 오류:`, err);
+      setMessageDialogTitle(mode === "detail" ? "수정 실패" : "등록 실패");
       setMessageDialogMessage(
         err instanceof Error
           ? err.message
-          : `${actionLabel} �??�류가 발생?�습?�다.`,
+          : `${actionLabel} 중 오류가 발생했습니다.`,
       );
       setMessageDialogType("danger");
       setShowMessageDialog(true);
@@ -1329,7 +1367,8 @@ export function useSupportApplicationRegister(
     router.push(`/adminWeb/support/detail?businessId=${businessId || ""}`);
   };
 
-  // 메시지 ?�이?�로�??�기 ?�들??  const handleMessageDialogClose = () => {
+  // 메시지 다이얼로그 닫기 핸들러
+  const handleMessageDialogClose = () => {
     setShowMessageDialog(false);
     if (messageDialogType === "success" && messageDialogNavigateToList) {
       router.push(`/adminWeb/support/detail?businessId=${businessId || ""}`);
@@ -1337,7 +1376,7 @@ export function useSupportApplicationRegister(
     setMessageDialogNavigateToList(false);
   };
 
-  // ?�세 모드????기존 ?�청 ?�보 조회 (REQ_ID 기�? by-req-id API)
+  // 상세 모드일 때 기존 신청 정보 조회 (REQ_ID 기준 by-req-id API)
   useEffect(() => {
     if (mode !== "detail") return;
     if (!reqId) return;
@@ -1352,7 +1391,8 @@ export function useSupportApplicationRegister(
         const response: ArtappmDetailResponse =
           await SupportApplicationService.getArtappmDetail({ reqId });
 
-        // ?�세 ?�이??        const rawDetail =
+        // 상세 데이터
+        const rawDetail =
           (response && (response.detail || (response as any).data)) || null;
 
         if (!rawDetail || cancelled) {
@@ -1362,64 +1402,67 @@ export function useSupportApplicationRegister(
         const detail: any = rawDetail;
         setDetailData(detail);
 
-        // 첨�??�일 목록 (기존 ?�일)
+        // 첨부파일 목록 (기존 파일)
         const files: ArtappmFileItem[] =
           (response && (response.files as ArtappmFileItem[])) || [];
         if (!cancelled) {
           setExistingFiles(files || []);
 
           // fileId 콘솔 출력
-          console.log("=== 지?�사???�청 ?�세 - ?�일 ?�보 ===");
+          console.log("=== 지원사업 신청 상세 - 파일 정보 ===");
           console.log("ARTAPPM.FILE_ID (그룹 fileId):", detail.fileId);
           if (files && files.length > 0) {
-            console.log("첨�??�일 목록:");
+            console.log("첨부파일 목록:");
             files.forEach((file, index) => {
-              console.log(`  ?�일 ${index + 1}:`, {
+              console.log(`  파일 ${index + 1}:`, {
                 fileId: file.fileId,
                 seq: file.seq,
                 orgfNm: file.orgfNm,
               });
             });
           } else {
-            console.log("첨�??�일 ?�음");
+            console.log("첨부파일 없음");
           }
           console.log("====================================");
         }
 
-        // ?�청분야 ?�싱: 직렬???�식?� ?�음 2가지
-        // - "N||"  : 체크 ????        // - "Y|?�스??" : 체크 + ?�스??        const parseReqPart = (reqPart?: string) => {
+        // 신청분야 파싱: 직렬화 형식은 다음 2가지
+        // - "N||"  : 체크 안 함
+        // - "Y|텍스트|" : 체크 + 텍스트
+        const parseReqPart = (reqPart?: string) => {
           const value = reqPart || "";
           let index = 0;
 
           const parseOne = () => {
-            // ?��? 문자?�이 ?�으�?기본�?            if (index >= value.length) {
+            // 남은 문자열이 없으면 기본값
+            if (index >= value.length) {
               return { text: "", checked: false };
             }
 
             const ch = value[index];
 
-            // N|| ?�턴
+            // N|| 패턴
             if (ch === "N" && value.slice(index, index + 3) === "N||") {
               index += 3;
               return { text: "", checked: false };
             }
 
-            // Y|?�스?? ?�턴
+            // Y|텍스트| 패턴
             if (ch === "Y" && value[index + 1] === "|") {
               const start = index + 2;
               const end = value.indexOf("|", start);
               if (end === -1) {
-                // 종료 구분?��? ?�으�??��? 부�??�체�??�스?�로 간주
+                // 종료 구분자가 없으면 남은 부분 전체를 텍스트로 간주
                 const text = value.slice(start);
                 index = value.length;
                 return { text, checked: true };
               }
               const text = value.slice(start, end);
-              index = end + 1; // 마�?�?'|' ?�음?�로 ?�동
+              index = end + 1; // 마지막 '|' 다음으로 이동
               return { text, checked: true };
             }
 
-            // ?�식 �??�는 ?�턴?�면 ??글?�만 ?�비?�고 비체?�로 처리
+            // 인식 못 하는 패턴이면 한 글자만 소비하고 비체크로 처리
             index += 1;
             return { text: "", checked: false };
           };
@@ -1457,7 +1500,7 @@ export function useSupportApplicationRegister(
           otherChecked,
         } = parseReqPart(detail.reqPart);
 
-        // ?�짜 ?�맷: YYYYMMDD -> YYYY-MM-DD
+        // 날짜 포맷: YYYYMMDD -> YYYY-MM-DD
         const formatDateFromYYYYMMDD = (value?: string): string => {
           if (!value) return "";
           const cleaned = value.replace(/-/g, "");
@@ -1468,13 +1511,14 @@ export function useSupportApplicationRegister(
           )}-${cleaned.slice(6, 8)}`;
         };
 
-        // ?�생 ?�년?�일 / ?�별 매핑
-        // C_BRTHDY: ?�생 ?�년?�일 (YYYYMMDD)
-        // C_SEXDSTN_CODE: ?�생 ?�별 코드
+        // 학생 생년월일 / 성별 매핑
+        // C_BRTHDY: 학생 생년월일 (YYYYMMDD)
+        // C_SEXDSTN_CODE: 학생 성별 코드
         const studentBirthDate = formatDateFromYYYYMMDD(detail.cBrthdy || "");
         const studentGender = detail.cSexdstnCode === "F" ? "F" : "M";
 
-        // SCHOOL_ID(schoolId/sdSchulCode)가 ?�으�??�용, ?�으�??�교명으�?검??        const findSchoolCodeByName = async (
+        // SCHOOL_ID(schoolId/sdSchulCode)가 있으면 사용, 없으면 학교명으로 검색
+        const findSchoolCodeByName = async (
           schoolName: string,
         ): Promise<string> => {
           if (!schoolName) return "";
@@ -1503,7 +1547,7 @@ export function useSupportApplicationRegister(
               return matchedSchool.sdSchulCode;
             }
           } catch (err) {
-            console.error("?�교 코드 찾기 ?�패:", err);
+            console.error("학교 코드 찾기 실패:", err);
           }
           return "";
         };
@@ -1516,11 +1560,11 @@ export function useSupportApplicationRegister(
           ? schoolCodeFromId
           : await findSchoolCodeByName(detail.schoolNm || "");
 
-        // �?번호 매칭???�한 변??(?�중???�용)
+        // 반 번호 매칭을 위한 변수 (나중에 사용)
         let matchedClassValue = "";
-        let classOptions2ListForDebug: SelectOption[] = []; // ?�버깅용
+        let classOptions2ListForDebug: SelectOption[] = []; // 디버깅용
 
-        // ?�교 코드가 ?�으�??�급 ?�보 조회
+        // 학교 코드가 있으면 학급 정보 조회
         if (schoolCode) {
           try {
             setClassLoading(true);
@@ -1536,18 +1580,18 @@ export function useSupportApplicationRegister(
             });
 
             const gradeOptions: SelectOption[] = [
-              { value: "", label: "?�택" },
+              { value: "", label: "선택" },
               ...Array.from(gradeSet)
                 .sort()
                 .map((grade) => ({
                   value: grade,
-                  label: `${grade}?�년`,
+                  label: `${grade}학년`,
                 })),
             ];
 
             setClassOptions(gradeOptions);
 
-            // ?�년???�으�?�?목록??조회
+            // 학년이 있으면 반 목록도 조회
             const gradeInfo =
               detail.schoolLvl !== undefined && detail.schoolLvl !== null
                 ? String(detail.schoolLvl)
@@ -1558,15 +1602,15 @@ export function useSupportApplicationRegister(
                 ? Number(detail.schoolNo)
                 : null;
 
-            // ?�버�? ?�년�?�?번호 ?�인
+            // 디버깅: 학년과 반 번호 확인
             console.log(
-              "[?�세 조회] ?�년 (schoolLvl):",
+              "[상세 조회] 학년 (schoolLvl):",
               detail.schoolLvl,
               "->",
               gradeInfo,
             );
             console.log(
-              "[?�세 조회] �?번호 (schoolNo):",
+              "[상세 조회] 반 번호 (schoolNo):",
               detail.schoolNo,
               "->",
               schoolNo,
@@ -1578,7 +1622,7 @@ export function useSupportApplicationRegister(
               );
 
               const classOptions2List: SelectOption[] = [
-                { value: "", label: "?�택" },
+                { value: "", label: "선택" },
                 ...filteredClasses
                   .map((item) => ({
                     value: item.classNm || "",
@@ -1587,22 +1631,23 @@ export function useSupportApplicationRegister(
                   .filter((item) => item.value !== ""),
               ];
 
-              // ?�버깅용?�로 ?�??              classOptions2ListForDebug = classOptions2List;
+              // 디버깅용으로 저장
+              classOptions2ListForDebug = classOptions2List;
 
-              // ?�버�? �?목록 ?�인
+              // 디버깅: 반 목록 확인
               console.log(
-                "[?�세 조회] �?목록 (classOptions2List):",
+                "[상세 조회] 반 목록 (classOptions2List):",
                 classOptions2List,
               );
               console.log(
-                "[?�세 조회] classOptions2List???�제 value??",
+                "[상세 조회] classOptions2List의 실제 value들:",
                 classOptions2List.map((o) => ({
                   value: o.value,
                   label: o.label,
                 })),
               );
               console.log(
-                "[?�세 조회] classOptions2List??value ?�??",
+                "[상세 조회] classOptions2List의 value 타입:",
                 classOptions2List.map((o) => ({
                   value: o.value,
                   valueType: typeof o.value,
@@ -1611,52 +1656,53 @@ export function useSupportApplicationRegister(
 
               setClassOptions2(classOptions2List);
 
-              // �?번호 매칭: SCHOOL_NO (?�자)�?classNm (?? "1�?) ?�식?�로 변??              if (schoolNo !== null && classOptions2List.length > 1) {
-                // SCHOOL_NO?� ?�치?�는 �?찾기 (?? 1 -> "1�?)
+              // 반 번호 매칭: SCHOOL_NO (숫자)를 classNm (예: "1반") 형식으로 변환
+              if (schoolNo !== null && classOptions2List.length > 1) {
+                // SCHOOL_NO와 일치하는 반 찾기 (예: 1 -> "1반")
                 const matchedClass = classOptions2List.find((option) => {
                   if (!option.value) return false;
-                  // "1�??�서 ?�자�?추출?�여 비교
+                  // "1반"에서 숫자만 추출하여 비교
                   const classNumber = parseInt(
                     option.value.replace(/[^0-9]/g, ""),
                   );
                   const isMatch = classNumber === schoolNo;
                   console.log(
-                    `[?�세 조회] �?매칭 ?�도: "${option.value}" (?�자: ${classNumber}) vs SCHOOL_NO: ${schoolNo} -> ${isMatch}`,
+                    `[상세 조회] 반 매칭 시도: "${option.value}" (숫자: ${classNumber}) vs SCHOOL_NO: ${schoolNo} -> ${isMatch}`,
                   );
                   return isMatch;
                 });
                 if (matchedClass) {
                   matchedClassValue = matchedClass.value;
                   console.log(
-                    "[?�세 조회] 매칭??�?",
+                    "[상세 조회] 매칭된 반:",
                     matchedClassValue,
-                    "?�??",
+                    "타입:",
                     typeof matchedClassValue,
                   );
                 } else {
-                  console.warn("[?�세 조회] �?번호 매칭 ?�패:", {
+                  console.warn("[상세 조회] 반 번호 매칭 실패:", {
                     schoolNo,
                     availableClasses: classOptions2List.map((o) => o.value),
                   });
-                  // 매칭 ?�패 ???�자 그�?�??�용
+                  // 매칭 실패 시 숫자 그대로 사용
                   matchedClassValue = String(schoolNo);
                 }
               } else if (schoolNo !== null) {
-                // �?목록???�거??1�??�하??경우 ?�자 그�?�??�용
+                // 반 목록이 없거나 1개 이하인 경우 숫자 그대로 사용
                 matchedClassValue = String(schoolNo);
               }
             } else {
-              setClassOptions2([{ value: "", label: "?�택" }]);
-              // ?�년???�어??�?번호???�정
+              setClassOptions2([{ value: "", label: "선택" }]);
+              // 학년이 없어도 반 번호는 설정
               if (detail.schoolNo !== undefined && detail.schoolNo !== null) {
                 matchedClassValue = String(detail.schoolNo);
               }
             }
           } catch (err) {
-            console.error("[?�세 조회] ?�급 ?�보 조회 ?�패:", err);
-            setClassOptions([{ value: "", label: "?�택" }]);
-            setClassOptions2([{ value: "", label: "?�택" }]);
-            // ?�러 발생 ?�에??�?번호???�정
+            console.error("[상세 조회] 학급 정보 조회 실패:", err);
+            setClassOptions([{ value: "", label: "선택" }]);
+            setClassOptions2([{ value: "", label: "선택" }]);
+            // 에러 발생 시에도 반 번호는 설정
             if (detail.schoolNo !== undefined && detail.schoolNo !== null) {
               matchedClassValue = String(detail.schoolNo);
             }
@@ -1664,7 +1710,8 @@ export function useSupportApplicationRegister(
             setClassLoading(false);
           }
         } else {
-          // ?�교 코드가 ?�어??�?번호???�정?????�도�?          if (detail.schoolNo !== undefined && detail.schoolNo !== null) {
+          // 학교 코드가 없어도 반 번호는 설정할 수 있도록
+          if (detail.schoolNo !== undefined && detail.schoolNo !== null) {
             matchedClassValue = String(detail.schoolNo);
           }
         }
@@ -1678,23 +1725,23 @@ export function useSupportApplicationRegister(
 
           const newFormData = {
             ...prev,
-            // ?�단
+            // 상단
             programTitle: prev.programTitle || "",
             status: detail.sttusCode || prev.status,
             selectionStatus: detail.resultGb || "N",
 
-            // ?�형
+            // 유형
             applicationType: detail.proType === "02" ? "GROUP" : "INDIVIDUAL",
 
-            // 보호???�보
+            // 보호자 정보
             parentName: detail.pUserNm || "",
             parentEsntlId: detail.pEsntlId || "",
             parentBirthDate: formatDateFromYYYYMMDD(detail.brthdy),
             parentPhone: formatPhoneNumber(detail.mbtlnum || ""),
 
-            // ?�교?�보
+            // 학교정보
             schoolName: detail.schoolNm || "",
-            schoolCode: schoolCode, // 찾�? ?�교 코드 ?�정
+            schoolCode: schoolCode, // 찾은 학교 코드 설정
             schoolGb: detail.schoolGb || "",
             gradeInfo:
               detail.schoolLvl !== undefined && detail.schoolLvl !== null
@@ -1702,7 +1749,7 @@ export function useSupportApplicationRegister(
                 : "",
             gradeInfo2: newGradeInfo2,
 
-            // ?�생?�보 (?�규: cEsntlId, 구데?�터: REQ_ESNTL_ID가 ?�생?�었??
+            // 학생정보 (신규: cEsntlId, 구데이터: REQ_ESNTL_ID가 학생이었음)
             studentName: detail.userNm || "",
             studentEsntlId:
               (detail.cEsntlId && String(detail.cEsntlId).trim()) ||
@@ -1715,12 +1762,12 @@ export function useSupportApplicationRegister(
             studentAddress: detail.adres || "",
             studentDetailAddress: detail.detailAdres || "",
 
-            // 계좌?�보
+            // 계좌정보
             accountNumber: detail.payBank || "",
             bankName: detail.payBankCode || "",
             depositorName: detail.holderNm || "",
 
-            // ?�청분야
+            // 신청분야
             humanitiesField,
             scienceField,
             artsField,
@@ -1732,25 +1779,26 @@ export function useSupportApplicationRegister(
             characterChecked,
             otherChecked,
 
-            // ?�동계획??            activityScope: detail.playPart === "2" ? "OUTSIDE" : "INSIDE",
+            // 활동계획서
+            activityScope: detail.playPart === "2" ? "OUTSIDE" : "INSIDE",
             purpose: detail.reqObj || "",
             activityContent: detail.reqPlay || "",
             budgetPlan: detail.reqPlan || "",
 
-            // 기�?
+            // 기타
             other: detail.reqDesc || "",
             reaDesc: detail.reaDesc || "",
           };
 
-          // ?�버�? 최종 ?�정??�??�인
-          console.log("[?�세 조회] 최종 ?�정??�?", newGradeInfo2);
+          // 디버깅: 최종 설정된 값 확인
+          console.log("[상세 조회] 최종 설정된 반:", newGradeInfo2);
           if (classOptions2ListForDebug.length > 0) {
             console.log(
-              "[?�세 조회] classOptions2List??value 목록:",
+              "[상세 조회] classOptions2List의 value 목록:",
               classOptions2ListForDebug.map((o) => o.value),
             );
             console.log(
-              "[?�세 조회] gradeInfo2?� 매칭 ?��?:",
+              "[상세 조회] gradeInfo2와 매칭 여부:",
               classOptions2ListForDebug.some((o) => o.value === newGradeInfo2),
             );
           }
@@ -1761,15 +1809,15 @@ export function useSupportApplicationRegister(
           fetchStudentList(detail.pEsntlId);
         }
       } catch (err) {
-        console.error("?�청 ?�세 조회 ?�류:", err);
+        console.error("신청 상세 조회 오류:", err);
         if (!cancelled) {
           if (err instanceof Error) {
             setError(
               err.message ||
-                "?�청 ?�세 ?�보�?불러?�는 �??�류가 발생?�습?�다.",
+                "신청 상세 정보를 불러오는 중 오류가 발생했습니다.",
             );
           } else {
-            setError("?�청 ?�세 ?�보�?불러?�는 �??�류가 발생?�습?�다.");
+            setError("신청 상세 정보를 불러오는 중 오류가 발생했습니다.");
           }
         }
       } finally {
@@ -1786,8 +1834,8 @@ export function useSupportApplicationRegister(
     };
   }, [mode, reqId]);
 
-  // classOptions2가 ?�정????gradeInfo2�??�기?�하??useEffect
-  // (?�록/?�세 공통) SCHOOL_NO(?�자)?� NEIS classNm("2�?, "02" ????매칭?�서 반을 ?�동 ?�택
+  // classOptions2가 설정된 후 gradeInfo2를 동기화하는 useEffect
+  // (등록/상세 공통) SCHOOL_NO(숫자)와 NEIS classNm("2반", "02" 등)을 매칭해서 반을 자동 선택
   useEffect(() => {
     if (classOptions2.length <= 1 || !formData.gradeInfo2) return;
 
@@ -1814,7 +1862,7 @@ export function useSupportApplicationRegister(
             gradeInfo2: matchedClass.value,
           }));
         } else {
-          console.warn("[�??�기?? gradeInfo2 매칭 ?�패:", {
+          console.warn("[반 동기화] gradeInfo2 매칭 실패:", {
             currentValue,
             numericValue,
             availableOptions: classOptions2.map((o) => ({
@@ -1841,7 +1889,7 @@ export function useSupportApplicationRegister(
     existingFiles,
     bankOptions,
     bankLoading,
-    // ?�교 검??모달
+    // 학교 검색 모달
     showSchoolModal,
     schoolSearchKeyword,
     setSchoolSearchKeyword,
@@ -1855,7 +1903,7 @@ export function useSupportApplicationRegister(
     handleSchoolSelect,
     handleOpenSchoolModal,
     handleCloseSchoolModal,
-    // 보호??검??모달
+    // 보호자 검색 모달
     showParentModal,
     parentSearchKeyword,
     setParentSearchKeyword,
@@ -1869,11 +1917,11 @@ export function useSupportApplicationRegister(
     handleParentSelect,
     handleOpenParentModal,
     handleCloseParentModal,
-    // ?�생 콤보박스 (부모별 ?��? 목록)
+    // 학생 콤보박스 (부모별 자녀 목록)
     studentList,
     studentLoading,
     handleStudentSelect,
-    // ?�급 ?�보
+    // 학급 정보
     classOptions,
     classOptions2,
     classLoading,
@@ -1887,12 +1935,14 @@ export function useSupportApplicationRegister(
     downloadExistingSupportApplicationAttachment,
     handleSubmit,
     handleCancel,
-    // 메시지 ?�이?�로�?    showMessageDialog,
+    // 메시지 다이얼로그
+    showMessageDialog,
     messageDialogTitle,
     messageDialogMessage,
     messageDialogType,
     handleMessageDialogClose,
-    // ??�� ?�인 ?�이?�로�?    showDeleteConfirmDialog,
+    // 삭제 확인 다이얼로그
+    showDeleteConfirmDialog,
     setShowDeleteConfirmDialog,
     fileToDelete,
     setFileToDelete,
