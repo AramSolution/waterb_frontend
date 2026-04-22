@@ -359,8 +359,15 @@ export const CmmCodeManagePageView: React.FC = () => {
 
   // 소분류코드 조회 버튼 핸들러
   const handleDetailCodeSearch = () => {
-    setDetailCurrentPage(1); // 조회 시 첫 페이지로 이동
-    fetchDetailCodeListRef.current(); // ref를 통해 최신 함수 호출
+    if (!detailCodeId) return;
+
+    // 페이지가 바뀌면 page effect에서 1회 호출되므로 직접 호출하지 않음
+    if (detailCurrentPage !== 1) {
+      setDetailCurrentPage(1);
+      return;
+    }
+
+    fetchDetailCodeListRef.current(); // 현재 페이지가 1이면 즉시 1회 호출
   };
 
   // 소분류코드 페이지 변경 핸들러
@@ -503,42 +510,41 @@ export const CmmCodeManagePageView: React.FC = () => {
     }
   };
 
-  // detailCodeId가 변경되면 자동으로 조회 (첫 페이지로 리셋)
+  // detailCodeId가 변경되면 조회 조건만 리셋 (실제 조회는 page effect에서 1회 수행)
   useEffect(() => {
     if (detailCodeId) {
       console.log('🔄 detailCodeId 변경됨, 자동 조회 시작:', detailCodeId);
       setDetailCurrentPage(1);
-      setDetailIsInitialLoad(true);
-      fetchDetailCodeList();
+      setDetailIsInitialLoad(false);
     } else {
       setDetailCodeList([]);
       setDetailTotalElements(0);
       setDetailTotalPages(0);
+      setDetailIsInitialLoad(true);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [detailCodeId]);
 
-  // 소분류코드 페이지 변경 시 API 재호출
+  // 소분류코드 페이지 변경/대분류코드 변경 시 API 재호출 (단일 트리거)
   useEffect(() => {
-    if (!detailIsInitialLoad && detailCodeId) {
+    if (detailCodeId) {
       fetchDetailCodeList();
     }
-  }, [
-    detailCurrentPage,
-    fetchDetailCodeList,
-    detailIsInitialLoad,
-    detailCodeId,
-  ]);
+  }, [detailCurrentPage, fetchDetailCodeList, detailCodeId]);
 
   // 소분류코드 필터 변경 시 Debounce 800ms 적용하여 첫 페이지로 이동하고 API 호출
   useEffect(() => {
-    if (detailIsInitialLoad || !detailCodeId) return; // 초기 로드 시 또는 detailCodeId가 없을 때는 실행하지 않음
+    if (!detailCodeId) return;
 
     const timer = setTimeout(() => {
       // 필터 변경 시 첫 페이지로 이동하고 API 호출
-      setDetailCurrentPage(1);
-      // currentPage가 이미 1일 수 있으므로 직접 fetchDetailCodeList 호출
-      // fetchDetailCodeListRef.current를 사용하여 최신 함수 참조
+      // 페이지가 바뀌면 page effect에서 1회 호출되므로 직접 호출하지 않음
+      if (detailCurrentPage !== 1) {
+        setDetailCurrentPage(1);
+        return;
+      }
+
+      // 현재 페이지가 1이면 즉시 1회 호출
       fetchDetailCodeListRef.current();
     }, 800); // 800ms Debounce
 
@@ -548,8 +554,8 @@ export const CmmCodeManagePageView: React.FC = () => {
     detailFilters.codeNm,
     detailFilters.orderBy,
     detailFilters.useAt,
-    detailIsInitialLoad,
     detailCodeId,
+    detailCurrentPage,
   ]); // fetchDetailCodeList를 dependency에서 제거
 
   // 소분류코드 필터 초기화 핸들러

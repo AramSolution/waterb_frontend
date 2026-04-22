@@ -14,7 +14,7 @@ function MemberDetailContent() {
       <div className="page-header">
         <h1 className="page-title">관리자회원상세</h1>
         <nav className="breadcrumb">
-          <span>홈</span> &gt; <span>관리자</span> &gt;{" "}
+          <span>홈</span> &gt; <span>회원관리</span> &gt;{" "}
           <span>관리자회원상세</span>
         </nav>
       </div>

@@ -5,28 +5,27 @@ const path = require("path");
 const turbopackRoot = path.join(__dirname);
 
 /**
- * [WATERB_MIGRATION_B] 이 파일의 `/edream`, `EDREAM_REWRITE_*`, `resolveBackendEdreamBaseUrl` —
- * `api.ts`, `Dockerfile` ARG/ENV, `docker-compose.yml`, 백엔드 context-path, `nginx`와 동시에 일괄 변경.
+ * `api.ts`, `Dockerfile` ARG/ENV, `docker-compose.yml`, 백엔드 context-path, `nginx`와 `/water` 경로를 맞출 것.
  *
- * NEXT_PUBLIC_API_BASE_URL과 동일한 백엔드로 /edream 프록시 (로컬 상대경로 axios용).
- * 우선순위: EDREAM_REWRITE_DESTINATION > NEXT_PUBLIC_API_BASE_URL 기반 > test3
- * Docker(dev.uaram): nginx가 먼저 /edream을 백엔드로 넘기면 Next rewrite는 타지 않음.
+ * NEXT_PUBLIC_API_BASE_URL과 동일한 백엔드로 /water 프록시 (로컬 상대경로 axios용).
+ * 우선순위: WATER_REWRITE_DESTINATION > NEXT_PUBLIC_API_BASE_URL 기반 > dev 기본 호스트
+ * Docker(dev.uaram): nginx가 먼저 /water를 백엔드로 넘기면 Next rewrite는 타지 않음.
  */
-function resolveBackendEdreamBaseUrl() {
+function resolveBackendWaterBaseUrl() {
   const raw = process.env.NEXT_PUBLIC_API_BASE_URL;
   const fallbackHost = "https://dev.uaram.co.kr";
   if (!raw || String(raw).trim() === "" || raw === "undefined") {
-    return `${fallbackHost.replace(/\/$/, "")}/edream`;
+    return `${fallbackHost.replace(/\/$/, "")}/water`;
   }
   let base = String(raw).trim().replace(/\/$/, "");
-  if (!base.endsWith("/edream")) {
-    base = `${base}/edream`;
+  if (!base.endsWith("/water")) {
+    base = `${base}/water`;
   }
   return base;
 }
 
-const EDREAM_REWRITE_BASE = (
-  process.env.EDREAM_REWRITE_DESTINATION || resolveBackendEdreamBaseUrl()
+const WATER_REWRITE_BASE = (
+  process.env.WATER_REWRITE_DESTINATION || resolveBackendWaterBaseUrl()
 ).replace(/\/$/, "");
 
 const nextConfig = {
@@ -56,8 +55,8 @@ const nextConfig = {
   async rewrites() {
     return [
       {
-        source: "/edream/:path*",
-        destination: `${EDREAM_REWRITE_BASE}/:path*`,
+        source: "/water/:path*",
+        destination: `${WATER_REWRITE_BASE}/:path*`,
       },
     ];
   },

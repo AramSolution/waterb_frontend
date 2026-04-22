@@ -1,20 +1,18 @@
 /**
- * [WATERB_MIGRATION_B] `edream` 경로·`EDREAM_CERT_SIREN`·`resolveEdreamApiBaseUrl` 이름 등은 백엔드
- * `server.servlet.context-path`, `next.config.js` rewrites, `nginx` location과 반드시 함께 `/waterb`(또는 확정값)로 일괄 변경.
- * 전역 검색: `edream`, `EDREAM_`, `/edream`
+ * Servlet context-path(`/water`)·`next.config.js` rewrites·`nginx` location과 경로를 맞출 것.
  *
- * NEXT_PUBLIC_API_BASE_URL: origin만(권장) 또는 이미 /edream 포함 — 중복 슬래시 방지
+ * NEXT_PUBLIC_API_BASE_URL: origin만(권장) 또는 이미 /water 포함 — 중복 슬래시 방지
  */
-function resolveEdreamApiBaseUrl(): string {
+function resolveWaterApiBaseUrl(): string {
   const raw = (process.env.NEXT_PUBLIC_API_BASE_URL || "")
     .trim()
     .replace(/\/$/, "");
   if (!raw) return "";
-  if (raw.endsWith("/edream")) return raw;
-  return `${raw}/edream`;
+  if (raw.endsWith("/water")) return raw;
+  return `${raw}/water`;
 }
 
-const resolvedBaseUrl = resolveEdreamApiBaseUrl();
+const resolvedBaseUrl = resolveWaterApiBaseUrl();
 
 // API 기본 설정 (공통 - 관리자/사용자 웹 공용)
 export const API_CONFIG = {
@@ -24,19 +22,19 @@ export const API_CONFIG = {
 
 /**
  * Bizsiren 본인인증 API URL.
- * `NEXT_PUBLIC_API_BASE_URL`이 있으면 다른 user API와 동일하게 절대 URL(`…/edream/api/cert/siren/...`).
- * 없을 때만 상대 `/edream/...`(Next rewrite 프록시).
+ * `NEXT_PUBLIC_API_BASE_URL`이 있으면 다른 user API와 동일하게 절대 URL(`…/water/api/cert/siren/...`).
+ * 없을 때만 상대 `/water/...`(Next rewrite 프록시).
  */
-export const EDREAM_CERT_SIREN = {
+export const WATER_CERT_SIREN = {
   TOKEN_AUTH: resolvedBaseUrl
     ? `${resolvedBaseUrl}/api/cert/siren/tokenAuth`
-    : "/edream/api/cert/siren/tokenAuth",
+    : "/water/api/cert/siren/tokenAuth",
   CREATE_TOKEN: resolvedBaseUrl
     ? `${resolvedBaseUrl}/api/cert/siren/createToken`
-    : "/edream/api/cert/siren/createToken",
+    : "/water/api/cert/siren/createToken",
   RESULT_DATA: resolvedBaseUrl
     ? `${resolvedBaseUrl}/api/cert/siren/resultData`
-    : "/edream/api/cert/siren/resultData",
+    : "/water/api/cert/siren/resultData",
 } as const;
 
 // 디버깅: 환경 변수 확인

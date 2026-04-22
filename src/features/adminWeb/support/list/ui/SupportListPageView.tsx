@@ -66,10 +66,10 @@ export const SupportListPageView: React.FC = () => {
   return (
     <>
       <div className="page-header">
-        <h1 className="page-title">샘플업무</h1>
+        <h1 className="page-title">목록관리</h1>
         <nav className="breadcrumb">
           <span>홈</span> &gt; <span>업무관리</span> &gt;{" "}
-          <span>샘플업무</span>
+          <span>목록관리</span>
         </nav>
       </div>
 
@@ -189,7 +189,7 @@ export const SupportListPageView: React.FC = () => {
       <div className="bg-white rounded-lg shadow border">
         <div className="flex justify-between items-center px-4 py-3 border-b border-gray-200">
           <h5 className="mb-0 text-lg font-semibold">
-            샘플업무 목록 (총 {totalElements.toLocaleString()}개)
+            목록관리 목록 (총 {totalElements.toLocaleString()}개)
           </h5>
           <div className="flex gap-2">
             <button

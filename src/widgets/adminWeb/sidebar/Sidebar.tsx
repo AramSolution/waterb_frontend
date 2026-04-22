@@ -34,8 +34,13 @@ const menuItems: MenuItem[] = [
     submenu: [
       {
         id: 'support-list',
-        label: '샘플업무',
+        label: '목록관리',
         path: '/adminWeb/support/list',
+      },
+      {
+        id: 'support-purpose',
+        label: '용도관리',
+        path: '/adminWeb/support/purpose',
       },
     ],
   },
@@ -54,7 +59,7 @@ const menuItems: MenuItem[] = [
   },
   {
     id: 'member',
-    label: '관리자',
+    label: '회원관리',
     icon: 'Users',
     submenu: [
       {
@@ -113,16 +118,17 @@ const menuItems: MenuItem[] = [
     label: '공통',
     icon: 'FileText',
     submenu: [
-      {
-        id: 'board-list',
-        label: '게시판관리',
-        path: '/adminWeb/board/list',
-      },
-      {
-        id: 'banner-list',
-        label: '배너관리',
-        path: '/adminWeb/banner/list',
-      },
+      // 공통 카테고리: 게시판관리/배너관리 (사이드바 비노출 — URL 직접 입력 시 접근 가능)
+      // {
+      //   id: 'board-list',
+      //   label: '게시판관리',
+      //   path: '/adminWeb/board/list',
+      // },
+      // {
+      //   id: 'banner-list',
+      //   label: '배너관리',
+      //   path: '/adminWeb/banner/list',
+      // },
     ],
   },
   {
@@ -130,21 +136,22 @@ const menuItems: MenuItem[] = [
     label: '시스템',
     icon: 'Settings',
     submenu: [
-      {
-        id: 'program-list',
-        label: '프로그램관리',
-        path: '/adminWeb/program/list',
-      },
-      {
-        id: 'menu-tree',
-        label: '메뉴관리',
-        path: '/adminWeb/menu/tree',
-      },
-      {
-        id: 'menu-make',
-        label: '메뉴생성관리',
-        path: '/adminWeb/menu/make',
-      },
+      // 시스템 카테고리: 프로그램관리/메뉴관리/메뉴생성관리 (사이드바 비노출 — URL 직접 입력 시 접근 가능)
+      // {
+      //   id: 'program-list',
+      //   label: '프로그램관리',
+      //   path: '/adminWeb/program/list',
+      // },
+      // {
+      //   id: 'menu-tree',
+      //   label: '메뉴관리',
+      //   path: '/adminWeb/menu/tree',
+      // },
+      // {
+      //   id: 'menu-make',
+      //   label: '메뉴생성관리',
+      //   path: '/adminWeb/menu/make',
+      // },
       {
         id: 'code-manage',
         label: '공통코드관리',

@@ -1,5 +1,5 @@
 import axios from "axios";
-import { EDREAM_CERT_SIREN } from "@/shared/config/api";
+import { WATER_CERT_SIREN } from "@/shared/config/api";
 
 const SIREN_POPUP_NAME = "PCCV3Window";
 const SIREN_PCC_ACTION = "https://pcc.siren24.com/pcc_V3/jsp/pcc_V3_j10_v4.jsp";
@@ -99,7 +99,7 @@ export async function postSirenCreateTokenAndSubmit(
   };
   if (authToken) headers.Authorization = authToken;
   const response = await axios.post<SirenCreateTokenResponse>(
-    EDREAM_CERT_SIREN.CREATE_TOKEN,
+    WATER_CERT_SIREN.CREATE_TOKEN,
     params,
     {
       headers,

@@ -9,7 +9,7 @@ export const MemberRegisterPageView: React.FC = () => {
       <div className="page-header">
         <h1 className="page-title">관리자회원등록</h1>
         <nav className="breadcrumb">
-          <span>홈</span> &gt; <span>관리자</span> &gt;{" "}
+          <span>홈</span> &gt; <span>회원관리</span> &gt;{" "}
           <span>관리자회원등록</span>
         </nav>
       </div>

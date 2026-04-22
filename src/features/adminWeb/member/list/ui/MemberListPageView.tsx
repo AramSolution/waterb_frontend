@@ -53,7 +53,7 @@ export const MemberListPageView: React.FC = () => {
       <div className="page-header">
         <h1 className="page-title">관리자회원</h1>
         <nav className="breadcrumb">
-          <span>홈</span> &gt; <span>관리자</span> &gt; <span>관리자회원</span>
+          <span>홈</span> &gt; <span>회원관리</span> &gt; <span>관리자회원</span>
         </nav>
       </div>
 

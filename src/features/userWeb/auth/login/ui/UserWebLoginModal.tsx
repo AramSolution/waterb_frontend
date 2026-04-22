@@ -13,7 +13,7 @@ import {
   getSirenTokenAuthRetUrlForAccountRecovery,
   readRememberLoginId,
 } from "@/shared/lib";
-import { EDREAM_CERT_SIREN } from "@/shared/config/api";
+import { WATER_CERT_SIREN } from "@/shared/config/api";
 import { ApiError } from "@/shared/lib/apiClient";
 import "@/styles/userWeb/loginModal.css";
 
@@ -97,7 +97,7 @@ async function fetchCertTokenForFindId(userSe: string): Promise<void> {
   params.append("srvNo", "017001");
   params.append("retUrl", getSirenTokenAuthRetUrlForAccountRecovery(userSe));
   const response = await axios.post(
-    EDREAM_CERT_SIREN.TOKEN_AUTH,
+    WATER_CERT_SIREN.TOKEN_AUTH,
     params,
     {
       headers: {

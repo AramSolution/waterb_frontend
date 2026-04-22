@@ -10,7 +10,7 @@ import {
   tryCloseSirenPassWindow,
   postSirenCreateTokenAndSubmit,
 } from "@/shared/lib";
-import { API_ENDPOINTS, API_CONFIG, EDREAM_CERT_SIREN } from "@/shared/config/apiUser";
+import { API_ENDPOINTS, API_CONFIG, WATER_CERT_SIREN } from "@/shared/config/apiUser";
 import { UserArmuserService } from "@/entities/userWeb/armuser/api";
 import { UserMemberService } from "@/entities/userWeb/member/api/memberApi";
 import { UserGpkiService } from "@/entities/userWeb/gpki/api";
@@ -47,7 +47,7 @@ async function fetchCertToken(): Promise<void> {
       : "72https://dev.uaram.co.kr/result/cert",
   );
   const response = await axios.post(
-    EDREAM_CERT_SIREN.TOKEN_AUTH,
+    WATER_CERT_SIREN.TOKEN_AUTH,
     params,
     {
       headers: {

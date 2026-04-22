@@ -115,8 +115,21 @@ export function useBoardList() {
   const fetchTargetList = async () => {
     try {
       const response = await BoardService.getBoardMasterManage();
-      if (response.targetList && Array.isArray(response.targetList)) {
-        setTargetList(response.targetList);
+      const safeTargetList =
+        response.targetList && Array.isArray(response.targetList)
+          ? response.targetList
+          : [];
+
+      setTargetList(safeTargetList);
+
+      // 대상구분 API가 빈 배열이면 초기 조회 트리거 조건(targetList.length > 0)을 만족하지 않아
+      // 로딩이 끝나지 않을 수 있으므로 빈 목록 상태로 명시적으로 종료한다.
+      if (safeTargetList.length === 0) {
+        setBoards([]);
+        setTotalElements(0);
+        setTotalPages(1);
+        setLoading(false);
+        setIsInitialLoad(false);
       }
     } catch (err) {
       console.error("대상구분 리스트 조회 실패:", err);
@@ -132,6 +145,10 @@ export function useBoardList() {
       } else {
         setError("대상구분 리스트를 불러오는 중 오류가 발생했습니다.");
       }
+
+      // 대상구분 조회 실패 시에도 초기 스켈레톤이 무한 지속되지 않도록 종료
+      setLoading(false);
+      setIsInitialLoad(false);
     }
   };
 

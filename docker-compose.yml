@@ -5,14 +5,12 @@ services:
       context: .
       dockerfile: Dockerfile
       # NEXT_PUBLIC_* 는 빌드 타임에 번들에 포함되므로 args로 전달
-      # nginx가 /edream/ 경로를 백엔드로 중계 — API_BASE는 호스트만(api.ts가 /edream 붙임)
-      # [WATERB_MIGRATION_B] 위 설명·아래 EDREAM_REWRITE_* 값의 `/edream` — B 단계에서 api.ts·next.config·백엔드 context-path와 함께 변경
+      # nginx가 /water/ 경로를 백엔드로 중계 — API_BASE는 호스트만(api.ts가 /water 붙임)
       args:
         NEXT_PUBLIC_API_BASE_URL: https://dev.uaram.co.kr
         NEXT_PUBLIC_PAGE_SIZE: 15
-        # Next가 /edream을 직접 받을 때(직접 3000 접속 등) dev 백엔드로 프록시
-        # [WATERB_MIGRATION_B] 변수명 EDREAM_REWRITE_DESTINATION·URL 경로 — Dockerfile ARG/ENV, next.config.js와 동기화
-        EDREAM_REWRITE_DESTINATION: https://dev.uaram.co.kr:8443/edream
+        # Next가 /water를 직접 받을 때(직접 3000 접속 등) dev 백엔드로 프록시 — Dockerfile ARG/ENV, next.config.js와 동기화
+        WATER_REWRITE_DESTINATION: https://dev.uaram.co.kr:8443/water
     restart: unless-stopped
     expose:
       - "3000"

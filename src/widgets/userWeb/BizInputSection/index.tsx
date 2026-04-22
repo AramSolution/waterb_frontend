@@ -12,7 +12,7 @@ import {
   postSirenCreateTokenAndSubmit,
   getSirenTokenAuthRetUrlForApply,
 } from "@/shared/lib";
-import { API_CONFIG, API_ENDPOINTS, EDREAM_CERT_SIREN } from "@/shared/config/apiUser";
+import { API_CONFIG, API_ENDPOINTS, WATER_CERT_SIREN } from "@/shared/config/apiUser";
 import { AuthService } from "@/entities/auth/api";
 import { UserArmuserService } from "@/entities/userWeb/armuser/api";
 import { UserArmchilService } from "@/entities/userWeb/armchil/api";
@@ -69,7 +69,7 @@ const fetchData = async () => {
 
     // /backend 경로를 사용하여 rewrites로 백엔드 API 호출
     const response = await axios.post(
-      EDREAM_CERT_SIREN.TOKEN_AUTH,
+      WATER_CERT_SIREN.TOKEN_AUTH,
       params, // URLSearchParams 객체
       {
         // Config 객체 (헤더 설정)

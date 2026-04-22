@@ -2,13 +2,12 @@
  * 사용자웹 전용 API 엔드포인트 + 공통(API_CONFIG, CODE, FILES) re-export
  * 사용자 페이지 수정 시 이 파일만 변경하면 되므로 관리자웹과 충돌을 줄일 수 있음.
  *
- * [WATERB_MIGRATION_B] `EDREAM_CERT_SIREN` re-export — `api.ts`에서 상수·이름 변경 시 이 import와
- * 모든 사용처(`grep EDREAM_CERT_SIREN`)를 함께 수정.
+ * `WATER_CERT_SIREN` re-export — `api.ts`에서 상수 변경 시 이 import와 사용처를 함께 수정.
  *
- * [WATERB_MIGRATION_C] `USER_GPKI` 아래 절대 URL(`…/edream/api/v1/…`)은 외부 행정망 연계 엔드포인트다.
+ * `USER_GPKI` 아래 절대 URL(`…/water/api/v1/…`)은 외부 행정망 연계 엔드포인트다.
  * 경로가 실제로 바뀔 때만 수정하고, 운영/인증 담당과 확인할 것.
  */
-export { API_CONFIG, CODE, FILES, EDREAM_CERT_SIREN } from "./api";
+export { API_CONFIG, CODE, FILES, WATER_CERT_SIREN } from "./api";
 
 export const API_ENDPOINTS = {
   /** 공통 - 소분류 코드 (사용자웹에서 은행코드 등 조회) */
@@ -22,13 +21,13 @@ export const API_ENDPOINTS = {
   /** 사용자웹 - 행정정보 연계(GPKI) */
   USER_GPKI: {
     RESIDE_INSTT_CNFRIM:
-      "https://test2.uaram.co.kr:8443/edream/api/v1/ResideInsttCnfirm",
+      "https://test2.uaram.co.kr:8443/water/api/v1/ResideInsttCnfirm",
     REDUCTION_BSC_LIV_YN:
-      "https://test2.uaram.co.kr:8443/edream/api/v1/ReductionBscLivYnService",
+      "https://test2.uaram.co.kr:8443/water/api/v1/ReductionBscLivYnService",
     REDUCTION_POOR_YN:
-      "https://test2.uaram.co.kr:8443/edream/api/v1/ReductionPoorYnService",
+      "https://test2.uaram.co.kr:8443/water/api/v1/ReductionPoorYnService",
     REDUCTION_SINGLE_PARENT_YN:
-      "https://test2.uaram.co.kr:8443/edream/api/v1/ReductionSingleParentYnService",
+      "https://test2.uaram.co.kr:8443/water/api/v1/ReductionSingleParentYnService",
   },
   ARMUSER_USER: {
     BASE: "/api/user/armuser",

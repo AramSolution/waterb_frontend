@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { TokenUtils } from "@/shared/lib";
-import { EDREAM_CERT_SIREN } from "@/shared/config/api";
+import { WATER_CERT_SIREN } from "@/shared/config/api";
 import axios from "axios";
 
 type Phase = "loading" | "success" | "error";
@@ -99,7 +99,7 @@ export default function CertificationPage() {
 
       try {
         const response = await axios.post<CertResultPayload>(
-          EDREAM_CERT_SIREN.RESULT_DATA,
+          WATER_CERT_SIREN.RESULT_DATA,
           params,
           {
             headers,

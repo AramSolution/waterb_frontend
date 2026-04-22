@@ -10,7 +10,7 @@ import {
 	tryCloseSirenPassWindow,
 	postSirenCreateTokenAndSubmit,
 } from "@/shared/lib";
-import { EDREAM_CERT_SIREN } from "@/shared/config/api";
+import { WATER_CERT_SIREN } from "@/shared/config/api";
 
 const VALID_JOIN_TYPES: LayoutThemeType[] = [
 	"student",
@@ -56,7 +56,7 @@ async function fetchCertToken(): Promise<void> {
 			: "72https://dev.uaram.co.kr/result/cert",
 	);
 	const response = await axios.post(
-		EDREAM_CERT_SIREN.TOKEN_AUTH,
+		WATER_CERT_SIREN.TOKEN_AUTH,
 		params,
 		{
 			headers: {

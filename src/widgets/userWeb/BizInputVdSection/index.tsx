@@ -14,7 +14,7 @@ import {
   postSirenCreateTokenAndSubmit,
   getSirenTokenAuthRetUrlForApply,
 } from "@/shared/lib";
-import { API_ENDPOINTS, API_CONFIG, EDREAM_CERT_SIREN } from "@/shared/config/apiUser";
+import { API_ENDPOINTS, API_CONFIG, WATER_CERT_SIREN } from "@/shared/config/apiUser";
 import { AuthService } from "@/entities/auth/api";
 import { UserArmuserService } from "@/entities/userWeb/armuser/api";
 import { UserArmchilService } from "@/entities/userWeb/armchil/api";
@@ -90,7 +90,7 @@ async function fetchCertToken(): Promise<void> {
   params.append("srvNo", "017001");
   params.append("retUrl", getSirenTokenAuthRetUrlForApply());
   const response = await axios.post(
-    EDREAM_CERT_SIREN.TOKEN_AUTH,
+    WATER_CERT_SIREN.TOKEN_AUTH,
     params,
     {
       headers: {
