@@ -5,19 +5,63 @@ import { useRouter } from "next/navigation";
 import { Pagination, ConfirmDialog } from "@/shared/ui/adminWeb";
 import { FormDatePicker } from "@/shared/ui/adminWeb/form";
 import { useSupportList } from "../model";
-import {
-  getRunStaBadgeClass,
-  getRunStaLabel,
-  RUN_STA_SEARCH_OPTIONS,
-} from "@/entities/adminWeb/support/lib/runStaAdmin";
+import type { Support } from "@/entities/adminWeb/support/api";
 import "@/shared/styles/admin/mobile-table.css";
 import "@/shared/styles/admin/resizable-table.css";
 import "@/shared/styles/admin/search-form.css";
 import { decodeDisplayText } from "@/shared/lib";
 
+/** 백엔드 연동 전: paySta 등으로 미납/납부 표시 (02·Y·납부 → 납부) */
+function isPaidFeeRow(row: Support): boolean {
+  const rowAny = row as Record<string, unknown>;
+  const v = String(
+    rowAny.paySta ?? rowAny.paymentSta ?? rowAny.feePayYn ?? "",
+  ).trim();
+  if (v === "02" || v === "2" || v === "Y" || v === "납부") return true;
+  return false;
+}
+
+function formatFeeCurrency(v: unknown): string {
+  if (v === null || v === undefined || v === "") return "-";
+  const n = Number(String(v).replace(/,/g, ""));
+  if (Number.isNaN(n)) return String(v);
+  return n.toLocaleString("ko-KR");
+}
+
+function feeListRowFields(row: Support, index: number, page: number, ps: number) {
+  const rowAny = row as Record<string, unknown>;
+  const seq = row.rnum ?? String((page - 1) * ps + index + 1);
+  const paid = isPaidFeeRow(row);
+  const name = decodeDisplayText(
+    String(rowAny.applicantNm ?? row.businessNm ?? ""),
+  );
+  const addr = decodeDisplayText(
+    String(rowAny.addr ?? rowAny.address ?? ""),
+  );
+  const notify = String(rowAny.notifyDd ?? row.recruitStartDate ?? "").trim();
+  const levyRaw = rowAny.levyAmt ?? rowAny.impAmt;
+  const payDd = String(rowAny.payDd ?? rowAny.paymentDd ?? "").trim();
+  const payAmtRaw = rowAny.payAmt ?? rowAny.paymentAmt;
+  const rowKey = String(row.businessId ?? row.proId ?? `row-${index}`);
+  return { seq, paid, name, addr, notify, levyRaw, payDd, payAmtRaw, rowKey };
+}
+
+/**
+ * 미납·납부 배지 색 (list-pagination / UI 톤)
+ * - 미납: 배경 #FFE5E5, 글자 #D32F2F — 경고는 주되 부드러움
+ * - 납부: 배경 #E8F5E9, 글자 #2E7D32 — 안정적이고 깔끔함
+ * (min-w·rounded·font-medium 등 표시 규격은 리스트 가이드와 호출부 span에 맞춤)
+ */
+function feePayBadgeClassName(paid: boolean): string {
+  return paid
+    ? "bg-[#E8F5E9] text-[#2E7D32] font-medium border border-[#C8E6C9]"
+    : "bg-[#FFE5E5] text-[#D32F2F] font-medium border border-[#FFCDD2]";
+}
+
 export const SupportListPageView: React.FC = () => {
   const router = useRouter();
-  const [showRegisterComingSoon, setShowRegisterComingSoon] = useState(false);
+  const [showPaymentHistoryComingSoon, setShowPaymentHistoryComingSoon] =
+    useState(false);
   const {
     loading,
     isInitialLoad,
@@ -34,7 +78,6 @@ export const SupportListPageView: React.FC = () => {
     error,
     startDate,
     endDate,
-    sortConfig,
     tableRef,
     pageSize,
     setShowSearchForm,
@@ -42,15 +85,16 @@ export const SupportListPageView: React.FC = () => {
     handleDeleteClick,
     handleDeleteConfirm,
     handleDeleteCancel,
-    handleSort,
     handleSearch,
     handleApplicantClick,
     handleApplicantDialogClose,
     handleExcelDownload,
     setStartDate,
     setEndDate,
-    searchStatus,
-    setSearchStatus,
+    applicantNm,
+    setApplicantNm,
+    addr,
+    setAddr,
   } = useSupportList();
 
   // 수정 페이지로 이동 (상세 조회 후 수정)
@@ -58,18 +102,17 @@ export const SupportListPageView: React.FC = () => {
     router.push(`/adminWeb/support/list/update?proId=${businessId}`);
   };
 
-  // 신청목록 상세 리스트 페이지로 이동
-  const handleApplicantListClick = (businessId: string) => {
-    router.push(`/adminWeb/support/list/detail?businessId=${businessId}`);
+  const handlePaymentHistoryClick = (_rowKey: string) => {
+    setShowPaymentHistoryComingSoon(true);
   };
 
   return (
     <>
       <div className="page-header">
-        <h1 className="page-title">목록관리</h1>
+        <h1 className="page-title">오수 원인자부담금 관리</h1>
         <nav className="breadcrumb">
           <span>홈</span> &gt; <span>업무관리</span> &gt;{" "}
-          <span>목록관리</span>
+          <span>오수 원인자부담금 관리</span>
         </nav>
       </div>
 
@@ -83,32 +126,32 @@ export const SupportListPageView: React.FC = () => {
         </button>
       </div>
 
-      {/* 검색기간 날짜 필터 (메뉴생성관리 검색구분 스타일 참고) */}
+      {/* 통지일·성명·주소 조회 (백엔드 연동 전 화면 전용) */}
       <div
         className={`bg-white mb-3 rounded-lg shadow search-form-container ${
           showSearchForm ? "show" : ""
         }`}
       >
         <div className="border border-gray-300">
-          <div className="flex flex-wrap">
-            {/* 검색기간 */}
+          <div
+            className="flex flex-wrap"
+            onKeyDown={(e) => {
+              if (e.key === "Enter") handleSearch();
+            }}
+          >
+            {/* 1행: 통지일 | 성명 */}
             <div className="w-full md:w-1/2">
               <div
-                className="flex flex-col border-b md:flex-row items-stretch md:border-b-0 md:border-r border-gray-300"
+                className="flex flex-col border-b md:flex-row items-stretch md:border-r border-gray-300"
                 style={{ minHeight: "45px" }}
               >
                 <label className="w-full md:w-1/4 bg-gray-100 flex items-center m-0 px-3 py-2 search-form-label border-b md:border-b-0 border-r border-gray-300">
-                  검색기간
+                  통지일
                 </label>
-                <div
-                  className="w-full md:w-3/4 flex items-center gap-2 p-2"
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") handleSearch();
-                  }}
-                >
-                  <div className="flex-1 min-w-0">
+                <div className="w-full md:w-3/4 flex items-center gap-2 p-2 flex-wrap">
+                  <div className="flex-1 min-w-[120px]">
                     <FormDatePicker
-                      name="recruitStartDate"
+                      name="notifyStartDate"
                       value={startDate}
                       onChange={(e) => {
                         setStartDate(e.target.value);
@@ -118,9 +161,9 @@ export const SupportListPageView: React.FC = () => {
                     />
                   </div>
                   <span className="text-gray-600 flex-shrink-0">~</span>
-                  <div className="flex-1 min-w-0">
+                  <div className="flex-1 min-w-[120px]">
                     <FormDatePicker
-                      name="recruitEndDate"
+                      name="notifyEndDate"
                       value={endDate}
                       onChange={(e) => {
                         setEndDate(e.target.value);
@@ -132,33 +175,52 @@ export const SupportListPageView: React.FC = () => {
                 </div>
               </div>
             </div>
-            {/* 상태 */}
             <div className="w-full md:w-1/2">
               <div
-                className="flex flex-col md:flex-row items-stretch"
+                className="flex flex-col border-b md:flex-row items-stretch border-gray-300"
                 style={{ minHeight: "45px" }}
               >
                 <label className="w-full md:w-1/4 bg-gray-100 flex items-center m-0 px-3 py-2 search-form-label border-b md:border-b-0 border-r border-gray-300">
-                  상태
+                  성명
                 </label>
                 <div className="w-full md:w-3/4 flex items-center p-2">
-                  <select
-                    className="w-full border border-gray-300 px-3 py-2 rounded-none focus:outline-none focus:ring-2 focus:ring-blue-500 text-[13px]"
-                    value={searchStatus}
-                    onChange={(e) => setSearchStatus(e.target.value)}
+                  <input
+                    type="text"
+                    name="applicantNm"
+                    value={applicantNm}
+                    onChange={(e) => setApplicantNm(e.target.value)}
                     onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        handleSearch();
-                      }
+                      if (e.key === "Enter") handleSearch();
                     }}
-                  >
-                    <option value="">전체</option>
-                    {RUN_STA_SEARCH_OPTIONS.map((o) => (
-                      <option key={o.value} value={o.value}>
-                        {o.label}
-                      </option>
-                    ))}
-                  </select>
+                    placeholder="성명 입력"
+                    className="w-full border border-gray-300 px-3 py-2 rounded-none focus:outline-none focus:ring-2 focus:ring-blue-500 text-[13px]"
+                    autoComplete="off"
+                  />
+                </div>
+              </div>
+            </div>
+            {/* 2행: 주소 (라벨 너비 = 1행 통지일·성명과 동일: 전체의 12.5% = 절반×1/4) */}
+            <div className="w-full">
+              <div
+                className="flex flex-col md:flex-row items-stretch border-gray-300"
+                style={{ minHeight: "45px" }}
+              >
+                <label className="w-full md:w-[12.5%] shrink-0 bg-gray-100 flex items-center m-0 px-3 py-2 search-form-label border-b md:border-b-0 border-r border-gray-300">
+                  주소
+                </label>
+                <div className="w-full md:flex-1 min-w-0 flex items-center p-2">
+                  <input
+                    type="text"
+                    name="addr"
+                    value={addr}
+                    onChange={(e) => setAddr(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") handleSearch();
+                    }}
+                    placeholder="주소 입력"
+                    className="w-full border border-gray-300 px-3 py-2 rounded-none focus:outline-none focus:ring-2 focus:ring-blue-500 text-[13px]"
+                    autoComplete="off"
+                  />
                 </div>
               </div>
             </div>
@@ -177,10 +239,8 @@ export const SupportListPageView: React.FC = () => {
         <button
           className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors text-[13px]"
           style={{ minWidth: "100px" }}
-          onClick={() => {
-            // router.push("/adminWeb/support/list/register");
-            setShowRegisterComingSoon(true);
-          }}
+          type="button"
+          onClick={() => router.push("/adminWeb/support/list/register")}
         >
           ✏️ 등록
         </button>
@@ -189,7 +249,7 @@ export const SupportListPageView: React.FC = () => {
       <div className="bg-white rounded-lg shadow border">
         <div className="flex justify-between items-center px-4 py-3 border-b border-gray-200">
           <h5 className="mb-0 text-lg font-semibold">
-            목록관리 목록 (총 {totalElements.toLocaleString()}개)
+            오수 원인자부담금 관리 목록 (총 {totalElements.toLocaleString()}개)
           </h5>
           <div className="flex gap-2">
             <button
@@ -204,47 +264,46 @@ export const SupportListPageView: React.FC = () => {
         <div className="p-0">
           {loading && isInitialLoad ? (
             <>
-              {/* 데스크톱 스켈레톤 테이블 */}
               <div className="overflow-x-auto hidden md:block">
                 <table className="w-full mb-0" style={{ tableLayout: "fixed" }}>
                   <colgroup>
                     <col style={{ width: "5%" }} />
-                    <col style={{ width: "6%" }} />
+                    <col style={{ width: "8%" }} />
+                    <col style={{ width: "9%" }} />
+                    <col style={{ width: "22%" }} />
                     <col style={{ width: "10%" }} />
-                    <col style={{ width: "25%" }} />
+                    <col style={{ width: "9%" }} />
+                    <col style={{ width: "10%" }} />
+                    <col style={{ width: "9%" }} />
                     <col style={{ width: "18%" }} />
-                    <col style={{ width: "13%" }} />
-                    <col style={{ width: "6%" }} />
-                    <col style={{ width: "5%" }} />
-                    <col style={{ width: "10%" }} />
                   </colgroup>
                   <thead className="bg-gray-50">
                     <tr className="border-b-2">
-                      <th className="px-4 py-3 border-r text-center text-[13px] font-bold text-gray-700">
-                        번호
+                      <th className="px-3 py-3 border-r text-center text-[13px] font-bold text-gray-700">
+                        순번
                       </th>
-                      <th className="px-4 py-3 border-r text-center text-[13px] font-bold text-gray-700">
+                      <th className="px-3 py-3 border-r text-center text-[13px] font-bold text-gray-700">
                         상태
                       </th>
-                      <th className="px-4 py-3 border-r text-center text-[13px] font-bold text-gray-700">
-                        사업ID
+                      <th className="px-3 py-3 border-r text-center text-[13px] font-bold text-gray-700">
+                        성명
                       </th>
-                      <th className="px-4 py-3 border-r text-center text-[13px] font-bold text-gray-700">
-                        사업명
+                      <th className="px-3 py-3 border-r text-center text-[13px] font-bold text-gray-700">
+                        주소
                       </th>
-                      <th className="px-4 py-3 border-r text-center text-[13px] font-bold text-gray-700">
-                        모집대상
+                      <th className="px-3 py-3 border-r text-center text-[13px] font-bold text-gray-700">
+                        통지일
                       </th>
-                      <th className="px-4 py-3 border-r text-center text-[13px] font-bold text-gray-700">
-                        모집기간
+                      <th className="px-3 py-3 border-r text-center text-[13px] font-bold text-gray-700">
+                        부과액
                       </th>
-                      <th className="px-4 py-3 border-r text-center text-[13px] font-bold text-gray-700">
-                        모집인원수
+                      <th className="px-3 py-3 border-r text-center text-[13px] font-bold text-gray-700">
+                        납부일
                       </th>
-                      <th className="px-4 py-3 border-r text-center text-[13px] font-bold text-gray-700">
-                        신청목록
+                      <th className="px-3 py-3 border-r text-center text-[13px] font-bold text-gray-700">
+                        납부액
                       </th>
-                      <th className="px-4 py-3 text-center text-[13px] font-bold text-gray-700">
+                      <th className="px-3 py-3 text-center text-[13px] font-bold text-gray-700">
                         관리
                       </th>
                     </tr>
@@ -252,103 +311,68 @@ export const SupportListPageView: React.FC = () => {
                   <tbody className="bg-white divide-y divide-gray-200">
                     {Array.from({ length: 15 }).map((_, i) => (
                       <tr key={i} className="hover:bg-gray-50">
-                        <td className="px-4 py-3 border-r">
+                        <td className="px-3 py-3 border-r">
+                          <div
+                            className="skeleton mx-auto"
+                            style={{ width: "28px", height: "14px" }}
+                          />
+                        </td>
+                        <td className="px-3 py-3 border-r">
+                          <div
+                            className="skeleton mx-auto rounded-[5px]"
+                            style={{ width: "56px", height: "22px" }}
+                          />
+                        </td>
+                        <td className="px-3 py-3 border-r">
                           <div
                             className="skeleton"
-                            style={{
-                              width: "30px",
-                              height: "16px",
-                              margin: "0 auto",
-                            }}
-                          ></div>
+                            style={{ width: "72px", height: "14px" }}
+                          />
                         </td>
-                        <td className="px-4 py-3 border-r">
+                        <td className="px-3 py-3 border-r">
                           <div
                             className="skeleton"
-                            style={{
-                              width: "50px",
-                              height: "22px",
-                              margin: "0 auto",
-                              borderRadius: "4px",
-                            }}
-                          ></div>
+                            style={{ width: "90%", height: "14px" }}
+                          />
                         </td>
-                        <td className="px-4 py-3 border-r">
+                        <td className="px-3 py-3 border-r">
                           <div
-                            className="skeleton"
-                            style={{
-                              width: "100px",
-                              height: "16px",
-                            }}
-                          ></div>
+                            className="skeleton mx-auto"
+                            style={{ width: "88px", height: "14px" }}
+                          />
                         </td>
-                        <td className="px-4 py-3 border-r">
+                        <td className="px-3 py-3 border-r">
                           <div
-                            className="skeleton"
-                            style={{
-                              width: "150px",
-                              height: "16px",
-                            }}
-                          ></div>
+                            className="skeleton mx-auto"
+                            style={{ width: "64px", height: "14px" }}
+                          />
                         </td>
-                        <td className="px-4 py-3 border-r">
+                        <td className="px-3 py-3 border-r">
                           <div
-                            className="skeleton"
-                            style={{
-                              width: "100px",
-                              height: "16px",
-                            }}
-                          ></div>
+                            className="skeleton mx-auto"
+                            style={{ width: "88px", height: "14px" }}
+                          />
                         </td>
-                        <td className="px-4 py-3 border-r">
+                        <td className="px-3 py-3 border-r">
                           <div
-                            className="skeleton"
-                            style={{
-                              width: "150px",
-                              height: "16px",
-                            }}
-                          ></div>
+                            className="skeleton mx-auto"
+                            style={{ width: "64px", height: "14px" }}
+                          />
                         </td>
-                        <td className="px-4 py-3 border-r">
-                          <div
-                            className="skeleton"
-                            style={{
-                              width: "50px",
-                              height: "16px",
-                              margin: "0 auto",
-                            }}
-                          ></div>
-                        </td>
-                        <td className="px-4 py-3 border-r">
-                          <div className="flex justify-center gap-1">
+                        <td className="px-3 py-3">
+                          <div className="flex justify-center flex-wrap gap-1">
                             <div
-                              className="skeleton"
-                              style={{
-                                width: "60px",
-                                height: "28px",
-                                borderRadius: "4px",
-                              }}
-                            ></div>
-                          </div>
-                        </td>
-                        <td className="px-4 py-3">
-                          <div className="flex justify-center gap-1">
+                              className="skeleton rounded"
+                              style={{ width: "64px", height: "26px" }}
+                            />
                             <div
-                              className="skeleton"
-                              style={{
-                                width: "45px",
-                                height: "28px",
-                                borderRadius: "4px",
-                              }}
-                            ></div>
+                              className="skeleton rounded"
+                              style={{ width: "44px", height: "26px" }}
+                            />
                             <div
-                              className="skeleton"
-                              style={{
-                                width: "45px",
-                                height: "28px",
-                                borderRadius: "4px",
-                              }}
-                            ></div>
+                              className="skeleton rounded"
+                              style={{ width: "44px", height: "26px" }}
+                            />
                           </div>
                         </td>
                       </tr>
@@ -359,7 +383,6 @@ export const SupportListPageView: React.FC = () => {
             </>
           ) : (
             <>
-              {/* 데스크톱 테이블 뷰 */}
               <div className="overflow-x-auto hidden md:block">
                 <table
                   ref={tableRef}
@@ -368,63 +391,42 @@ export const SupportListPageView: React.FC = () => {
                 >
                   <colgroup>
                     <col style={{ width: "5%" }} />
-                    <col style={{ width: "6%" }} />
+                    <col style={{ width: "8%" }} />
+                    <col style={{ width: "9%" }} />
+                    <col style={{ width: "22%" }} />
                     <col style={{ width: "10%" }} />
-                    <col style={{ width: "25%" }} />
+                    <col style={{ width: "9%" }} />
+                    <col style={{ width: "10%" }} />
+                    <col style={{ width: "9%" }} />
                     <col style={{ width: "18%" }} />
-                    <col style={{ width: "13%" }} />
-                    <col style={{ width: "6%" }} />
-                    <col style={{ width: "5%" }} />
-                    <col style={{ width: "10%" }} />
                   </colgroup>
                   <thead className="bg-gray-100">
                     <tr className="border-t border-b-2">
-                      <th
-                        className="px-4 py-3 border-r text-center text-[13px] font-bold text-gray-700 sortable-header cursor-pointer hover:bg-gray-100"
-                        onClick={() => handleSort("number")}
-                      >
-                        번호
+                      <th className="px-3 py-3 border-r text-center text-[13px] font-bold text-gray-700">
+                        순번
                       </th>
-                      <th
-                        className="px-4 py-3 border-r text-center text-[13px] font-bold text-gray-700 sortable-header cursor-pointer hover:bg-gray-100"
-                        onClick={() => handleSort("status")}
-                      >
+                      <th className="px-3 py-3 border-r text-center text-[13px] font-bold text-gray-700">
                         상태
                       </th>
-                      <th
-                        className="px-4 py-3 border-r text-center text-[13px] font-bold text-gray-700 sortable-header cursor-pointer hover:bg-gray-100"
-                        onClick={() => handleSort("businessId")}
-                      >
-                        사업ID
+                      <th className="px-3 py-3 border-r text-center text-[13px] font-bold text-gray-700">
+                        성명
                       </th>
-                      <th
-                        className="px-4 py-3 border-r text-center text-[13px] font-bold text-gray-700 sortable-header cursor-pointer hover:bg-gray-100"
-                        onClick={() => handleSort("businessNm")}
-                      >
-                        사업명
+                      <th className="px-3 py-3 border-r text-center text-[13px] font-bold text-gray-700">
+                        주소
                       </th>
-                      <th
-                        className="px-4 py-3 border-r text-center text-[13px] font-bold text-gray-700 sortable-header cursor-pointer hover:bg-gray-100"
-                        onClick={() => handleSort("recruitTarget")}
-                      >
-                        모집대상
+                      <th className="px-3 py-3 border-r text-center text-[13px] font-bold text-gray-700">
+                        통지일
                       </th>
-                      <th
-                        className="px-4 py-3 border-r text-center text-[13px] font-bold text-gray-700 sortable-header cursor-pointer hover:bg-gray-100"
-                        onClick={() => handleSort("recruitPeriod")}
-                      >
-                        모집기간
+                      <th className="px-3 py-3 border-r text-center text-[13px] font-bold text-gray-700">
+                        부과액
                       </th>
-                      <th
-                        className="px-4 py-3 border-r text-center text-[13px] font-bold text-gray-700 sortable-header cursor-pointer hover:bg-gray-100"
-                        onClick={() => handleSort("recruitYear")}
-                      >
-                        모집인원수
+                      <th className="px-3 py-3 border-r text-center text-[13px] font-bold text-gray-700">
+                        납부일
                       </th>
-                      <th className="px-4 py-3 border-r text-center text-[13px] font-bold text-gray-700">
-                        신청목록
+                      <th className="px-3 py-3 border-r text-center text-[13px] font-bold text-gray-700">
+                        납부액
                       </th>
-                      <th className="px-4 py-3 text-center text-[13px] font-bold text-gray-700">
+                      <th className="px-3 py-3 text-center text-[13px] font-bold text-gray-700">
                         관리
                       </th>
                     </tr>
@@ -443,89 +445,138 @@ export const SupportListPageView: React.FC = () => {
                       </tr>
                     ) : (
                       supports.map((support, index) => {
-                        const actualNum =
-                          support.rnum ||
-                          String((currentPage - 1) * pageSize + index + 1);
+                        const f = feeListRowFields(
+                          support,
+                          index,
+                          currentPage,
+                          pageSize,
+                        );
                         const businessId = support.businessId || "";
-                        const businessNm = support.businessNm || "";
-                        const businessNmDisp = decodeDisplayText(businessNm);
-                        const status = support.status || "";
-                        const recruitTarget = support.recruitTarget || "";
-                        const recruitTargetDisp = decodeDisplayText(recruitTarget);
-                        const recruitYear = support.recruitYear || "";
-                        const recruitPeriod =
-                          support.recruitStartDate && support.recruitEndDate
-                            ? `${support.recruitStartDate} ~ ${support.recruitEndDate}`
-                            : "";
+                        const payLabel = f.paid ? "납부" : "미납";
+                        const payBadgeClass = feePayBadgeClassName(f.paid);
+                        const levyDisp = formatFeeCurrency(f.levyRaw);
+                        const payAmtDisp = formatFeeCurrency(f.payAmtRaw);
+                        const notifyDisp = f.notify || "-";
+                        const payDdDisp = f.payDd || "-";
 
                         return (
                           <tr
-                            key={businessId || index}
+                            key={f.rowKey}
                             className="hover:bg-gray-50"
                           >
                             <td className="px-3 py-2 border-r text-center text-[13px] text-gray-900">
-                              {actualNum}
+                              {f.seq}
                             </td>
                             <td className="px-3 py-2 border-r text-center">
                               <span
-                                className={`inline-flex items-center justify-center min-w-[72px] px-2.5 py-0.5 rounded-[5px] text-[13px] font-medium ${getRunStaBadgeClass(
-                                  status,
-                                )}`}
+                                className={`inline-flex items-center justify-center min-w-[72px] px-2.5 py-0.5 rounded-[5px] text-[13px] ${payBadgeClass}`}
                               >
-                                {getRunStaLabel(status)}
+                                {payLabel}
                               </span>
                             </td>
-                            <td className="px-3 py-2 border-r text-center text-[13px] text-gray-900">
-                              {businessId}
-                            </td>
-                            <td className="px-3 py-2 border-r text-left text-[13px] text-gray-900 overflow-hidden">
+                            <td className="px-3 py-2 border-r text-center text-[13px] text-gray-900 min-w-0 overflow-hidden align-middle">
                               <span
-                                className="block truncate min-w-0"
-                                title={businessNmDisp || undefined}
-                              >
-                                {businessNmDisp}
-                              </span>
-                            </td>
-                            <td className="px-3 py-2 border-r text-left text-[13px] text-gray-900 overflow-hidden">
-                              <span
-                                className="block truncate min-w-0"
-                                title={recruitTargetDisp || undefined}
-                              >
-                                {recruitTargetDisp}
-                              </span>
-                            </td>
-                            <td className="px-3 py-2 border-r text-center text-[13px] text-gray-900 overflow-hidden">
-                              <span
-                                className="block truncate min-w-0"
-                                title={recruitPeriod || undefined}
-                              >
-                                {recruitPeriod}
-                              </span>
-                            </td>
-                            <td className="px-3 py-2 border-r text-center text-[13px] text-gray-900">
-                              {recruitYear}
-                            </td>
-                            <td className="px-3 py-2 border-r text-center">
-                              <button
-                                className="px-3 py-1 text-[13px] text-blue-600 border border-blue-600 rounded hover:bg-blue-50 transition-colors whitespace-nowrap"
-                                onClick={() =>
-                                  handleApplicantListClick(businessId)
+                                className="block min-w-0 truncate"
+                                title={
+                                  f.name && f.name !== "-"
+                                    ? f.name
+                                    : undefined
                                 }
                               >
-                                보기
-                              </button>
+                                {f.name || "-"}
+                              </span>
+                            </td>
+                            <td className="px-3 py-2 border-r text-left text-[13px] text-gray-900 min-w-0 overflow-hidden align-middle">
+                              <span
+                                className="block min-w-0 truncate"
+                                title={
+                                  f.addr && f.addr !== "-"
+                                    ? f.addr
+                                    : undefined
+                                }
+                              >
+                                {f.addr || "-"}
+                              </span>
+                            </td>
+                            <td className="px-3 py-2 border-r text-center text-[13px] text-gray-900 min-w-0 overflow-hidden align-middle">
+                              <span
+                                className="block min-w-0 truncate"
+                                title={
+                                  notifyDisp !== "-"
+                                    ? notifyDisp
+                                    : undefined
+                                }
+                              >
+                                {notifyDisp}
+                              </span>
+                            </td>
+                            <td className="px-3 py-2 border-r text-right text-[13px] text-gray-900 tabular-nums min-w-0 overflow-hidden align-middle">
+                              <span
+                                className="block min-w-0 truncate"
+                                title={
+                                  levyDisp !== "-"
+                                    ? `${levyDisp}원`
+                                    : undefined
+                                }
+                              >
+                                {levyDisp === "-" ? "-" : `${levyDisp}원`}
+                              </span>
+                            </td>
+                            <td className="px-3 py-2 border-r text-center text-[13px] text-gray-900 min-w-0 overflow-hidden align-middle">
+                              <span
+                                className="block min-w-0 truncate"
+                                title={
+                                  payDdDisp !== "-"
+                                    ? payDdDisp
+                                    : undefined
+                                }
+                              >
+                                {payDdDisp}
+                              </span>
+                            </td>
+                            <td className="px-3 py-2 border-r text-right text-[13px] text-gray-900 tabular-nums min-w-0 overflow-hidden align-middle">
+                              <span
+                                className="block min-w-0 truncate"
+                                title={
+                                  payAmtDisp !== "-"
+                                    ? `${payAmtDisp}원`
+                                    : undefined
+                                }
+                              >
+                                {payAmtDisp === "-" ? "-" : `${payAmtDisp}원`}
+                              </span>
                             </td>
                             <td className="px-3 py-2 text-center">
-                              <div className="flex items-center justify-center gap-1">
+                              <div className="flex items-center justify-center flex-wrap gap-1">
                                 <button
-                                  className="px-3 py-1 text-[13px] text-blue-600 border border-blue-600 rounded hover:bg-blue-50 transition-colors whitespace-nowrap"
-                                  onClick={() => handleDetailClick(businessId)}
+                                  type="button"
+                                  className="px-2 py-1 text-[12px] text-blue-600 border border-blue-600 rounded hover:bg-blue-50 transition-colors whitespace-nowrap"
+                                  style={{ minWidth: "64px" }}
+                                  onClick={() =>
+                                    handlePaymentHistoryClick(f.rowKey)
+                                  }
+                                >
+                                  납부내역
+                                </button>
+                                <button
+                                  type="button"
+                                  className="px-2 py-1 text-[12px] text-blue-600 border border-blue-600 rounded hover:bg-blue-50 transition-colors whitespace-nowrap"
+                                  style={{ minWidth: "44px" }}
+                                  onClick={() =>
+                                    handleDetailClick(businessId || f.rowKey)
+                                  }
                                 >
                                   상세
                                 </button>
                                 <button
-                                  className="px-3 py-1 text-[13px] text-red-600 border border-red-600 rounded hover:bg-red-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
-                                  onClick={() => handleDeleteClick(businessId)}
+                                  type="button"
+                                  className="px-2 py-1 text-[12px] text-red-600 border border-red-600 rounded hover:bg-red-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                                  style={{ minWidth: "44px" }}
+                                  onClick={() =>
+                                    handleDeleteClick(
+                                      businessId || f.rowKey,
+                                    )
+                                  }
                                   disabled={deleteLoading}
                                 >
                                   삭제
@@ -540,7 +591,6 @@ export const SupportListPageView: React.FC = () => {
                 </table>
               </div>
 
-              {/* 모바일 카드 뷰 */}
               <div className="mobile-card-view md:hidden">
                 {supports.length === 0 ? (
                   <div className="mobile-card">
@@ -554,29 +604,30 @@ export const SupportListPageView: React.FC = () => {
                   </div>
                 ) : (
                   supports.map((support, index) => {
-                    const actualNum =
-                      support.rnum ||
-                      String((currentPage - 1) * pageSize + index + 1);
+                    const f = feeListRowFields(
+                      support,
+                      index,
+                      currentPage,
+                      pageSize,
+                    );
                     const businessId = support.businessId || "";
-                    const businessNm = support.businessNm || "";
-                    const businessNmDisp = decodeDisplayText(businessNm);
-                    const status = support.status || "";
-                    const recruitTarget = support.recruitTarget || "";
-                    const recruitTargetDisp = decodeDisplayText(recruitTarget);
-                    const recruitYear = support.recruitYear || "";
-                    const recruitPeriod =
-                      support.recruitStartDate && support.recruitEndDate
-                        ? `${support.recruitStartDate} ~ ${support.recruitEndDate}`
-                        : "";
+                    const payLabel = f.paid ? "납부" : "미납";
+                    const payBadgeClass = feePayBadgeClassName(f.paid);
+                    const levyDisp = formatFeeCurrency(f.levyRaw);
+                    const payAmtDisp = formatFeeCurrency(f.payAmtRaw);
 
                     return (
-                      <div key={businessId || index} className="mobile-card">
+                      <div key={f.rowKey} className="mobile-card">
                         <div className="mobile-card-header">
                           <span
                             className="mobile-card-id block truncate min-w-0"
-                            title={businessNmDisp || undefined}
+                            title={
+                              `순번 ${f.seq}${f.name ? ` · ${f.name}` : ""}` ||
+                              undefined
+                            }
                           >
-                            #{actualNum} - {businessNmDisp}
+                            순번 {f.seq}
+                            {f.name ? ` · ${f.name}` : ""}
                           </span>
                         </div>
                         <div className="mobile-card-body">
@@ -584,67 +635,75 @@ export const SupportListPageView: React.FC = () => {
                             <span className="mobile-card-label">상태</span>
                             <span className="mobile-card-value">
                               <span
-                                className={`inline-flex items-center justify-center min-w-[72px] px-2.5 py-0.5 rounded-[5px] text-[13px] font-medium ${getRunStaBadgeClass(
-                                  status,
-                                )}`}
+                                className={`inline-flex items-center justify-center min-w-[72px] px-2.5 py-0.5 rounded-[5px] text-[13px] ${payBadgeClass}`}
                               >
-                                {getRunStaLabel(status)}
+                                {payLabel}
                               </span>
                             </span>
                           </div>
                           <div className="mobile-card-row">
-                            <span className="mobile-card-label">사업ID</span>
-                            <span className="mobile-card-value">
-                              {businessId}
-                            </span>
-                          </div>
-                          <div className="mobile-card-row">
-                            <span className="mobile-card-label">모집대상</span>
+                            <span className="mobile-card-label">주소</span>
                             <span
                               className="mobile-card-value block truncate min-w-0"
-                              title={recruitTargetDisp || undefined}
+                              title={f.addr || undefined}
                             >
-                              {recruitTargetDisp}
+                              {f.addr || "-"}
                             </span>
                           </div>
                           <div className="mobile-card-row">
-                            <span className="mobile-card-label">모집기간</span>
-                            <span
-                              className="mobile-card-value block truncate min-w-0"
-                              title={recruitPeriod || undefined}
-                            >
-                              {recruitPeriod}
-                            </span>
-                          </div>
-                          <div className="mobile-card-row">
-                            <span className="mobile-card-label">모집연수</span>
+                            <span className="mobile-card-label">통지일</span>
                             <span className="mobile-card-value">
-                              {recruitYear}
+                              {f.notify || "-"}
+                            </span>
+                          </div>
+                          <div className="mobile-card-row">
+                            <span className="mobile-card-label">부과액</span>
+                            <span className="mobile-card-value">
+                              {levyDisp === "-" ? "-" : `${levyDisp}원`}
+                            </span>
+                          </div>
+                          <div className="mobile-card-row">
+                            <span className="mobile-card-label">납부일</span>
+                            <span className="mobile-card-value">
+                              {f.payDd || "-"}
+                            </span>
+                          </div>
+                          <div className="mobile-card-row">
+                            <span className="mobile-card-label">납부액</span>
+                            <span className="mobile-card-value">
+                              {payAmtDisp === "-" ? "-" : `${payAmtDisp}원`}
                             </span>
                           </div>
                         </div>
-                        <div className="mobile-card-footer">
+                        <div className="mobile-card-footer flex flex-wrap gap-1 justify-end">
                           <button
-                            className="px-3 py-1 text-[13px] text-blue-600 border border-blue-600 rounded hover:bg-blue-50 transition-colors"
-                            onClick={() => handleApplicantListClick(businessId)}
+                            type="button"
+                            className="px-2 py-1 text-[12px] text-blue-600 border border-blue-600 rounded hover:bg-blue-50 transition-colors"
+                            onClick={() =>
+                              handlePaymentHistoryClick(f.rowKey)
+                            }
                           >
-                            보기
+                            납부내역
                           </button>
-                          <div className="flex items-center gap-1">
-                            <button
-                              className="px-3 py-1 text-[13px] text-blue-600 border border-blue-600 rounded hover:bg-blue-50 transition-colors whitespace-nowrap"
-                              onClick={() => handleDetailClick(businessId)}
-                            >
-                              상세
-                            </button>
-                            <button
-                              className="px-3 py-1 text-[13px] text-red-600 border border-red-600 rounded hover:bg-red-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
-                              onClick={() => handleDeleteClick(businessId)}
-                              disabled={deleteLoading}
-                            >
-                              삭제
-                            </button>
-                          </div>
+                          <button
+                            type="button"
+                            className="px-2 py-1 text-[12px] text-blue-600 border border-blue-600 rounded hover:bg-blue-50 transition-colors"
+                            onClick={() =>
+                              handleDetailClick(businessId || f.rowKey)
+                            }
+                          >
+                            상세
+                          </button>
+                          <button
+                            type="button"
+                            className="px-2 py-1 text-[12px] text-red-600 border border-red-600 rounded hover:bg-red-50 transition-colors disabled:opacity-50"
+                            onClick={() =>
+                              handleDeleteClick(businessId || f.rowKey)
+                            }
+                            disabled={deleteLoading}
+                          >
+                            삭제
+                          </button>
                         </div>
                       </div>
                     );
@@ -654,20 +713,22 @@ export const SupportListPageView: React.FC = () => {
             </>
           )}
         </div>
-        <div className="px-4 py-3 bg-gray-50 border-t border-gray-200">
-          <Pagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={handlePageChange}
-          />
-        </div>
+        {totalElements > 0 ? (
+          <div className="px-4 py-3 bg-gray-50 border-t border-gray-200">
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={handlePageChange}
+            />
+          </div>
+        ) : null}
       </div>
 
       {/* 삭제 확인 다이얼로그 */}
       <ConfirmDialog
         isOpen={showDeleteDialog}
-        title="지원사업 삭제"
-        message={`해당 지원사업을 삭제하시겠습니까?`}
+        title="오수 원인자부담금 삭제"
+        message="해당 건을 삭제하시겠습니까?"
         confirmText={deleteLoading ? "처리 중..." : "삭제"}
         cancelText="닫기"
         type="danger"
@@ -675,16 +736,15 @@ export const SupportListPageView: React.FC = () => {
         onCancel={handleDeleteCancel}
       />
 
-      {/* 등록: 목록 → 등록 페이지 이동 대신 안내 (이동 복구 시 router.push 주석 해제) */}
       <ConfirmDialog
-        isOpen={showRegisterComingSoon}
+        isOpen={showPaymentHistoryComingSoon}
         title="알림"
-        message="준비중입니다."
+        message="납부내역 화면은 준비 중입니다."
         type="primary"
         confirmText="확인"
         cancelText="닫기"
-        onConfirm={() => setShowRegisterComingSoon(false)}
-        onCancel={() => setShowRegisterComingSoon(false)}
+        onConfirm={() => setShowPaymentHistoryComingSoon(false)}
+        onCancel={() => setShowPaymentHistoryComingSoon(false)}
       />
 
       {/* 신청인 목록 다이얼로그 */}

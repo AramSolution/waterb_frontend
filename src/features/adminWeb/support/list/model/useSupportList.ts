@@ -12,6 +12,120 @@ import { downloadSupportsExcel } from "@/entities/adminWeb/support/lib";
 import { ApiError, TokenUtils } from "@/shared/lib";
 import { useResizableColumns } from "@/shared/hooks";
 
+/** TODO: 오수 원인자부담금 API 연동 후 `false`로 두거나 목 데이터·필터 블록 제거 */
+const USE_FEE_LIST_MOCK_DATA = true;
+
+/** 화면 확인용 임시 목록 (Support 확장 필드 — feeListRowFields와 동일 키) */
+const FEE_LIST_MOCK: Support[] = [
+  {
+    businessId: "FEE-2026-001",
+    rnum: "1",
+    applicantNm: "김오수",
+    addr: "전북특별자치도 군산시 미원대로 123 (나운동, 행복주택)",
+    notifyDd: "2026-01-15",
+    levyAmt: 128500,
+    paySta: "01",
+    payDd: "",
+    payAmt: "",
+  },
+  {
+    businessId: "FEE-2026-002",
+    rnum: "2",
+    applicantNm: "이납부",
+    addr: "전북 군산시 해망로 45",
+    notifyDd: "2026-02-01",
+    levyAmt: 95000,
+    paySta: "02",
+    payDd: "2026-02-20",
+    payAmt: 95000,
+  },
+  {
+    businessId: "FEE-2026-003",
+    rnum: "3",
+    applicantNm: "박미납",
+    addr: "군산시 조촌로 7길 12",
+    notifyDd: "2026-03-10",
+    levyAmt: 210000,
+    paySta: "01",
+    payDd: "",
+    payAmt: "",
+  },
+  {
+    businessId: "FEE-2026-004",
+    rnum: "4",
+    applicantNm: "최부분",
+    addr: "군산시 나운동 200번지 일대",
+    notifyDd: "2026-03-22",
+    levyAmt: 77500,
+    paySta: "Y",
+    payDd: "2026-04-01",
+    payAmt: 50000,
+  },
+  {
+    businessId: "FEE-2026-005",
+    rnum: "5",
+    applicantNm: "정오수",
+    addr: "전라북도 군산시 소룡동 산업단지로 88",
+    notifyDd: "2026-04-05",
+    levyAmt: 340000,
+    paySta: "01",
+    payDd: "",
+    payAmt: undefined,
+  },
+  {
+    businessId: "FEE-2026-006",
+    rnum: "6",
+    applicantNm: "한테스트",
+    addr: "군산시 미장동",
+    notifyDd: "2025-12-28",
+    levyAmt: 15000,
+    paySta: "납부",
+    payDd: "2026-01-02",
+    payAmt: 15000,
+  },
+];
+
+function filterFeeMockRows(
+  rows: Support[],
+  notifyFrom?: string,
+  notifyTo?: string,
+  applicantNm?: string,
+  addr?: string,
+): Support[] {
+  let out = [...rows];
+  if (notifyFrom) {
+    out = out.filter((r) => {
+      const d = String((r as Record<string, unknown>).notifyDd ?? "");
+      return !d || d >= notifyFrom;
+    });
+  }
+  if (notifyTo) {
+    out = out.filter((r) => {
+      const d = String((r as Record<string, unknown>).notifyDd ?? "");
+      return !d || d <= notifyTo;
+    });
+  }
+  if (applicantNm) {
+    const q = applicantNm.toLowerCase();
+    out = out.filter((r) => {
+      const rowAny = r as Record<string, unknown>;
+      const name = String(
+        rowAny.applicantNm ?? r.businessNm ?? "",
+      ).toLowerCase();
+      return name.includes(q);
+    });
+  }
+  if (addr) {
+    const q = addr.toLowerCase();
+    out = out.filter((r) => {
+      const rowAny = r as Record<string, unknown>;
+      const a = String(rowAny.addr ?? rowAny.address ?? "").toLowerCase();
+      return a.includes(q);
+    });
+  }
+  return out;
+}
+
 export function useSupportList() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -20,6 +134,8 @@ export function useSupportList() {
   const urlStartDate = searchParams?.get("startDate") ?? null;
   const urlEndDate = searchParams?.get("endDate") ?? null;
   const urlPage = searchParams?.get("page") ?? null;
+  const urlApplicantNm = searchParams?.get("applicantNm") ?? null;
+  const urlAddr = searchParams?.get("addr") ?? null;
 
   const [loading, setLoading] = useState(true);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
@@ -43,33 +159,34 @@ export function useSupportList() {
   const [totalPages, setTotalPages] = useState(0);
   const [error, setError] = useState("");
 
-  // 현재 년도 기준으로 기본 날짜 설정 (1월 1일 ~ 12월 31일)
-  const getDefaultStartDate = (): string => {
-    const now = new Date();
-    const year = now.getFullYear();
+  /** 통지일 기준: 해당 연도 1월 1일 ~ 12월 31일 (기본 조회 구간) */
+  const getDefaultNotifyStartDate = (): string => {
+    const year = new Date().getFullYear();
     return `${year}-01-01`;
   };
 
-  const getDefaultEndDate = (): string => {
-    const now = new Date();
-    const year = now.getFullYear();
+  const getDefaultNotifyEndDate = (): string => {
+    const year = new Date().getFullYear();
     return `${year}-12-31`;
   };
 
-  // 검색기간 날짜 필터 (URL 파라미터가 있으면 사용, 없으면 현재 년도 기본값)
+  // 통지일 구간 (URL 파라미터가 있으면 사용, 없으면 해당 연도 전체)
   const [startDate, setStartDate] = useState<string>(
-    urlStartDate || getDefaultStartDate(),
+    urlStartDate || getDefaultNotifyStartDate(),
   );
   const [endDate, setEndDate] = useState<string>(
-    urlEndDate || getDefaultEndDate(),
+    urlEndDate || getDefaultNotifyEndDate(),
   );
 
-  // 조회조건: 상태 (서버 사이드 필터링용)
-  const [searchStatus, setSearchStatus] = useState<string>("");
+  const [applicantNm, setApplicantNm] = useState<string>(
+    urlApplicantNm ?? "",
+  );
+  const [addr, setAddr] = useState<string>(urlAddr ?? "");
 
   const startDateRef = useRef(startDate);
   const endDateRef = useRef(endDate);
-  const searchStatusRef = useRef(searchStatus);
+  const applicantNmRef = useRef(applicantNm);
+  const addrRef = useRef(addr);
   const currentPageRef = useRef(currentPage);
   const isSearchingRef = useRef(false); // 조회 버튼 클릭 중인지 추적
   const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null); // 중복 호출 방지용
@@ -83,8 +200,12 @@ export function useSupportList() {
   }, [endDate]);
 
   useEffect(() => {
-    searchStatusRef.current = searchStatus;
-  }, [searchStatus]);
+    applicantNmRef.current = applicantNm;
+  }, [applicantNm]);
+
+  useEffect(() => {
+    addrRef.current = addr;
+  }, [addr]);
 
   useEffect(() => {
     currentPageRef.current = currentPage;
@@ -116,7 +237,13 @@ export function useSupportList() {
         setCurrentPage(pageNum);
       }
     }
-  }, [urlStartDate, urlEndDate, urlPage]);
+    if (urlApplicantNm !== null) {
+      setApplicantNm(urlApplicantNm);
+    }
+    if (urlAddr !== null) {
+      setAddr(urlAddr);
+    }
+  }, [urlStartDate, urlEndDate, urlPage, urlApplicantNm, urlAddr]);
 
   // 지원사업 목록 조회 (서버 사이드 페이징)
   const fetchSupports = useCallback(async () => {
@@ -149,37 +276,52 @@ export function useSupportList() {
         return dateStr;
       };
 
-      const searchRecFromDd = convertDateToYYYYMMDD(startDateRef.current);
-      const searchRecToDd = convertDateToYYYYMMDD(endDateRef.current);
-
-      // 상태 필터 값 확인 및 처리 (서버 사이드 필터링)
-      const statusFilter =
-        searchStatusRef.current && searchStatusRef.current.trim() !== ""
-          ? searchStatusRef.current
+      const notifyFrom = convertDateToYYYYMMDD(startDateRef.current);
+      const notifyTo = convertDateToYYYYMMDD(endDateRef.current);
+      const nm =
+        applicantNmRef.current.trim() !== ""
+          ? applicantNmRef.current.trim()
           : undefined;
+      const address =
+        addrRef.current.trim() !== "" ? addrRef.current.trim() : undefined;
 
-      console.log("📊 fetchSupports 실행:");
-      console.log(`  - startDateRef: ${startDateRef.current}`);
-      console.log(`  - endDateRef: ${endDateRef.current}`);
-      console.log(`  - searchRecFromDd: ${searchRecFromDd}`);
-      console.log(`  - searchRecToDd: ${searchRecToDd}`);
+      console.log("📊 fetchSupports 실행 (오수 원인자부담금 조회 UI):");
+      console.log(`  - 통지일: ${startDateRef.current} ~ ${endDateRef.current}`);
+      console.log(`  - 성명: ${applicantNmRef.current}, 주소: ${addrRef.current}`);
       console.log(`  - currentPageRef: ${currentPageRef.current}`);
-      console.log(`  - requestStart: ${requestStart}`);
-      console.log(`  - requestLength: ${requestLength}`);
-      console.log(`  - searchStatusRef: ${searchStatusRef.current}`);
-      console.log(`  - statusFilter: ${statusFilter}`);
 
       const params: SupportListParams = {
         start: requestStart,
         length: requestLength,
-        searchRecFromDd, // 모집기간 시작일 (YYYYMMDD)
-        searchRecToDd, // 모집기간 종료일 (YYYYMMDD)
-        // 샘플업무: proGb = "01"만 조회
+        searchNotifyFromDd: notifyFrom,
+        searchNotifyToDd: notifyTo,
+        searchApplicantNm: nm,
+        searchAddr: address,
+        searchRecFromDd: notifyFrom,
+        searchRecToDd: notifyTo,
         proGb: "01",
-        filterStatus: statusFilter, // 상태 필터 (서버 사이드 필터링)
       };
 
       console.log("📤 API 요청 파라미터:", params);
+
+      if (USE_FEE_LIST_MOCK_DATA) {
+        const filtered = filterFeeMockRows(
+          FEE_LIST_MOCK,
+          notifyFrom,
+          notifyTo,
+          nm,
+          address,
+        );
+        const total = filtered.length;
+        const pageSlice = filtered.slice(
+          requestStart,
+          requestStart + requestLength,
+        );
+        setSupports(pageSlice);
+        setTotalElements(total);
+        setTotalPages(Math.max(1, Math.ceil(total / pageSize)));
+        return;
+      }
 
       // ── 샘플업무 목록 API 비활성화 (다시 쓰려면 아래 블록 주석 해제) ──
       // const response = await SupportService.getSupportList(params);
@@ -251,10 +393,10 @@ export function useSupportList() {
 
   // 초기 로드
   useEffect(() => {
-    // 초기 로드 시 ref를 최신 값으로 동기화
     startDateRef.current = startDate;
     endDateRef.current = endDate;
-    searchStatusRef.current = searchStatus;
+    applicantNmRef.current = applicantNm;
+    addrRef.current = addr;
     fetchSupports();
   }, []);
 
@@ -385,19 +527,18 @@ export function useSupportList() {
     searchTimeoutRef.current = setTimeout(async () => {
       console.log("🔍 handleSearch 호출");
       console.log(
-        "📅 조회 전 날짜:",
-        `startDate: ${startDate}, endDate: ${endDate}, searchStatus: ${searchStatus}`,
+        "📅 조회 전:",
+        `통지일 ${startDate}~${endDate}, 성명=${applicantNm}, 주소=${addr}`,
       );
 
-      // ref를 최신 값으로 동기화
       startDateRef.current = startDate;
       endDateRef.current = endDate;
-      searchStatusRef.current = searchStatus;
-      // 조회 시 첫 페이지로 이동하고 ref도 업데이트
+      applicantNmRef.current = applicantNm;
+      addrRef.current = addr;
       currentPageRef.current = 1;
       console.log(
         "📅 ref 동기화 후:",
-        `startDateRef: ${startDateRef.current}, endDateRef: ${endDateRef.current}, searchStatusRef: ${searchStatusRef.current}, currentPageRef: ${currentPageRef.current}`,
+        `통지일 ${startDateRef.current}~${endDateRef.current}, 성명=${applicantNmRef.current}, 주소=${addrRef.current}, page=${currentPageRef.current}`,
       );
 
       // 조회 중 플래그 설정 (useEffect 중복 호출 방지)
@@ -489,16 +630,18 @@ export function useSupportList() {
         return dateStr;
       };
 
-      // 엑셀 다운로드용 API 파라미터 (페이지네이션 제외, 검색 조건 + 사업구분 포함)
-      const statusFilter =
-        searchStatusRef.current && searchStatusRef.current.trim() !== ""
-          ? searchStatusRef.current
-          : undefined;
+      const notifyFrom = convertDateToYYYYMMDD(startDate);
+      const notifyTo = convertDateToYYYYMMDD(endDate);
+      const nm =
+        applicantNm.trim() !== "" ? applicantNm.trim() : undefined;
+      const address = addr.trim() !== "" ? addr.trim() : undefined;
       const params: Omit<SupportListParams, "length" | "start"> = {
-        searchRecFromDd: convertDateToYYYYMMDD(startDate),
-        searchRecToDd: convertDateToYYYYMMDD(endDate),
-        filterStatus: statusFilter, // 상태 필터 (서버 사이드 필터링)
-        // 샘플업무: proGb = "01"만 조회
+        searchNotifyFromDd: notifyFrom,
+        searchNotifyToDd: notifyTo,
+        searchApplicantNm: nm,
+        searchAddr: address,
+        searchRecFromDd: notifyFrom,
+        searchRecToDd: notifyTo,
         proGb: "01",
       };
 
@@ -603,7 +746,9 @@ export function useSupportList() {
     handleExcelDownload,
     setStartDate,
     setEndDate,
-    searchStatus,
-    setSearchStatus,
+    applicantNm,
+    setApplicantNm,
+    addr,
+    setAddr,
   };
 }

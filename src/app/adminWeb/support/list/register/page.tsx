@@ -1,14 +1,22 @@
 "use client";
 
+import { Suspense } from "react";
 import { AdminLayout } from "@/widgets/adminWeb/layout";
-import { SupportRegisterPageView } from "@/features/adminWeb/support/register/ui";
+import { FeePayerBasicRegisterPageView } from "@/features/adminWeb/support/feePayerRegister/ui";
+import { LoadingFallback } from "@/shared/ui/adminWeb";
 
-export default function SupportRegisterPage() {
+function FeePayerBasicRegisterContent() {
   return (
     <AdminLayout>
-      <SupportRegisterPageView />
+      <FeePayerBasicRegisterPageView />
     </AdminLayout>
   );
 }
 
-
+export default function SupportListRegisterPage() {
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <FeePayerBasicRegisterContent />
+    </Suspense>
+  );
+}

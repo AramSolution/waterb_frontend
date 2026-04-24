@@ -1586,6 +1586,126 @@ Copy the exact structure and class names from these blocks when adding new two-o
 
 ---
 
+## Register Form Grid: `FormField` Row Boundaries & Empty Half-Cells
+
+### Purpose (scope)
+
+**Use this section when:**
+
+- ✅ Building or changing **admin registration/edit** forms that use `@/shared/ui/adminWeb/form/FormField` + `@/shared/styles/admin/register-form.css`.
+- ✅ A row contains **only one `md:w-1/2` field** (half row) and the next row is **`fullWidth`**, or the first row must show a **closed table grid** (including the right vertical edge) without a second real field.
+
+**Out of scope:** Validation error DOM placement (see `admin-web-validation-ui-rules.mdc`). This section is **layout and border continuity only**.
+
+---
+
+### Why this is CRITICAL (failure mode)
+
+1. **Half row then `fullWidth` row:** A half-width `FormField` draws **bottom borders only across its own 50% wrapper**. The following `fullWidth` row does **not** extend that line across the remaining 50% by default → the horizontal separator **appears broken** above the full-width row.
+2. **Half row with no right cell:** If only one half-width `FormField` exists in a `flex flex-wrap` row, the **right 50% has no bordered cell** → missing **outer right vertical** and inconsistent grid vs. the row below.
+
+**Do not rely on one-off Tailwind borders** (`border-r`, negative margins, etc.) to “draw lines” unless the product explicitly requires a custom layout. Prefer **`FormField`’s documented props** and the **empty-label half-cell pattern** below.
+
+---
+
+### Pattern A — Half-width row followed by `fullWidth` row (full-width horizontal rule)
+
+**MUST** restore a **single** horizontal boundary between the half row and the `fullWidth` row using `FormField` props (see `FormField.tsx`: `suppressBottomBorder`, `forceTopBorder`).
+
+**On the last field(s) of the row above the `fullWidth` row:**
+
+- ✅ Set **`suppressBottomBorder`** on every `FormField` in that row that should **not** stack a second line against the next row’s top.
+
+**On the first `fullWidth` `FormField` of the next row:**
+
+- ✅ Set **`forceTopBorder`** so the next row’s label and field cells get **`borderTop: 1px solid #dee2e6`** across the **full** width.
+
+**MUST NOT:**
+
+- ❌ Add a raw `<div className="border-t …">` between rows **without** removing the overlapping half-row bottom borders first (risk of **double-thick** line on the overlapping segment).
+- ❌ Use `forceTopBorder` alone while leaving the half-row’s bottom borders on (same double-line risk on the left overlap).
+
+**Minimal example (conceptual):**
+
+```tsx
+<div className="flex flex-wrap">
+  <FormField
+    label="Name"
+    isFirstRow
+    isFirstInRow
+    suppressBottomBorder
+    /* … */
+  >
+    <FormInput /* … */ />
+  </FormField>
+  {/* Optional: empty half-cell Pattern B in the same row */}
+</div>
+<div className="flex flex-wrap">
+  <FormField label="Address" required fullWidth forceTopBorder /* … */>
+    {/* … */}
+  </FormField>
+</div>
+```
+
+---
+
+### Pattern B — Empty right half-cell (grid closure, no fake `FormInput`)
+
+When the design keeps **only one real half-width field** in the first column but the **table grid must close** (right vertical edge, same row height, aligned `suppressBottomBorder` with Pattern A):
+
+**MUST** add a second **`FormField`** in the same `flex flex-wrap` row using the **empty-label branch** of `FormField`:
+
+- ✅ Pass a label that is **empty after `trim()`** (e.g. `label=" "` — a single space). That triggers the branch where **no label column** is rendered and the cell is **`w-full md:w-1/2`** with standard `register-form-mobile-field` borders (`FormField.tsx`, `if (!label.trim()) { … }`).
+- ✅ Set **`isFirstInRow`** on this second `FormField` (same as other two-column rows, e.g. `ProgramRegisterForm.tsx`).
+- ✅ If Pattern A applies to this row, set **`suppressBottomBorder`** on this empty half-cell **as well** so both halves stay visually consistent with the next row’s `forceTopBorder`.
+- ✅ Put **non-visual** content only inside the cell (e.g. `<span className="sr-only">…</span>`) — **do not** add a read-only fake text input unless the product explicitly requires it.
+
+**MUST NOT:**
+
+- ❌ Leave the right 50% of the row **without** any `FormField` when the rest of the form uses the **two-column register grid** and the design expects a closed rectangle for that row.
+- ❌ Use `label=""` if your bundler or linter strips it; use `label=" "` (space) so `!label.trim()` remains true.
+
+**Minimal example:**
+
+```tsx
+<FormField label=" " isFirstInRow suppressBottomBorder>
+  <span className="sr-only">No additional field in this column</span>
+</FormField>
+```
+
+---
+
+### Verification checklist (run before PR / handoff)
+
+- [ ] **Row transition:** If row *n* is half-width only and row *n+1* is `fullWidth`, half-row `FormField`s use **`suppressBottomBorder`** and the first `fullWidth` `FormField` uses **`forceTopBorder`**.
+- [ ] **Right edge:** If row *n* has a single half-width field but the grid must close, a second **`FormField`** with **`label=" "`** (empty after trim) + **`isFirstInRow`** (+ optional **`suppressBottomBorder`**) exists in the same `flex flex-wrap` row.
+- [ ] **No duplicate lines:** No stacked `border-top` + `border-bottom` on the same horizontal segment without intentional design.
+- [ ] **Reference read:** Opened `src/shared/ui/adminWeb/form/FormField.tsx` and confirmed prop behavior for `suppressBottomBorder`, `forceTopBorder`, and `!label.trim()`.
+
+---
+
+### Decision tree
+
+```
+Register form row uses FormField + register-form.css?
+├─ Next row is fullWidth while current row has only one half-width field?
+│  └─ YES → Apply Pattern A (suppressBottomBorder on current row fields, forceTopBorder on next fullWidth FormField)
+└─ Same row must show a closed grid on the right but no second business field?
+   └─ YES → Apply Pattern B (second FormField with label=" ", isFirstInRow, optional suppressBottomBorder, sr-only child)
+```
+
+---
+
+### Reference implementations
+
+| Concern | File |
+|--------|------|
+| `suppressBottomBorder` / `forceTopBorder` / empty `label` branch | `src/shared/ui/adminWeb/form/FormField.tsx` |
+| Half row + empty half-cell + address `fullWidth` row | `src/features/adminWeb/support/feePayerRegister/ui/FeePayerBasicRegisterForm.tsx` |
+| Two-column first row (both real fields) | `src/features/adminWeb/program/register/ui/ProgramRegisterForm.tsx` |
+
+---
+
 ## 📎 Attachment File UI (Admin Web)
 
 ### ⚠️ CRITICAL: Attachment File Row Structure

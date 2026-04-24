@@ -12,6 +12,8 @@ interface FormFieldProps {
   forceLabelLeftBorder?: boolean;
   suppressTopBorder?: boolean; // 상단 테두리 제거(첫 행 두꺼워짐 방지)
   fullWidth?: boolean; // 전체 너비 필드 (게시판설명 등)
+  /** fullWidth일 때 왼쪽 라벨 열(회색) 없이 필드만 전체 너비·흰 배경 */
+  fieldOnlyFullWidth?: boolean;
   forceTopBorder?: boolean; // 상단 선 강제 표시(이전 행이 1칸만 차지할 때 등)
   suppressBottomBorder?: boolean; // 하단 선 제거 (다음 행이 fullWidth+forceTopBorder일 때 중복 선 방지)
   /** fullWidth일 때 라벨·필드 영역을 위쪽 정렬 (체크박스/라디오/textarea 등 여러 줄 콘텐츠) */
@@ -30,6 +32,7 @@ export const FormField: React.FC<FormFieldProps> = ({
   forceLabelLeftBorder = false,
   suppressTopBorder = false,
   fullWidth = false,
+  fieldOnlyFullWidth = false,
   forceTopBorder = false,
   suppressBottomBorder = false,
   alignFieldStart = false,
@@ -50,12 +53,12 @@ export const FormField: React.FC<FormFieldProps> = ({
   const labelBorderTop = suppressTopBorder
     ? "none"
     : forceTopBorder
-    ? "1px solid #dee2e6"
-    : isFirstRow && isFirstInRow
-      ? "none"
-      : isFirstRow
-        ? "1px solid #dee2e6"
-        : "none";
+      ? "1px solid #dee2e6"
+      : isFirstRow && isFirstInRow
+        ? "none"
+        : isFirstRow
+          ? "1px solid #dee2e6"
+          : "none";
   const labelBorderLeft =
     suppressLeftBorder || (isFirstInRow && !forceLabelLeftBorder)
       ? "none"
@@ -68,48 +71,49 @@ export const FormField: React.FC<FormFieldProps> = ({
   const fieldBorderTop = suppressTopBorder
     ? "none"
     : forceTopBorder
-    ? "1px solid #dee2e6"
-    : isFirstRow && isFirstInRow
-      ? "none"
-      : isFirstRow
-        ? "1px solid #dee2e6"
-        : "none";
+      ? "1px solid #dee2e6"
+      : isFirstRow && isFirstInRow
+        ? "none"
+        : isFirstRow
+          ? "1px solid #dee2e6"
+          : "none";
 
-  // 라벨이 비어있는 경우: 라벨 영역 없이 필드만 전체 영역 사용
-  if (!label.trim()) {
-    return (
-      <div className="w-full md:w-1/2 register-form-mobile-row">
-        <div
-          className="register-form-mobile-wrapper md:flex md:items-stretch"
-          style={{ minHeight: "45px" }}
-        >
-          <div
-            className="register-form-mobile-field w-full flex items-center"
-            style={{
-              border: "1px solid #dee2e6",
-              borderLeft: "none",
-              ...(fieldBorderTop !== undefined && { borderTop: fieldBorderTop }),
-              ...(fieldBorderBottom !== undefined && {
-                borderBottom: fieldBorderBottom,
-              }),
-              padding: "5px",
-            }}
-          >
-            {children}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
+  // fullWidth는 `label`이 공백만 있어도 전체 폭 레이아웃을 써야 함(공백 trim 분기보다 먼저 판단)
   if (fullWidth) {
-    const labelAlignClass = alignFieldStart
-      ? "items-start pt-1.5"
-      : "items-center";
     /** alignFieldStart 시 필드 셀을 flex 가로로 두면 자식 w-full이 축소·깨짐(라디오/체크 등) → block으로 전체 폭 유지 */
     const fieldContainerClass = alignFieldStart
       ? "register-form-mobile-field w-full min-h-0 block"
       : `register-form-mobile-field w-full flex items-center min-h-0`;
+
+    if (fieldOnlyFullWidth) {
+      return (
+        <div className="w-full register-form-mobile-row">
+          <div
+            className="register-form-mobile-wrapper md:flex md:items-stretch"
+            style={{ minHeight: "45px" }}
+          >
+            <div
+              className={fieldContainerClass}
+              style={{
+                border: "1px solid #dee2e6",
+                backgroundColor: "#fff",
+                ...(fieldBorderTop !== undefined && { borderTop: fieldBorderTop }),
+                ...(fieldBorderBottom !== undefined && {
+                  borderBottom: fieldBorderBottom,
+                }),
+                padding: "5px",
+              }}
+            >
+              {children}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    const labelAlignClass = alignFieldStart
+      ? "items-start pt-1.5"
+      : "items-center";
 
     return (
       <div className="w-full register-form-mobile-row">
@@ -154,6 +158,33 @@ export const FormField: React.FC<FormFieldProps> = ({
             >
               {children}
             </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // 라벨이 비어있는 경우: 라벨 영역 없이 필드만 전체 영역 사용
+  if (!label.trim()) {
+    return (
+      <div className="w-full md:w-1/2 register-form-mobile-row">
+        <div
+          className="register-form-mobile-wrapper md:flex md:items-stretch"
+          style={{ minHeight: "45px" }}
+        >
+          <div
+            className="register-form-mobile-field w-full flex items-center"
+            style={{
+              border: "1px solid #dee2e6",
+              borderLeft: "none",
+              ...(fieldBorderTop !== undefined && { borderTop: fieldBorderTop }),
+              ...(fieldBorderBottom !== undefined && {
+                borderBottom: fieldBorderBottom,
+              }),
+              padding: "5px",
+            }}
+          >
+            {children}
           </div>
         </div>
       </div>

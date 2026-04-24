@@ -34,7 +34,7 @@ const menuItems: MenuItem[] = [
     submenu: [
       {
         id: 'support-list',
-        label: '목록관리',
+        label: '오수 원인자부담금 관리',
         path: '/adminWeb/support/list',
       },
       {

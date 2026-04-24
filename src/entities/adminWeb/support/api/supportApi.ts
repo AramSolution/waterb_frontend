@@ -26,6 +26,14 @@ export interface SupportListParams {
   lengthPage?: number; // 내부 사용 (length와 동일)
   searchRecFromDd?: string; // 모집기간 시작일 (YYYYMMDD 형식)
   searchRecToDd?: string; // 모집기간 종료일 (YYYYMMDD 형식)
+  /** 오수 원인자부담금 등: 통지일 시작 (YYYY-MM-DD). 백엔드 연동 시 사용 예정 */
+  searchNotifyFromDd?: string;
+  /** 오수 원인자부담금 등: 통지일 종료 (YYYY-MM-DD). 백엔드 연동 시 사용 예정 */
+  searchNotifyToDd?: string;
+  /** 오수 원인자부담금 등: 성명 검색. 백엔드 연동 시 사용 예정 */
+  searchApplicantNm?: string;
+  /** 오수 원인자부담금 등: 주소 검색. 백엔드 연동 시 사용 예정 */
+  searchAddr?: string;
   proGb?: string; // 사업구분 (PRO_GB) - 예: 01(샘플업무), 02(스터디 사업)
   // 테이블 필터 파라미터 (클라이언트 사이드 필터링용, 백엔드에는 전달하지 않음)
   filterStatus?: string; // 상태 필터
