@@ -1,40 +1,29 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React from "react";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { ConfirmDialog } from "@/shared/ui/adminWeb";
 import { FormInput } from "@/shared/ui/adminWeb/form";
-import {
-  PURPOSE_CATEGORY_TREE,
-  usePurposeManage,
-  type PurposeCategoryNode,
-} from "../model/usePurposeManage";
-
-function findLeafLabel(
-  nodes: PurposeCategoryNode[],
-  leafId: string,
-): string | null {
-  for (const n of nodes) {
-    if (n.children?.length) {
-      const hit = findLeafLabel(n.children, leafId);
-      if (hit) return hit;
-    } else if (n.id === leafId) {
-      return n.label;
-    }
-  }
-  return null;
-}
+import { usePurposeManage } from "../model/usePurposeManage";
 
 export const PurposeManagePageView: React.FC = () => {
   const {
+    categoryTree,
+    treeLoading,
     expandedMajorIds,
     toggleMajor,
-    selectedLeafId,
+    selection,
     handleSelectLeaf,
-    currentRows,
+    listRows,
+    listLoading,
+    saveLoading,
     rowFieldErrors,
     handleAddRow,
-    handleDeleteRow,
+    requestDeleteRow,
+    showDeleteConfirmDialog,
+    deleteLoading,
+    confirmDeleteRow,
+    cancelDeleteRow,
     handleRowChange,
     handleSave,
     showResultDialog,
@@ -43,12 +32,6 @@ export const PurposeManagePageView: React.FC = () => {
     resultDialogType,
     closeResultDialog,
   } = usePurposeManage();
-
-  const selectedLeafLabel = useMemo(
-    () =>
-      selectedLeafId ? findLeafLabel(PURPOSE_CATEGORY_TREE, selectedLeafId) : null,
-    [selectedLeafId],
-  );
 
   return (
     <>
@@ -66,7 +49,7 @@ export const PurposeManagePageView: React.FC = () => {
             className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
             style={{ minWidth: "100px" }}
             onClick={handleAddRow}
-            disabled={!selectedLeafId}
+            disabled={!selection || listLoading || treeLoading}
           >
             추가
           </button>
@@ -82,80 +65,92 @@ export const PurposeManagePageView: React.FC = () => {
               분류
             </div>
             <div className="p-2 max-h-[480px] overflow-y-auto">
-              <ul className="space-y-0.5">
-                {PURPOSE_CATEGORY_TREE.map((major) => {
-                  const open = expandedMajorIds.has(major.id);
-                  return (
-                    <li key={major.id}>
-                      <button
-                        type="button"
-                        className="w-full flex items-center gap-1 text-left text-sm py-1.5 px-1 rounded hover:bg-gray-200 text-gray-800"
-                        onClick={() => toggleMajor(major.id)}
-                      >
-                        {open ? (
-                          <ChevronDown className="w-4 h-4 shrink-0 text-gray-600" />
-                        ) : (
-                          <ChevronRight className="w-4 h-4 shrink-0 text-gray-600" />
+              {treeLoading ? (
+                <p className="text-sm text-gray-500 py-4 px-2">불러오는 중…</p>
+              ) : categoryTree.length === 0 ? (
+                <p className="text-sm text-gray-500 py-4 px-2">
+                  등록된 건축용도 분류가 없습니다.
+                </p>
+              ) : (
+                <ul className="space-y-0.5">
+                  {categoryTree.map((major) => {
+                    const open = expandedMajorIds.has(major.id);
+                    return (
+                      <li key={major.id}>
+                        <button
+                          type="button"
+                          className="w-full flex items-center gap-1 text-left text-sm py-1.5 px-1 rounded hover:bg-gray-200 text-gray-800"
+                          onClick={() => toggleMajor(major.id)}
+                        >
+                          {open ? (
+                            <ChevronDown className="w-4 h-4 shrink-0 text-gray-600" />
+                          ) : (
+                            <ChevronRight className="w-4 h-4 shrink-0 text-gray-600" />
+                          )}
+                          <span className="font-medium">{major.label}</span>
+                        </button>
+                        {open && major.children && (
+                          <ul className="pl-6 pb-1 space-y-0.5">
+                            {major.children.map((leaf) => {
+                              const active = selection?.leafId === leaf.id;
+                              return (
+                                <li key={leaf.id}>
+                                  <button
+                                    type="button"
+                                    className={`w-full text-left text-sm py-1 px-2 rounded ${
+                                      active
+                                        ? "bg-blue-100 text-blue-900 font-medium"
+                                        : "text-gray-700 hover:bg-gray-200"
+                                    }`}
+                                    onClick={() => handleSelectLeaf(leaf)}
+                                  >
+                                    {leaf.label}
+                                  </button>
+                                </li>
+                              );
+                            })}
+                          </ul>
                         )}
-                        <span className="font-medium">{major.label}</span>
-                      </button>
-                      {open && major.children && (
-                        <ul className="pl-6 pb-1 space-y-0.5">
-                          {major.children.map((leaf) => {
-                            const active = selectedLeafId === leaf.id;
-                            return (
-                              <li key={leaf.id}>
-                                <button
-                                  type="button"
-                                  className={`w-full text-left text-sm py-1 px-2 rounded ${
-                                    active
-                                      ? "bg-blue-100 text-blue-900 font-medium"
-                                      : "text-gray-700 hover:bg-gray-200"
-                                  }`}
-                                  onClick={() => handleSelectLeaf(leaf.id)}
-                                >
-                                  {leaf.label}
-                                </button>
-                              </li>
-                            );
-                          })}
-                        </ul>
-                      )}
-                    </li>
-                  );
-                })}
-              </ul>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
             </div>
           </aside>
 
           {/* 용도 행 목록 */}
           <section className="flex-1 min-w-0 flex flex-col border border-gray-200 rounded overflow-hidden">
             <div className="px-3 py-2 border-b border-gray-200 bg-gray-50 text-sm text-gray-600">
-              {selectedLeafId && selectedLeafLabel ? (
+              {selection ? (
                 <>
                   선택 분류:{" "}
                   <span className="font-medium text-gray-900">
-                    {selectedLeafLabel}
+                    {selection.displayLabel}
                   </span>
                 </>
               ) : (
-                "왼쪽에서 중분류(말단 분류)를 선택한 뒤 행을 추가하세요."
+                "왼쪽에서 소분류를 선택한 뒤 행을 추가하세요."
               )}
             </div>
 
-            <div className="flex-1 overflow-x-auto p-3">
-              {!selectedLeafId ? (
+            <div className="flex-1 overflow-x-auto p-3 relative">
+              {!selection ? (
                 <p className="text-sm text-gray-500 py-8 text-center">
-                  중분류를 선택하면 이 영역에 건축물 용도·1일 오수발생량·비고를
+                  소분류를 선택하면 이 영역에 건축물 용도·1일 오수발생량·비고를
                   입력할 수 있습니다.
                 </p>
+              ) : listLoading ? (
+                <p className="text-sm text-gray-500 py-8 text-center">
+                  목록을 불러오는 중…
+                </p>
               ) : (
-                <div className="min-w-[640px]">
+                <div className="min-w-[560px]">
                   <div
                     className="grid gap-2 items-end text-xs font-medium text-gray-700 mb-2"
                     style={{
                       gridTemplateColumns:
-                        "minmax(140px,1.2fr) minmax(120px,0.9fr) minmax(180px,2fr) auto",
+                        "minmax(200px,2.5fr) minmax(76px,0.42fr) minmax(110px,1.05fr) auto",
                     }}
                   >
                     <div className="pl-1">
@@ -169,12 +164,13 @@ export const PurposeManagePageView: React.FC = () => {
                   </div>
 
                   <div className="space-y-2">
-                    {currentRows.length === 0 ? (
+                    {listRows.length === 0 ? (
                       <p className="text-sm text-gray-500 py-4 text-center border border-dashed border-gray-200 rounded">
-                        「추가」버튼으로 행을 추가하세요.
+                        등록된 건축물 용도가 없습니다. 「추가」로 행을
+                        추가하세요.
                       </p>
                     ) : (
-                      currentRows.map((row) => {
+                      listRows.map((row) => {
                         const err = rowFieldErrors[row.rowId] ?? {};
                         return (
                           <div
@@ -182,7 +178,7 @@ export const PurposeManagePageView: React.FC = () => {
                             className="grid gap-2 items-start"
                             style={{
                               gridTemplateColumns:
-                                "minmax(140px,1.2fr) minmax(120px,0.9fr) minmax(180px,2fr) auto",
+                                "minmax(200px,2.5fr) minmax(76px,0.42fr) minmax(110px,1.05fr) auto",
                             }}
                           >
                             <FormInput
@@ -191,14 +187,13 @@ export const PurposeManagePageView: React.FC = () => {
                               value={row.buildingUse}
                               onChange={(e) =>
                                 handleRowChange(
-                                  selectedLeafId,
                                   row.rowId,
                                   "buildingUse",
                                   e.target.value,
                                 )
                               }
                               error={err.buildingUse}
-                              maxLength={200}
+                              maxLength={256}
                               placeholder="건축물 용도"
                             />
                             <FormInput
@@ -208,7 +203,6 @@ export const PurposeManagePageView: React.FC = () => {
                               value={row.dailySewage}
                               onChange={(e) =>
                                 handleRowChange(
-                                  selectedLeafId,
                                   row.rowId,
                                   "dailySewage",
                                   e.target.value,
@@ -224,23 +218,21 @@ export const PurposeManagePageView: React.FC = () => {
                               value={row.remarks}
                               onChange={(e) =>
                                 handleRowChange(
-                                  selectedLeafId,
                                   row.rowId,
                                   "remarks",
                                   e.target.value,
                                 )
                               }
                               error={err.remarks}
-                              maxLength={500}
+                              maxLength={2048}
                               placeholder="비고"
                             />
                             <div className="flex items-start justify-center pt-1">
                               <button
                                 type="button"
                                 className="px-4 py-1 text-sm border border-gray-400 rounded-full text-gray-700 hover:bg-gray-100"
-                                onClick={() =>
-                                  handleDeleteRow(selectedLeafId, row.rowId)
-                                }
+                                onClick={() => requestDeleteRow(row.rowId)}
+                                disabled={deleteLoading}
                               >
                                 삭제
                               </button>
@@ -257,16 +249,29 @@ export const PurposeManagePageView: React.FC = () => {
             <div className="flex justify-end px-3 py-3 border-t border-gray-200 bg-white">
               <button
                 type="button"
-                className="px-4 py-2 border border-gray-400 bg-white text-gray-800 rounded hover:bg-gray-50"
+                className="px-4 py-2 border border-gray-400 bg-white text-gray-800 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{ minWidth: "100px" }}
                 onClick={handleSave}
+                disabled={!selection || listLoading || saveLoading}
               >
-                저장
+                {saveLoading ? "저장 중…" : "저장"}
               </button>
             </div>
           </section>
         </div>
       </div>
+
+      <ConfirmDialog
+        isOpen={showDeleteConfirmDialog}
+        title="건축물 용도 삭제"
+        message="선택한 건축물 용도를 삭제하시겠습니까? 저장된 건은 서버에서 비활성(삭제) 처리되며 목록에서 제외됩니다."
+        confirmText={deleteLoading ? "처리 중…" : "삭제"}
+        cancelText="닫기"
+        type="danger"
+        disabled={deleteLoading}
+        onConfirm={confirmDeleteRow}
+        onCancel={cancelDeleteRow}
+      />
 
       <ConfirmDialog
         isOpen={showResultDialog}

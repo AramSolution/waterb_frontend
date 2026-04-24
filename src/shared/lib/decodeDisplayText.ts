@@ -15,6 +15,12 @@ export function decodeDisplayText(raw: string | null | undefined): string {
   s = s.replace(/&#0*8212;/g, "\u2014");
 
   const named: [RegExp, string][] = [
+    // 이중 인코딩·오타 엔티티 (일반 &middot; 보다 먼저 처리)
+    [/&amp;middot;/gi, "\u00B7"],
+    [/&amp;#0*183;/g, "\u00B7"],
+    [/&amp;#x0*([Bb]7);/gi, "\u00B7"],
+    /** DB/문서 오기 `&mmiddot;` 등 */
+    [/&mmiddot;/gi, "\u00B7"],
     [/&middot;/gi, "\u00B7"],
     [/&nbsp;/gi, "\u00A0"],
     [/&bull;/gi, "\u2022"],
@@ -26,6 +32,8 @@ export function decodeDisplayText(raw: string | null | undefined): string {
     [/&gt;/gi, ">"],
     [/&amp;/gi, "&"],
   ];
+  for (const [re, ch] of named) s = s.replace(re, ch);
+  // `&amp;amp;middot;` 등 이중 이상 인코딩 한 번 더 정리
   for (const [re, ch] of named) s = s.replace(re, ch);
 
   return s;

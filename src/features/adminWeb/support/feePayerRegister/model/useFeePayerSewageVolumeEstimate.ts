@@ -35,7 +35,7 @@ function getTodayYmd(): string {
 function createDetailLine(): SewageDetailLine {
   return {
     id: crypto.randomUUID(),
-    floor: "",
+    floor: "1",
     usage: "",
     area: "",
     dailySewage: "",
@@ -198,6 +198,35 @@ export function useFeePayerSewageVolumeEstimate() {
     [],
   );
 
+  /** 용도조회 모달에서 선택한 행 → 해당 상세 줄 `용도`·`1일 오수발생량` 반영 */
+  const applyUsageFromLookup = useCallback(
+    (
+      entryId: string,
+      lineId: string,
+      picked: { buildingUse: string; dailySewage: string },
+    ) => {
+      setEntries((prev) =>
+        prev.map((e) => {
+          if (e.id !== entryId) return e;
+          return {
+            ...e,
+            lines: e.lines.map((L) => {
+              if (L.id !== lineId) return L;
+              return {
+                ...L,
+                usage: picked.buildingUse,
+                ...(picked.dailySewage.trim()
+                  ? { dailySewage: picked.dailySewage.trim() }
+                  : {}),
+              };
+            }),
+          };
+        }),
+      );
+    },
+    [],
+  );
+
   return {
     entries,
     handleAddEntry,
@@ -207,5 +236,6 @@ export function useFeePayerSewageVolumeEstimate() {
     handleEntryFieldChange,
     handleCalculateEntry,
     handleEntrySewageButton,
+    applyUsageFromLookup,
   };
 }

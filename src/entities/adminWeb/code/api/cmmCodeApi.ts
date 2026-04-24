@@ -626,3 +626,26 @@ export interface DeleteCmmDetailCodeResponse {
   data?: any;
   [key: string]: any;
 }
+
+/** 건축용도 소분류 (building-use-codes 트리 children) */
+export interface BuildingUseCodeChildDto {
+  code: string;
+  name: string;
+}
+
+/** 건축용도 중분류 + 소분류 트리 노드 — GET /api/cont/code/building-use-codes */
+export interface BuildingUseCodeTreeDto {
+  code: string;
+  name: string;
+  children?: BuildingUseCodeChildDto[];
+}
+
+/**
+ * 건축용도 코드 트리 (중분류 + 소분류 children).
+ * GET /api/cont/code/building-use-codes
+ */
+export async function getBuildingUseCodeList(): Promise<BuildingUseCodeTreeDto[]> {
+  return apiClient.get<BuildingUseCodeTreeDto[]>(
+    "/api/cont/code/building-use-codes",
+  );
+}

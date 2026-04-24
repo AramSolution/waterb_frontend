@@ -7,3 +7,4 @@ export {
   type SewageDetailLine,
   type SewageEstimateEntry,
 } from "./useFeePayerSewageVolumeEstimate";
+export { useUsageLookupModal } from "./useUsageLookupModal";

@@ -5,9 +5,13 @@ import { FormField, FormInput, FormSelect } from "@/shared/ui/adminWeb/form";
 import { useFeePayerSewageVolumeEstimate } from "../model/useFeePayerSewageVolumeEstimate";
 import { UsageLookupModal } from "./UsageLookupModal";
 
-/** 오수량 발생량 산정 — `UsageLookupModal`은 용도 **조회** 전용. 섹션 헤더 `추가` = 통지일 블록 전체 추가, 통지일 아래 `추가` = 층수~삭제 상세 행만 추가. */
+/** 오수량 발생량 산정 — `UsageLookupModal`은 용도 **조회** 전용. 섹션 헤더 `추가` = 통지일 블록 전체 추가, 원인자부담금·계산 행 아래 `추가` = 층수~삭제 상세 행만 추가. */
 export const FeePayerSewageVolumeEstimateSection: React.FC = () => {
   const [usageLookupOpen, setUsageLookupOpen] = useState(false);
+  const [usageLookupTarget, setUsageLookupTarget] = useState<{
+    entryId: string;
+    lineId: string;
+  } | null>(null);
 
   const {
     entries,
@@ -17,6 +21,7 @@ export const FeePayerSewageVolumeEstimateSection: React.FC = () => {
     handleEntryFieldChange,
     handleCalculateEntry,
     handleEntrySewageButton,
+    applyUsageFromLookup,
   } = useFeePayerSewageVolumeEstimate();
 
   const statusOptions = useMemo(
@@ -77,7 +82,17 @@ export const FeePayerSewageVolumeEstimateSection: React.FC = () => {
 
       <UsageLookupModal
         isOpen={usageLookupOpen}
-        onClose={() => setUsageLookupOpen(false)}
+        onClose={() => {
+          setUsageLookupOpen(false);
+          setUsageLookupTarget(null);
+        }}
+        onPickRow={(row) => {
+          if (!usageLookupTarget) return;
+          applyUsageFromLookup(usageLookupTarget.entryId, usageLookupTarget.lineId, {
+            buildingUse: row.buildingUse,
+            dailySewage: row.dailySewage,
+          });
+        }}
       />
 
       <div className="p-0 pb-6">
@@ -102,7 +117,7 @@ export const FeePayerSewageVolumeEstimateSection: React.FC = () => {
                   {entryIndex + 1}
                 </div>
 
-                {/* 상태·구분·유형·통지일: 기본정보와 동일한 FormField 라벨(회색) + 2열 규칙. 추가는 우측 반칸. */}
+                {/* 상태·구분·유형·통지일: 기본정보와 동일한 FormField 라벨(회색) + 2열 규칙. */}
                 <div className="flex flex-wrap">
                   <FormField
                     label="상태"
@@ -156,27 +171,6 @@ export const FeePayerSewageVolumeEstimateSection: React.FC = () => {
                     />
                   </FormField>
                 </div>
-
-                <FormField
-                  label=" "
-                  fullWidth
-                  fieldOnlyFullWidth
-                  suppressBottomBorder
-                >
-                  <div className="w-full">
-                    <span className="sr-only">층수~삭제 상세 행 추가</span>
-                    <div className="flex w-full justify-end">
-                      <button
-                        type="button"
-                        className="px-3 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                        style={{ minWidth: "72px" }}
-                        onClick={() => handleAddDetailLine(entry.id)}
-                      >
-                        추가
-                      </button>
-                    </div>
-                  </div>
-                </FormField>
 
                 {/* 기준단가·오수량·원인자부담금: 통합 회색 라벨 없이 라벨+값 셀 3세트 + 계산 (md 한 줄) */}
                 <FormField
@@ -284,7 +278,28 @@ export const FeePayerSewageVolumeEstimateSection: React.FC = () => {
                   </div>
                 </FormField>
 
-                {/* 층수·용도·… 상세: 통지일 `추가`로 동일 열 1..n. 부담금 산정 행과 동일(회색 라벨 + 값 셀). */}
+                <FormField
+                  label=" "
+                  fullWidth
+                  fieldOnlyFullWidth
+                  suppressBottomBorder
+                >
+                  <div className="w-full">
+                    <span className="sr-only">층수~삭제 상세 행 추가</span>
+                    <div className="flex w-full justify-end">
+                      <button
+                        type="button"
+                        className="px-3 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        style={{ minWidth: "72px" }}
+                        onClick={() => handleAddDetailLine(entry.id)}
+                      >
+                        추가
+                      </button>
+                    </div>
+                  </div>
+                </FormField>
+
+                {/* 층수·용도·… 상세: `추가`는 원인자부담금·계산 행 아래, 동일 열 1..n. 부담금 산정 행과 동일(회색 라벨 + 값 셀). */}
                 {entry.lines.map((line, lineIndex) => (
                   <FormField
                     key={line.id}
@@ -296,11 +311,11 @@ export const FeePayerSewageVolumeEstimateSection: React.FC = () => {
                   >
                     <div className="w-full">
                       <span className="sr-only">
-                        {lineIndex + 1}행 — 층수, 용도, 면적, 1일 오수
+                        {lineIndex + 1}행 — 층수, 면적, 용도, 1일 오수
                         발생량, 행 선택, 오수량, 삭제
                       </span>
                       <div className="flex w-full flex-col md:flex-row md:flex-nowrap md:items-stretch">
-                        <div className="flex min-w-0 w-full flex-col md:ml-0 md:flex-1 md:flex-row md:items-stretch">
+                        <div className="flex min-w-0 w-full flex-col md:ml-0 md:flex-[0.55] md:flex-row md:items-stretch">
                           <label
                             className="m-0 flex w-full shrink-0 items-center bg-gray-100 register-form-label md:w-1/4"
                             style={{
@@ -319,14 +334,39 @@ export const FeePayerSewageVolumeEstimateSection: React.FC = () => {
                                 value={line.floor}
                                 onChange={handleEntryFieldChange}
                                 options={floorOptions}
-                                placeholder="--------선택하세요-----"
                                 data-entry-id={entry.id}
                                 data-line-id={line.id}
                               />
                             </div>
                           </div>
                         </div>
-                        <div className="flex min-w-0 w-full flex-col border-t border-[#dee2e6] md:-ml-px md:flex-1 md:flex-row md:items-stretch md:border-t-0">
+                        <div className="flex min-w-0 w-full flex-col border-t border-[#dee2e6] md:-ml-px md:flex-[0.55] md:flex-row md:items-stretch md:border-t-0">
+                          <label
+                            className="m-0 flex w-full shrink-0 items-center bg-gray-100 register-form-label md:w-1/4"
+                            style={{
+                              border: "1px solid #dee2e6",
+                              padding: "5px",
+                            }}
+                          >
+                            면적
+                          </label>
+                          <div
+                            className="register-form-mobile-field flex w-full min-w-0 items-center border border-solid border-[#dee2e6] border-t-0 p-[5px] md:flex-1 md:border-l-0 md:border-t"
+                          >
+                            <div className="w-full">
+                              <FormInput
+                                type="text"
+                                name="area"
+                                value={line.area}
+                                onChange={handleEntryFieldChange}
+                                placeholder="면적"
+                                data-entry-id={entry.id}
+                                data-line-id={line.id}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex min-w-0 w-full flex-col border-t border-[#dee2e6] md:-ml-px md:flex-[1.9] md:flex-row md:items-stretch md:border-t-0">
                           <label
                             className="m-0 flex w-full shrink-0 items-center bg-gray-100 register-form-label md:w-1/4"
                             style={{
@@ -353,12 +393,16 @@ export const FeePayerSewageVolumeEstimateSection: React.FC = () => {
                               </div>
                               <button
                                 type="button"
-                                className="flex h-10 min-h-[2.5rem] w-10 min-w-[2.5rem] flex-shrink-0 items-center justify-center rounded-none border-0 bg-[#1967d2] text-white transition-colors hover:bg-[#1557b0]"
+                                className="flex h-10 min-h-[2.5rem] w-10 min-w-[2.5rem] flex-shrink-0 items-center justify-center rounded-none border-0 bg-[#1967d2] text-white transition-colors hover:bg-[#1557b0]" 
                                 title="용도 조회"
                                 aria-label="용도 조회"
                                 onClick={(e) => {
                                   e.preventDefault();
                                   e.stopPropagation();
+                                  setUsageLookupTarget({
+                                    entryId: entry.id,
+                                    lineId: line.id,
+                                  });
                                   setUsageLookupOpen(true);
                                 }}
                               >
@@ -377,32 +421,6 @@ export const FeePayerSewageVolumeEstimateSection: React.FC = () => {
                                   <path d="m21 21-4.35-4.35" />
                                 </svg>
                               </button>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="flex min-w-0 w-full flex-col border-t border-[#dee2e6] md:-ml-px md:flex-1 md:flex-row md:items-stretch md:border-t-0">
-                          <label
-                            className="m-0 flex w-full shrink-0 items-center bg-gray-100 register-form-label md:w-1/4"
-                            style={{
-                              border: "1px solid #dee2e6",
-                              padding: "5px",
-                            }}
-                          >
-                            면적
-                          </label>
-                          <div
-                            className="register-form-mobile-field flex w-full min-w-0 items-center border border-solid border-[#dee2e6] border-t-0 p-[5px] md:flex-1 md:border-l-0 md:border-t"
-                          >
-                            <div className="w-full">
-                              <FormInput
-                                type="text"
-                                name="area"
-                                value={line.area}
-                                onChange={handleEntryFieldChange}
-                                placeholder="면적"
-                                data-entry-id={entry.id}
-                                data-line-id={line.id}
-                              />
                             </div>
                           </div>
                         </div>
