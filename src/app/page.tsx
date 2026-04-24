@@ -7,7 +7,7 @@ export default function IndexPage() {
   const router = useRouter();
 
   useEffect(() => {
-    router.push("/userWeb");
+    router.push("/adminWeb/login");
   }, [router]);
 
   return null;

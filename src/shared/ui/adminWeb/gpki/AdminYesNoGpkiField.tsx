@@ -2,7 +2,7 @@
 
 import React from "react";
 import { AdminGpkiYnCertShell } from "./AdminGpkiYnCertShell";
-import { MypageYnCertButton } from "@/widgets/userWeb/MypageInfoControls";
+import { AdminYnCertButton } from "./AdminYnCertButton";
 
 export type AdminYnGpkiFieldName =
   | "citizenCertYn"
@@ -66,7 +66,7 @@ export function AdminYesNoGpkiField({
         </button>
       </div>
       <AdminGpkiYnCertShell>
-        <MypageYnCertButton
+        <AdminYnCertButton
           pressed={ynValue === "Y"}
           certifiedAt={gpkiCertAt}
           name={ariaGroupLabel}

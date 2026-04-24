@@ -6,10 +6,7 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: "*",
         allow: "/",
-        disallow: [
-          "/adminWeb/",
-          "/userWeb/",
-        ],
+        disallow: ["/adminWeb/"],
       },
     ],
     sitemap: "https://ieum.gunsan.go.kr/sitemap.xml",

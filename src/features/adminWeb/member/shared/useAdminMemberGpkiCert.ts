@@ -4,7 +4,7 @@ import {
   type Dispatch,
   type SetStateAction,
 } from "react";
-import { UserGpkiService } from "@/entities/userWeb/gpki/api";
+import { AdminGpkiCertService } from "@/entities/adminWeb/gpki/api";
 
 /** 학생·학부모 관리자 폼 공통: GPKI 인증 필드 */
 export interface AdminMemberGpkiCertFields {
@@ -24,7 +24,7 @@ function stamp(): string {
 }
 
 /**
- * 관리자 회원 등록/수정: 시민·감면 인증 버튼 → 사용자웹과 동일 UserGpkiService API
+ * 관리자 회원 등록/수정: 시민·감면 인증 버튼 (GPKI API는 AdminGpkiCertService)
  */
 export function useAdminMemberGpkiCert<T extends AdminMemberGpkiCertFields>(
   formData: T,
@@ -56,7 +56,7 @@ export function useAdminMemberGpkiCert<T extends AdminMemberGpkiCertFields>(
     setLoadingKey("citizen");
     try {
       const { isCitizen, reason, message } =
-        await UserGpkiService.checkCitizenByResideCode(ihidnum, name);
+        await AdminGpkiCertService.checkCitizenByResideCode(ihidnum, name);
       if (reason === "service_unavailable") {
         window.alert(message || "시민인증 조회에 실패했습니다.");
         return;
@@ -81,7 +81,7 @@ export function useAdminMemberGpkiCert<T extends AdminMemberGpkiCertFields>(
     setLoadingKey("single");
     try {
       const { isEligible, reason, message } =
-        await UserGpkiService.checkSingleParentYn(ihidnum, name);
+        await AdminGpkiCertService.checkSingleParentYn(ihidnum, name);
       if (reason === "service_unavailable") {
         window.alert(message || "한부모가족 여부 조회에 실패했습니다.");
         return;
@@ -105,7 +105,7 @@ export function useAdminMemberGpkiCert<T extends AdminMemberGpkiCertFields>(
     setLoadingKey("basic");
     try {
       const { isEligible, reason, message } =
-        await UserGpkiService.checkBasicLivelihoodYn(ihidnum, name);
+        await AdminGpkiCertService.checkBasicLivelihoodYn(ihidnum, name);
       if (reason === "service_unavailable") {
         window.alert(message || "기초생활수급자 여부 조회에 실패했습니다.");
         return;
@@ -128,7 +128,7 @@ export function useAdminMemberGpkiCert<T extends AdminMemberGpkiCertFields>(
     }
     setLoadingKey("poor");
     try {
-      const { isEligible, reason, message } = await UserGpkiService.checkPoorYn(
+      const { isEligible, reason, message } = await AdminGpkiCertService.checkPoorYn(
         ihidnum,
         name,
       );

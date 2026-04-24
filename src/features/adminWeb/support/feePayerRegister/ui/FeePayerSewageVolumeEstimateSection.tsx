@@ -386,7 +386,10 @@ export const FeePayerSewageVolumeEstimateSection: React.FC = () => {
                                   name="usage"
                                   value={line.usage}
                                   onChange={handleEntryFieldChange}
-                                  placeholder="용도"
+                                  readOnly
+                                  className="bg-gray-100"
+                                  placeholder="용도 조회로 선택"
+                                  title="용도는 조회 모달로만 지정됩니다. 돋보기를 눌러주세요."
                                   data-entry-id={entry.id}
                                   data-line-id={line.id}
                                 />

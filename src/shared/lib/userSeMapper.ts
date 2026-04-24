@@ -20,16 +20,10 @@ export function getUserSeFromUserType(userType: UserType): string {
 }
 
 /**
- * 사용자 타입에 따른 리다이렉트 경로 반환
+ * 사용자 타입에 따른 리다이렉트 경로 반환 (사용자웹 제거: 관리자 로그인으로 통일)
  * @param userType 사용자 타입
  * @returns 리다이렉트 경로
  */
-export function getRedirectPathFromUserType(userType: UserType): string {
-  const mapping: Record<UserType, string> = {
-    "학생": "/userWeb/student",
-    "학부모": "/userWeb/parent",
-    "학원": "/userWeb/academy",
-    "멘토": "/userWeb/mentor",
-  };
-  return mapping[userType];
+export function getRedirectPathFromUserType(_userType: UserType): string {
+  return "/adminWeb/login";
 }
