@@ -2,21 +2,21 @@
 
 import { Suspense } from "react";
 import { AdminLayout } from "@/widgets/adminWeb/layout";
-import { PurposeManagePageView } from "@/features/adminWeb/support/purpose/ui";
+import { PaymentHistoryPageView } from "@/features/adminWeb/support/paymentHistory/ui";
 import { LoadingFallback } from "@/shared/ui/adminWeb";
 
-function SupportPurposeContent() {
+function PaymentHistoryContent() {
   return (
     <AdminLayout>
-      <PurposeManagePageView />
+      <PaymentHistoryPageView />
     </AdminLayout>
   );
 }
 
-export default function SupportPurposePage() {
+export default function SupportPaymentHistoryPage() {
   return (
     <Suspense fallback={<LoadingFallback />}>
-      <SupportPurposeContent />
+      <PaymentHistoryContent />
     </Suspense>
   );
 }

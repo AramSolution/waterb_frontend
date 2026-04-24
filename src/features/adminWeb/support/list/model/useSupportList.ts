@@ -11,79 +11,10 @@ import {
 import { downloadSupportsExcel } from "@/entities/adminWeb/support/lib";
 import { ApiError, TokenUtils } from "@/shared/lib";
 import { useResizableColumns } from "@/shared/hooks";
+import { FEE_LIST_MOCK } from "./feeListMockData";
 
 /** TODO: 오수 원인자부담금 API 연동 후 `false`로 두거나 목 데이터·필터 블록 제거 */
 const USE_FEE_LIST_MOCK_DATA = true;
-
-/** 화면 확인용 임시 목록 (Support 확장 필드 — feeListRowFields와 동일 키) */
-const FEE_LIST_MOCK: Support[] = [
-  {
-    businessId: "FEE-2026-001",
-    rnum: "1",
-    applicantNm: "김오수",
-    addr: "전북특별자치도 군산시 미원대로 123 (나운동, 행복주택)",
-    notifyDd: "2026-01-15",
-    levyAmt: 128500,
-    paySta: "01",
-    payDd: "",
-    payAmt: "",
-  },
-  {
-    businessId: "FEE-2026-002",
-    rnum: "2",
-    applicantNm: "이납부",
-    addr: "전북 군산시 해망로 45",
-    notifyDd: "2026-02-01",
-    levyAmt: 95000,
-    paySta: "02",
-    payDd: "2026-02-20",
-    payAmt: 95000,
-  },
-  {
-    businessId: "FEE-2026-003",
-    rnum: "3",
-    applicantNm: "박미납",
-    addr: "군산시 조촌로 7길 12",
-    notifyDd: "2026-03-10",
-    levyAmt: 210000,
-    paySta: "01",
-    payDd: "",
-    payAmt: "",
-  },
-  {
-    businessId: "FEE-2026-004",
-    rnum: "4",
-    applicantNm: "최부분",
-    addr: "군산시 나운동 200번지 일대",
-    notifyDd: "2026-03-22",
-    levyAmt: 77500,
-    paySta: "Y",
-    payDd: "2026-04-01",
-    payAmt: 50000,
-  },
-  {
-    businessId: "FEE-2026-005",
-    rnum: "5",
-    applicantNm: "정오수",
-    addr: "전라북도 군산시 소룡동 산업단지로 88",
-    notifyDd: "2026-04-05",
-    levyAmt: 340000,
-    paySta: "01",
-    payDd: "",
-    payAmt: undefined,
-  },
-  {
-    businessId: "FEE-2026-006",
-    rnum: "6",
-    applicantNm: "한테스트",
-    addr: "군산시 미장동",
-    notifyDd: "2025-12-28",
-    levyAmt: 15000,
-    paySta: "납부",
-    payDd: "2026-01-02",
-    payAmt: 15000,
-  },
-];
 
 function filterFeeMockRows(
   rows: Support[],

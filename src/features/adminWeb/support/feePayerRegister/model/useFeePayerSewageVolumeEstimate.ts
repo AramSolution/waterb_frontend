@@ -1,6 +1,16 @@
 import { useCallback, useState, type ChangeEvent } from "react";
 
-/** 오수량 발생량 산정: 화면 설계상 한 덩어리(3행)가 리스트로 반복됨 */
+/** 층수~삭제 한 줄(통지일 블록 당 1..n행) */
+export type SewageDetailLine = {
+  id: string;
+  floor: string;
+  usage: string;
+  area: string;
+  dailySewage: string;
+  selected: boolean;
+};
+
+/** 오수량 발생량 산정: 상단 공통(상태~통지일·기준단가~계산) + 층수/용도 상세 `lines` */
 export type SewageEstimateEntry = {
   id: string;
   status: string;
@@ -10,11 +20,7 @@ export type SewageEstimateEntry = {
   unitPrice: string;
   sewageVolume: string;
   causerCharge: string;
-  floor: string;
-  usage: string;
-  area: string;
-  dailySewage: string;
-  selected: boolean;
+  lines: SewageDetailLine[];
 };
 
 /** `<input type="date">`용 로컬 당일 `YYYY-MM-DD` */
@@ -24,6 +30,17 @@ function getTodayYmd(): string {
   const m = String(d.getMonth() + 1).padStart(2, "0");
   const day = String(d.getDate()).padStart(2, "0");
   return `${y}-${m}-${day}`;
+}
+
+function createDetailLine(): SewageDetailLine {
+  return {
+    id: crypto.randomUUID(),
+    floor: "",
+    usage: "",
+    area: "",
+    dailySewage: "",
+    selected: false,
+  };
 }
 
 function createEntry(): SewageEstimateEntry {
@@ -36,11 +53,7 @@ function createEntry(): SewageEstimateEntry {
     unitPrice: "",
     sewageVolume: "",
     causerCharge: "",
-    floor: "",
-    usage: "",
-    area: "",
-    dailySewage: "",
-    selected: false,
+    lines: [createDetailLine()],
   };
 }
 
@@ -53,6 +66,16 @@ export function useFeePayerSewageVolumeEstimate() {
     setEntries((prev) => [...prev, createEntry()]);
   }, []);
 
+  const handleAddDetailLine = useCallback((entryId: string) => {
+    setEntries((prev) =>
+      prev.map((e) =>
+        e.id === entryId
+          ? { ...e, lines: [...e.lines, createDetailLine()] }
+          : e,
+      ),
+    );
+  }, []);
+
   const handleRemoveEntry = useCallback((entryId: string) => {
     setEntries((prev) => {
       if (prev.length <= 1) return prev;
@@ -60,23 +83,70 @@ export function useFeePayerSewageVolumeEstimate() {
     });
   }, []);
 
+  /** 층수~삭제 행 제거. 남은 줄이 1이고 이 통지일 블록이 유일이면 항목 삭제는 하지 않음(최소 1줄). */
+  const handleRemoveDetailLine = useCallback(
+    (entryId: string, lineId: string) => {
+      setEntries((prev) => {
+        const e = prev.find((x) => x.id === entryId);
+        if (!e) return prev;
+        if (e.lines.length > 1) {
+          return prev.map((x) =>
+            x.id === entryId
+              ? { ...x, lines: x.lines.filter((l) => l.id !== lineId) }
+              : x,
+          );
+        }
+        if (e.lines[0]?.id !== lineId) return prev;
+        if (prev.length > 1) {
+          return prev.filter((x) => x.id !== entryId);
+        }
+        return prev;
+      });
+    },
+    [],
+  );
+
   const handleEntryFieldChange = useCallback(
     (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
       const target = e.target as HTMLInputElement;
       const { name, value, type, checked } = target;
       const entryId = target.dataset.entryId;
       if (!entryId) return;
-      const key = name as keyof SewageEstimateEntry;
-      if (key === "id") return;
+      const lineId = target.dataset.lineId;
 
-      if (type === "checkbox" && name === "selected") {
+      if (lineId) {
+        if (name === "selected" && type === "checkbox") {
+          setEntries((prev) =>
+            prev.map((en) => {
+              if (en.id !== entryId) return en;
+              return {
+                ...en,
+                lines: en.lines.map((L) =>
+                  L.id === lineId ? { ...L, selected: checked } : L,
+                ),
+              };
+            }),
+          );
+          return;
+        }
+        const key = name as keyof SewageDetailLine;
+        if (key === "id") return;
         setEntries((prev) =>
-          prev.map((row) =>
-            row.id === entryId ? { ...row, selected: checked } : row,
-          ),
+          prev.map((en) => {
+            if (en.id !== entryId) return en;
+            return {
+              ...en,
+              lines: en.lines.map((L) =>
+                L.id === lineId ? { ...L, [key]: value } : L,
+              ),
+            };
+          }),
         );
         return;
       }
+
+      const key = name as keyof SewageEstimateEntry;
+      if (key === "id" || key === "lines") return;
 
       setEntries((prev) =>
         prev.map((row) =>
@@ -105,25 +175,35 @@ export function useFeePayerSewageVolumeEstimate() {
     );
   }, []);
 
-  const handleEntrySewageButton = useCallback((entryId: string) => {
-    setEntries((prev) =>
-      prev.map((row) => {
-        if (row.id !== entryId) return row;
-        // TODO: API 응답으로 기준단가·오수량·1일오수발생량 등을 채움. 연동 전에는 예시 값만 세팅.
-        return {
-          ...row,
-          unitPrice: row.unitPrice.trim() || "12,000",
-          sewageVolume: row.sewageVolume.trim() || "9.8",
-          dailySewage: row.dailySewage.trim() || "0",
-        };
-      }),
-    );
-  }, []);
+  const handleEntrySewageButton = useCallback(
+    (entryId: string, lineId: string) => {
+      setEntries((prev) =>
+        prev.map((e) => {
+          if (e.id !== entryId) return e;
+          return {
+            ...e,
+            unitPrice: e.unitPrice.trim() || "12,000",
+            sewageVolume: e.sewageVolume.trim() || "9.8",
+            lines: e.lines.map((L) => {
+              if (L.id !== lineId) return L;
+              return {
+                ...L,
+                dailySewage: L.dailySewage.trim() || "0",
+              };
+            }),
+          };
+        }),
+      );
+    },
+    [],
+  );
 
   return {
     entries,
     handleAddEntry,
+    handleAddDetailLine,
     handleRemoveEntry,
+    handleRemoveDetailLine,
     handleEntryFieldChange,
     handleCalculateEntry,
     handleEntrySewageButton,

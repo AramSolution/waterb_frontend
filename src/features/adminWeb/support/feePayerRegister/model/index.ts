@@ -4,5 +4,6 @@ export {
 } from "./useFeePayerBasicRegister";
 export {
   useFeePayerSewageVolumeEstimate,
+  type SewageDetailLine,
   type SewageEstimateEntry,
 } from "./useFeePayerSewageVolumeEstimate";

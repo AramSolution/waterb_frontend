@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import { useRouter } from "next/navigation";
 import { Pagination, ConfirmDialog } from "@/shared/ui/adminWeb";
 import { FormDatePicker } from "@/shared/ui/adminWeb/form";
@@ -60,8 +60,6 @@ function feePayBadgeClassName(paid: boolean): string {
 
 export const SupportListPageView: React.FC = () => {
   const router = useRouter();
-  const [showPaymentHistoryComingSoon, setShowPaymentHistoryComingSoon] =
-    useState(false);
   const {
     loading,
     isInitialLoad,
@@ -102,8 +100,12 @@ export const SupportListPageView: React.FC = () => {
     router.push(`/adminWeb/support/list/update?proId=${businessId}`);
   };
 
-  const handlePaymentHistoryClick = (_rowKey: string) => {
-    setShowPaymentHistoryComingSoon(true);
+  const handlePaymentHistoryClick = (proId: string) => {
+    const id = proId.trim();
+    if (!id) return;
+    router.push(
+      `/adminWeb/support/list/payment-history?proId=${encodeURIComponent(id)}`,
+    );
   };
 
   return (
@@ -553,7 +555,9 @@ export const SupportListPageView: React.FC = () => {
                                   className="px-2 py-1 text-[12px] text-blue-600 border border-blue-600 rounded hover:bg-blue-50 transition-colors whitespace-nowrap"
                                   style={{ minWidth: "64px" }}
                                   onClick={() =>
-                                    handlePaymentHistoryClick(f.rowKey)
+                                    handlePaymentHistoryClick(
+                                      businessId || f.rowKey,
+                                    )
                                   }
                                 >
                                   납부내역
@@ -680,7 +684,9 @@ export const SupportListPageView: React.FC = () => {
                             type="button"
                             className="px-2 py-1 text-[12px] text-blue-600 border border-blue-600 rounded hover:bg-blue-50 transition-colors"
                             onClick={() =>
-                              handlePaymentHistoryClick(f.rowKey)
+                              handlePaymentHistoryClick(
+                                businessId || f.rowKey,
+                              )
                             }
                           >
                             납부내역
@@ -734,17 +740,6 @@ export const SupportListPageView: React.FC = () => {
         type="danger"
         onConfirm={handleDeleteConfirm}
         onCancel={handleDeleteCancel}
-      />
-
-      <ConfirmDialog
-        isOpen={showPaymentHistoryComingSoon}
-        title="알림"
-        message="납부내역 화면은 준비 중입니다."
-        type="primary"
-        confirmText="확인"
-        cancelText="닫기"
-        onConfirm={() => setShowPaymentHistoryComingSoon(false)}
-        onCancel={() => setShowPaymentHistoryComingSoon(false)}
       />
 
       {/* 신청인 목록 다이얼로그 */}

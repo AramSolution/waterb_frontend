@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useId } from "react";
+import { createPortal } from "react-dom";
 import "@/shared/styles/admin/dialog.css";
 
 interface ModalProps {
@@ -20,6 +21,8 @@ export const Modal: React.FC<ModalProps> = ({
   size = "md",
   showCloseButton = true,
 }) => {
+  const titleId = useId();
+
   // ESC 키로 모달 닫기
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -41,6 +44,7 @@ export const Modal: React.FC<ModalProps> = ({
   }, [isOpen, onClose]);
 
   if (!isOpen) return null;
+  if (typeof document === "undefined") return null;
 
   const sizeClasses = {
     sm: "max-w-md",
@@ -49,11 +53,14 @@ export const Modal: React.FC<ModalProps> = ({
     xl: "max-w-6xl",
   };
 
-  return (
+  return createPortal(
     <>
       <div className="dialog-overlay" onClick={onClose}></div>
       <div
         className={`modal-container ${sizeClasses[size]}`}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={title ? titleId : undefined}
       >
         <div
           className="modal-content w-full"
@@ -62,7 +69,9 @@ export const Modal: React.FC<ModalProps> = ({
         >
           {title && (
             <div className="dialog-header border-b border-gray-200 pb-3 mb-4 relative">
-              <h5 className="dialog-title text-lg font-semibold">{title}</h5>
+              <h5 id={titleId} className="dialog-title text-lg font-semibold">
+                {title}
+              </h5>
               {showCloseButton && (
                 <button
                   type="button"
@@ -90,6 +99,7 @@ export const Modal: React.FC<ModalProps> = ({
           <div className="dialog-body">{children}</div>
         </div>
       </div>
-    </>
+    </>,
+    document.body,
   );
 };
