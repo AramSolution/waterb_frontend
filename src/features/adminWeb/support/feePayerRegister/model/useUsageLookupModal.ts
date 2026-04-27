@@ -32,6 +32,12 @@ export type UsageLookupDisplayRow = {
   buildingUse: string;
   dailySewage: string;
   remarks: string;
+  /** WAT001 대분류 code — armbuild `gubun1` */
+  gubun1: string;
+  /** WAT002 소분류 code — 오수량 산정 분기 우선 */
+  gubun2: string;
+  /** 분류 트리 상위 라벨(예: 주거시설) — 표시·보조 */
+  midCategoryLabel: string;
 };
 
 export type UsageLookupSelection = {
@@ -39,6 +45,8 @@ export type UsageLookupSelection = {
   gubun1: string;
   gubun2: string;
   displayLabel: string;
+  /** `selectLeaf` 시 소분류의 상위 구분명(중분류) */
+  midCategoryLabel: string;
 };
 
 function mapTree(
@@ -70,6 +78,7 @@ function mapItemToDisplayRow(
   item: ArmbuildListItem,
   gubun1: string,
   gubun2: string,
+  midCategoryLabel: string,
 ): UsageLookupDisplayRow {
   const bid = String(item.buildId ?? "").trim();
   return {
@@ -77,6 +86,9 @@ function mapItemToDisplayRow(
     buildingUse: decodeDisplayText(String(item.buildNm ?? "").trim()),
     dailySewage: formatDayVal(item.dayVal),
     remarks: decodeDisplayText(String(item.buildDesc ?? "").trim()),
+    gubun1: gubun1.trim(),
+    gubun2: gubun2.trim(),
+    midCategoryLabel: decodeDisplayText(midCategoryLabel.trim()),
   };
 }
 
@@ -168,7 +180,12 @@ export function useUsageLookupModal(isOpen: boolean) {
         }
         setListRows(
           (res.data ?? []).map((item) =>
-            mapItemToDisplayRow(item, selection.gubun1, selection.gubun2),
+            mapItemToDisplayRow(
+              item,
+              selection.gubun1,
+              selection.gubun2,
+              selection.midCategoryLabel,
+            ),
           ),
         );
       } catch (e) {
@@ -204,6 +221,7 @@ export function useUsageLookupModal(isOpen: boolean) {
       gubun1: leaf.gubun1,
       gubun2: leaf.gubun2,
       displayLabel: `${leaf.parentLabel} > ${leaf.label}`,
+      midCategoryLabel: leaf.parentLabel,
     });
     setSearchQuery("");
     setKeyword("");

@@ -3,6 +3,7 @@
 import React, { useMemo, useState } from "react";
 import { FormField, FormInput, FormSelect } from "@/shared/ui/adminWeb/form";
 import { getSewageTypeOptionsForCategory } from "@/features/adminWeb/support/lib/sewageCategoryTypeOptions";
+import { getSewageCalcModeForLine } from "@/features/adminWeb/support/lib/sewageVolumeCalc";
 import {
   useFeePayerSewageVolumeEstimate,
   type SewageEstimateEntry,
@@ -44,7 +45,6 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
     handleRemoveDetailLine,
     handleEntryFieldChange,
     handleCalculateEntry,
-    handleEntrySewageButton,
     applyUsageFromLookup,
   } = useFeePayerSewageVolumeEstimate(initialEntries);
 
@@ -87,12 +87,28 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
           }}
           onPickRow={(row) => {
             if (!usageLookupTarget) return;
+            if (process.env.NODE_ENV === "development") {
+              console.log("[FeePayer 오수량 산정] 용도조회 onPickRow", {
+                target: usageLookupTarget,
+                gubun2: row.gubun2,
+                midCategoryLabel: row.midCategoryLabel,
+                buildingUse: row.buildingUse,
+                dailySewage: row.dailySewage,
+                calcMode: getSewageCalcModeForLine({
+                  buildingUseSubCode: row.gubun2,
+                  buildingUse: row.buildingUse,
+                  midCategoryLabel: row.midCategoryLabel,
+                }),
+              });
+            }
             applyUsageFromLookup(
               usageLookupTarget.entryId,
               usageLookupTarget.lineId,
               {
                 buildingUse: row.buildingUse,
                 dailySewage: row.dailySewage,
+                midCategoryLabel: row.midCategoryLabel,
+                gubun2: row.gubun2,
               },
             );
           }}
@@ -325,7 +341,13 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                 </FormField>
 
                 {/* 층수·용도·… 상세: `추가`는 원인자부담금·계산 행 아래, 동일 열 1..n. 부담금 산정 행과 동일(회색 라벨 + 값 셀). */}
-                {entry.lines.map((line, lineIndex) => (
+                {entry.lines.map((line, lineIndex) => {
+                  const lineCalcMode = getSewageCalcModeForLine({
+                    buildingUseSubCode: line.buildingUseSubCode,
+                    buildingUse: line.usage,
+                    midCategoryLabel: line.midCategoryLabel,
+                  });
+                  return (
                   <FormField
                     key={line.id}
                     label=" "
@@ -336,10 +358,11 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                   >
                     <div className="w-full">
                       <span className="sr-only">
-                        {lineIndex + 1}행 — 층수, 면적, 용도, 1일 오수
-                        발생량, 행 선택, 오수량, 삭제
+                        {lineIndex + 1}행 — 층수, 용도, 산정 모드에 따른 면적 또는
+                        방수(·다중주택일 때 세대수), 1일 오수 발생량, 행 선택,
+                        오수량(산출), 삭제
                       </span>
-                      <div className="flex w-full flex-col md:flex-row md:flex-nowrap md:items-stretch">
+                      <div className="flex w-full flex-col flex-wrap md:flex-row md:items-stretch">
                         <div className="flex min-w-0 w-full flex-col md:ml-0 md:flex-[0.55] md:flex-row md:items-stretch">
                           <label
                             className="m-0 flex w-full shrink-0 items-center bg-gray-100 register-form-label md:w-1/4"
@@ -362,34 +385,6 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                                 data-entry-id={entry.id}
                                 data-line-id={line.id}
                                 disabled={readOnly}
-                              />
-                            </div>
-                          </div>
-                        </div>
-                        <div className="flex min-w-0 w-full flex-col border-t border-[#dee2e6] md:-ml-px md:flex-[0.55] md:flex-row md:items-stretch md:border-t-0">
-                          <label
-                            className="m-0 flex w-full shrink-0 items-center bg-gray-100 register-form-label md:w-1/4"
-                            style={{
-                              border: "1px solid #dee2e6",
-                              padding: "5px",
-                            }}
-                          >
-                            면적
-                          </label>
-                          <div
-                            className="register-form-mobile-field flex w-full min-w-0 items-center border border-solid border-[#dee2e6] border-t-0 p-[5px] md:flex-1 md:border-l-0 md:border-t"
-                          >
-                            <div className="w-full">
-                              <FormInput
-                                type="text"
-                                name="area"
-                                value={line.area}
-                                onChange={handleEntryFieldChange}
-                                placeholder="면적"
-                                data-entry-id={entry.id}
-                                data-line-id={line.id}
-                                readOnly={readOnly}
-                                className={readOnly ? readOnlyInputClass : undefined}
                               />
                             </div>
                           </div>
@@ -463,6 +458,104 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                             </div>
                           </div>
                         </div>
+                        {lineCalcMode === "default" ? (
+                          <div className="flex min-w-0 w-full flex-col border-t border-[#dee2e6] md:-ml-px md:flex-[0.55] md:flex-row md:items-stretch md:border-t-0">
+                            <label
+                              className="m-0 flex w-full shrink-0 items-center bg-gray-100 register-form-label md:w-1/4"
+                              style={{
+                                border: "1px solid #dee2e6",
+                                padding: "5px",
+                              }}
+                            >
+                              면적
+                            </label>
+                            <div
+                              className="register-form-mobile-field flex w-full min-w-0 items-center border border-solid border-[#dee2e6] border-t-0 p-[5px] md:flex-1 md:border-l-0 md:border-t"
+                            >
+                              <div className="w-full">
+                                <FormInput
+                                  type="text"
+                                  name="area"
+                                  value={line.area}
+                                  onChange={handleEntryFieldChange}
+                                  placeholder="면적"
+                                  data-entry-id={entry.id}
+                                  data-line-id={line.id}
+                                  readOnly={readOnly}
+                                  className={
+                                    readOnly ? readOnlyInputClass : undefined
+                                  }
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        ) : null}
+                        {lineCalcMode !== "default" ? (
+                          <div className="flex min-w-0 w-full flex-col border-t border-[#dee2e6] md:-ml-px md:flex-[0.55] md:flex-row md:items-stretch md:border-t-0">
+                            <label
+                              className="m-0 flex w-full shrink-0 items-center bg-gray-100 register-form-label md:w-1/4"
+                              style={{
+                                border: "1px solid #dee2e6",
+                                padding: "5px",
+                              }}
+                            >
+                              방수
+                            </label>
+                            <div
+                              className="register-form-mobile-field flex w-full min-w-0 items-center border border-solid border-[#dee2e6] border-t-0 p-[5px] md:flex-1 md:border-l-0 md:border-t"
+                            >
+                              <div className="w-full">
+                                <FormInput
+                                  type="text"
+                                  name="roomCount"
+                                  value={line.roomCount ?? ""}
+                                  onChange={handleEntryFieldChange}
+                                  placeholder="방"
+                                  inputMode="decimal"
+                                  data-entry-id={entry.id}
+                                  data-line-id={line.id}
+                                  readOnly={readOnly}
+                                  className={
+                                    readOnly ? readOnlyInputClass : undefined
+                                  }
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        ) : null}
+                        {lineCalcMode === "multi" ? (
+                          <div className="flex min-w-0 w-full flex-col border-t border-[#dee2e6] md:-ml-px md:flex-[0.55] md:flex-row md:items-stretch md:border-t-0">
+                            <label
+                              className="m-0 flex w-full shrink-0 items-center bg-gray-100 register-form-label md:w-1/4"
+                              style={{
+                                border: "1px solid #dee2e6",
+                                padding: "5px",
+                              }}
+                            >
+                              세대수
+                            </label>
+                            <div
+                              className="register-form-mobile-field flex w-full min-w-0 items-center border border-solid border-[#dee2e6] border-t-0 p-[5px] md:flex-1 md:border-l-0 md:border-t"
+                            >
+                              <div className="w-full">
+                                <FormInput
+                                  type="text"
+                                  name="householdCount"
+                                  value={line.householdCount ?? ""}
+                                  onChange={handleEntryFieldChange}
+                                  placeholder="세대"
+                                  inputMode="numeric"
+                                  data-entry-id={entry.id}
+                                  data-line-id={line.id}
+                                  readOnly={readOnly}
+                                  className={
+                                    readOnly ? readOnlyInputClass : undefined
+                                  }
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        ) : null}
                         <div className="flex min-w-0 w-full flex-col border-t border-[#dee2e6] md:-ml-px md:min-w-[15.5rem] md:flex-[1.65] md:flex-row md:items-stretch md:border-t-0">
                           <label
                             className="m-0 flex w-full shrink-0 items-center whitespace-nowrap bg-gray-100 text-sm register-form-label md:w-[42%]"
@@ -504,46 +597,51 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                             disabled={readOnly}
                           />
                         </div>
-                        <div className="flex w-full shrink-0 flex-col justify-center gap-2 border-t border-solid border-[#dee2e6] px-2 py-2 md:-ml-px md:w-auto md:flex-row md:flex-wrap md:items-center md:border md:border-solid md:border-[#dee2e6] md:py-2">
+                        <div className="flex w-full shrink-0 flex-col justify-center gap-2 border-t border-solid border-[#dee2e6] px-2 py-2 md:-ml-px md:w-auto md:min-w-0 md:flex-1 md:flex-row md:flex-wrap md:items-center md:border md:border-solid md:border-[#dee2e6] md:py-2">
+                          <div className="flex w-full min-w-[5.5rem] flex-col gap-0.5 md:w-auto md:max-w-[7.5rem]">
+                            <span className="px-0.5 text-[11px] font-medium text-gray-600 md:hidden">
+                              오수량
+                            </span>
+                            <FormInput
+                              type="text"
+                              name="sewageQty"
+                              value={line.sewageQty ?? ""}
+                              placeholder="오수량"
+                              title="분류 중분류(단독주택·공동주택 등)·면적·방·세대·1일오수에 따라 자동 산출"
+                              readOnly
+                              className={readOnlyInputClass}
+                              data-entry-id={entry.id}
+                              data-line-id={line.id}
+                            />
+                          </div>
                           {!readOnly ? (
-                            <>
-                              <button
-                                type="button"
-                                className="px-3 py-2 text-sm bg-orange-500 text-white rounded hover:bg-orange-600 transition-colors"
-                                style={{ minWidth: "88px" }}
-                                onClick={() =>
-                                  handleEntrySewageButton(entry.id, line.id)
-                                }
-                              >
-                                오수량
-                              </button>
-                              <button
-                                type="button"
-                                className="px-4 py-2 text-sm border border-gray-400 rounded-full bg-white text-gray-800 hover:bg-gray-50 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
-                                style={{ minWidth: "72px" }}
-                                onClick={() =>
-                                  handleRemoveDetailLine(entry.id, line.id)
-                                }
-                                disabled={
-                                  entry.lines.length === 1 &&
-                                  entries.length === 1
-                                }
-                                title={
-                                  entry.lines.length === 1 &&
-                                  entries.length === 1
-                                    ? "최소 한 통지일 블록·한 상세 행은 유지됩니다"
-                                    : undefined
-                                }
-                              >
-                                삭제
-                              </button>
-                            </>
+                            <button
+                              type="button"
+                              className="px-4 py-2 text-sm border border-gray-400 rounded-full bg-white text-gray-800 hover:bg-gray-50 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+                              style={{ minWidth: "72px" }}
+                              onClick={() =>
+                                handleRemoveDetailLine(entry.id, line.id)
+                              }
+                              disabled={
+                                entry.lines.length === 1 &&
+                                entries.length === 1
+                              }
+                              title={
+                                entry.lines.length === 1 &&
+                                entries.length === 1
+                                  ? "최소 한 통지일 블록·한 상세 행은 유지됩니다"
+                                  : undefined
+                              }
+                            >
+                              삭제
+                            </button>
                           ) : null}
                         </div>
                       </div>
                     </div>
                   </FormField>
-                ))}
+                  );
+                })}
 
                 {/* 통지일 블록(엔트리) 추가: 카드 하단 경계 가운데, 원이 선에 반쯝 걸치게 */}
                 {!readOnly && showAddNoticeBlockButton ? (

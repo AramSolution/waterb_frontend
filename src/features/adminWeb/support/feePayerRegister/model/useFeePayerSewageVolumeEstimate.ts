@@ -1,4 +1,8 @@
 import { useCallback, useEffect, useState, type ChangeEvent } from "react";
+import {
+  computeLineSewageQty,
+  getSewageCalcModeForLine,
+} from "@/features/adminWeb/support/lib/sewageVolumeCalc";
 
 /** 층수~삭제 한 줄(통지일 블록 당 1..n행) */
 export type SewageDetailLine = {
@@ -7,6 +11,16 @@ export type SewageDetailLine = {
   usage: string;
   area: string;
   dailySewage: string;
+  /** WAT002 소분류 code(용도조회 `gubun2`) — 오수량 식 분기 우선 */
+  buildingUseSubCode: string;
+  /** 용도조회 분류 상위 라벨(예: 주거시설) — 표시·레거시 보조 */
+  midCategoryLabel: string;
+  /** 단독·공동(다중) 산정용 방수 */
+  roomCount: string;
+  /** 공동주택 산정용 세대수 */
+  householdCount: string;
+  /** 층수·용도 행 옆 표시용 오수량(계산 결과) */
+  sewageQty: string;
   selected: boolean;
 };
 
@@ -34,15 +48,35 @@ function getTodayYmd(): string {
   return `${y}-${m}-${day}`;
 }
 
-function createDetailLine(): SewageDetailLine {
+function withSewageQty(line: SewageDetailLine): SewageDetailLine {
   return {
+    ...line,
+    sewageQty: computeLineSewageQty({
+      buildingUseSubCode: line.buildingUseSubCode,
+      buildingUse: line.usage,
+      midCategoryLabel: line.midCategoryLabel,
+      area: line.area,
+      dailySewage: line.dailySewage,
+      roomCount: line.roomCount,
+      householdCount: line.householdCount,
+    }),
+  };
+}
+
+function createDetailLine(): SewageDetailLine {
+  return withSewageQty({
     id: crypto.randomUUID(),
     floor: "1",
     usage: "",
+    buildingUseSubCode: "",
+    midCategoryLabel: "",
     area: "",
     dailySewage: "",
+    roomCount: "",
+    householdCount: "",
+    sewageQty: "",
     selected: false,
-  };
+  });
 }
 
 function createEntry(): SewageEstimateEntry {
@@ -60,10 +94,25 @@ function createEntry(): SewageEstimateEntry {
   };
 }
 
+function normalizeDetailLine(l: SewageDetailLine): SewageDetailLine {
+  const merged: SewageDetailLine = {
+    ...l,
+    buildingUseSubCode: l.buildingUseSubCode ?? "",
+    midCategoryLabel: l.midCategoryLabel ?? "",
+    roomCount: l.roomCount ?? "",
+    householdCount: l.householdCount ?? "",
+  };
+  return withSewageQty(merged);
+}
+
+function normalizeEntry(e: SewageEstimateEntry): SewageEstimateEntry {
+  return { ...e, lines: e.lines.map(normalizeDetailLine) };
+}
+
 function initialEntriesOrDefault(
   initial?: SewageEstimateEntry[],
 ): SewageEstimateEntry[] {
-  if (initial && initial.length > 0) return initial;
+  if (initial && initial.length > 0) return initial.map(normalizeEntry);
   return [createEntry()];
 }
 
@@ -150,14 +199,42 @@ export function useFeePayerSewageVolumeEstimate(
           return;
         }
         const key = name as keyof SewageDetailLine;
-        if (key === "id") return;
+        if (
+          key === "id" ||
+          key === "sewageQty" ||
+          key === "midCategoryLabel" ||
+          key === "buildingUseSubCode"
+        )
+          return;
+        if (key === "usage") {
+          setEntries((prev) =>
+            prev.map((en) => {
+              if (en.id !== entryId) return en;
+              return {
+                ...en,
+                lines: en.lines.map((L) =>
+                  L.id === lineId
+                    ? withSewageQty({
+                        ...L,
+                        usage: value,
+                        buildingUseSubCode: "",
+                      })
+                    : L,
+                ),
+              };
+            }),
+          );
+          return;
+        }
         setEntries((prev) =>
           prev.map((en) => {
             if (en.id !== entryId) return en;
             return {
               ...en,
               lines: en.lines.map((L) =>
-                L.id === lineId ? { ...L, [key]: value } : L,
+                L.id === lineId
+                  ? withSewageQty({ ...L, [key]: value })
+                  : L,
               ),
             };
           }),
@@ -204,36 +281,35 @@ export function useFeePayerSewageVolumeEstimate(
     );
   }, []);
 
-  const handleEntrySewageButton = useCallback(
-    (entryId: string, lineId: string) => {
-      setEntries((prev) =>
-        prev.map((e) => {
-          if (e.id !== entryId) return e;
-          return {
-            ...e,
-            unitPrice: e.unitPrice.trim() || "12,000",
-            sewageVolume: e.sewageVolume.trim() || "9.8",
-            lines: e.lines.map((L) => {
-              if (L.id !== lineId) return L;
-              return {
-                ...L,
-                dailySewage: L.dailySewage.trim() || "0",
-              };
-            }),
-          };
-        }),
-      );
-    },
-    [],
-  );
-
   /** 용도조회 모달에서 선택한 행 → 해당 상세 줄 `용도`·`1일 오수발생량` 반영 */
   const applyUsageFromLookup = useCallback(
     (
       entryId: string,
       lineId: string,
-      picked: { buildingUse: string; dailySewage: string },
+      picked: {
+        buildingUse: string;
+        dailySewage: string;
+        midCategoryLabel: string;
+        gubun2: string;
+      },
     ) => {
+      const midTrim = (picked.midCategoryLabel ?? "").trim();
+      const g2 = (picked.gubun2 ?? "").trim();
+      if (process.env.NODE_ENV === "development") {
+        console.log("[FeePayer 오수량 산정] applyUsageFromLookup", {
+          entryId,
+          lineId,
+          gubun2: g2,
+          midCategoryLabel: midTrim,
+          calcMode: getSewageCalcModeForLine({
+            buildingUseSubCode: g2,
+            buildingUse: picked.buildingUse,
+            midCategoryLabel: midTrim,
+          }),
+          buildingUse: picked.buildingUse,
+          dailySewage: picked.dailySewage,
+        });
+      }
       setEntries((prev) =>
         prev.map((e) => {
           if (e.id !== entryId) return e;
@@ -241,13 +317,16 @@ export function useFeePayerSewageVolumeEstimate(
             ...e,
             lines: e.lines.map((L) => {
               if (L.id !== lineId) return L;
-              return {
+              const next: SewageDetailLine = {
                 ...L,
                 usage: picked.buildingUse,
+                buildingUseSubCode: g2,
+                midCategoryLabel: midTrim,
                 ...(picked.dailySewage.trim()
                   ? { dailySewage: picked.dailySewage.trim() }
                   : {}),
               };
+              return withSewageQty(next);
             }),
           };
         }),
@@ -264,7 +343,6 @@ export function useFeePayerSewageVolumeEstimate(
     handleRemoveDetailLine,
     handleEntryFieldChange,
     handleCalculateEntry,
-    handleEntrySewageButton,
     applyUsageFromLookup,
   };
 }

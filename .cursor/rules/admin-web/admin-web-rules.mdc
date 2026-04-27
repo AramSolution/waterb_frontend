@@ -1729,6 +1729,7 @@ Register form row uses FormField + register-form.css?
 | Half row + empty half-cell + address `fullWidth` row | `src/features/adminWeb/support/feePayerRegister/ui/FeePayerBasicRegisterForm.tsx` |
 | Two-column first row (both real fields) | `src/features/adminWeb/program/register/ui/ProgramRegisterForm.tsx` |
 | 구분·유형 연동 (원인자부담 오수량/납부내역) | `src/features/adminWeb/support/lib/sewageCategoryTypeOptions.ts`, `FeePayerSewageVolumeEstimateSection.tsx`, `CauserPaymentHistorySection.tsx`, `FormField` `mdGridSpan` |
+| 용도조회 트리·오수량 산정 모드 | `useUsageLookupModal.ts`, `entities/.../cmmCodeApi` (`building-use-codes`), `sewageVolumeCalc.ts`, `useFeePayerSewageVolumeEstimate.ts` |
 
 ---
 
@@ -1765,6 +1766,31 @@ Register form row uses FormField + register-form.css?
 - `src/features/adminWeb/support/lib/sewageCategoryTypeOptions.ts`
 - `src/shared/ui/adminWeb/form/FormField.tsx` — `mdGridSpan` (`2` 기본, `4` = 한 줄 4칸)
 - `src/shared/styles/admin/register-form.css` — `.feePayerPriceGrid` (원인자부담 기준단가 블록 정렬·연한 선)
+
+---
+
+## ⚠️ CRITICAL: Support — 용도조회 트리·오수량 산정 모드 (`gubun2` / WAT002 `code`)
+
+건축용도 코드 API(`GET …/building-use-codes` 등, 엔티티 `cmmCodeApi`)는 **2단 트리**로 내려온다: **부모 노드** = WAT001(대분류, 예 `code: "01"` 이름 `주거시설`), **`children[]`** = WAT002(소분류, 예 `code: "0101"` 단독주택, `"0102"` 공동주택). 용도조회 모달(`useUsageLookupModal`)의 리프 선택값에는 이미 **`gubun1`(부모 `code`)**, **`gubun2`(자식 `code`)** 가 있다.
+
+### MUST
+
+- ✅ **방수·세대수·1일오수 식(`multi`)과 세대수 입력 UI**는 **`용도명`·`midCategoryLabel` 등에 「다중주택」 문구가 있을 때만** 적용한다. **공동주택(`0102` 등)** 만으로는 **다중주택 식에 넣지 않는다** — 공동은 **면적·1일오수 식(`default`)** 이다.
+- ✅ **`0101` 접두(WAT002 단독주택)** → **단독 식**(방수·1일오수). **`0102`(공동주택)** → **면적 식**(코드만으로 세대수 식 금지). 코드 체계 변경 시 백엔드/코드표와 함께 `sewageVolumeCalc.ts`만 수정한다.
+- ✅ **`gubun2`가 비었거나 아직 줄에 없을 때** **용도명 `buildingUse`**에 **`단독주택`**이 포함되면 단독 식으로 **보조 판별**한다. **「다중주택」** 은 위 `multi` 규칙과 동일하게 취급한다. **동일 헬퍼** 우선순위: **다중주택 문구 → `0101` 등 코드 → 용도명 `단독주택` → 라벨 보조**.
+- ✅ 용도조회에서 armbuild 목록 행을 만들 때, 선택된 분류의 **`gubun1`/`gubun2`를 상세 줄 상태에 전달**해 저장·계산에 쓴다(`UsageLookupDisplayRow` → `applyUsageFromLookup` 등). UI에서 “산정 모드”를 판별할 때도 **그 헬퍼**를 쓴다.
+- ✅ **`midCategoryLabel`**(또는 트리 `parentLabel`)은 **대분류 쪽 라벨**(예: `주거시설`)로만 쓰이는 경우가 많아, **“단독 vs 공동(다중)” 구분의 단일 근거로 쓰지 않는다.** 표시·레거시용으로 두고, **`gubun2`·`buildingUse`가 모두 부족할 때만** 라벨 문자열 보조에 한정한다.
+
+### MUST NOT
+
+- ❌ **공동주택(`0102`)·공동 문구**를 **다중주택**과 동일하게 취급해 **세대수·방수 식(`multi`)** 을 적용하기.
+- ❌ **단독/다중** 구분을 **`midCategoryLabel` 문자열 매칭만**으로 결정해, API가 대분류 이름만 내려줄 때 **항상 면적(default) 모드**로 떨어지는 실수를 하기.
+
+### Reference
+
+- `src/features/adminWeb/support/feePayerRegister/model/useUsageLookupModal.ts` — 트리 매핑 `gubun1`/`gubun2`, 목록 행 매핑
+- `src/features/adminWeb/support/lib/sewageVolumeCalc.ts` — 행 단위 오수량 계산·모드 분기
+- `src/features/adminWeb/support/feePayerRegister/model/useFeePayerSewageVolumeEstimate.ts` — 상세 줄 상태·용도조회 반영
 
 ---
 
