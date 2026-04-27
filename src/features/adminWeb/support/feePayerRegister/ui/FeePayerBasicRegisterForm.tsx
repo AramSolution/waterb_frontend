@@ -7,22 +7,56 @@ import { useFeePayerBasicRegister } from "../model";
 import { FeePayerSewageVolumeEstimateSection } from "./FeePayerSewageVolumeEstimateSection";
 import "@/shared/styles/admin/register-form.css";
 
-export const FeePayerBasicRegisterForm: React.FC = () => {
+export interface FeePayerBasicRegisterFormProps {
+  /** 상세 URL의 `proId` — 전달 시 목 행으로 폼·오수량 산정 초기화(등록과 동일 편집) */
+  seedProId?: string | null;
+}
+
+export const FeePayerBasicRegisterForm: React.FC<
+  FeePayerBasicRegisterFormProps
+> = ({ seedProId = null }) => {
   const {
     applicantNm,
+    telNo,
     zipCode,
     adres,
     detailAdres,
     errors,
     loading,
     showInfoDialog,
+    saveInfoMessage,
+    seedInvalid,
+    sewageInitialEntries,
     handleInputChange,
     noopInputChange,
     handleAddressSearch,
     handleSubmit,
     handleCancel,
     handleInfoDialogClose,
-  } = useFeePayerBasicRegister();
+  } = useFeePayerBasicRegister({ seedProId });
+
+  if (seedInvalid) {
+    return (
+      <>
+        <div className="bg-white rounded-lg shadow">
+          <div className="px-6 py-8 text-sm text-gray-600">
+            조회할 수 없는 대상이거나 잘못된 링크입니다. 목록에서 다시
+            시도해주세요.
+          </div>
+        </div>
+        <div className="flex justify-end mt-4 gap-2">
+          <button
+            type="button"
+            className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors text-[13px]"
+            style={{ minWidth: "100px" }}
+            onClick={handleCancel}
+          >
+            닫기
+          </button>
+        </div>
+      </>
+    );
+  }
 
   return (
     <>
@@ -52,9 +86,23 @@ export const FeePayerBasicRegisterForm: React.FC = () => {
                   autoComplete="name"
                 />
               </FormField>
-              {/* 첫 행 우측 반칸: 격자 세로·하단선만 (라벨 공백 → FormField 빈 라벨 레이아웃) */}
-              <FormField label=" " isFirstInRow suppressBottomBorder>
-                <span className="sr-only">추가 입력 없음</span>
+              <FormField
+                label="전화번호"
+                required
+                isFirstInRow
+                suppressBottomBorder
+                error={errors.telNo}
+              >
+                <FormInput
+                  type="tel"
+                  name="telNo"
+                  value={telNo}
+                  onChange={handleInputChange}
+                  error={errors.telNo}
+                  placeholder="전화번호를 입력하세요"
+                  maxLength={13}
+                  autoComplete="tel"
+                />
               </FormField>
             </div>
             {/* 주소 (다음 API 연동: 주소 입력란 옆에 돋보기로 조회) */}
@@ -133,9 +181,12 @@ export const FeePayerBasicRegisterForm: React.FC = () => {
           </div>
         </div>
 
-        <FeePayerSewageVolumeEstimateSection />
+        <FeePayerSewageVolumeEstimateSection
+          initialEntries={sewageInitialEntries}
+          showAddNoticeBlockButton={Boolean(seedProId?.trim())}
+        />
 
-        <div className="flex justify-end mt-6 gap-2">
+        <div className="flex justify-end mt-4 gap-2">
           <button
             type="submit"
             className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors text-[13px] disabled:opacity-50 disabled:cursor-not-allowed"
@@ -159,7 +210,7 @@ export const FeePayerBasicRegisterForm: React.FC = () => {
       <ConfirmDialog
         isOpen={showInfoDialog}
         title="알림"
-        message="등록 API는 아직 연결되지 않았습니다. 목록으로 이동합니다."
+        message={saveInfoMessage}
         type="primary"
         confirmText="확인"
         cancelText="닫기"

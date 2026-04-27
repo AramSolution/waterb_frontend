@@ -55,4 +55,42 @@ input[type='number'] {
   .franchise-register-form .register-form-mobile-wrapper {
     min-height: 45px;
   }
+
+  /* 원인자부담 오수량 산정: 기준단가·오수량 / 원인자부담금·오수부과량 열 맞춤 + 연한 구분선 */
+  .feePayerPriceGrid .feePayerPricePair .register-form-label {
+    justify-content: flex-start;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+    border-right: 1px solid #e5e7eb;
+    width: 34% !important;
+    max-width: 8.5rem;
+  }
+
+  .feePayerPriceGrid .feePayerPricePair .register-form-mobile-field {
+    border: none !important;
+    border-top: none !important;
+  }
+
+  /* 1행 기준단가·오수량: 라벨 열은 행 높이만큼 회색으로 채우고, 열 하단에 가로 구분선(옆 필드와 높이 맞춤 — flex-start 금지로 하얀 빈칸 방지) */
+  .feePayerPriceGrid > div:first-child > .feePayerPricePair:nth-child(-n + 2) .register-form-label {
+    align-self: stretch !important;
+    border-bottom: 1px solid #e5e7eb !important;
+    border-top: none !important;
+    border-left: none !important;
+  }
+}
+
+@media (max-width: 767px) {
+  .feePayerPriceGrid .feePayerPricePair .register-form-label {
+    border-color: #e5e7eb !important;
+  }
+
+  .feePayerPriceGrid .feePayerPricePair .register-form-mobile-field {
+    border-color: #e5e7eb !important;
+  }
+
+  /* 1행 기준단가·오수량: 라벨 글 아래 한 줄(공통 mobile label의 border-bottom:none 예외) */
+  .feePayerPriceGrid > div:first-child > .feePayerPricePair:nth-child(-n + 2) .register-form-label {
+    border-bottom: 1px solid #e5e7eb !important;
+  }
 }

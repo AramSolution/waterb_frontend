@@ -95,9 +95,13 @@ export const SupportListPageView: React.FC = () => {
     setAddr,
   } = useSupportList();
 
-  // 수정 페이지로 이동 (상세 조회 후 수정)
+  // 상세(읽기 전용) — 등록 화면과 동일 격자
   const handleDetailClick = (businessId: string) => {
-    router.push(`/adminWeb/support/list/update?proId=${businessId}`);
+    const id = businessId.trim();
+    if (!id) return;
+    router.push(
+      `/adminWeb/support/list/basic-detail?proId=${encodeURIComponent(id)}`,
+    );
   };
 
   const handlePaymentHistoryClick = (proId: string) => {

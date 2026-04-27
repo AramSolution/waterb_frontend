@@ -7,7 +7,7 @@
 }
 
 .sidebar-logo {
-  @apply flex items-center justify-center gap-3 transition-all duration-300;
+  @apply flex items-center justify-center gap-3 transition-all duration-300 no-underline text-inherit;
 }
 
 .sidebar.collapsed .sidebar-logo {

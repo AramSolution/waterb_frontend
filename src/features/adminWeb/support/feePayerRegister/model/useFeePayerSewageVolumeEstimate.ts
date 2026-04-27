@@ -1,4 +1,4 @@
-import { useCallback, useState, type ChangeEvent } from "react";
+import { useCallback, useEffect, useState, type ChangeEvent } from "react";
 
 /** 층수~삭제 한 줄(통지일 블록 당 1..n행) */
 export type SewageDetailLine = {
@@ -20,6 +20,8 @@ export type SewageEstimateEntry = {
   unitPrice: string;
   sewageVolume: string;
   causerCharge: string;
+  /** 오수부과량 (백엔드 필드명 확정 시 맞출 것) */
+  sewageLevyAmount: string;
   lines: SewageDetailLine[];
 };
 
@@ -46,21 +48,39 @@ function createDetailLine(): SewageDetailLine {
 function createEntry(): SewageEstimateEntry {
   return {
     id: crypto.randomUUID(),
-    status: "",
+    status: "UNPAID",
     category: "",
     type: "",
     notifyDate: getTodayYmd(),
     unitPrice: "",
     sewageVolume: "",
     causerCharge: "",
+    sewageLevyAmount: "",
     lines: [createDetailLine()],
   };
 }
 
-export function useFeePayerSewageVolumeEstimate() {
-  const [entries, setEntries] = useState<SewageEstimateEntry[]>(() => [
-    createEntry(),
-  ]);
+function initialEntriesOrDefault(
+  initial?: SewageEstimateEntry[],
+): SewageEstimateEntry[] {
+  if (initial && initial.length > 0) return initial;
+  return [createEntry()];
+}
+
+/**
+ * @param initialEntries 상세 등에서 목 데이터·API 스냅샷으로 채울 때 전달. 미전달 시 등록용 기본 1블록.
+ */
+export function useFeePayerSewageVolumeEstimate(
+  initialEntries?: SewageEstimateEntry[],
+) {
+  const [entries, setEntries] = useState<SewageEstimateEntry[]>(() =>
+    initialEntriesOrDefault(initialEntries),
+  );
+
+  useEffect(() => {
+    if (initialEntries === undefined) return;
+    setEntries(initialEntriesOrDefault(initialEntries));
+  }, [initialEntries]);
 
   const handleAddEntry = useCallback(() => {
     setEntries((prev) => [...prev, createEntry()]);
@@ -147,6 +167,15 @@ export function useFeePayerSewageVolumeEstimate() {
 
       const key = name as keyof SewageEstimateEntry;
       if (key === "id" || key === "lines") return;
+
+      if (key === "category") {
+        setEntries((prev) =>
+          prev.map((row) =>
+            row.id === entryId ? { ...row, category: value, type: "" } : row,
+          ),
+        );
+        return;
+      }
 
       setEntries((prev) =>
         prev.map((row) =>

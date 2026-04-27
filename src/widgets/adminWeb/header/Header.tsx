@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { AuthService } from '@/entities/auth/api';
 import { SessionManager } from '@/shared/lib/sessionManager';
@@ -90,10 +91,14 @@ export const Header: React.FC<HeaderProps> = ({ onToggleSidebar }) => {
         >
           <span className="menu-toggle-icon">☰</span>
         </button>
-        <div className="header-logo-mobile">
+        <Link
+          href="/adminWeb"
+          className="header-logo-mobile flex items-center shrink-0"
+          aria-label="관리자 홈(대시보드)으로 이동"
+        >
           <img src="/images/logo.png" alt="관리자 로고" />
           <span className="font-bold"></span>
-        </div>
+        </Link>
       </div>
 
       <div className="header-actions flex items-center gap-1.5 sm:gap-2 md:gap-4">

@@ -221,10 +221,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
         }`}
       >
         <div className="sidebar-header">
-          <div className="sidebar-logo">
+          <Link
+            href="/adminWeb"
+            className="sidebar-logo"
+            aria-label="관리자 홈(대시보드)으로 이동"
+            onClick={handleLinkClick}
+          >
             <img src="/images/logo.png" alt="관리자 로고" />
             <span className="font-bold sidebar-logo-text"></span>
-          </div>
+          </Link>
           <button className="sidebar-close-btn" onClick={onClose}>
             ✕
           </button>

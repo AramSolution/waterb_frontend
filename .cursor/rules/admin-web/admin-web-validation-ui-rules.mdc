@@ -42,6 +42,24 @@ alwaysApply: false
 
 ---
 
+## 연계: 원인자부담 등록 — 구분·유형 연동 (유효성 검사 전제)
+
+**`구분` 미선택**이거나 **`구분` 변경 직후 `유형`이 비어 있는** 상태에서 저장·제출 유효성을 검사할 때는, 에러 메시지는 아래 **§ CRITICAL: 유효성 검사 에러 메시지 구조**를 따른다 (필드 하단 inner wrapper).
+
+**`유형` 옵션 목록**은 `admin-web-rules.mdc`의 **Support — 원인자부담 「구분」 ↔ 「유형」 옵션 연동**과 동일하게, 단일 출처 함수 **`getSewageTypeOptionsForCategory`** (`src/features/adminWeb/support/lib/sewageCategoryTypeOptions.ts`)만 사용한다. (개별건축물 → 신축·증축·변경 3개; 타행위 → 신축·개축 2개; 허가사항변경 → 개축만.)
+
+**같은 화면의** `상태`·`구분`·`유형`·`통지일` 레이아웃은 해당 규칙의 **`mdGridSpan={4}`** 한 줄 배치를 따른다.
+
+**`상태`:** 신규 엔트리 기본값 **`UNPAID`(미납)**, `FormSelect`에 **`placeholder` 없음**(빈 value 선택 행 없음). `구분`·`유형` 등은 기존처럼 placeholder로 미선택 유도 가능.
+
+**오수량 발생량 산정:** 통지일 블록 추가는 **엔트리 카드 하단 경계 가운데** 원형 `+`가 **선에 반쯝 걸리게**; **`aria-label`/`title`** 필수.
+
+**기준단가 블록:** 첫 줄에 **기준단가·오수량·계산**만 두고, **다음 줄**에 **원인자부담금·오수부과량** 입력을 둔다(`FeePayerSewageVolumeEstimateSection`, `useFeePayerSewageVolumeEstimate`의 `sewageLevyAmount`). **열 맞춤**은 `feePayerPriceGrid`·동일 폭 계산열 스페이서·연한 세로선(`#e5e7eb`, `register-form.css`)을 따른다. **두 줄 사이**에는 **데이터 열(원인자부담금·오수부과량 쌍)에만** 가로 구분(예 `#d1d5db`, `shadow-[inset_0_1px_0_0_#d1d5db]` 등); **`feePayerPriceGridRow2` 루트 전체 폭 `border-t` 금지**로 **계산 열 아래 선 없음**을 유지한다. 유효성 메시지는 필드별 하단 규칙을 따른다.
+
+**원인자부담 기본 등록:** `저장`·`닫기`는 오수량 발생량 산정 섹션 **아래**에 배치한다. 오수량 섹션 **전체 비활성화 패턴**(`disabled`/`basicInfoSaved`로 섹션 끄기)은 쓰지 않는다.
+
+---
+
 ## Admin Archive (BBST03): Image Upload / Reorder UI — Prompt Spec (English)
 
 Use when changing **archive board** article **register** or **detail/edit** screens (`bbsSe === "BBST03"`). This is **not** generic attachment UX; it is the **multi-slot image gallery** with **row reorder** and **multipart** contract to `ArticleManageController`.

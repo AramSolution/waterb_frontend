@@ -18,6 +18,11 @@ interface FormFieldProps {
   suppressBottomBorder?: boolean; // 하단 선 제거 (다음 행이 fullWidth+forceTopBorder일 때 중복 선 방지)
   /** fullWidth일 때 라벨·필드 영역을 위쪽 정렬 (체크박스/라디오/textarea 등 여러 줄 콘텐츠) */
   alignFieldStart?: boolean;
+  /**
+   * md 이상에서 한 flex 행에 나란히 둘 칸 수. 기본 `2`(반칸).
+   * `4` = 원인자부담 등 상태·구분·유형·통지일 한 줄(각 `md:w-1/4`).
+   */
+  mdGridSpan?: 2 | 4;
   requiredIndicatorPosition?: "before" | "after"; // 필수 표시 위치 (기본값: "after")
   children: React.ReactNode;
   error?: string;
@@ -36,10 +41,18 @@ export const FormField: React.FC<FormFieldProps> = ({
   forceTopBorder = false,
   suppressBottomBorder = false,
   alignFieldStart = false,
-  requiredIndicatorPosition = "before",
+  mdGridSpan = 2,
+  requiredIndicatorPosition = "after",
   children,
   error,
 }) => {
+  const rowMdWidthClass = mdGridSpan === 4 ? "md:w-1/4" : "md:w-1/2";
+  const labelMdWidthClass =
+    mdGridSpan === 4
+      ? "md:w-[34%] md:min-w-0 md:shrink-0 md:text-[11px] md:leading-snug"
+      : "md:w-1/4";
+  const fieldMdWidthClass =
+    mdGridSpan === 4 ? "md:w-[66%] md:min-w-0" : "md:w-3/4";
   const labelBorderBottom =
     suppressBottomBorder ? "none" : undefined;
   const fieldBorderBottom =
@@ -167,7 +180,7 @@ export const FormField: React.FC<FormFieldProps> = ({
   // 라벨이 비어있는 경우: 라벨 영역 없이 필드만 전체 영역 사용
   if (!label.trim()) {
     return (
-      <div className="w-full md:w-1/2 register-form-mobile-row">
+      <div className={`w-full ${rowMdWidthClass} register-form-mobile-row`}>
         <div
           className="register-form-mobile-wrapper md:flex md:items-stretch"
           style={{ minHeight: "45px" }}
@@ -192,13 +205,13 @@ export const FormField: React.FC<FormFieldProps> = ({
   }
 
   return (
-    <div className="w-full md:w-1/2 register-form-mobile-row">
+    <div className={`w-full ${rowMdWidthClass} register-form-mobile-row`}>
       <div
         className="register-form-mobile-wrapper md:flex md:items-stretch"
         style={{ minHeight: "45px" }}
       >
         <label
-          className="w-full md:w-1/4 flex items-center m-0 register-form-label bg-gray-100"
+          className={`w-full ${labelMdWidthClass} flex items-center m-0 register-form-label bg-gray-100`}
           style={{
             border: "1px solid #dee2e6",
             ...(labelBorderTop !== undefined && { borderTop: labelBorderTop }),
@@ -218,7 +231,7 @@ export const FormField: React.FC<FormFieldProps> = ({
           )}
         </label>
         <div
-          className="register-form-mobile-field w-full md:w-3/4 flex items-center"
+          className={`register-form-mobile-field w-full ${fieldMdWidthClass} flex items-center min-w-0`}
           style={{
             border: "1px solid #dee2e6",
             borderLeft: "none",

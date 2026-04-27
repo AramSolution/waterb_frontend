@@ -32,7 +32,7 @@ function createEntry(): CauserPaymentEntry {
   return {
     id: crypto.randomUUID(),
     category: "",
-    status: "",
+    status: "UNPAID",
     type: "",
     notifyDate: "2020-01-01",
     sewageVolume: "9.8",
@@ -58,9 +58,13 @@ export function useCauserPaymentHistorySection() {
       if (!entryId) return;
       const key = name as "category" | "status" | "type";
       setEntries((prev) =>
-        prev.map((en) =>
-          en.id === entryId ? { ...en, [key]: value } : en,
-        ),
+        prev.map((en) => {
+          if (en.id !== entryId) return en;
+          if (key === "category") {
+            return { ...en, category: value, type: "" };
+          }
+          return { ...en, [key]: value };
+        }),
       );
     },
     [],
@@ -139,7 +143,7 @@ export function useCauserPaymentHistorySection() {
   return {
     entries,
     handleAddEntry,
-    categoryStatusTypeOptions: {
+    categoryStatusOptions: {
       category: [
         { value: "INDIVIDUAL", label: "개별건축물" },
         { value: "OTHER_ACT", label: "타행위" },
@@ -148,11 +152,6 @@ export function useCauserPaymentHistorySection() {
       status: [
         { value: "UNPAID", label: "미납" },
         { value: "PAID", label: "납부" },
-      ],
-      type: [
-        { value: "BUILD_NEW_ALT", label: "개별건축물(신축, 증축, 변경)" },
-        { value: "OTHER_ACT_BUILD", label: "타행위(신축, 개축)" },
-        { value: "PERMIT_CHG_BUILD", label: "허가사항변경(개축)" },
       ],
     },
     handleSelectChange,

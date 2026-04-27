@@ -150,6 +150,31 @@ Creating or editing app/adminWeb/**/page.tsx?
 
 ---
 
+## ⚠️ CRITICAL: Header & Sidebar logo → Admin dashboard (home)
+
+**MUST** make the **admin branding logo** (header bar + sidebar) navigate to the **admin home (dashboard)**:
+
+- ✅ **Target href:** `/adminWeb` — see `src/app/adminWeb/page.tsx` (`DashboardPageView` inside `AdminLayout`).
+- ✅ **Implementation:** Wrap the logo (or logo + title row) in Next.js `<Link href="/adminWeb">`, **or** `useRouter().push("/adminWeb")` with keyboard-accessible semantics (e.g. `button` + `aria-label` if not using `Link`).
+
+**MUST** keep the same behavior in both chrome areas when both exist:
+
+- ✅ `src/widgets/adminWeb/header/Header.tsx` — `header-logo-mobile` (top bar logo).
+- ✅ `src/widgets/adminWeb/sidebar/Sidebar.tsx` — `sidebar-header` / `sidebar-logo` (sidebar logo).
+
+**MUST NOT:**
+
+- ❌ Leave the logo as a **non-interactive `<div>` + `<img>` only** — users expect “logo = home”. **No build error** (silent UX bug).
+- ❌ Link the logo to **removed user routes** (e.g. `/userWeb`) — admin-only product uses `/adminWeb` only.
+
+**Checklist:**
+
+- [ ] Header logo click navigates to `/adminWeb` (dashboard).
+- [ ] Sidebar logo click navigates to `/adminWeb` (on mobile, call existing `onClose` after navigation if the drawer should close).
+- [ ] If `/adminWeb/login` (or similar) shows a logo **intentionally** not linked to home, document the reason in code or rules.
+
+---
+
 ## ⚠️ CRITICAL: URL path segments vs query-only identity (Sidebar & navigation)
 
 ### 🎯 Purpose
@@ -1703,6 +1728,43 @@ Register form row uses FormField + register-form.css?
 | `suppressBottomBorder` / `forceTopBorder` / empty `label` branch | `src/shared/ui/adminWeb/form/FormField.tsx` |
 | Half row + empty half-cell + address `fullWidth` row | `src/features/adminWeb/support/feePayerRegister/ui/FeePayerBasicRegisterForm.tsx` |
 | Two-column first row (both real fields) | `src/features/adminWeb/program/register/ui/ProgramRegisterForm.tsx` |
+| 구분·유형 연동 (원인자부담 오수량/납부내역) | `src/features/adminWeb/support/lib/sewageCategoryTypeOptions.ts`, `FeePayerSewageVolumeEstimateSection.tsx`, `CauserPaymentHistorySection.tsx`, `FormField` `mdGridSpan` |
+
+---
+
+## ⚠️ CRITICAL: Support — 원인자부담 「구분」 ↔ 「유형」 옵션 연동
+
+**오수량 발생량 산정** (`FeePayerSewageVolumeEstimateSection`) 및 **원인자부담 납부내역** (`CauserPaymentHistorySection`)에서 **`구분` (category)** 선택에 따라 **`유형` (type)** `FormSelect` 옵션을 **달리한다.**
+
+### MUST
+
+- ✅ **`구분` = 개별건축물 (`INDIVIDUAL`)** → **`유형` 3개:** 신축, 증축, 변경 (각각 고유 `value`; 하나로 합친 라벨 금지).
+- ✅ **`구분` = 타행위 (`OTHER_ACT`)** → **`유형` 2개:** 신축, 개축 (개별건축물의 증축·변경과 혼동되지 않게 `value` 분리).
+- ✅ **`구분` = 허가사항변경 (`PERMIT_CHANGE`)** → **`유형` 1개:** 개축만.
+- ✅ **`구분` 변경 시** 기존 `유형`이 새 옵션 집합에 없으면 **`type` 초기화** (`""`) — 잘못된 조합 방지.
+- ✅ **레이아웃:** `상태`, `구분`, `유형`, `통지일` 네 필드는 **하나의** `flex flex-wrap` 행에 두고, 각 `FormField`에 **`mdGridSpan={4}`** (`src/shared/ui/adminWeb/form/FormField.tsx`)를 지정한다 — **md 이상에서 한 줄**(칸당 `md:w-1/4`), 모바일은 줄바꿈.
+- ✅ **섹션 헤더·통지일 블록 추가:** `FeePayerSewageVolumeEstimateSection` 상단은 **제목만**(`오수량 발생량 산정`) 둔다. **통지일 블록(엔트리) 전체 추가**(`handleAddEntry`)는 **각 엔트리 카드 하단**에 둔다 — **가로 구분선(`border-t`, 예 `#dee2e6`) 가운데**에 **`absolute` + `left-1/2` + `-translate-x-1/2` + `-translate-y-1/2`** 로 **원형 `+`가 선에 반쯝 걸치게**(흰 **`border-2 border-white`**, `shadow-md`). 상세 격자(층수·면적·**용도**·…) **아래쪽**에 오도록 카드 **맨 아래**에 배치한다. **`aria-label` / `title`**: “통지일 블록 추가”.
+- ✅ **`상태` 기본값:** 신규 통지일 블록(엔트리) 생성 시 **`UNPAID`(미납)**. `상태` `FormSelect`에는 **`placeholder` 비우기** — `--------선택하세요-----` 같은 빈 옵션 행을 두지 않는다(미납·납부만).
+- ✅ **기준단가·오수량·계산 행:** `FeePayerSewageVolumeEstimateSection`에서 **한 줄(md `flex-row`)**에 **기준단가**, **오수량**, **계산** 버튼을 둔다(원인자부담금은 이 행에 넣지 않음).
+- ✅ **그 아래 한 줄:** **원인자부담금**(`causerCharge`)과 **오수부과량**(`sewageLevyAmount`) 입력을 **나란히**(md에서 2칸, 모바일은 세로 스택). `SewageEstimateEntry`에 `sewageLevyAmount` 유지·백엔드 DTO 맞춤.
+- ✅ **열 정렬·선:** 위 두 행은 **`feePayerPriceGrid` / `feePayerPricePair`** 로 같은 **flex-1 쌍** 너비를 맞추고, **계산 버튼 열과 동일 폭(`md:w-[104px]`)의 빈 스페이서**를 둘째 행 끝에 두어 **기준단가↔원인자부담금**, **오수량↔오수부과량** 세로선이 이어지게 한다. 바깥·열 구분선은 **`#e5e7eb`** 등 연한 회색; `register-form-mobile-field`의 `border-left: none !important` 때문에 **라벨 오른쪽 선(`border-right`)**으로 라벨|값 구분(`register-form.css` md 구간 `.feePayerPriceGrid` 규칙).
+- ✅ **1행 기준단가·오수량 라벨 아래 선:** 공통 모바일 `.register-form-label`의 **`border-bottom: none`** 때문에 글씨 아래 줄이 없어지지 않게, **`register-form.css`** 에서 **`feePayerPriceGrid` 1행 두 쌍**만 예외로 **`border-bottom: 1px solid #e5e7eb`** 를 둔다. **md** 에서는 라벨을 **`align-self: stretch`** 로 두어 **회색 라벨 칸이 행 높이를 채우고**(`flex-start`로 생기는 **하얀 빈칸 금지**), **`border-bottom`** 은 **라벨 열 하단**에 그린다. 해당 라벨에 **`md:border-0`** 를 두지 않는다.
+- ✅ **행 그룹 구분선:** **1행**(기준단가·오수량·계산)과 **2행**(원인자부담금·오수부과량) 사이에는 **`feePayerPriceGridRow2`** 로 **아주 옅은 배경**(`bg-gray-50/50` 등)을 두고, **가로 구분(예 `#d1d5db`)은 데이터 열(두 `feePayerPricePair`)에만** 둔다 — **`shadow-[inset_0_1px_0_0_#d1d5db]`** 등으로 상단만 그려도 된다(모바일은 첫 쌍만, md는 둘째 쌍에 `md:shadow-[inset_0_1px_0_0_#d1d5db]`). **`feePayerPriceGridRow2` 루트에 전체 폭 `border-t`를 두지 않는다** — **계산 버튼 열·맞춤 스페이서 아래로 가로선이 이어지지 않게** 한다.
+- ✅ **원인자부담 기본 등록 폼 (`FeePayerBasicRegisterForm`):** **`저장` / `닫기`** 버튼은 **`FeePayerSewageVolumeEstimateSection`(오수량 발생량 산정) 블록 바로 아래**에 둔다(기본정보 카드만 위에 두고, 그 다음 오수량 섹션 → 액션 버튼). 오수량 섹션을 **`basicInfoSaved` 등으로 `pointer-events-none` 비활성화하지 않는다** — 하위 블록은 항상 조작 가능(요구 시에만 로딩 `disabled` 등).
+
+**Single source of truth:** `getSewageTypeOptionsForCategory` in `src/features/adminWeb/support/lib/sewageCategoryTypeOptions.ts` (두 화면에서 동일 함수 사용).
+
+### MUST NOT
+
+- ❌ **`유형`**에 개별·타행위·허가를 **한 줄로 묶은** 과거형 옵션만 두고 `구분`과 무관하게 선택하게 하기.
+- ❌ **`타행위`**인데 **신축·개축 외**(증축·변경 등 개별건축물 전용 유형)를 노출하기.
+- ❌ **`타행위`의 신축**과 **`개별건축물`의 신축**을 **동일 `value`**로 취급하기 — 구분별로 코드가 달라야 함.
+
+### Reference
+
+- `src/features/adminWeb/support/lib/sewageCategoryTypeOptions.ts`
+- `src/shared/ui/adminWeb/form/FormField.tsx` — `mdGridSpan` (`2` 기본, `4` = 한 줄 4칸)
+- `src/shared/styles/admin/register-form.css` — `.feePayerPriceGrid` (원인자부담 기준단가 블록 정렬·연한 선)
 
 ---
 

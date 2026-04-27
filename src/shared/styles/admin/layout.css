@@ -43,7 +43,7 @@
 }
 
 .header-logo-mobile {
-  @apply hidden;
+  @apply hidden no-underline text-inherit;
 }
 
 .header-logo-mobile img {
@@ -114,7 +114,7 @@
   }
 
   .header-logo-mobile {
-    @apply flex items-center gap-2;
+    @apply flex items-center gap-2 no-underline text-inherit;
   }
 
   .header-logo-mobile span {

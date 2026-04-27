@@ -2,6 +2,7 @@
 
 import React from "react";
 import { FormField, FormInput, FormSelect } from "@/shared/ui/adminWeb/form";
+import { getSewageTypeOptionsForCategory } from "@/features/adminWeb/support/lib/sewageCategoryTypeOptions";
 import { useCauserPaymentHistorySection } from "../model/useCauserPaymentHistorySection";
 import "@/shared/styles/admin/register-form.css";
 
@@ -12,7 +13,7 @@ export const CauserPaymentHistorySection: React.FC = () => {
   const {
     entries,
     handleAddEntry,
-    categoryStatusTypeOptions,
+    categoryStatusOptions,
     handleSelectChange,
     handleFieldChange,
     handleLineFieldChange,
@@ -20,8 +21,7 @@ export const CauserPaymentHistorySection: React.FC = () => {
     handleRemoveLine,
   } = useCauserPaymentHistorySection();
 
-  const { category: catOpt, status: stOpt, type: tyOpt } =
-    categoryStatusTypeOptions;
+  const { category: catOpt, status: stOpt } = categoryStatusOptions;
 
   return (
     <div className="bg-white rounded-lg shadow mt-6">
@@ -61,10 +61,25 @@ export const CauserPaymentHistorySection: React.FC = () => {
 
                 <div className="flex flex-wrap">
                   <FormField
-                    label="구분"
+                    label="상태"
                     isFirstRow={entryIndex === 0}
                     isFirstInRow
                     forceTopBorder={entryIndex > 0}
+                    mdGridSpan={4}
+                  >
+                    <FormSelect
+                      name="status"
+                      value={entry.status}
+                      onChange={handleSelectChange}
+                      options={stOpt}
+                      data-entry-id={entry.id}
+                    />
+                  </FormField>
+                  <FormField
+                    label="구분"
+                    isFirstInRow
+                    forceTopBorder={entryIndex > 0}
+                    mdGridSpan={4}
                   >
                     <FormSelect
                       name="category"
@@ -75,34 +90,17 @@ export const CauserPaymentHistorySection: React.FC = () => {
                       data-entry-id={entry.id}
                     />
                   </FormField>
-                  <FormField
-                    label="상태"
-                    isFirstInRow
-                    forceTopBorder={entryIndex > 0}
-                  >
-                    <FormSelect
-                      name="status"
-                      value={entry.status}
-                      onChange={handleSelectChange}
-                      options={stOpt}
-                      placeholder="--------선택하세요-----"
-                      data-entry-id={entry.id}
-                    />
-                  </FormField>
-                </div>
-
-                <div className="flex flex-wrap">
-                  <FormField label="유형">
+                  <FormField label="유형" isFirstInRow mdGridSpan={4}>
                     <FormSelect
                       name="type"
                       value={entry.type}
                       onChange={handleSelectChange}
-                      options={tyOpt}
+                      options={getSewageTypeOptionsForCategory(entry.category)}
                       placeholder="--------선택하세요-----"
                       data-entry-id={entry.id}
                     />
                   </FormField>
-                  <FormField label="통지일" isFirstInRow>
+                  <FormField label="통지일" isFirstInRow mdGridSpan={4}>
                     <FormInput
                       type="date"
                       name="notifyDate"
