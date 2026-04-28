@@ -140,6 +140,41 @@ function numOrZero(v: unknown): number {
   return Number.isFinite(n) ? n : 0;
 }
 
+/**
+ * 상세 `calculations[].buildId`: BUL_* 는 건축물 ID, 그 외(예: WAT002)는 레거시 산정 분기 코드로만 취급.
+ * BUL만 오고 소분류가 없을 때는 알려진 건축물 ID → WAT002 매핑으로 복원(그 외는 빈 값).
+ */
+const KNOWN_ARMBUILD_BUILD_ID_TO_WAT002: Readonly<Record<string, string>> = {
+  BUL_0000000000000001: "0101",
+  BUL_0000000000000003: "0102",
+};
+
+function splitDetailCalculationBuildId(raw: unknown): {
+  armbuildBuildId?: string;
+  buildingUseSubCode: string;
+} {
+  const t = String(raw ?? "").trim();
+  if (!t) return { buildingUseSubCode: "" };
+  if (t.startsWith("BUL_")) {
+    return {
+      armbuildBuildId: t,
+      buildingUseSubCode: KNOWN_ARMBUILD_BUILD_ID_TO_WAT002[t] ?? "",
+    };
+  }
+  return { armbuildBuildId: undefined, buildingUseSubCode: t };
+}
+
+function readCalculationUsageName(c: SupportFeePayerDetailCalculationDto): string {
+  const raw = c as unknown as Record<string, unknown>;
+  for (const key of ["buildNm", "build_nm", "BUILD_NM"] as const) {
+    const v = raw[key];
+    if (v != null && String(v).trim() !== "") {
+      return decodeDisplayText(String(v).trim());
+    }
+  }
+  return "";
+}
+
 function mapCalculationDtoToLine(
   c: SupportFeePayerDetailCalculationDto,
 ): SewageDetailLine {
@@ -150,11 +185,15 @@ function mapCalculationDtoToLine(
     waterRaw != null && String(waterRaw).trim() !== ""
       ? String(waterRaw).replace(/,/g, "").trim()
       : "";
+  const { armbuildBuildId, buildingUseSubCode } =
+    splitDetailCalculationBuildId(c.buildId);
+  const usage = readCalculationUsageName(c);
   return {
     id: crypto.randomUUID(),
     floor: Number.isFinite(floorN) && floorN > 0 ? String(Math.trunc(floorN)) : "1",
-    usage: "",
-    buildingUseSubCode: String(c.buildId ?? "").trim(),
+    usage,
+    buildingUseSubCode,
+    ...(armbuildBuildId ? { armbuildBuildId } : {}),
     midCategoryLabel: "",
     area:
       c.buildSize != null && String(c.buildSize).trim() !== ""

@@ -32,6 +32,8 @@ export type SewageDetailLine = {
   dailySewage: string;
   /** WAT002 소분류 code(용도조회 `gubun2`) — 오수량 식 분기 우선 */
   buildingUseSubCode: string;
+  /** 건축물(ARMBUILD) ID — 계산·저장 API `buildId` 전용 (`gubun2`와 분리) */
+  armbuildBuildId?: string;
   /** 용도조회 분류 상위 라벨(예: 주거시설) — 표시·레거시 보조 */
   midCategoryLabel: string;
   /** 단독·공동(다중) 산정용 방수 */
@@ -105,6 +107,7 @@ function withSewageQty(line: SewageDetailLine): SewageDetailLine {
       dailySewage: line.dailySewage,
       roomCount: line.roomCount,
       householdCount: line.householdCount,
+      selected: line.selected,
     }),
   };
 }
@@ -125,6 +128,10 @@ function createDetailLine(): SewageDetailLine {
   });
 }
 
+function isEntryPaid(entry: SewageEstimateEntry): boolean {
+  return entry.status === "PAID";
+}
+
 function createEntry(): SewageEstimateEntry {
   return {
     id: crypto.randomUUID(),
@@ -141,6 +148,7 @@ function createEntry(): SewageEstimateEntry {
 }
 
 function normalizeDetailLine(l: SewageDetailLine): SewageDetailLine {
+  const bul = (l.armbuildBuildId ?? "").trim();
   const merged: SewageDetailLine = {
     ...l,
     buildingUseSubCode: l.buildingUseSubCode ?? "",
@@ -148,6 +156,7 @@ function normalizeDetailLine(l: SewageDetailLine): SewageDetailLine {
     roomCount: l.roomCount ?? "",
     householdCount: l.householdCount ?? "",
     calcSeq2: l.calcSeq2,
+    armbuildBuildId: bul || undefined,
   };
   return withSewageQty(merged);
 }
@@ -195,16 +204,19 @@ export function useFeePayerSewageVolumeEstimate(
   }, [initialEntries]);
 
   const handleAddEntry = useCallback(() => {
-    setEntries((prev) => [...prev, createEntry()]);
+    setEntries((prev) => {
+      if (!prev.every((e) => e.status === "PAID")) return prev;
+      return [...prev, createEntry()];
+    });
   }, []);
 
   const handleAddDetailLine = useCallback((entryId: string) => {
     setEntries((prev) =>
-      prev.map((e) =>
-        e.id === entryId
-          ? { ...e, lines: [...e.lines, createDetailLine()] }
-          : e,
-      ),
+      prev.map((e) => {
+        if (e.id !== entryId) return e;
+        if (isEntryPaid(e)) return e;
+        return { ...e, lines: [...e.lines, createDetailLine()] };
+      }),
     );
   }, []);
 
@@ -212,6 +224,7 @@ export function useFeePayerSewageVolumeEstimate(
     setEntries((prev) => {
       if (prev.length <= 1) return prev;
       const victim = prev.find((e) => e.id === entryId);
+      if (victim && isEntryPaid(victim)) return prev;
       const ds = victim?.detailSeq;
       if (victim != null && ds != null && ds > 0) {
         removedDetailSeqsRef.current.push(ds);
@@ -225,6 +238,7 @@ export function useFeePayerSewageVolumeEstimate(
       setEntries((prev) => {
         const e = prev.find((x) => x.id === entryId);
         if (!e) return prev;
+        if (isEntryPaid(e)) return prev;
         const line = e.lines.find((l) => l.id === lineId);
         const seq = e.detailSeq;
         const s2 = line?.calcSeq2;
@@ -260,6 +274,9 @@ export function useFeePayerSewageVolumeEstimate(
       const lineId = target.dataset.lineId;
 
       if (lineId) {
+        const host = entriesRef.current.find((en) => en.id === entryId);
+        if (host && isEntryPaid(host)) return;
+
         if (name === "selected" && type === "checkbox") {
           setEntries((prev) =>
             prev.map((en) => {
@@ -267,7 +284,7 @@ export function useFeePayerSewageVolumeEstimate(
               return {
                 ...en,
                 lines: en.lines.map((L) =>
-                  L.id === lineId ? { ...L, selected: checked } : L,
+                  L.id === lineId ? withSewageQty({ ...L, selected: checked }) : L,
                 ),
               };
             }),
@@ -280,6 +297,7 @@ export function useFeePayerSewageVolumeEstimate(
           key === "sewageQty" ||
           key === "midCategoryLabel" ||
           key === "buildingUseSubCode" ||
+          key === "armbuildBuildId" ||
           key === "calcSeq2"
         )
           return;
@@ -295,6 +313,7 @@ export function useFeePayerSewageVolumeEstimate(
                         ...L,
                         usage: value,
                         buildingUseSubCode: "",
+                        armbuildBuildId: undefined,
                       })
                     : L,
                 ),
@@ -321,6 +340,9 @@ export function useFeePayerSewageVolumeEstimate(
 
       const key = name as keyof SewageEstimateEntry;
       if (key === "id" || key === "lines") return;
+
+      const hostEntry = entriesRef.current.find((en) => en.id === entryId);
+      if (hostEntry && isEntryPaid(hostEntry)) return;
 
       if (key === "category") {
         setEntries((prev) =>
@@ -363,6 +385,9 @@ export function useFeePayerSewageVolumeEstimate(
   const handleCalculateEntry = useCallback(
     async (entryId: string) => {
       const targetEntry = entriesRef.current.find((e) => e.id === entryId);
+      if (targetEntry && isEntryPaid(targetEntry)) {
+        return;
+      }
       if (targetEntry?.category === SEWAGE_CATEGORY.PERMIT_CHANGE) {
         return;
       }
@@ -489,10 +514,12 @@ export function useFeePayerSewageVolumeEstimate(
         dailySewage: string;
         midCategoryLabel: string;
         gubun2: string;
+        armbuildBuildId?: string;
       },
     ) => {
       const midTrim = (picked.midCategoryLabel ?? "").trim();
       const g2 = (picked.gubun2 ?? "").trim();
+      const bul = (picked.armbuildBuildId ?? "").trim();
       if (process.env.NODE_ENV === "development") {
         console.log("[FeePayer 오수량 산정] applyUsageFromLookup", {
           entryId,
@@ -508,6 +535,9 @@ export function useFeePayerSewageVolumeEstimate(
           dailySewage: picked.dailySewage,
         });
       }
+      const cur = entriesRef.current.find((e) => e.id === entryId);
+      if (cur && isEntryPaid(cur)) return;
+
       setEntries((prev) =>
         prev.map((e) => {
           if (e.id !== entryId) return e;
@@ -520,6 +550,7 @@ export function useFeePayerSewageVolumeEstimate(
                 usage: picked.buildingUse,
                 buildingUseSubCode: g2,
                 midCategoryLabel: midTrim,
+                armbuildBuildId: bul || undefined,
                 ...(picked.dailySewage.trim()
                   ? { dailySewage: picked.dailySewage.trim() }
                   : {}),

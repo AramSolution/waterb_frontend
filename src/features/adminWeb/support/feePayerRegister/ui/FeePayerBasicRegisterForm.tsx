@@ -212,7 +212,6 @@ export const FeePayerBasicRegisterForm: React.FC<
         <FeePayerSewageVolumeEstimateSection
           key={seedProId?.trim() ? `detail-${seedProId.trim()}` : "register"}
           initialEntries={sewageInitialEntries}
-          showAddNoticeBlockButton={Boolean(seedProId?.trim())}
           feePayerApi={feePayerApi}
           persistRequestBuilderRef={persistRequestBuilderRef}
         />

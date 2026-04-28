@@ -15,6 +15,29 @@ export interface ArmbuildListItem {
   chgDate?: string;
 }
 
+/**
+ * 목록 JSON 키가 `buildNm` / `build_nm` / `BUILD_NM` 등으로 올 수 있음(MyBatis 별칭·Jackson 설정 차이).
+ * 용도조회 모달·원인자부담금 상세 줄 `usage` 표시에 사용.
+ */
+export function readArmbuildListItemBuildNm(item: ArmbuildListItem): string {
+  const r = item as unknown as Record<string, unknown>;
+  for (const k of ["buildNm", "build_nm", "BUILD_NM"] as const) {
+    const v = r[k];
+    if (v != null && String(v).trim() !== "") return String(v).trim();
+  }
+  return "";
+}
+
+/** 동일 이유로 `buildId` / `build_id` / `BUILD_ID` */
+export function readArmbuildListItemBuildId(item: ArmbuildListItem): string {
+  const r = item as unknown as Record<string, unknown>;
+  for (const k of ["buildId", "build_id", "BUILD_ID"] as const) {
+    const v = r[k];
+    if (v != null && String(v).trim() !== "") return String(v).trim();
+  }
+  return "";
+}
+
 export interface ArmbuildListResponse {
   data?: ArmbuildListItem[];
   result?: string;

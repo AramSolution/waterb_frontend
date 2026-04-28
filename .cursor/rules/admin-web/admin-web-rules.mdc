@@ -1780,7 +1780,9 @@ Register form row uses FormField + register-form.css?
 - ✅ **방수·세대수·1일오수 식(`multi`)과 세대수 입력 UI**는 **`용도명`·`midCategoryLabel` 등에 「다중주택」 문구가 있을 때만** 적용한다. **공동주택(`0102` 등)** 만으로는 **다중주택 식에 넣지 않는다** — 공동은 **면적·1일오수 식(`default`)** 이다.
 - ✅ **`0101` 접두(WAT002 단독주택)** → **단독 식**(방수·1일오수). **`0102`(공동주택)** → **면적 식**(코드만으로 세대수 식 금지). 코드 체계 변경 시 백엔드/코드표와 함께 `sewageVolumeCalc.ts`만 수정한다.
 - ✅ **`gubun2`가 비었거나 아직 줄에 없을 때** **용도명 `buildingUse`**에 **`단독주택`**이 포함되면 단독 식으로 **보조 판별**한다. **「다중주택」** 은 위 `multi` 규칙과 동일하게 취급한다. **동일 헬퍼** 우선순위: **다중주택 문구 → `0101` 등 코드 → 용도명 `단독주택` → 라벨 보조**.
-- ✅ 용도조회에서 armbuild 목록 행을 만들 때, 선택된 분류의 **`gubun1`/`gubun2`를 상세 줄 상태에 전달**해 저장·계산에 쓴다(`UsageLookupDisplayRow` → `applyUsageFromLookup` 등). UI에서 “산정 모드”를 판별할 때도 **그 헬퍼**를 쓴다.
+- ✅ 용도조회에서 armbuild 목록 행을 만들 때, 선택된 분류의 **`gubun1`/`gubun2`를 상세 줄 상태에 전달**해 오수량 산정 분기에 쓴다(`UsageLookupDisplayRow` → `applyUsageFromLookup` 등). UI에서 “산정 모드”를 판별할 때도 **그 헬퍼**를 쓴다.
+- ✅ **원인자부담금 계산·저장 API** `details[].calculations[].buildId`에는 **건축물(ARMBUILD) ID**(예: `BUL_…`)만 넣고, **WAT002 소분류(`gubun2`)는 `buildId` 슬롯에 넣지 않는다.** 프론트에서는 `SewageDetailLine.armbuildBuildId`(API `buildId`)와 `buildingUseSubCode`(산정 분기용 `gubun2`)를 **분리**한다. 상세 조회로 줄을 채울 때 서버가 `buildId`에 BUL만 주는 경우 등은 `useFeePayerBasicDetail`의 매핑·알려진 BUL→WAT002 보조를 따른다.
+- ✅ 용도명은 armbuild **`buildNm`**을 상세 줄 **`usage`**(용도 인풋)에 반영한다. API JSON 키가 `build_nm`·`BUILD_NM` 등으로 올 수 있으므로 목록 매핑 시 **`readArmbuildListItemBuildNm`**(및 ID용 **`readArmbuildListItemBuildId`**, `armbuildApi`)로 정규화한다.
 - ✅ **`midCategoryLabel`**(또는 트리 `parentLabel`)은 **대분류 쪽 라벨**(예: `주거시설`)로만 쓰이는 경우가 많아, **“단독 vs 공동(다중)” 구분의 단일 근거로 쓰지 않는다.** 표시·레거시용으로 두고, **`gubun2`·`buildingUse`가 모두 부족할 때만** 라벨 문자열 보조에 한정한다.
 
 ### MUST NOT
@@ -1790,9 +1792,12 @@ Register form row uses FormField + register-form.css?
 
 ### Reference
 
+- `src/entities/adminWeb/armbuild/api/armbuildApi.ts` — 목록 항목 `buildNm`/`buildId` 키 정규화(`readArmbuildListItemBuildNm` 등)
 - `src/features/adminWeb/support/feePayerRegister/model/useUsageLookupModal.ts` — 트리 매핑 `gubun1`/`gubun2`, 목록 행 매핑
+- `src/features/adminWeb/support/feePayerRegister/lib/buildSupportFeePayerRegisterRequest.ts` — `calculations[].buildId` ← `armbuildBuildId`
 - `src/features/adminWeb/support/lib/sewageVolumeCalc.ts` — 행 단위 오수량 계산·모드 분기
 - `src/features/adminWeb/support/feePayerRegister/model/useFeePayerSewageVolumeEstimate.ts` — 상세 줄 상태·용도조회 반영
+- `src/features/adminWeb/support/feePayerRegister/model/useFeePayerBasicDetail.ts` — 상세 `calculations` → 줄 매핑(BUL vs 레거시 `buildId`)
 
 ---
 

@@ -86,6 +86,11 @@ export interface SupportFeePayerDetailCalculationDto {
   seq2?: number | null;
   floor?: number | null;
   buildId?: string | null;
+  /** 상세 조회에서 내려오는 건축물 용도명(서버 스펙 확장) */
+  buildNm?: string | null;
+  /** 백엔드 JSON key 변형 대비 (snake/upper) */
+  build_nm?: string | null;
+  BUILD_NM?: string | null;
   roomCnt?: number | null;
   homeCnt?: number | null;
   buildSize?: number | string | null;

@@ -73,6 +73,12 @@ export interface SewageQtyLineInput {
   dailySewage: string;
   roomCount: string;
   householdCount: string;
+  /**
+   * 1일오수발생량 옆 체크박스 — 산정식 **말미**에 곱함.
+   * - 미체크(`false`/`undefined`): `×1` (기존 식 결과 유지)
+   * - 체크(`true`): `×0` (오수량 0)
+   */
+  selected?: boolean;
 }
 
 /**
@@ -80,6 +86,7 @@ export interface SewageQtyLineInput {
  * - 다중주택: (2.7+(방수-2)*0.5)*1일오수*세대수/1,000
  * - 단독주택: (2+(방수-2)*0.5)*1일오수/1,000
  * - 기본: 면적*1일오수/1,000
+ * - 위 식 결과 끝에 (1일오수 옆 체크 시 ×0, 미체크 ×1) 적용
  */
 export function computeLineSewageQty(line: SewageQtyLineInput): string {
   const mode = getSewageCalcModeForLine({
@@ -90,22 +97,26 @@ export function computeLineSewageQty(line: SewageQtyLineInput): string {
   const daily = parseMetric(line.dailySewage);
   if (!Number.isFinite(daily)) return "";
 
+  let qty: number;
+
   if (mode === "standalone") {
     const rooms = parseMetric(line.roomCount);
     if (!Number.isFinite(rooms)) return "";
     const coef = 2 + (rooms - 2) * 0.5;
-    return fmtQty((coef * daily) / 1000);
-  }
-
-  if (mode === "multi") {
+    qty = (coef * daily) / 1000;
+  } else if (mode === "multi") {
     const rooms = parseMetric(line.roomCount);
     const hh = parseMetric(line.householdCount);
     if (!Number.isFinite(rooms) || !Number.isFinite(hh)) return "";
     const coef = 2.7 + (rooms - 2) * 0.5;
-    return fmtQty((coef * daily * hh) / 1000);
+    qty = (coef * daily * hh) / 1000;
+  } else {
+    const area = parseMetric(line.area);
+    if (!Number.isFinite(area)) return "";
+    qty = (area * daily) / 1000;
   }
 
-  const area = parseMetric(line.area);
-  if (!Number.isFinite(area)) return "";
-  return fmtQty((area * daily) / 1000);
+  if (!Number.isFinite(qty)) return "";
+  const tailFactor = line.selected === true ? 0 : 1;
+  return fmtQty(qty * tailFactor);
 }

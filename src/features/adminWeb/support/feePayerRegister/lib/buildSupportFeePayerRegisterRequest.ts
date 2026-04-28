@@ -47,7 +47,7 @@ function mapLineToCalculation(line: SewageDetailLine): SupportFeePayerCalcReques
     rowStatus: hasSeq2 ? "U" : "I",
     seq2: hasSeq2 ? line.calcSeq2 : undefined,
     floor,
-    buildId: line.buildingUseSubCode?.trim() || undefined,
+    buildId: line.armbuildBuildId?.trim() || undefined,
     roomCnt: roomCnt || undefined,
     homeCnt: homeCnt || undefined,
     buildSize,

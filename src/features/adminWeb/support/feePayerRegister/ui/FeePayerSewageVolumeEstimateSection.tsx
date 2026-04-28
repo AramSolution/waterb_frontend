@@ -29,8 +29,7 @@ export interface FeePayerSewageVolumeEstimateSectionProps {
   /** 상세 등: 초기 엔트리 스냅샷. `readOnly`일 때 함께 넘기는 것을 권장. */
   initialEntries?: SewageEstimateEntry[];
   /**
-   * 통지일 블록 하단 원형 `+`(엔트리 추가). 기본 true.
-   * 신규 등록 화면에서는 false로 두어 한 블록만 두는 흐름에 맞춤.
+   * 통지일 블록 하단 원형 `+`(엔트리 추가). 기본 true — 등록·상세 동일.
    */
   showAddNoticeBlockButton?: boolean;
   /** 기본정보·ITEM_ID — 계산 API(`POST …/fee-payer/calculate`) 연동 시 전달 */
@@ -127,6 +126,12 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
     [],
   );
 
+  /** 통지일 블록 `+`: 기존 블록이 모두 「납부」일 때만 추가 가능(미납 블록이 있으면 차단) */
+  const canAddNoticeBlock = useMemo(
+    () => entries.length > 0 && entries.every((e) => e.status === "PAID"),
+    [entries],
+  );
+
   return (
     <div className="bg-white rounded-lg shadow mt-6">
       <div className="border-b border-gray-200 px-6 py-4">
@@ -164,6 +169,7 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                 dailySewage: row.dailySewage,
                 midCategoryLabel: row.midCategoryLabel,
                 gubun2: row.gubun2,
+                armbuildBuildId: row.armbuildBuildId,
               },
             );
           }}
@@ -174,6 +180,8 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
         {entries.map((entry, entryIndex) => {
           const isPermitChangeCategory =
             entry.category === SEWAGE_CATEGORY.PERMIT_CHANGE;
+          const entryPaid = entry.status === "PAID";
+          const rowReadOnly = readOnly || entryPaid;
           return (
           <div
             key={entry.id}
@@ -210,7 +218,7 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                       onChange={handleEntryFieldChange}
                       options={statusOptions}
                       data-entry-id={entry.id}
-                      disabled={readOnly}
+                      disabled={rowReadOnly}
                     />
                   </FormField>
                   <FormField
@@ -226,7 +234,7 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                       options={categoryOptions}
                       placeholder="--------선택하세요-----"
                       data-entry-id={entry.id}
-                      disabled={readOnly}
+                      disabled={rowReadOnly}
                     />
                   </FormField>
                   <FormField label="유형" isFirstInRow mdGridSpan={4}>
@@ -237,7 +245,7 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                       options={getSewageTypeOptionsForCategory(entry.category)}
                       placeholder="--------선택하세요-----"
                       data-entry-id={entry.id}
-                      disabled={readOnly}
+                      disabled={rowReadOnly}
                     />
                   </FormField>
                   <FormField label="통지일" isFirstInRow mdGridSpan={4}>
@@ -247,8 +255,8 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                       value={entry.notifyDate}
                       onChange={handleEntryFieldChange}
                       data-entry-id={entry.id}
-                      readOnly={readOnly}
-                      className={readOnly ? readOnlyInputClass : undefined}
+                      readOnly={rowReadOnly}
+                      className={rowReadOnly ? readOnlyInputClass : undefined}
                     />
                   </FormField>
                 </div>
@@ -280,9 +288,9 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                                 value={entry.unitPrice}
                                 onChange={handleEntryFieldChange}
                                 placeholder="예: 12,000"
-                                readOnly={readOnly || !isPermitChangeCategory}
+                                readOnly={rowReadOnly || !isPermitChangeCategory}
                                 className={
-                                  readOnly || !isPermitChangeCategory
+                                  rowReadOnly || !isPermitChangeCategory
                                     ? readOnlyInputClass
                                     : undefined
                                 }
@@ -303,9 +311,9 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                                 value={entry.sewageVolume}
                                 onChange={handleEntryFieldChange}
                                 placeholder="예: 9.8"
-                                readOnly={readOnly || !isPermitChangeCategory}
+                                readOnly={rowReadOnly || !isPermitChangeCategory}
                                 className={
-                                  readOnly || !isPermitChangeCategory
+                                  rowReadOnly || !isPermitChangeCategory
                                     ? readOnlyInputClass
                                     : undefined
                                 }
@@ -323,12 +331,15 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                               onClick={() => void handleCalculateEntry(entry.id)}
                               disabled={
                                 calcBusyEntryId === entry.id ||
-                                isPermitChangeCategory
+                                isPermitChangeCategory ||
+                                rowReadOnly
                               }
                               title={
-                                isPermitChangeCategory
-                                  ? "허가사항변경은 계산 없이 금액·오수량 등을 직접 입력합니다."
-                                  : "서버 계산(선저장 후 f_cost)"
+                                entryPaid
+                                  ? "납부 처리된 블록은 수정·계산할 수 없습니다."
+                                  : isPermitChangeCategory
+                                    ? "허가사항변경은 계산 없이 금액·오수량 등을 직접 입력합니다."
+                                    : "서버 계산(선저장 후 f_cost)"
                               }
                             >
                               {calcBusyEntryId === entry.id ? "계산 중…" : "계산"}
@@ -358,8 +369,10 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                                 onChange={handleEntryFieldChange}
                                 placeholder="예: 300,000원"
                                 data-entry-id={entry.id}
-                                readOnly={readOnly}
-                                className={readOnly ? readOnlyInputClass : undefined}
+                                readOnly={rowReadOnly}
+                                className={
+                                  rowReadOnly ? readOnlyInputClass : undefined
+                                }
                               />
                             </div>
                           </div>
@@ -377,8 +390,10 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                                 onChange={handleEntryFieldChange}
                                 placeholder="오수부과량"
                                 data-entry-id={entry.id}
-                                readOnly={readOnly}
-                                className={readOnly ? readOnlyInputClass : undefined}
+                                readOnly={rowReadOnly}
+                                className={
+                                  rowReadOnly ? readOnlyInputClass : undefined
+                                }
                               />
                             </div>
                           </div>
@@ -401,7 +416,7 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                   <div className="w-full">
                     <span className="sr-only">층수~삭제 상세 행 추가</span>
                     <div className="flex w-full justify-end">
-                      {!readOnly ? (
+                      {!readOnly && !rowReadOnly ? (
                         <button
                           type="button"
                           className="px-3 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
@@ -459,7 +474,7 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                                 options={floorOptions}
                                 data-entry-id={entry.id}
                                 data-line-id={line.id}
-                                disabled={readOnly}
+                                disabled={rowReadOnly}
                               />
                             </div>
                           </div>
@@ -492,7 +507,7 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                                   data-line-id={line.id}
                                 />
                               </div>
-                              {!readOnly ? (
+                              {!readOnly && !rowReadOnly ? (
                                 <button
                                   type="button"
                                   className="flex h-10 min-h-[2.5rem] w-10 min-w-[2.5rem] flex-shrink-0 items-center justify-center rounded-none border-0 bg-[#1967d2] text-white transition-colors hover:bg-[#1557b0]"
@@ -556,9 +571,9 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                                   placeholder="면적"
                                   data-entry-id={entry.id}
                                   data-line-id={line.id}
-                                  readOnly={readOnly}
+                                  readOnly={rowReadOnly}
                                   className={
-                                    readOnly ? readOnlyInputClass : undefined
+                                    rowReadOnly ? readOnlyInputClass : undefined
                                   }
                                 />
                               </div>
@@ -589,9 +604,9 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                                   inputMode="decimal"
                                   data-entry-id={entry.id}
                                   data-line-id={line.id}
-                                  readOnly={readOnly}
+                                  readOnly={rowReadOnly}
                                   className={
-                                    readOnly ? readOnlyInputClass : undefined
+                                    rowReadOnly ? readOnlyInputClass : undefined
                                   }
                                 />
                               </div>
@@ -622,9 +637,9 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                                   inputMode="numeric"
                                   data-entry-id={entry.id}
                                   data-line-id={line.id}
-                                  readOnly={readOnly}
+                                  readOnly={rowReadOnly}
                                   className={
-                                    readOnly ? readOnlyInputClass : undefined
+                                    rowReadOnly ? readOnlyInputClass : undefined
                                   }
                                 />
                               </div>
@@ -668,8 +683,9 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                             data-entry-id={entry.id}
                             data-line-id={line.id}
                             className="h-4 w-4 rounded border-gray-300"
-                            aria-label="행 선택"
-                            disabled={readOnly}
+                            aria-label="체크 시 오수량 산정식 끝에 곱하기 0, 미체크 시 곱하기 1"
+                            title="체크: 산정 결과×0 / 미체크: ×1"
+                            disabled={rowReadOnly}
                           />
                         </div>
                         <div className="flex w-full shrink-0 flex-col justify-center gap-2 border-t border-solid border-[#dee2e6] px-2 py-2 md:-ml-px md:w-auto md:min-w-0 md:flex-1 md:flex-row md:flex-wrap md:items-center md:border md:border-solid md:border-[#dee2e6] md:py-2">
@@ -689,7 +705,7 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                               data-line-id={line.id}
                             />
                           </div>
-                          {!readOnly ? (
+                          {!readOnly && !rowReadOnly ? (
                             <button
                               type="button"
                               className="px-4 py-2 text-sm border border-gray-400 rounded-full bg-white text-gray-800 hover:bg-gray-50 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
@@ -725,7 +741,12 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                       type="button"
                       className="absolute left-1/2 top-0 z-[1] flex h-10 w-10 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 border-white bg-blue-600 text-2xl font-light leading-none text-white shadow-md transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
                       aria-label="통지일 블록 추가"
-                      title="통지일 블록 추가"
+                      title={
+                        canAddNoticeBlock
+                          ? "통지일 블록 추가"
+                          : "기존 통지일 블록이 모두 납부 상태일 때만 추가할 수 있습니다."
+                      }
+                      disabled={!canAddNoticeBlock}
                       onClick={handleAddEntry}
                     >
                       +

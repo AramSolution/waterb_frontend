@@ -8,6 +8,8 @@ import {
 import {
   getArmbuildList,
   isArmbuildApiSuccess,
+  readArmbuildListItemBuildId,
+  readArmbuildListItemBuildNm,
   type ArmbuildListItem,
 } from "@/entities/adminWeb/armbuild/api/armbuildApi";
 import { ApiError } from "@/shared/lib/apiClient";
@@ -29,6 +31,8 @@ export type UsageLookupCategoryLeaf = {
 
 export type UsageLookupDisplayRow = {
   rowId: string;
+  /** 건축물(ARMBUILD) ID — 계산·저장 API `buildId` 전용 */
+  armbuildBuildId?: string;
   buildingUse: string;
   dailySewage: string;
   remarks: string;
@@ -80,10 +84,11 @@ function mapItemToDisplayRow(
   gubun2: string,
   midCategoryLabel: string,
 ): UsageLookupDisplayRow {
-  const bid = String(item.buildId ?? "").trim();
+  const bid = readArmbuildListItemBuildId(item);
   return {
     rowId: bid || `tmp-${Math.random().toString(16).slice(2)}`,
-    buildingUse: decodeDisplayText(String(item.buildNm ?? "").trim()),
+    armbuildBuildId: bid || undefined,
+    buildingUse: decodeDisplayText(readArmbuildListItemBuildNm(item)),
     dailySewage: formatDayVal(item.dayVal),
     remarks: decodeDisplayText(String(item.buildDesc ?? "").trim()),
     gubun1: gubun1.trim(),
