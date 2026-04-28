@@ -15,13 +15,20 @@ const readOnlyClass = "bg-gray-100 !cursor-not-allowed";
  */
 export const PaymentHistoryPageView: React.FC = () => {
   const {
+    itemId,
     found,
+    detailLoading,
+    detailErrorMessage,
     applicantNm,
+    telNo,
     zipCode,
     adres,
     detailAdres,
+    detailEntries,
+    persistRequestBuilderRef,
     loading,
     showSaveDialog,
+    saveDialogMessage,
     handleBack,
     handleSave,
     handleSaveDialogClose,
@@ -43,10 +50,12 @@ export const PaymentHistoryPageView: React.FC = () => {
           <h5 className="text-lg font-semibold mb-0">기본정보</h5>
         </div>
         <div className="p-0">
-          {!found ? (
+          {detailLoading ? (
+            <div className="px-6 py-8 text-sm text-gray-600">불러오는 중입니다…</div>
+          ) : !found ? (
             <div className="px-6 py-8 text-sm text-gray-600">
-              조회할 수 없는 대상이거나 잘못된 링크입니다. 목록에서 다시
-              시도해주세요.
+              {detailErrorMessage.trim() ||
+                "조회할 수 없는 대상이거나 잘못된 링크입니다. 목록에서 다시 시도해주세요."}
             </div>
           ) : (
             <>
@@ -68,8 +77,17 @@ export const PaymentHistoryPageView: React.FC = () => {
                     autoComplete="off"
                   />
                 </FormField>
-                <FormField label=" " isFirstInRow suppressBottomBorder>
-                  <span className="sr-only">빈 칸</span>
+                <FormField label="전화번호" isFirstInRow suppressBottomBorder>
+                  <FormInput
+                    type="text"
+                    name="telNo"
+                    value={telNo}
+                    onChange={noopChange}
+                    readOnly
+                    className={readOnlyClass}
+                    placeholder="전화번호"
+                    autoComplete="off"
+                  />
                 </FormField>
               </div>
               <div className="flex flex-wrap">
@@ -129,7 +147,13 @@ export const PaymentHistoryPageView: React.FC = () => {
         </div>
       </div>
 
-      {found ? <CauserPaymentHistorySection /> : null}
+      {found ? (
+        <CauserPaymentHistorySection
+          itemId={itemId}
+          initialEntries={detailEntries}
+          persistRequestBuilderRef={persistRequestBuilderRef}
+        />
+      ) : null}
 
       <div className="flex justify-end mt-6 gap-2">
         {found ? (
@@ -157,7 +181,7 @@ export const PaymentHistoryPageView: React.FC = () => {
       <ConfirmDialog
         isOpen={showSaveDialog}
         title="알림"
-        message="납부내역 저장 API는 아직 연결되지 않았습니다."
+        message={saveDialogMessage || "처리 결과를 확인해주세요."}
         type="primary"
         confirmText="확인"
         cancelText="닫기"

@@ -52,6 +52,7 @@ function mapLineToCalculation(line: SewageDetailLine): SupportFeePayerCalcReques
     homeCnt: homeCnt || undefined,
     buildSize,
     dayVal,
+    costYn: line.selected ? "Y" : "N",
     waterVol,
   };
 }
@@ -114,6 +115,9 @@ export interface BuildFeePayerRegisterBodyInput {
   /** 서버에 이미 있는 ITEM_ID (첫 계산 후 콜백) */
   itemId?: string | null;
   entries: SewageEstimateEntry[];
+  /** 계산 요청에도 저장과 동일하게 삭제 D 행을 포함한다. */
+  removedDetailSeqs: readonly number[];
+  removedCalcs: ReadonlyArray<{ seq: number; seq2: number }>;
   /** 계산 대상 통지일 블록 — details 배열에서 마지막 I/U가 프로시저 대상이 되도록 맨 뒤로 보냄 */
   calculateTargetEntryId: string;
 }
@@ -121,16 +125,37 @@ export interface BuildFeePayerRegisterBodyInput {
 export function buildSupportFeePayerRegisterRequest(
   input: BuildFeePayerRegisterBodyInput,
 ): SupportFeePayerRegisterRequest | null {
-  const { basicInfo, itemId, entries, calculateTargetEntryId } = input;
+  const {
+    basicInfo,
+    itemId,
+    entries,
+    removedDetailSeqs,
+    removedCalcs,
+    calculateTargetEntryId,
+  } = input;
   const target = entries.find((e) => e.id === calculateTargetEntryId);
   if (!target) return null;
 
   const others = entries.filter((e) => e.id !== calculateTargetEntryId);
   const ordered = [...others, target];
 
+  const activeSeqs = new Set(
+    entries
+      .map((e) => e.detailSeq)
+      .filter((s): s is number => s != null && s > 0),
+  );
+
   const details: SupportFeePayerDetailRequest[] = [];
+  const uniqRemoved = Array.from(
+    new Set(removedDetailSeqs.filter((n) => n > 0)),
+  );
+  for (const seq of uniqRemoved) {
+    if (activeSeqs.has(seq)) continue;
+    details.push({ rowStatus: "D", seq, calculations: [] });
+  }
+
   for (const e of ordered) {
-    const d = mapEntryToDetail(e);
+    const d = mapEntryToPersistDetail(e, removedCalcs);
     if (!d) return null;
     details.push(d);
   }

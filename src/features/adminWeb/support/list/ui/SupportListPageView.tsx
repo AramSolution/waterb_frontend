@@ -35,7 +35,8 @@ function feeListRowFields(row: Support, index: number, page: number, ps: number)
   const levyRaw =
     rowAny.levyAmt ?? rowAny.waterCost ?? rowAny.impAmt;
   const payDd = String(rowAny.payDd ?? rowAny.payDay ?? rowAny.paymentDd ?? "").trim();
-  const payAmtRaw = rowAny.payAmt ?? rowAny.pay ?? rowAny.paymentAmt;
+  const payAmtRaw =
+    rowAny.payAmt ?? rowAny.waterPay ?? rowAny.pay ?? rowAny.paymentAmt;
   const itemId = String(rowAny.itemId ?? row.businessId ?? row.proId ?? "").trim();
   const det = rowAny.feeDetailSeq ?? rowAny.seq;
   const rowKey =
@@ -103,11 +104,11 @@ export const SupportListPageView: React.FC = () => {
     );
   };
 
-  const handlePaymentHistoryClick = (proId: string) => {
-    const id = proId.trim();
+  const handlePaymentHistoryClick = (itemId: string) => {
+    const id = itemId.trim();
     if (!id) return;
     router.push(
-      `/adminWeb/support/list/payment-history?proId=${encodeURIComponent(id)}`,
+      `/adminWeb/support/list/payment-history?itemId=${encodeURIComponent(id)}`,
     );
   };
 
@@ -456,7 +457,14 @@ export const SupportListPageView: React.FC = () => {
                           currentPage,
                           pageSize,
                         );
+                        const rowAny = support as Record<string, unknown>;
+                        const itemId = String(
+                          rowAny.itemId ?? support.businessId ?? support.proId ?? "",
+                        ).trim();
                         const businessId = support.businessId || "";
+                        const detailSeq = Number(
+                          rowAny.feeDetailSeq ?? rowAny.seq ?? NaN,
+                        );
                         const payLabel = f.paid ? "납부" : "미납";
                         const payBadgeClass = feePayBadgeClassName(f.paid);
                         const levyDisp = formatFeeCurrency(f.levyRaw);
@@ -559,7 +567,7 @@ export const SupportListPageView: React.FC = () => {
                                   style={{ minWidth: "64px" }}
                                   onClick={() =>
                                     handlePaymentHistoryClick(
-                                      businessId || f.rowKey,
+                                      itemId || businessId || f.rowKey,
                                     )
                                   }
                                 >
@@ -581,10 +589,15 @@ export const SupportListPageView: React.FC = () => {
                                   style={{ minWidth: "44px" }}
                                   onClick={() =>
                                     handleDeleteClick(
-                                      businessId || f.rowKey,
+                                      itemId || businessId || f.rowKey,
+                                      detailSeq,
                                     )
                                   }
-                                  disabled={deleteLoading}
+                                  disabled={
+                                    deleteLoading ||
+                                    !Number.isFinite(detailSeq) ||
+                                    detailSeq <= 0
+                                  }
                                 >
                                   삭제
                                 </button>
@@ -617,7 +630,14 @@ export const SupportListPageView: React.FC = () => {
                       currentPage,
                       pageSize,
                     );
+                    const rowAny = support as Record<string, unknown>;
+                    const itemId = String(
+                      rowAny.itemId ?? support.businessId ?? support.proId ?? "",
+                    ).trim();
                     const businessId = support.businessId || "";
+                    const detailSeq = Number(
+                      rowAny.feeDetailSeq ?? rowAny.seq ?? NaN,
+                    );
                     const payLabel = f.paid ? "납부" : "미납";
                     const payBadgeClass = feePayBadgeClassName(f.paid);
                     const levyDisp = formatFeeCurrency(f.levyRaw);
@@ -688,7 +708,7 @@ export const SupportListPageView: React.FC = () => {
                             className="px-2 py-1 text-[12px] text-blue-600 border border-blue-600 rounded hover:bg-blue-50 transition-colors"
                             onClick={() =>
                               handlePaymentHistoryClick(
-                                businessId || f.rowKey,
+                                itemId || businessId || f.rowKey,
                               )
                             }
                           >
@@ -707,9 +727,16 @@ export const SupportListPageView: React.FC = () => {
                             type="button"
                             className="px-2 py-1 text-[12px] text-red-600 border border-red-600 rounded hover:bg-red-50 transition-colors disabled:opacity-50"
                             onClick={() =>
-                              handleDeleteClick(businessId || f.rowKey)
+                              handleDeleteClick(
+                                itemId || businessId || f.rowKey,
+                                detailSeq,
+                              )
                             }
-                            disabled={deleteLoading}
+                            disabled={
+                              deleteLoading ||
+                              !Number.isFinite(detailSeq) ||
+                              detailSeq <= 0
+                            }
                           >
                             삭제
                           </button>

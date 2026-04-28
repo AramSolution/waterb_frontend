@@ -490,7 +490,7 @@ export async function downloadFeePayerListExcel(
     const rowAny = row as Record<string, unknown>;
     const paid = isFeePayerListRowPaid(row);
     const levy = rowAny.levyAmt ?? rowAny.waterCost;
-    const payAmt = rowAny.payAmt ?? rowAny.pay;
+    const payAmt = rowAny.payAmt ?? rowAny.waterPay ?? rowAny.pay;
     return [
       index + 1,
       paid ? "납부" : "미납",

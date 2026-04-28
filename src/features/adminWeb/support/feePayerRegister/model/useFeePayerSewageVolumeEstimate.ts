@@ -429,6 +429,8 @@ export function useFeePayerSewageVolumeEstimate(
         basicInfo,
         itemId: bridge.feePayerItemId,
         entries: snapshot,
+        removedDetailSeqs: removedDetailSeqsRef.current,
+        removedCalcs: removedCalcsRef.current,
         calculateTargetEntryId: entryId,
       });
       if (!body) {

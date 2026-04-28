@@ -1,7 +1,16 @@
-import { useCallback, useState, type ChangeEvent } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type ChangeEvent,
+  type MutableRefObject,
+} from "react";
+import type { SupportFeePayerPaymentSaveRequest } from "@/entities/adminWeb/support/api/feePayerManageApi";
 
 export type CauserPayLine = {
   id: string;
+  paymentSeq2?: number;
   lineDate: string;
   amount: string;
   remarks: string;
@@ -9,6 +18,7 @@ export type CauserPayLine = {
 
 export type CauserPaymentEntry = {
   id: string;
+  detailSeq?: number;
   category: string;
   status: string;
   type: string;
@@ -22,7 +32,7 @@ export type CauserPaymentEntry = {
 function createLine(): CauserPayLine {
   return {
     id: crypto.randomUUID(),
-    lineDate: "",
+    lineDate: getTodayYmd(),
     amount: "",
     remarks: "",
   };
@@ -42,10 +52,45 @@ function createEntry(): CauserPaymentEntry {
   };
 }
 
-export function useCauserPaymentHistorySection() {
+function normalizeEntries(
+  src: CauserPaymentEntry[] | undefined,
+): CauserPaymentEntry[] {
+  if (!src || src.length === 0) return [createEntry()];
+  return src.map((entry) => ({
+    ...entry,
+    id: entry.id || crypto.randomUUID(),
+    lines:
+      entry.lines && entry.lines.length > 0
+        ? entry.lines.map((line) => ({
+            ...line,
+            id: line.id || crypto.randomUUID(),
+            lineDate: line.lineDate || getTodayYmd(),
+          }))
+        : [createLine()],
+  }));
+}
+
+export function useCauserPaymentHistorySection(
+  initialEntries?: CauserPaymentEntry[],
+  itemId?: string,
+  persistRequestBuilderRef?: MutableRefObject<
+    (() => SupportFeePayerPaymentSaveRequest | null) | null
+  >,
+) {
   const [entries, setEntries] = useState<CauserPaymentEntry[]>(() => [
-    createEntry(),
+    ...normalizeEntries(initialEntries),
   ]);
+
+  useEffect(() => {
+    if (initialEntries === undefined) return;
+    setEntries(normalizeEntries(initialEntries));
+  }, [initialEntries]);
+
+  const removedPaymentsRef = useRef<Array<{ seq: number; seq2: number }>>([]);
+  useEffect(() => {
+    if (initialEntries === undefined) return;
+    removedPaymentsRef.current = [];
+  }, [initialEntries]);
 
   const handleAddEntry = useCallback(() => {
     setEntries((prev) => [...prev, createEntry()]);
@@ -130,6 +175,18 @@ export function useCauserPaymentHistorySection() {
         prev.map((en) => {
           if (en.id !== entryId) return en;
           if (en.lines.length <= 1) return en;
+          const victim = en.lines.find((L) => L.id === lineId);
+          if (
+            en.detailSeq != null &&
+            en.detailSeq > 0 &&
+            victim?.paymentSeq2 != null &&
+            victim.paymentSeq2 > 0
+          ) {
+            removedPaymentsRef.current.push({
+              seq: en.detailSeq,
+              seq2: victim.paymentSeq2,
+            });
+          }
           return {
             ...en,
             lines: en.lines.filter((L) => L.id !== lineId),
@@ -139,6 +196,54 @@ export function useCauserPaymentHistorySection() {
     },
     [],
   );
+
+  useEffect(() => {
+    if (!persistRequestBuilderRef) return;
+    persistRequestBuilderRef.current = () => {
+      const id = (itemId ?? "").trim();
+      if (!id) return null;
+
+      const bySeq = new Map<number, Array<{ seq2: number }>>();
+      for (const r of removedPaymentsRef.current) {
+        if (r.seq <= 0 || r.seq2 <= 0) continue;
+        const cur = bySeq.get(r.seq) ?? [];
+        cur.push({ seq2: r.seq2 });
+        bySeq.set(r.seq, cur);
+      }
+
+      const details = entries
+        .filter((entry) => entry.detailSeq != null && entry.detailSeq > 0)
+        .map((entry) => {
+          const seq = entry.detailSeq as number;
+          const deleted = (bySeq.get(seq) ?? []).map((d) => ({
+            rowStatus: "D",
+            seq2: d.seq2,
+          }));
+          const inserted = entry.lines
+            .filter((line) => !(line.paymentSeq2 != null && line.paymentSeq2 > 0))
+            .map((line) => {
+              const pay = parseAmount(line.amount);
+              return {
+                rowStatus: "I",
+                payDay: line.lineDate || undefined,
+                pay: pay > 0 ? pay : 0,
+                payDesc: line.remarks.trim() || undefined,
+              };
+            });
+          const payments = [...deleted, ...inserted];
+          if (payments.length === 0) return null;
+          return { seq, payments };
+        })
+        .filter((d): d is NonNullable<typeof d> => d != null);
+
+      if (details.length === 0) return null;
+      return { itemId: id, details };
+    };
+
+    return () => {
+      persistRequestBuilderRef.current = null;
+    };
+  }, [entries, itemId, persistRequestBuilderRef]);
 
   return {
     entries,
@@ -159,5 +264,20 @@ export function useCauserPaymentHistorySection() {
     handleLineFieldChange,
     handleAddLine,
     handleRemoveLine,
+    removedPaymentsRef,
   };
+}
+
+function parseAmount(raw: string): number {
+  const n = Number(String(raw ?? "").replace(/[^\d.-]/g, "").trim());
+  if (!Number.isFinite(n)) return 0;
+  return Math.max(0, Math.trunc(n));
+}
+
+function getTodayYmd(): string {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
 }

@@ -3,9 +3,10 @@ import { useRouter, useSearchParams } from "next/navigation";
 import {
   SupportService,
   Support,
-  SupportDeleteParams,
   ApplicantListResponse,
+  deleteFeePayerDetail,
   postFeePayerList,
+  postFeePayerExcelList,
   mapFeePayerListItemToSupport,
   buildSupportFeePayerListBody,
 } from "@/entities/adminWeb/support/api";
@@ -76,9 +77,10 @@ export function useSupportList() {
     urlPage ? parseInt(urlPage, 10) : 1,
   );
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [selectedBusinessId, setSelectedBusinessId] = useState<string | null>(
-    null,
-  );
+  const [selectedDeleteTarget, setSelectedDeleteTarget] = useState<{
+    itemId: string;
+    seq: number;
+  } | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [showSearchForm, setShowSearchForm] = useState(false);
   const [showApplicantDialog, setShowApplicantDialog] = useState(false);
@@ -320,13 +322,19 @@ export function useSupportList() {
     setCurrentPage(page);
   };
 
-  const handleDeleteClick = (businessId: string) => {
-    setSelectedBusinessId(businessId);
+  const handleDeleteClick = (itemId: string, seq: number) => {
+    const id = itemId.trim();
+    const n = Number(seq);
+    if (!id || !Number.isFinite(n) || n <= 0) {
+      setError("삭제 대상 식별값(itemId/seq)이 올바르지 않습니다.");
+      return;
+    }
+    setSelectedDeleteTarget({ itemId: id, seq: Math.trunc(n) });
     setShowDeleteDialog(true);
   };
 
   const handleDeleteConfirm = async () => {
-    if (!selectedBusinessId) {
+    if (!selectedDeleteTarget) {
       setShowDeleteDialog(false);
       return;
     }
@@ -335,37 +343,21 @@ export function useSupportList() {
       setDeleteLoading(true);
       setError("");
 
-      // sessionStorage에서 user 객체를 가져와서 uniqId 추출
-      const userStr = sessionStorage.getItem("user");
-      let uniqId = "";
-
-      if (userStr) {
-        try {
-          const user = JSON.parse(userStr);
-          uniqId = user.uniqId || "";
-        } catch (error) {
-          console.error("user 객체 파싱 오류:", error);
-        }
-      }
-
-      const deleteParams: SupportDeleteParams = {
-        businessId: selectedBusinessId,
-        uniqId: uniqId,
-      };
-
-      // TODO: 백엔드 API 완료 후 주석 해제
-      const response = await SupportService.deleteSupport(deleteParams);
+      const response = await deleteFeePayerDetail({
+        itemId: selectedDeleteTarget.itemId,
+        seq: selectedDeleteTarget.seq,
+      });
 
       // 삭제 성공 시 목록 다시 불러오기
       if (response.result === "00") {
         await fetchSupportsRef.current();
         setShowDeleteDialog(false);
-        setSelectedBusinessId(null);
+        setSelectedDeleteTarget(null);
       } else {
-        setError(response.message || "지원사업 삭제에 실패했습니다.");
+        setError(response.message || "오수 원인자부담금 삭제에 실패했습니다.");
       }
     } catch (err) {
-      console.error("지원사업 삭제 오류:", err);
+      console.error("오수 원인자부담금 삭제 오류:", err);
       if (err instanceof ApiError) {
         if (err.status === 401) {
           setError("인증이 만료되었습니다. 다시 로그인해주세요.");
@@ -373,13 +365,13 @@ export function useSupportList() {
             window.location.href = "/adminWeb/login";
           }, 2000);
         } else {
-          setError(err.message || "지원사업 삭제 중 오류가 발생했습니다.");
+          setError(err.message || "오수 원인자부담금 삭제 중 오류가 발생했습니다.");
         }
       } else {
-        setError("지원사업 삭제 중 오류가 발생했습니다.");
+        setError("오수 원인자부담금 삭제 중 오류가 발생했습니다.");
       }
       setShowDeleteDialog(false);
-      setSelectedBusinessId(null);
+      setSelectedDeleteTarget(null);
     } finally {
       setDeleteLoading(false);
     }
@@ -387,7 +379,7 @@ export function useSupportList() {
 
   const handleDeleteCancel = () => {
     setShowDeleteDialog(false);
-    setSelectedBusinessId(null);
+    setSelectedDeleteTarget(null);
   };
 
   const handleSort = (key: string) => {
@@ -541,7 +533,7 @@ export function useSupportList() {
           userNm: nm,
           address,
         });
-        const feeRes = await postFeePayerList(feeBody);
+        const feeRes = await postFeePayerExcelList(feeBody);
         supportList = (Array.isArray(feeRes.data) ? feeRes.data : []).map(
           mapFeePayerListItemToSupport,
         );

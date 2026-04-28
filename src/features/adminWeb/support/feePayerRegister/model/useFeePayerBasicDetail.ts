@@ -188,6 +188,7 @@ function mapCalculationDtoToLine(
   const { armbuildBuildId, buildingUseSubCode } =
     splitDetailCalculationBuildId(c.buildId);
   const usage = readCalculationUsageName(c);
+  const costYn = String(c.costYn ?? "").trim().toUpperCase();
   return {
     id: crypto.randomUUID(),
     floor: Number.isFinite(floorN) && floorN > 0 ? String(Math.trunc(floorN)) : "1",
@@ -212,7 +213,7 @@ function mapCalculationDtoToLine(
         ? String(c.homeCnt).trim()
         : "",
     sewageQty: waterStr,
-    selected: false,
+    selected: costYn === "Y",
     calcSeq2: Number.isFinite(seq2) && seq2 > 0 ? seq2 : undefined,
   };
 }

@@ -2,14 +2,30 @@
 
 import React from "react";
 import { FormField, FormInput, FormSelect } from "@/shared/ui/adminWeb/form";
+import { ConfirmDialog } from "@/shared/ui/adminWeb";
 import { getSewageTypeOptionsForCategory } from "@/features/adminWeb/support/lib/sewageCategoryTypeOptions";
-import { useCauserPaymentHistorySection } from "../model/useCauserPaymentHistorySection";
+import {
+  useCauserPaymentHistorySection,
+  type CauserPaymentEntry,
+} from "../model/useCauserPaymentHistorySection";
+import type { SupportFeePayerPaymentSaveRequest } from "@/entities/adminWeb/support/api/feePayerManageApi";
 import "@/shared/styles/admin/register-form.css";
 
 /**
  * 납부내역 — 원인자부담 납부내역 (헤더 `추가` = 블록 전체 복제, 블록 내 `추가` = 일자·금액·비고 행).
  */
-export const CauserPaymentHistorySection: React.FC = () => {
+export interface CauserPaymentHistorySectionProps {
+  itemId?: string;
+  initialEntries?: CauserPaymentEntry[];
+  persistRequestBuilderRef?: React.MutableRefObject<
+    (() => SupportFeePayerPaymentSaveRequest | null) | null
+  >;
+}
+
+export const CauserPaymentHistorySection: React.FC<
+  CauserPaymentHistorySectionProps
+> = ({ itemId, initialEntries, persistRequestBuilderRef }) => {
+  const [showLimitDialog, setShowLimitDialog] = React.useState(false);
   const {
     entries,
     handleAddEntry,
@@ -19,9 +35,31 @@ export const CauserPaymentHistorySection: React.FC = () => {
     handleLineFieldChange,
     handleAddLine,
     handleRemoveLine,
-  } = useCauserPaymentHistorySection();
+  } = useCauserPaymentHistorySection(
+    initialEntries,
+    itemId,
+    persistRequestBuilderRef,
+  );
 
   const { category: catOpt, status: stOpt } = categoryStatusOptions;
+  const readOnlyClass = "bg-gray-100 !cursor-not-allowed";
+  const maxEntryCount = React.useMemo(
+    () => Math.max(0, initialEntries?.length ?? 0),
+    [initialEntries],
+  );
+  const limitMessage = React.useMemo(() => {
+    if (maxEntryCount <= 0) {
+      return "등록된 납부 대상이 없어 납부내역 블록을 추가할 수 없습니다.";
+    }
+    return `납부내역 블록은 최대 ${maxEntryCount}개까지만 추가할 수 있습니다.`;
+  }, [maxEntryCount]);
+  const handleAddEntryClick = React.useCallback(() => {
+    if (entries.length >= maxEntryCount) {
+      setShowLimitDialog(true);
+      return;
+    }
+    handleAddEntry();
+  }, [entries.length, handleAddEntry, maxEntryCount]);
 
   return (
     <div className="bg-white rounded-lg shadow mt-6">
@@ -31,7 +69,7 @@ export const CauserPaymentHistorySection: React.FC = () => {
           type="button"
           className="px-3 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           style={{ minWidth: "72px" }}
-          onClick={handleAddEntry}
+          onClick={handleAddEntryClick}
         >
           추가
         </button>
@@ -73,6 +111,7 @@ export const CauserPaymentHistorySection: React.FC = () => {
                       onChange={handleSelectChange}
                       options={stOpt}
                       data-entry-id={entry.id}
+                      disabled
                     />
                   </FormField>
                   <FormField
@@ -88,6 +127,7 @@ export const CauserPaymentHistorySection: React.FC = () => {
                       options={catOpt}
                       placeholder="--------선택하세요-----"
                       data-entry-id={entry.id}
+                      disabled
                     />
                   </FormField>
                   <FormField label="유형" isFirstInRow mdGridSpan={4}>
@@ -98,6 +138,7 @@ export const CauserPaymentHistorySection: React.FC = () => {
                       options={getSewageTypeOptionsForCategory(entry.category)}
                       placeholder="--------선택하세요-----"
                       data-entry-id={entry.id}
+                      disabled
                     />
                   </FormField>
                   <FormField label="통지일" isFirstInRow mdGridSpan={4}>
@@ -107,6 +148,8 @@ export const CauserPaymentHistorySection: React.FC = () => {
                       value={entry.notifyDate}
                       onChange={handleFieldChange}
                       data-entry-id={entry.id}
+                      readOnly
+                      className={readOnlyClass}
                     />
                   </FormField>
                 </div>
@@ -140,6 +183,8 @@ export const CauserPaymentHistorySection: React.FC = () => {
                               onChange={handleFieldChange}
                               placeholder="예: 9.8"
                               data-entry-id={entry.id}
+                              readOnly
+                              className={readOnlyClass}
                             />
                           </div>
                         </div>
@@ -163,6 +208,8 @@ export const CauserPaymentHistorySection: React.FC = () => {
                               onChange={handleFieldChange}
                               placeholder="예: 300,000원"
                               data-entry-id={entry.id}
+                              readOnly
+                              className={readOnlyClass}
                             />
                           </div>
                         </div>
@@ -186,6 +233,8 @@ export const CauserPaymentHistorySection: React.FC = () => {
                               onChange={handleFieldChange}
                               placeholder="납부금액"
                               data-entry-id={entry.id}
+                              readOnly
+                              className={readOnlyClass}
                             />
                           </div>
                         </div>
@@ -230,7 +279,7 @@ export const CauserPaymentHistorySection: React.FC = () => {
                         금액, 비고
                       </span>
                       <div className="flex w-full flex-col gap-0 md:flex-row md:flex-nowrap md:items-stretch">
-                        <div className="flex min-w-0 w-full flex-col md:max-w-[12rem] md:flex-[0.7] md:flex-row md:items-stretch">
+                        <div className="flex min-w-0 w-full flex-col md:w-[17rem] md:flex-none md:flex-row md:items-stretch">
                           <label
                             className="m-0 flex w-full shrink-0 items-center bg-gray-100 register-form-label md:w-[38%] md:min-w-[4.5rem] md:max-w-[5.5rem]"
                             style={{
@@ -249,11 +298,17 @@ export const CauserPaymentHistorySection: React.FC = () => {
                                 onChange={handleLineFieldChange}
                                 data-entry-id={entry.id}
                                 data-line-id={line.id}
+                                readOnly={line.paymentSeq2 != null && line.paymentSeq2 > 0}
+                                className={
+                                  line.paymentSeq2 != null && line.paymentSeq2 > 0
+                                    ? readOnlyClass
+                                    : ""
+                                }
                               />
                             </div>
                           </div>
                         </div>
-                        <div className="flex min-w-0 w-full flex-col border-t border-[#dee2e6] md:max-w-[12rem] md:-ml-px md:flex-[0.65] md:flex-row md:items-stretch md:border-t-0">
+                        <div className="flex min-w-0 w-full flex-col border-t border-[#dee2e6] md:w-[16rem] md:flex-none md:-ml-px md:flex-row md:items-stretch md:border-t-0">
                           <label
                             className="m-0 flex w-full shrink-0 items-center bg-gray-100 register-form-label md:w-[38%] md:min-w-[3.5rem] md:max-w-[4.5rem]"
                             style={{
@@ -273,6 +328,12 @@ export const CauserPaymentHistorySection: React.FC = () => {
                                 placeholder="금액"
                                 data-entry-id={entry.id}
                                 data-line-id={line.id}
+                                readOnly={line.paymentSeq2 != null && line.paymentSeq2 > 0}
+                                className={
+                                  line.paymentSeq2 != null && line.paymentSeq2 > 0
+                                    ? readOnlyClass
+                                    : ""
+                                }
                               />
                             </div>
                           </div>
@@ -297,6 +358,12 @@ export const CauserPaymentHistorySection: React.FC = () => {
                                 placeholder="비고"
                                 data-entry-id={entry.id}
                                 data-line-id={line.id}
+                                readOnly={line.paymentSeq2 != null && line.paymentSeq2 > 0}
+                                className={
+                                  line.paymentSeq2 != null && line.paymentSeq2 > 0
+                                    ? readOnlyClass
+                                    : ""
+                                }
                               />
                             </div>
                           </div>
@@ -326,6 +393,16 @@ export const CauserPaymentHistorySection: React.FC = () => {
           </div>
         ))}
       </div>
+      <ConfirmDialog
+        isOpen={showLimitDialog}
+        title="알림"
+        message={limitMessage}
+        type="primary"
+        confirmText="확인"
+        cancelText="닫기"
+        onConfirm={() => setShowLimitDialog(false)}
+        onCancel={() => setShowLimitDialog(false)}
+      />
     </div>
   );
 };

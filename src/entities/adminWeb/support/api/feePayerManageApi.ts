@@ -66,6 +66,18 @@ export interface SupportFeePayerRegisterResponse {
   itemId?: string | null;
 }
 
+export interface SupportFeePayerDeleteRequest {
+  itemId: string;
+  seq: number;
+}
+
+export interface SupportFeePayerDeleteResponse {
+  result?: string;
+  message?: string;
+  itemId?: string | null;
+  seq?: number | null;
+}
+
 /**
  * 백엔드 `SupportFeePayerBasicInfoRequest`의 `@NotBlank usrTelno` 호환:
  * 미입력 시 요청 본문에만 대체값을 넣는다(화면 상태는 그대로).
@@ -130,6 +142,77 @@ export interface SupportFeePayerDetailEnvelope {
   data?: SupportFeePayerDetailDataDto | null;
 }
 
+export interface SupportFeePayerPaymentHistoryDto {
+  seq2?: number | null;
+  payDay?: string | null;
+  pay?: number | null;
+  payDesc?: string | null;
+}
+
+export interface SupportFeePayerPaymentDetailDto {
+  seq?: number | null;
+  paySta?: string | null;
+  type1?: string | null;
+  type2?: string | null;
+  reqDate?: string | null;
+  baseCost?: number | null;
+  waterSum?: number | string | null;
+  waterVal?: number | string | null;
+  waterCost?: number | null;
+  waterPay?: number | null;
+  payments?: SupportFeePayerPaymentHistoryDto[];
+}
+
+export interface SupportFeePayerPaymentDetailDataDto {
+  itemId?: string | null;
+  userNm?: string | null;
+  zip?: string | null;
+  adresLot?: string | null;
+  adres?: string | null;
+  detailAdres?: string | null;
+  usrTelno?: string | null;
+  details?: SupportFeePayerPaymentDetailDto[];
+}
+
+export interface SupportFeePayerPaymentDetailEnvelope {
+  result?: string;
+  message?: string;
+  data?: SupportFeePayerPaymentDetailDataDto | null;
+}
+
+export interface SupportFeePayerPaymentSaveItemRequest {
+  rowStatus?: string;
+  seq2?: number;
+  payDay?: string;
+  pay?: number;
+  payDesc?: string;
+}
+
+export interface SupportFeePayerPaymentDetailSaveRequest {
+  seq: number;
+  paySta?: string;
+  payments?: SupportFeePayerPaymentSaveItemRequest[];
+}
+
+export interface SupportFeePayerPaymentSaveRequest {
+  itemId: string;
+  details: SupportFeePayerPaymentDetailSaveRequest[];
+}
+
+export interface SupportFeePayerPaymentSkippedDetailResponse {
+  seq?: number | null;
+  rowStatus?: string | null;
+  reason?: string | null;
+  seq2?: number | null;
+}
+
+export interface SupportFeePayerPaymentSaveResponse {
+  result?: string;
+  message?: string;
+  itemId?: string | null;
+  skippedDetails?: SupportFeePayerPaymentSkippedDetailResponse[];
+}
+
 /** `SupportFeePayerManageController` — POST `/list` 요청 본문 */
 export interface SupportFeePayerListRequest {
   reqDateFrom?: string;
@@ -152,6 +235,7 @@ export interface SupportFeePayerListItemDto {
   waterSum?: number | string | null;
   waterCost?: number | null;
   waterVal?: number | string | null;
+  waterPay?: number | null;
   payDay?: string | null;
   pay?: number | null;
 }
@@ -162,10 +246,11 @@ export interface SupportFeePayerListResponse {
   data?: SupportFeePayerListItemDto[];
 }
 
-function numOrUndef(v: unknown): number | undefined {
-  if (v === null || v === undefined || v === "") return undefined;
-  const n = Number(v);
-  return Number.isFinite(n) ? n : undefined;
+/** 오수 원인자부담금 목록 엑셀 API 응답 */
+export interface SupportFeePayerExcelListResponse {
+  result?: string;
+  message?: string;
+  data?: SupportFeePayerListItemDto[];
 }
 
 /**
@@ -194,6 +279,7 @@ export function mapFeePayerListItemToSupport(
     waterCostN !== undefined && !Number.isNaN(waterCostN)
       ? waterCostN
       : undefined;
+  const waterPayN = item.waterPay != null ? Number(item.waterPay) : undefined;
   const payN = item.pay != null ? Number(item.pay) : undefined;
   const payDd = item.payDay != null ? String(item.payDay).trim() : "";
 
@@ -209,17 +295,20 @@ export function mapFeePayerListItemToSupport(
     paySta: item.paySta,
     levyAmt: levy,
     payDd,
-    payAmt: payN !== undefined && !Number.isNaN(payN) ? payN : undefined,
+    payAmt:
+      waterPayN !== undefined && !Number.isNaN(waterPayN)
+        ? waterPayN
+        : payN !== undefined && !Number.isNaN(payN)
+          ? payN
+          : undefined,
   };
 }
 
-/** 미납/납부 배지 — `paySta`·납부액 병행 */
+/** 미납/납부 배지 — `paySta`만 기준(보조판정 없음) */
 export function isFeePayerListRowPaid(row: Support): boolean {
   const rowAny = row as Record<string, unknown>;
   const v = String(rowAny.paySta ?? "").trim();
   if (v === "02" || v === "2" || v === "Y" || v === "납부") return true;
-  const pay = numOrUndef(rowAny.pay ?? rowAny.payAmt);
-  if (pay !== undefined && pay > 0) return true;
   return false;
 }
 
@@ -349,6 +438,73 @@ export async function getFeePayerDetail(
   }
 }
 
+/**
+ * 오수 원인자부담금 납부내역 상세 (ITEM_ID)
+ * GET `/api/admin/support/fee-payer/{itemId}/payment-detail`
+ */
+export async function getFeePayerPaymentDetail(
+  itemId: string,
+): Promise<SupportFeePayerPaymentDetailEnvelope> {
+  const id = itemId.trim();
+  if (!id) {
+    throw new ApiError(0, "ITEM_ID가 없습니다.");
+  }
+  try {
+    const res = await apiClient.get<SupportFeePayerPaymentDetailEnvelope>(
+      API_ENDPOINTS.SUPPORT.FEE_PAYER_PAYMENT_DETAIL(id),
+    );
+    const code = String(res?.result ?? "").trim();
+    if (code !== "00") {
+      throw new ApiError(
+        0,
+        String(res?.message ?? "").trim() ||
+          "오수 원인자부담금 납부 상세 조회에 실패했습니다.",
+        res,
+      );
+    }
+    return res ?? {};
+  } catch (e) {
+    if (e instanceof ApiError) throw e;
+    throw new ApiError(
+      0,
+      "오수 원인자부담금 납부 상세를 불러오는 중 오류가 발생했습니다.",
+    );
+  }
+}
+
+/**
+ * 오수 원인자부담금 납부내역 저장
+ * POST `/api/admin/support/fee-payer/payment`
+ */
+export async function postFeePayerPaymentSave(
+  body: SupportFeePayerPaymentSaveRequest,
+): Promise<SupportFeePayerPaymentSaveResponse> {
+  const itemId = body.itemId?.trim();
+  if (!itemId) throw new ApiError(0, "ITEM_ID가 없습니다.");
+  try {
+    const res = await apiClient.post<SupportFeePayerPaymentSaveResponse>(
+      API_ENDPOINTS.SUPPORT.FEE_PAYER_PAYMENT_SAVE,
+      body,
+    );
+    const code = String(res?.result ?? "").trim();
+    if (code !== "00") {
+      throw new ApiError(
+        0,
+        String(res?.message ?? "").trim() ||
+          "오수 원인자부담금 납부내역 저장에 실패했습니다.",
+        res,
+      );
+    }
+    return res ?? {};
+  } catch (e) {
+    if (e instanceof ApiError) throw e;
+    throw new ApiError(
+      0,
+      "오수 원인자부담금 납부내역 저장 요청 중 오류가 발생했습니다.",
+    );
+  }
+}
+
 export async function postFeePayerList(
   body?: SupportFeePayerListRequest | null,
 ): Promise<SupportFeePayerListResponse> {
@@ -370,6 +526,70 @@ export async function postFeePayerList(
     throw new ApiError(
       0,
       "오수 원인자부담금 목록을 불러오는 중 오류가 발생했습니다.",
+    );
+  }
+}
+
+export async function deleteFeePayerDetail(
+  body: SupportFeePayerDeleteRequest,
+): Promise<SupportFeePayerDeleteResponse> {
+  const itemId = String(body.itemId ?? "").trim();
+  const seq = Number(body.seq);
+  if (!itemId) {
+    throw new ApiError(0, "ITEM_ID가 없습니다.");
+  }
+  if (!Number.isFinite(seq) || seq <= 0) {
+    throw new ApiError(0, "SEQ가 올바르지 않습니다.");
+  }
+  const payload: SupportFeePayerDeleteRequest = { itemId, seq: Math.trunc(seq) };
+  try {
+    const res = await apiClient.delete<SupportFeePayerDeleteResponse>(
+      API_ENDPOINTS.SUPPORT.FEE_PAYER_DELETE,
+      {
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      },
+    );
+    const code = String(res?.result ?? "").trim();
+    if (code !== "00") {
+      throw new ApiError(
+        0,
+        String(res?.message ?? "").trim() ||
+          "오수 원인자부담금 삭제에 실패했습니다.",
+        res,
+      );
+    }
+    return res ?? {};
+  } catch (e) {
+    if (e instanceof ApiError) throw e;
+    throw new ApiError(
+      0,
+      "오수 원인자부담금 삭제 요청 중 오류가 발생했습니다.",
+    );
+  }
+}
+
+export async function postFeePayerExcelList(
+  body?: SupportFeePayerListRequest | null,
+): Promise<SupportFeePayerExcelListResponse> {
+  try {
+    const res = await apiClient.post<SupportFeePayerExcelListResponse>(
+      API_ENDPOINTS.SUPPORT.FEE_PAYER_EXCEL_LIST,
+      body ?? {},
+    );
+    if (res?.result && res.result !== "00") {
+      throw new ApiError(
+        0,
+        res.message?.trim() || "오수 원인자부담금 엑셀 목록 조회에 실패했습니다.",
+        res,
+      );
+    }
+    return res ?? { data: [] };
+  } catch (e) {
+    if (e instanceof ApiError) throw e;
+    throw new ApiError(
+      0,
+      "오수 원인자부담금 엑셀 목록을 불러오는 중 오류가 발생했습니다.",
     );
   }
 }
