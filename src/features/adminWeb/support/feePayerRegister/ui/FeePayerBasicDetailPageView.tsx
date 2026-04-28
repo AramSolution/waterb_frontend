@@ -7,6 +7,7 @@ import { FeePayerBasicRegisterForm } from "./FeePayerBasicRegisterForm";
 export const FeePayerBasicDetailPageView: React.FC = () => {
   const searchParams = useSearchParams();
   const proId = searchParams.get("proId") ?? "";
+  const idTrim = proId.trim();
 
   return (
     <>
@@ -19,9 +20,16 @@ export const FeePayerBasicDetailPageView: React.FC = () => {
         </nav>
       </div>
 
-      <div key={proId || "none"}>
-        <FeePayerBasicRegisterForm seedProId={proId} />
-      </div>
+      {!idTrim ? (
+        <div className="bg-white rounded-lg shadow px-6 py-8 text-sm text-gray-600">
+          상세 조회에 필요한 ITEM_ID(proId)가 없습니다. 목록에서 다시
+          들어와주세요.
+        </div>
+      ) : (
+        <div key={idTrim}>
+          <FeePayerBasicRegisterForm seedProId={idTrim} />
+        </div>
+      )}
     </>
   );
 };

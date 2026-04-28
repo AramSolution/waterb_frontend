@@ -36,6 +36,10 @@ alwaysApply: false
 - 공통 컬럼 순서: 체크박스 → 상태 → 제목/사업명 → 기간(모집기간) → 등록일/수정일 → 액션
 - 꿈탐험 전용: “운영방식” 컬럼 제거
 
+### 오수 원인자부담금 관리 목록 (`SupportListPageView`, `POST /api/admin/support/fee-payer/list`)
+- **부과액:** API `waterCost`(DB **`WATER_COST`**)만 표시·엑셀 반영. `waterVal`은 목록 부과액 표시에 쓰지 않는다.
+- **주소 표시:** `formatFeePayerAddressLine` — **`zip` 제외**, `adresLot`·`adres`·`detailAdres`만 연결. (요청 파라미터 `address`는 서버에서 ZIP 포함 통합 검색.)
+
 ---
 
 ## 🏷 상태코드 매핑 (지원사업 사업 RUN_STA)

@@ -5,21 +5,14 @@ import { useRouter } from "next/navigation";
 import { Pagination, ConfirmDialog } from "@/shared/ui/adminWeb";
 import { FormDatePicker } from "@/shared/ui/adminWeb/form";
 import { useSupportList } from "../model";
-import type { Support } from "@/entities/adminWeb/support/api";
+import {
+  type Support,
+  isFeePayerListRowPaid,
+} from "@/entities/adminWeb/support/api";
 import "@/shared/styles/admin/mobile-table.css";
 import "@/shared/styles/admin/resizable-table.css";
 import "@/shared/styles/admin/search-form.css";
 import { decodeDisplayText } from "@/shared/lib";
-
-/** 백엔드 연동 전: paySta 등으로 미납/납부 표시 (02·Y·납부 → 납부) */
-function isPaidFeeRow(row: Support): boolean {
-  const rowAny = row as Record<string, unknown>;
-  const v = String(
-    rowAny.paySta ?? rowAny.paymentSta ?? rowAny.feePayYn ?? "",
-  ).trim();
-  if (v === "02" || v === "2" || v === "Y" || v === "납부") return true;
-  return false;
-}
 
 function formatFeeCurrency(v: unknown): string {
   if (v === null || v === undefined || v === "") return "-";
@@ -30,19 +23,25 @@ function formatFeeCurrency(v: unknown): string {
 
 function feeListRowFields(row: Support, index: number, page: number, ps: number) {
   const rowAny = row as Record<string, unknown>;
-  const seq = row.rnum ?? String((page - 1) * ps + index + 1);
-  const paid = isPaidFeeRow(row);
+  const seq = String((page - 1) * ps + index + 1);
+  const paid = isFeePayerListRowPaid(row);
   const name = decodeDisplayText(
-    String(rowAny.applicantNm ?? row.businessNm ?? ""),
+    String(rowAny.applicantNm ?? row.userNm ?? row.businessNm ?? ""),
   );
   const addr = decodeDisplayText(
     String(rowAny.addr ?? rowAny.address ?? ""),
   );
-  const notify = String(rowAny.notifyDd ?? row.recruitStartDate ?? "").trim();
-  const levyRaw = rowAny.levyAmt ?? rowAny.impAmt;
-  const payDd = String(rowAny.payDd ?? rowAny.paymentDd ?? "").trim();
-  const payAmtRaw = rowAny.payAmt ?? rowAny.paymentAmt;
-  const rowKey = String(row.businessId ?? row.proId ?? `row-${index}`);
+  const notify = String(rowAny.notifyDd ?? rowAny.reqDate ?? row.recruitStartDate ?? "").trim();
+  const levyRaw =
+    rowAny.levyAmt ?? rowAny.waterCost ?? rowAny.impAmt;
+  const payDd = String(rowAny.payDd ?? rowAny.payDay ?? rowAny.paymentDd ?? "").trim();
+  const payAmtRaw = rowAny.payAmt ?? rowAny.pay ?? rowAny.paymentAmt;
+  const itemId = String(rowAny.itemId ?? row.businessId ?? row.proId ?? "").trim();
+  const det = rowAny.feeDetailSeq ?? rowAny.seq;
+  const rowKey =
+    itemId && det !== undefined && det !== null && String(det) !== ""
+      ? `${itemId}-${det}`
+      : itemId || `row-${index}`;
   return { seq, paid, name, addr, notify, levyRaw, payDd, payAmtRaw, rowKey };
 }
 

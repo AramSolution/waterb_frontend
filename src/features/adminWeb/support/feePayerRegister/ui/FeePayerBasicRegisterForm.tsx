@@ -1,8 +1,9 @@
 "use client";
 
-import React from "react";
+import React, { useMemo, useRef } from "react";
 import { ConfirmDialog } from "@/shared/ui/adminWeb";
 import { FormField, FormInput } from "@/shared/ui/adminWeb/form";
+import type { SupportFeePayerRegisterRequest } from "@/entities/adminWeb/support/api/feePayerManageApi";
 import { useFeePayerBasicRegister } from "../model";
 import { FeePayerSewageVolumeEstimateSection } from "./FeePayerSewageVolumeEstimateSection";
 import "@/shared/styles/admin/register-form.css";
@@ -15,6 +16,10 @@ export interface FeePayerBasicRegisterFormProps {
 export const FeePayerBasicRegisterForm: React.FC<
   FeePayerBasicRegisterFormProps
 > = ({ seedProId = null }) => {
+  const persistRequestBuilderRef = useRef<
+    (() => SupportFeePayerRegisterRequest | null) | null
+  >(null);
+
   const {
     applicantNm,
     telNo,
@@ -24,24 +29,40 @@ export const FeePayerBasicRegisterForm: React.FC<
     errors,
     loading,
     showInfoDialog,
-    saveInfoMessage,
+    infoDialogTitle,
+    infoDialogMessage,
+    infoDialogType,
     seedInvalid,
+    detailLoading,
+    detailErrorMessage,
     sewageInitialEntries,
+    feePayerItemId,
+    setFeePayerItemId,
+    getBasicInfoBody,
     handleInputChange,
     noopInputChange,
     handleAddressSearch,
     handleSubmit,
     handleCancel,
     handleInfoDialogClose,
-  } = useFeePayerBasicRegister({ seedProId });
+  } = useFeePayerBasicRegister({ seedProId, persistRequestBuilderRef });
+
+  const feePayerApi = useMemo(
+    () => ({
+      getBasicInfoBody,
+      feePayerItemId: feePayerItemId ?? seedProId?.trim() ?? undefined,
+      onFeePayerItemId: setFeePayerItemId,
+    }),
+    [getBasicInfoBody, feePayerItemId, seedProId, setFeePayerItemId],
+  );
 
   if (seedInvalid) {
     return (
       <>
         <div className="bg-white rounded-lg shadow">
           <div className="px-6 py-8 text-sm text-gray-600">
-            조회할 수 없는 대상이거나 잘못된 링크입니다. 목록에서 다시
-            시도해주세요.
+            {detailErrorMessage.trim() ||
+              "조회할 수 없는 대상이거나 잘못된 링크입니다. 목록에서 다시 시도해주세요."}
           </div>
         </div>
         <div className="flex justify-end mt-4 gap-2">
@@ -55,6 +76,14 @@ export const FeePayerBasicRegisterForm: React.FC<
           </button>
         </div>
       </>
+    );
+  }
+
+  if (seedProId?.trim() && detailLoading) {
+    return (
+      <div className="bg-white rounded-lg shadow px-6 py-12 text-center text-sm text-gray-600">
+        불러오는 중입니다…
+      </div>
     );
   }
 
@@ -88,7 +117,6 @@ export const FeePayerBasicRegisterForm: React.FC<
               </FormField>
               <FormField
                 label="전화번호"
-                required
                 isFirstInRow
                 suppressBottomBorder
                 error={errors.telNo}
@@ -182,8 +210,11 @@ export const FeePayerBasicRegisterForm: React.FC<
         </div>
 
         <FeePayerSewageVolumeEstimateSection
+          key={seedProId?.trim() ? `detail-${seedProId.trim()}` : "register"}
           initialEntries={sewageInitialEntries}
           showAddNoticeBlockButton={Boolean(seedProId?.trim())}
+          feePayerApi={feePayerApi}
+          persistRequestBuilderRef={persistRequestBuilderRef}
         />
 
         <div className="flex justify-end mt-4 gap-2">
@@ -209,9 +240,9 @@ export const FeePayerBasicRegisterForm: React.FC<
 
       <ConfirmDialog
         isOpen={showInfoDialog}
-        title="알림"
-        message={saveInfoMessage}
-        type="primary"
+        title={infoDialogTitle}
+        message={infoDialogMessage}
+        type={infoDialogType}
         confirmText="확인"
         cancelText="닫기"
         onConfirm={handleInfoDialogClose}

@@ -1,5 +1,9 @@
 import { downloadAdminListExcelFile } from "@/shared/lib/exceljsAdminExcel";
-import { Support, SupportDetailItem } from "../api";
+import {
+  Support,
+  SupportDetailItem,
+  isFeePayerListRowPaid,
+} from "../api";
 import { getRunStaLabel } from "./runStaAdmin";
 
 export type DownloadSupportsExcelOptions = {
@@ -454,5 +458,56 @@ export async function downloadStudyCertificateExcel(
     headers,
     dataRows,
     columnWidths: [8, 40, 12],
+  });
+}
+
+/**
+ * 오수 원인자부담금 관리 목록 엑셀 (`POST .../fee-payer/list` 결과와 동일 컬럼)
+ */
+export async function downloadFeePayerListExcel(
+  supports: Support[],
+  fileName: string = "오수원인자부담금목록",
+): Promise<void> {
+  const headers = [
+    "순번",
+    "상태",
+    "성명",
+    "주소",
+    "통지일",
+    "부과액(원)",
+    "납부일",
+    "납부액(원)",
+    "ITEM_ID",
+    "SEQ",
+  ];
+  const fmtNum = (v: unknown): string | number => {
+    if (v === null || v === undefined || v === "") return "";
+    const n = Number(String(v).replace(/,/g, ""));
+    if (Number.isNaN(n)) return String(v);
+    return n;
+  };
+  const dataRows = supports.map((row, index) => {
+    const rowAny = row as Record<string, unknown>;
+    const paid = isFeePayerListRowPaid(row);
+    const levy = rowAny.levyAmt ?? rowAny.waterCost;
+    const payAmt = rowAny.payAmt ?? rowAny.pay;
+    return [
+      index + 1,
+      paid ? "납부" : "미납",
+      row.applicantNm ?? "",
+      String(rowAny.addr ?? ""),
+      String(rowAny.notifyDd ?? rowAny.reqDate ?? row.recruitStartDate ?? ""),
+      fmtNum(levy),
+      String(rowAny.payDd ?? "").trim(),
+      fmtNum(payAmt),
+      String(rowAny.itemId ?? row.businessId ?? ""),
+      rowAny.feeDetailSeq ?? rowAny.seq ?? "",
+    ];
+  });
+  await downloadAdminListExcelFile("오수 원인자부담금 관리", fileName, {
+    title: fileName,
+    headers,
+    dataRows,
+    columnWidths: [8, 10, 12, 32, 12, 14, 12, 14, 18, 8],
   });
 }

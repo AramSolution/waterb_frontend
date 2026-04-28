@@ -609,6 +609,36 @@ export class CmmCodeService {
       throw new ApiError(0, "소분류코드 삭제 중 오류가 발생했습니다.");
     }
   }
+
+  /**
+   * 건축용도 구분별 기준단가 (소분류 WAT003).
+   * GET /api/cont/code/building-use-codes/unit-price?isOtherAct=
+   */
+  static async getBuildingUseCodeUnitPrice(
+    isOtherAct: boolean,
+  ): Promise<DetailCodeItem[]> {
+    try {
+      const params = new URLSearchParams();
+      params.set("isOtherAct", String(isOtherAct));
+      const path = `${API_ENDPOINTS.CODE.DETAIL_LIST_BASE}/building-use-codes/unit-price?${params.toString()}`;
+      const response = await apiClient.get<
+        DetailCodeItem[] | { data?: DetailCodeItem[] }
+      >(path);
+      const list = Array.isArray(response)
+        ? response
+        : ((response as { data?: DetailCodeItem[] })?.data ?? []);
+      return list;
+    } catch (error) {
+      console.error("건축용도 기준단가 조회 실패:", error);
+      if (error instanceof ApiError) {
+        throw error;
+      }
+      throw new ApiError(
+        0,
+        "건축용도 기준단가를 불러오는 중 오류가 발생했습니다.",
+      );
+    }
+  }
 }
 
 // 소분류코드 삭제 요청 파라미터

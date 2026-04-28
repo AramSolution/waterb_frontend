@@ -131,6 +131,15 @@ export const API_ENDPOINTS = {
     /** 멘토 신청 수정 — PUT multipart (등록과 동일) */
     MENTOR_APPLICATION_UPDATE: (proId: string, reqId: string) =>
       `/api/admin/artappm/${encodeURIComponent(proId)}/mentor-applications/${encodeURIComponent(reqId)}`,
+    /** 오수 원인자부담금 관리 목록 — POST JSON, body 생략 가능(전체) */
+    FEE_PAYER_LIST: "/api/admin/support/fee-payer/list",
+    /** 오수 원인자부담금 등록·수정·삭제 저장 — POST JSON `SupportFeePayerRegisterRequest` */
+    FEE_PAYER_REGISTER: "/api/admin/support/fee-payer",
+    /** 오수 원인자부담금 계산 — POST JSON `SupportFeePayerRegisterRequest` */
+    FEE_PAYER_CALCULATE: "/api/admin/support/fee-payer/calculate",
+    /** 오수 원인자부담금 상세 — GET `itemId` */
+    FEE_PAYER_DETAIL: (itemId: string) =>
+      `/api/admin/support/fee-payer/${encodeURIComponent(itemId)}/detail`,
   },
   /** 공부의 명수(ARTPROM proGb 08) — adminWeb ArtappsManageController */
   ARTAPPS: {

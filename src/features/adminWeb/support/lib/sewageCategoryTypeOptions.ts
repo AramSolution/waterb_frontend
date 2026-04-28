@@ -20,6 +20,71 @@ export const SEWAGE_TYPE_VALUE = {
 
 export type SewageTypeOption = { value: string; label: string };
 
+/** ARTITED.TYPE_1 — 01 개별건축물, 02 타행위, 03 허가사항변경 */
+export function mapCategoryToType1(category: string): string | undefined {
+  if (category === SEWAGE_CATEGORY.INDIVIDUAL) return "01";
+  if (category === SEWAGE_CATEGORY.OTHER_ACT) return "02";
+  if (category === SEWAGE_CATEGORY.PERMIT_CHANGE) return "03";
+  return undefined;
+}
+
+/**
+ * ARTITED.TYPE_2 — 01 신축, 02 증축, 03 변경, 04 개축
+ * (개별 신축 vs 타행위 신축은 구분값으로 이미 갈리므로 동일 01 사용)
+ */
+export function mapSewageTypeValueToType2(
+  typeValue: string,
+): string | undefined {
+  switch (typeValue) {
+    case SEWAGE_TYPE_VALUE.INDIVIDUAL_NEW:
+    case SEWAGE_TYPE_VALUE.OTHER_ACT_NEW:
+      return "01";
+    case SEWAGE_TYPE_VALUE.INDIVIDUAL_EXTENSION:
+      return "02";
+    case SEWAGE_TYPE_VALUE.INDIVIDUAL_CHANGE:
+      return "03";
+    case SEWAGE_TYPE_VALUE.REBUILD:
+      return "04";
+    default:
+      return undefined;
+  }
+}
+
+/** ARTITED.TYPE_1 → 화면 `구분` value */
+export function mapType1ToCategory(type1: string | null | undefined): string {
+  const t = String(type1 ?? "").trim();
+  if (t === "01") return SEWAGE_CATEGORY.INDIVIDUAL;
+  if (t === "02") return SEWAGE_CATEGORY.OTHER_ACT;
+  if (t === "03") return SEWAGE_CATEGORY.PERMIT_CHANGE;
+  return "";
+}
+
+/**
+ * ARTITED.TYPE_2 + TYPE_1 → 화면 `유형` value
+ * (TYPE_2=01 은 TYPE_1에 따라 개별 신축 vs 타행위 신축으로 갈림)
+ */
+export function mapType2ToSewageTypeValue(
+  type1: string | null | undefined,
+  type2: string | null | undefined,
+): string {
+  const t2 = String(type2 ?? "").trim();
+  const t1 = String(type1 ?? "").trim();
+  if (t2 === "01") {
+    return t1 === "02"
+      ? SEWAGE_TYPE_VALUE.OTHER_ACT_NEW
+      : SEWAGE_TYPE_VALUE.INDIVIDUAL_NEW;
+  }
+  if (t2 === "02") return SEWAGE_TYPE_VALUE.INDIVIDUAL_EXTENSION;
+  if (t2 === "03") return SEWAGE_TYPE_VALUE.INDIVIDUAL_CHANGE;
+  if (t2 === "04") return SEWAGE_TYPE_VALUE.REBUILD;
+  return "";
+}
+
+/** 건축용도 기준단가 API `isOtherAct` — 타행위(TYPE_1=02)만 true */
+export function isOtherActCategory(category: string): boolean {
+  return category === SEWAGE_CATEGORY.OTHER_ACT;
+}
+
 export function getSewageTypeOptionsForCategory(
   category: string,
 ): SewageTypeOption[] {

@@ -1,13 +1,24 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, {
+  useLayoutEffect,
+  useMemo,
+  useState,
+  type MutableRefObject,
+} from "react";
 import { FormField, FormInput, FormSelect } from "@/shared/ui/adminWeb/form";
-import { getSewageTypeOptionsForCategory } from "@/features/adminWeb/support/lib/sewageCategoryTypeOptions";
+import {
+  getSewageTypeOptionsForCategory,
+  SEWAGE_CATEGORY,
+} from "@/features/adminWeb/support/lib/sewageCategoryTypeOptions";
 import { getSewageCalcModeForLine } from "@/features/adminWeb/support/lib/sewageVolumeCalc";
 import {
   useFeePayerSewageVolumeEstimate,
+  type FeePayerSewageApiBridge,
   type SewageEstimateEntry,
 } from "../model/useFeePayerSewageVolumeEstimate";
+import { buildSupportFeePayerRegisterRequestForPersist } from "../lib/buildSupportFeePayerRegisterRequest";
+import type { SupportFeePayerRegisterRequest } from "@/entities/adminWeb/support/api/feePayerManageApi";
 import { UsageLookupModal } from "./UsageLookupModal";
 
 const readOnlyInputClass = "bg-gray-100 !cursor-not-allowed";
@@ -22,6 +33,12 @@ export interface FeePayerSewageVolumeEstimateSectionProps {
    * 신규 등록 화면에서는 false로 두어 한 블록만 두는 흐름에 맞춤.
    */
   showAddNoticeBlockButton?: boolean;
+  /** 기본정보·ITEM_ID — 계산 API(`POST …/fee-payer/calculate`) 연동 시 전달 */
+  feePayerApi?: FeePayerSewageApiBridge | null;
+  /** 저장 시 `POST …/fee-payer` 본문 조립 — `feePayerApi.getBasicInfoBody` 필수 */
+  persistRequestBuilderRef?: MutableRefObject<
+    (() => SupportFeePayerRegisterRequest | null) | null
+  >;
 }
 
 /** 오수량 발생량 산정 — `UsageLookupModal`은 용도 **조회** 전용. 통지일 블록 추가 `+`는 엔트리 카드 **하단 테두리 가운데**에 반만 걸친 원형(상세·용도 아래 흐름). 상세 `추가` = 층수~삭제 행만. */
@@ -31,6 +48,8 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
   readOnly = false,
   initialEntries,
   showAddNoticeBlockButton = true,
+  feePayerApi = null,
+  persistRequestBuilderRef,
 }) => {
   const [usageLookupOpen, setUsageLookupOpen] = useState(false);
   const [usageLookupTarget, setUsageLookupTarget] = useState<{
@@ -40,13 +59,49 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
 
   const {
     entries,
+    calcBusyEntryId,
+    removedDetailSeqsRef,
+    removedCalcsRef,
     handleAddEntry,
     handleAddDetailLine,
     handleRemoveDetailLine,
     handleEntryFieldChange,
     handleCalculateEntry,
     applyUsageFromLookup,
-  } = useFeePayerSewageVolumeEstimate(initialEntries);
+  } = useFeePayerSewageVolumeEstimate(initialEntries, feePayerApi);
+
+  useLayoutEffect(() => {
+    if (!persistRequestBuilderRef) return;
+    if (!feePayerApi?.getBasicInfoBody) {
+      persistRequestBuilderRef.current = null;
+      return;
+    }
+    persistRequestBuilderRef.current = () => {
+      const basicInfo = feePayerApi.getBasicInfoBody?.();
+      if (!basicInfo) return null;
+      const rawId = feePayerApi.feePayerItemId;
+      const itemId =
+        rawId != null && String(rawId).trim() !== ""
+          ? String(rawId).trim()
+          : undefined;
+      return buildSupportFeePayerRegisterRequestForPersist({
+        basicInfo,
+        itemId,
+        entries,
+        removedDetailSeqs: removedDetailSeqsRef.current,
+        removedCalcs: removedCalcsRef.current,
+      });
+    };
+    return () => {
+      persistRequestBuilderRef.current = null;
+    };
+  }, [
+    entries,
+    feePayerApi,
+    persistRequestBuilderRef,
+    removedDetailSeqsRef,
+    removedCalcsRef,
+  ]);
 
   const statusOptions = useMemo(
     () => [
@@ -116,7 +171,10 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
       ) : null}
 
       <div className="p-0 pb-6">
-        {entries.map((entry, entryIndex) => (
+        {entries.map((entry, entryIndex) => {
+          const isPermitChangeCategory =
+            entry.category === SEWAGE_CATEGORY.PERMIT_CHANGE;
+          return (
           <div
             key={entry.id}
             className={
@@ -222,8 +280,12 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                                 value={entry.unitPrice}
                                 onChange={handleEntryFieldChange}
                                 placeholder="예: 12,000"
-                                readOnly
-                                className="bg-gray-100"
+                                readOnly={readOnly || !isPermitChangeCategory}
+                                className={
+                                  readOnly || !isPermitChangeCategory
+                                    ? readOnlyInputClass
+                                    : undefined
+                                }
                                 data-entry-id={entry.id}
                               />
                             </div>
@@ -241,8 +303,12 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                                 value={entry.sewageVolume}
                                 onChange={handleEntryFieldChange}
                                 placeholder="예: 9.8"
-                                readOnly
-                                className="bg-gray-100"
+                                readOnly={readOnly || !isPermitChangeCategory}
+                                className={
+                                  readOnly || !isPermitChangeCategory
+                                    ? readOnlyInputClass
+                                    : undefined
+                                }
                                 data-entry-id={entry.id}
                               />
                             </div>
@@ -252,11 +318,20 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                           {!readOnly ? (
                             <button
                               type="button"
-                              className="rounded-full border border-gray-300 bg-white px-3 py-1.5 text-[13px] text-gray-800 shadow-sm transition-colors hover:bg-gray-50"
+                              className="rounded-full border border-gray-300 bg-white px-3 py-1.5 text-[13px] text-gray-800 shadow-sm transition-colors hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                               style={{ minWidth: "80px" }}
-                              onClick={() => handleCalculateEntry(entry.id)}
+                              onClick={() => void handleCalculateEntry(entry.id)}
+                              disabled={
+                                calcBusyEntryId === entry.id ||
+                                isPermitChangeCategory
+                              }
+                              title={
+                                isPermitChangeCategory
+                                  ? "허가사항변경은 계산 없이 금액·오수량 등을 직접 입력합니다."
+                                  : "서버 계산(선저장 후 f_cost)"
+                              }
                             >
-                              계산
+                              {calcBusyEntryId === entry.id ? "계산 중…" : "계산"}
                             </button>
                           ) : (
                             <div
@@ -662,7 +737,8 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
               </div>
             </div>
           </div>
-        ))}
+        );
+        })}
       </div>
     </div>
   );

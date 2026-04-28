@@ -780,6 +780,8 @@ Check these files for correct status badge implementation:
   `src/features/adminWeb/support/list/ui/SupportListPageView.tsx`  
   → Status badge `min-w-[72px]`, 보기 `px-2 py-1 text-[12px]`, 상세/삭제 `px-3 py-1 text-[13px]`.  
   → **사업 진행상태(RUN_STA):** 01 모집예정, 02 모집중, 04 모집마감, 99 취소 — 스터디·공공형 진로진학 컨설팅·1:1 원어민 화상영어·지역연계 진로체험·꿈탐험·글로벌 문화탐방·청소년 자기계발 연수지원 등 **동일**. 구현·라벨·배지색은 `@/entities/adminWeb/support/lib/runStaAdmin` (`getRunStaLabel`, `RUN_STA_BASE_OPTIONS`, …) 단일 참조.
+- **오수 원인자부담금 관리 목록 (동일 `SupportListPageView`, 별도 API):** `POST /api/admin/support/fee-payer/list` — `SupportFeePayerManageController#list`. 요청 JSON `SupportFeePayerListRequest`: `reqDateFrom`, `reqDateTo`(통지일 `yyyy-MM-dd`), `userNm`, `address`(ZIP·지번·주소·상세 통합 검색); **body 생략 시 전체**. 응답 `SupportFeePayerListResponse`: `data[]`에 `itemId`, `seq`, `paySta`, `reqDate`, `userNm`, `zip`·`adresLot`·`adres`·`detailAdres`, `waterSum`·`waterCost`·`waterVal`, `payDay`, `pay`(납부 ARTITEP 최신 1건; **없으면 `payDay=null`, `pay=0`**). 클라이언트: `@/entities/adminWeb/support/api/feePayerManageApi.ts` (`postFeePayerList`, `mapFeePayerListItemToSupport`, `buildSupportFeePayerListBody`, `isFeePayerListRowPaid`). 목록은 **클라이언트 페이징**(전량 수신 후 `pageSize` 슬라이스). **목 mock:** 환경변수 `NEXT_PUBLIC_FEE_PAYER_LIST_MOCK=true` 일 때만 `feeListMockData` 사용.
+- **오수 원인자부담금 목록 표시 규칙:** **부과액 컬럼·엑셀**은 **`waterCost`(DB `WATER_COST`)만** 사용 — `waterVal`로 대체 표시하지 않는다. **주소 컬럼·엑셀**은 표시용으로 **`zip` 제외** — `formatFeePayerAddressLine`에서 `adresLot`·`adres`·`detailAdres`만 이어 붙인다(검색 `address`는 백엔드 ZIP 포함 통합 검색 유지).
 - **Study list (스터디사업 목록):**  
   `src/features/adminWeb/support/study/list/ui/StudyListPageView.tsx`  
   → Same as above.

@@ -1,8 +1,27 @@
-import { useCallback, useEffect, useState, type ChangeEvent } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type ChangeEvent,
+} from "react";
 import {
   computeLineSewageQty,
   getSewageCalcModeForLine,
 } from "@/features/adminWeb/support/lib/sewageVolumeCalc";
+import {
+  isOtherActCategory,
+  SEWAGE_CATEGORY,
+} from "@/features/adminWeb/support/lib/sewageCategoryTypeOptions";
+import { buildSupportFeePayerRegisterRequest } from "../lib/buildSupportFeePayerRegisterRequest";
+import type { DetailCodeItem } from "@/entities/adminWeb/code/api/cmmCodeApi";
+import { CmmCodeService } from "@/entities/adminWeb/code/api/cmmCodeApi";
+import {
+  getFeePayerDetail,
+  postFeePayerCalculate,
+  type SupportFeePayerBasicInfoRequest,
+} from "@/entities/adminWeb/support/api/feePayerManageApi";
+import { ApiError } from "@/shared/lib/apiClient";
 
 /** 층수~삭제 한 줄(통지일 블록 당 1..n행) */
 export type SewageDetailLine = {
@@ -22,6 +41,8 @@ export type SewageDetailLine = {
   /** 층수·용도 행 옆 표시용 오수량(계산 결과) */
   sewageQty: string;
   selected: boolean;
+  /** ARTITEC.seq2 — 재계산 시 U 행 동기화용(서버 상세 조회로 채움) */
+  calcSeq2?: number;
 };
 
 /** 오수량 발생량 산정: 상단 공통(상태~통지일·기준단가~계산) + 층수/용도 상세 `lines` */
@@ -34,10 +55,17 @@ export type SewageEstimateEntry = {
   unitPrice: string;
   sewageVolume: string;
   causerCharge: string;
-  /** 오수부과량 (백엔드 필드명 확정 시 맞출 것) */
   sewageLevyAmount: string;
   lines: SewageDetailLine[];
+  /** ARTITED.SEQ — 계산 API 응답 후 갱신 */
+  detailSeq?: number;
 };
+
+export interface FeePayerSewageApiBridge {
+  getBasicInfoBody: () => SupportFeePayerBasicInfoRequest | null;
+  feePayerItemId?: string | null;
+  onFeePayerItemId?: (itemId: string) => void;
+}
 
 /** `<input type="date">`용 로컬 당일 `YYYY-MM-DD` */
 function getTodayYmd(): string {
@@ -46,6 +74,24 @@ function getTodayYmd(): string {
   const m = String(d.getMonth() + 1).padStart(2, "0");
   const day = String(d.getDate()).padStart(2, "0");
   return `${y}-${m}-${day}`;
+}
+
+function parseBaseCostFromWat003(items: DetailCodeItem[]): number | undefined {
+  const row = items[0];
+  if (!row) return undefined;
+  const raw = `${row.codeDc ?? ""} ${row.codeNm ?? ""}`;
+  const digits = raw.replace(/\D/g, "");
+  if (!digits) return undefined;
+  const n = parseInt(digits, 10);
+  return Number.isFinite(n) ? n : undefined;
+}
+
+function formatIntKo(n: number): string {
+  return n.toLocaleString("ko-KR");
+}
+
+function formatMetricKo(n: number): string {
+  return n.toLocaleString("ko-KR", { maximumFractionDigits: 2 });
 }
 
 function withSewageQty(line: SewageDetailLine): SewageDetailLine {
@@ -101,12 +147,17 @@ function normalizeDetailLine(l: SewageDetailLine): SewageDetailLine {
     midCategoryLabel: l.midCategoryLabel ?? "",
     roomCount: l.roomCount ?? "",
     householdCount: l.householdCount ?? "",
+    calcSeq2: l.calcSeq2,
   };
   return withSewageQty(merged);
 }
 
 function normalizeEntry(e: SewageEstimateEntry): SewageEstimateEntry {
-  return { ...e, lines: e.lines.map(normalizeDetailLine) };
+  return {
+    ...e,
+    detailSeq: e.detailSeq,
+    lines: e.lines.map(normalizeDetailLine),
+  };
 }
 
 function initialEntriesOrDefault(
@@ -118,17 +169,29 @@ function initialEntriesOrDefault(
 
 /**
  * @param initialEntries 상세 등에서 목 데이터·API 스냅샷으로 채울 때 전달. 미전달 시 등록용 기본 1블록.
+ * @param apiBridge 등록 폼에서 계산 API·기준단가 연동 시 전달.
  */
 export function useFeePayerSewageVolumeEstimate(
   initialEntries?: SewageEstimateEntry[],
+  apiBridge?: FeePayerSewageApiBridge | null,
 ) {
   const [entries, setEntries] = useState<SewageEstimateEntry[]>(() =>
     initialEntriesOrDefault(initialEntries),
   );
+  const [calcBusyEntryId, setCalcBusyEntryId] = useState<string | null>(null);
+  const entriesRef = useRef(entries);
+  entriesRef.current = entries;
+
+  /** 저장 시 `details[].rowStatus=D` 로 보낼 ARTITED.SEQ (통지일 블록 삭제) */
+  const removedDetailSeqsRef = useRef<number[]>([]);
+  /** 저장 시 `calculations[].rowStatus=D` — 기존 `seq`·`seq2` 필요 */
+  const removedCalcsRef = useRef<Array<{ seq: number; seq2: number }>>([]);
 
   useEffect(() => {
     if (initialEntries === undefined) return;
     setEntries(initialEntriesOrDefault(initialEntries));
+    removedDetailSeqsRef.current = [];
+    removedCalcsRef.current = [];
   }, [initialEntries]);
 
   const handleAddEntry = useCallback(() => {
@@ -148,16 +211,26 @@ export function useFeePayerSewageVolumeEstimate(
   const handleRemoveEntry = useCallback((entryId: string) => {
     setEntries((prev) => {
       if (prev.length <= 1) return prev;
+      const victim = prev.find((e) => e.id === entryId);
+      const ds = victim?.detailSeq;
+      if (victim != null && ds != null && ds > 0) {
+        removedDetailSeqsRef.current.push(ds);
+      }
       return prev.filter((e) => e.id !== entryId);
     });
   }, []);
 
-  /** 층수~삭제 행 제거. 남은 줄이 1이고 이 통지일 블록이 유일이면 항목 삭제는 하지 않음(최소 1줄). */
   const handleRemoveDetailLine = useCallback(
     (entryId: string, lineId: string) => {
       setEntries((prev) => {
         const e = prev.find((x) => x.id === entryId);
         if (!e) return prev;
+        const line = e.lines.find((l) => l.id === lineId);
+        const seq = e.detailSeq;
+        const s2 = line?.calcSeq2;
+        if (line != null && seq != null && seq > 0 && s2 != null && s2 > 0) {
+          removedCalcsRef.current.push({ seq, seq2: s2 });
+        }
         if (e.lines.length > 1) {
           return prev.map((x) =>
             x.id === entryId
@@ -167,6 +240,9 @@ export function useFeePayerSewageVolumeEstimate(
         }
         if (e.lines[0]?.id !== lineId) return prev;
         if (prev.length > 1) {
+          if (seq != null && seq > 0) {
+            removedDetailSeqsRef.current.push(seq);
+          }
           return prev.filter((x) => x.id !== entryId);
         }
         return prev;
@@ -203,7 +279,8 @@ export function useFeePayerSewageVolumeEstimate(
           key === "id" ||
           key === "sewageQty" ||
           key === "midCategoryLabel" ||
-          key === "buildingUseSubCode"
+          key === "buildingUseSubCode" ||
+          key === "calcSeq2"
         )
           return;
         if (key === "usage") {
@@ -251,6 +328,26 @@ export function useFeePayerSewageVolumeEstimate(
             row.id === entryId ? { ...row, category: value, type: "" } : row,
           ),
         );
+        const cat = value.trim();
+        if (!cat || cat === SEWAGE_CATEGORY.PERMIT_CHANGE) return;
+        void (async () => {
+          try {
+            const rows = await CmmCodeService.getBuildingUseCodeUnitPrice(
+              isOtherActCategory(cat),
+            );
+            const n = parseBaseCostFromWat003(rows);
+            if (n == null) return;
+            setEntries((prev) =>
+              prev.map((row) =>
+                row.id === entryId
+                  ? { ...row, unitPrice: formatIntKo(n) }
+                  : row,
+              ),
+            );
+          } catch {
+            /* 기준단가 조회 실패 시 수동 입력 대기 */
+          }
+        })();
         return;
       }
 
@@ -263,25 +360,126 @@ export function useFeePayerSewageVolumeEstimate(
     [],
   );
 
-  const handleCalculateEntry = useCallback((entryId: string) => {
-    setEntries((prev) =>
-      prev.map((row) => {
-        if (row.id !== entryId) return row;
-        const price = Number(String(row.unitPrice).replace(/,/g, "").trim());
-        const vol = Number(String(row.sewageVolume).replace(/,/g, "").trim());
-        if (!Number.isFinite(price) || !Number.isFinite(vol)) {
-          return row;
-        }
-        const won = Math.round(price * vol);
-        return {
-          ...row,
-          causerCharge: won > 0 ? `${won.toLocaleString("ko-KR")}원` : "",
-        };
-      }),
-    );
-  }, []);
+  const handleCalculateEntry = useCallback(
+    async (entryId: string) => {
+      const targetEntry = entriesRef.current.find((e) => e.id === entryId);
+      if (targetEntry?.category === SEWAGE_CATEGORY.PERMIT_CHANGE) {
+        return;
+      }
 
-  /** 용도조회 모달에서 선택한 행 → 해당 상세 줄 `용도`·`1일 오수발생량` 반영 */
+      const bridge = apiBridge;
+      if (!bridge?.getBasicInfoBody) {
+        setEntries((prev) =>
+          prev.map((row) => {
+            if (row.id !== entryId) return row;
+            const price = Number(
+              String(row.unitPrice).replace(/,/g, "").trim(),
+            );
+            const vol = Number(
+              String(row.sewageVolume).replace(/,/g, "").trim(),
+            );
+            if (!Number.isFinite(price) || !Number.isFinite(vol)) {
+              return row;
+            }
+            const won = Math.round(price * vol);
+            return {
+              ...row,
+              causerCharge: won > 0 ? `${formatIntKo(won)}원` : "",
+            };
+          }),
+        );
+        return;
+      }
+
+      const basicInfo = bridge.getBasicInfoBody();
+      if (!basicInfo) {
+        window.alert(
+          "계산을 위해 기본정보(성명·주소)를 먼저 입력해 주세요.",
+        );
+        return;
+      }
+
+      const snapshot = entriesRef.current;
+      const body = buildSupportFeePayerRegisterRequest({
+        basicInfo,
+        itemId: bridge.feePayerItemId,
+        entries: snapshot,
+        calculateTargetEntryId: entryId,
+      });
+      if (!body) {
+        window.alert("구분·유형·통지일 등 필수 항목을 확인해 주세요.");
+        return;
+      }
+
+      setCalcBusyEntryId(entryId);
+      try {
+        const res = await postFeePayerCalculate(body);
+        const wid = String(res.itemId ?? "").trim();
+        if (wid && bridge.onFeePayerItemId) {
+          bridge.onFeePayerItemId(wid);
+        }
+        const seq = res.seq != null ? Number(res.seq) : NaN;
+        const wc = res.waterCost != null ? Number(res.waterCost) : NaN;
+        const wv = res.waterVal != null ? Number(res.waterVal) : NaN;
+        const ws = res.waterSum != null ? Number(res.waterSum) : NaN;
+
+        setEntries((prev) =>
+          prev.map((en) => {
+            if (en.id !== entryId) return en;
+            return {
+              ...en,
+              detailSeq: Number.isFinite(seq) ? seq : en.detailSeq,
+              causerCharge: Number.isFinite(wc)
+                ? `${formatIntKo(Math.round(wc))}원`
+                : en.causerCharge,
+              sewageLevyAmount: Number.isFinite(wv)
+                ? formatMetricKo(wv)
+                : en.sewageLevyAmount,
+              sewageVolume: Number.isFinite(ws)
+                ? formatMetricKo(ws)
+                : en.sewageVolume,
+            };
+          }),
+        );
+
+        if (wid && Number.isFinite(seq)) {
+          try {
+            const detail = await getFeePayerDetail(wid);
+            const blocks = detail.data?.details ?? [];
+            const block = blocks.find((b) => Number(b.seq) === Number(seq));
+            const calcs = [...(block?.calculations ?? [])].sort(
+              (a, b) => Number(a.seq2 ?? 0) - Number(b.seq2 ?? 0),
+            );
+            setEntries((prev) =>
+              prev.map((en) => {
+                if (en.id !== entryId) return en;
+                const nextLines = en.lines.map((line, i) => ({
+                  ...line,
+                  calcSeq2:
+                    calcs[i]?.seq2 != null
+                      ? Number(calcs[i].seq2)
+                      : line.calcSeq2,
+                }));
+                return { ...en, lines: nextLines };
+              }),
+            );
+          } catch {
+            /* seq2 동기화 실패해도 금액 반영은 유지 */
+          }
+        }
+      } catch (err) {
+        const msg =
+          err instanceof ApiError
+            ? String(err.message || "").trim()
+            : "계산 요청 중 오류가 발생했습니다.";
+        window.alert(msg || "계산 요청 중 오류가 발생했습니다.");
+      } finally {
+        setCalcBusyEntryId(null);
+      }
+    },
+    [apiBridge],
+  );
+
   const applyUsageFromLookup = useCallback(
     (
       entryId: string,
@@ -337,6 +535,9 @@ export function useFeePayerSewageVolumeEstimate(
 
   return {
     entries,
+    calcBusyEntryId,
+    removedDetailSeqsRef,
+    removedCalcsRef,
     handleAddEntry,
     handleAddDetailLine,
     handleRemoveEntry,

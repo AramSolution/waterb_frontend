@@ -3,18 +3,20 @@ import { useRouter, useSearchParams } from "next/navigation";
 import {
   SupportService,
   Support,
-  SupportListParams,
-  SupportListResponse,
   SupportDeleteParams,
   ApplicantListResponse,
+  postFeePayerList,
+  mapFeePayerListItemToSupport,
+  buildSupportFeePayerListBody,
 } from "@/entities/adminWeb/support/api";
-import { downloadSupportsExcel } from "@/entities/adminWeb/support/lib";
+import { downloadFeePayerListExcel } from "@/entities/adminWeb/support/lib";
 import { ApiError, TokenUtils } from "@/shared/lib";
 import { useResizableColumns } from "@/shared/hooks";
 import { FEE_LIST_MOCK } from "./feeListMockData";
 
-/** TODO: 오수 원인자부담금 API 연동 후 `false`로 두거나 목 데이터·필터 블록 제거 */
-const USE_FEE_LIST_MOCK_DATA = true;
+/** `NEXT_PUBLIC_FEE_PAYER_LIST_MOCK=true` 일 때만 목·엑셀을 mock 사용 (기본: 실 API) */
+const USE_FEE_LIST_MOCK_DATA =
+  process.env.NEXT_PUBLIC_FEE_PAYER_LIST_MOCK === "true";
 
 function filterFeeMockRows(
   rows: Support[],
@@ -216,25 +218,6 @@ export function useSupportList() {
       const address =
         addrRef.current.trim() !== "" ? addrRef.current.trim() : undefined;
 
-      console.log("📊 fetchSupports 실행 (오수 원인자부담금 조회 UI):");
-      console.log(`  - 통지일: ${startDateRef.current} ~ ${endDateRef.current}`);
-      console.log(`  - 성명: ${applicantNmRef.current}, 주소: ${addrRef.current}`);
-      console.log(`  - currentPageRef: ${currentPageRef.current}`);
-
-      const params: SupportListParams = {
-        start: requestStart,
-        length: requestLength,
-        searchNotifyFromDd: notifyFrom,
-        searchNotifyToDd: notifyTo,
-        searchApplicantNm: nm,
-        searchAddr: address,
-        searchRecFromDd: notifyFrom,
-        searchRecToDd: notifyTo,
-        proGb: "01",
-      };
-
-      console.log("📤 API 요청 파라미터:", params);
-
       if (USE_FEE_LIST_MOCK_DATA) {
         const filtered = filterFeeMockRows(
           FEE_LIST_MOCK,
@@ -254,43 +237,23 @@ export function useSupportList() {
         return;
       }
 
-      // ── 샘플업무 목록 API 비활성화 (다시 쓰려면 아래 블록 주석 해제) ──
-      // const response = await SupportService.getSupportList(params);
-      //
-      // let supportList: Support[] = [];
-      // let total = 0;
-      //
-      // if (Array.isArray(response)) {
-      //   supportList = response;
-      //   total = response.length;
-      // } else if (response && typeof response === "object") {
-      //   const responseObj = response as SupportListResponse;
-      //
-      //   if (Array.isArray(responseObj.data)) {
-      //     supportList = responseObj.data;
-      //   } else if (Array.isArray(responseObj.Array)) {
-      //     supportList = responseObj.Array;
-      //   } else if (Array.isArray(responseObj.list)) {
-      //     supportList = responseObj.list;
-      //   } else if (Array.isArray(responseObj.content)) {
-      //     supportList = responseObj.content;
-      //   }
-      //
-      //   total =
-      //     Number(responseObj.recordsTotal) ||
-      //     Number(responseObj.recordsFiltered) ||
-      //     supportList.length;
-      // }
-      //
-      // setSupports(supportList);
-      // setTotalElements(total);
-      // setTotalPages(Math.ceil(total / pageSize) || 1);
-
-      const supportList: Support[] = [];
-      const total = 0;
-      setSupports(supportList);
-      setTotalElements(total);
-      setTotalPages(Math.ceil(total / pageSize) || 1);
+      const feeBody = buildSupportFeePayerListBody({
+        reqDateFrom: notifyFrom,
+        reqDateTo: notifyTo,
+        userNm: nm,
+        address,
+      });
+      const feeRes = await postFeePayerList(feeBody);
+      const feeRaw = Array.isArray(feeRes.data) ? feeRes.data : [];
+      const feeMapped = feeRaw.map(mapFeePayerListItemToSupport);
+      const feeTotal = feeMapped.length;
+      const feeSlice = feeMapped.slice(
+        requestStart,
+        requestStart + requestLength,
+      );
+      setSupports(feeSlice);
+      setTotalElements(feeTotal);
+      setTotalPages(Math.max(1, Math.ceil(feeTotal / pageSize)));
     } catch (err) {
       console.error("지원사업 목록 조회 실패:", err);
 
@@ -540,9 +503,6 @@ export function useSupportList() {
       setLoading(true);
       setError("");
 
-      console.group("📥 엑셀 다운로드 시작");
-
-      // 토큰 검증
       if (!TokenUtils.isTokenValid()) {
         setError("로그인이 필요합니다. 다시 로그인해주세요.");
         setTimeout(() => {
@@ -551,13 +511,10 @@ export function useSupportList() {
         return;
       }
 
-      // 날짜 형식 변환: YYYY-MM-DD -> YYYY-MM-DD (백엔드 SQL의 DATE_FORMAT이 YYYY-MM-DD 형식을 기대함)
-      // 백엔드 SQL: DATE_FORMAT(#{searchRecToDd}, '%Y-%m-%d')는 YYYY-MM-DD 형식 문자열을 기대함
       const convertDateToYYYYMMDD = (
         dateStr: string | null | undefined,
       ): string | undefined => {
         if (!dateStr) return undefined;
-        // YYYY-MM-DD 형식 그대로 유지 (백엔드 SQL의 DATE_FORMAT이 이 형식을 기대함)
         return dateStr;
       };
 
@@ -566,62 +523,38 @@ export function useSupportList() {
       const nm =
         applicantNm.trim() !== "" ? applicantNm.trim() : undefined;
       const address = addr.trim() !== "" ? addr.trim() : undefined;
-      const params: Omit<SupportListParams, "length" | "start"> = {
-        searchNotifyFromDd: notifyFrom,
-        searchNotifyToDd: notifyTo,
-        searchApplicantNm: nm,
-        searchAddr: address,
-        searchRecFromDd: notifyFrom,
-        searchRecToDd: notifyTo,
-        proGb: "01",
-      };
 
-      console.log("📤 엑셀 다운로드 요청:", params);
-
-      // TODO: 백엔드 API 완료 후 주석 해제
-      // 엑셀 데이터 조회
-      const response = await SupportService.getSupportsExcel(params);
-
-      console.log("📥 엑셀 다운로드 응답:", response);
-
-      // API 응답 구조에 맞게 데이터 추출
       let supportList: Support[] = [];
 
-      if (Array.isArray(response)) {
-        supportList = response;
-      } else if (response && typeof response === "object") {
-        const responseObj = response as SupportListResponse;
-
-        // 결과 확인
-        if (responseObj.result === "01") {
-          throw new Error("엑셀 다운로드에 실패했습니다.");
-        }
-
-        if (Array.isArray(responseObj.data)) {
-          supportList = responseObj.data;
-        } else if (Array.isArray(responseObj.Array)) {
-          supportList = responseObj.Array;
-        } else if (Array.isArray(responseObj.list)) {
-          supportList = responseObj.list;
-        } else if (Array.isArray(responseObj.content)) {
-          supportList = responseObj.content;
-        }
+      if (USE_FEE_LIST_MOCK_DATA) {
+        supportList = filterFeeMockRows(
+          FEE_LIST_MOCK,
+          notifyFrom,
+          notifyTo,
+          nm,
+          address,
+        );
+      } else {
+        const feeBody = buildSupportFeePayerListBody({
+          reqDateFrom: notifyFrom,
+          reqDateTo: notifyTo,
+          userNm: nm,
+          address,
+        });
+        const feeRes = await postFeePayerList(feeBody);
+        supportList = (Array.isArray(feeRes.data) ? feeRes.data : []).map(
+          mapFeePayerListItemToSupport,
+        );
       }
 
-
-      // 데이터 검증
       if (supportList.length === 0) {
         setError("다운로드할 데이터가 없습니다.");
         return;
       }
 
-      // 엑셀 파일 다운로드
-      await downloadSupportsExcel(supportList, "샘플업무");
-      console.log(`✅ 엑셀 다운로드 완료: ${supportList.length}건`);
-      console.groupEnd();
+      await downloadFeePayerListExcel(supportList, "오수원인자부담금목록");
     } catch (err) {
-      console.error("❌ 엑셀 다운로드 실패:", err);
-      console.groupEnd();
+      console.error("엑셀 다운로드 실패:", err);
 
       if (err instanceof ApiError) {
         if (err.status === 401) {
