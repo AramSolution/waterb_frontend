@@ -205,7 +205,7 @@ function mapPaymentLine(
     paymentSeq2: seq2N > 0 ? seq2N : undefined,
     lineDate: payDay,
     amount:
-      Number.isFinite(pay) && pay !== 0 ? `${formatIntKo(pay)}원` : "",
+      Number.isFinite(pay) && pay !== 0 ? formatIntKo(pay) : "",
     remarks: decodeDisplayText(String(p.payDesc ?? "").trim()),
   };
 }
@@ -250,10 +250,10 @@ function mapPaymentDetailToEntry(
       Number.isFinite(waterSum) && waterSum !== 0 ? formatMetricKo(waterSum) : "",
     causerCharge:
       Number.isFinite(waterCost) && waterCost !== 0
-        ? `${formatIntKo(waterCost)}원`
+        ? formatIntKo(waterCost)
         : "",
     paidAmount:
-      Number.isFinite(waterPay) && waterPay !== 0 ? `${formatIntKo(waterPay)}원` : "",
+      Number.isFinite(waterPay) && waterPay !== 0 ? formatIntKo(waterPay) : "",
     lines,
   };
 }

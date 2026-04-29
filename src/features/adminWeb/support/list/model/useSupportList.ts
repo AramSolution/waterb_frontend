@@ -80,8 +80,17 @@ export function useSupportList() {
   const [selectedDeleteTarget, setSelectedDeleteTarget] = useState<{
     itemId: string;
     seq: number;
+    applicantNm: string;
+    levyAmtLabel: string;
   } | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [showDeleteSuccessDialog, setShowDeleteSuccessDialog] = useState(false);
+  const [deleteSuccessMessage, setDeleteSuccessMessage] = useState("");
+  const [showDeleteFailDialog, setShowDeleteFailDialog] = useState(false);
+  const [deleteFailMessage, setDeleteFailMessage] = useState("");
+  const [deleteFailDialogType, setDeleteFailDialogType] = useState<
+    "danger" | "warning" | "success"
+  >("warning");
   const [showSearchForm, setShowSearchForm] = useState(false);
   const [showApplicantDialog, setShowApplicantDialog] = useState(false);
   const [selectedApplicantBusinessId, setSelectedApplicantBusinessId] =
@@ -322,14 +331,38 @@ export function useSupportList() {
     setCurrentPage(page);
   };
 
-  const handleDeleteClick = (itemId: string, seq: number) => {
+  const handleDeleteClick = (
+    itemId: string,
+    seq: number,
+    applicantNm?: string,
+    levyAmtRaw?: unknown,
+    isPaid?: boolean,
+  ) => {
+    if (isPaid) {
+      setDeleteFailDialogType("warning");
+      setDeleteFailMessage("납부완료 건은 삭제하실 수 없습니다.");
+      setShowDeleteFailDialog(true);
+      return;
+    }
+
     const id = itemId.trim();
     const n = Number(seq);
     if (!id || !Number.isFinite(n) || n <= 0) {
       setError("삭제 대상 식별값(itemId/seq)이 올바르지 않습니다.");
       return;
     }
-    setSelectedDeleteTarget({ itemId: id, seq: Math.trunc(n) });
+    const rawNm = String(applicantNm ?? "").trim();
+    const targetNm = rawNm || "-";
+    const levyNum = Number(String(levyAmtRaw ?? "").replace(/,/g, ""));
+    const levyAmtLabel = Number.isFinite(levyNum)
+      ? `${Math.max(0, Math.round(levyNum)).toLocaleString("ko-KR")}원`
+      : "-";
+    setSelectedDeleteTarget({
+      itemId: id,
+      seq: Math.trunc(n),
+      applicantNm: targetNm,
+      levyAmtLabel,
+    });
     setShowDeleteDialog(true);
   };
 
@@ -352,6 +385,8 @@ export function useSupportList() {
       if (response.result === "00") {
         await fetchSupportsRef.current();
         setShowDeleteDialog(false);
+        setDeleteSuccessMessage("정상적으로 삭제되었습니다.");
+        setShowDeleteSuccessDialog(true);
         setSelectedDeleteTarget(null);
       } else {
         setError(response.message || "오수 원인자부담금 삭제에 실패했습니다.");
@@ -361,14 +396,26 @@ export function useSupportList() {
       if (err instanceof ApiError) {
         if (err.status === 401) {
           setError("인증이 만료되었습니다. 다시 로그인해주세요.");
+          setDeleteFailDialogType("danger");
+          setDeleteFailMessage("인증이 만료되었습니다. 다시 로그인해주세요.");
+          setShowDeleteFailDialog(true);
           setTimeout(() => {
             window.location.href = "/adminWeb/login";
           }, 2000);
         } else {
-          setError(err.message || "오수 원인자부담금 삭제 중 오류가 발생했습니다.");
+          const failMessage =
+            err.message || "오수 원인자부담금 삭제 중 오류가 발생했습니다.";
+          setError(failMessage);
+          setDeleteFailDialogType("warning");
+          setDeleteFailMessage(failMessage);
+          setShowDeleteFailDialog(true);
         }
       } else {
-        setError("오수 원인자부담금 삭제 중 오류가 발생했습니다.");
+        const failMessage = "오수 원인자부담금 삭제 중 오류가 발생했습니다.";
+        setError(failMessage);
+        setDeleteFailDialogType("danger");
+        setDeleteFailMessage(failMessage);
+        setShowDeleteFailDialog(true);
       }
       setShowDeleteDialog(false);
       setSelectedDeleteTarget(null);
@@ -380,6 +427,17 @@ export function useSupportList() {
   const handleDeleteCancel = () => {
     setShowDeleteDialog(false);
     setSelectedDeleteTarget(null);
+  };
+
+  const handleDeleteSuccessDialogClose = () => {
+    setShowDeleteSuccessDialog(false);
+    setDeleteSuccessMessage("");
+  };
+
+  const handleDeleteFailDialogClose = () => {
+    setShowDeleteFailDialog(false);
+    setDeleteFailMessage("");
+    setDeleteFailDialogType("warning");
   };
 
   const handleSort = (key: string) => {
@@ -574,7 +632,13 @@ export function useSupportList() {
     isInitialLoad,
     currentPage,
     showDeleteDialog,
+    selectedDeleteTarget,
     deleteLoading,
+    showDeleteSuccessDialog,
+    deleteSuccessMessage,
+    showDeleteFailDialog,
+    deleteFailMessage,
+    deleteFailDialogType,
     showSearchForm,
     showApplicantDialog,
     applicants,
@@ -595,6 +659,8 @@ export function useSupportList() {
     handleDeleteClick,
     handleDeleteConfirm,
     handleDeleteCancel,
+    handleDeleteSuccessDialogClose,
+    handleDeleteFailDialogClose,
     handleSort,
     handleSearch,
     handleApplicantClick,

@@ -232,7 +232,7 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                       value={entry.category}
                       onChange={handleEntryFieldChange}
                       options={categoryOptions}
-                      placeholder="--------선택하세요-----"
+                      placeholder="선택하세요"
                       data-entry-id={entry.id}
                       disabled={rowReadOnly}
                     />
@@ -243,7 +243,7 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                       value={entry.type}
                       onChange={handleEntryFieldChange}
                       options={getSewageTypeOptionsForCategory(entry.category)}
-                      placeholder="--------선택하세요-----"
+                      placeholder="선택하세요"
                       data-entry-id={entry.id}
                       disabled={rowReadOnly}
                     />
@@ -367,7 +367,7 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                                 name="causerCharge"
                                 value={entry.causerCharge}
                                 onChange={handleEntryFieldChange}
-                                placeholder="예: 300,000원"
+                                placeholder="예: 300,000"
                                 data-entry-id={entry.id}
                                 readOnly={rowReadOnly}
                                 className={

@@ -65,7 +65,13 @@ export const SupportListPageView: React.FC = () => {
     isInitialLoad,
     currentPage,
     showDeleteDialog,
+    selectedDeleteTarget,
     deleteLoading,
+    showDeleteSuccessDialog,
+    deleteSuccessMessage,
+    showDeleteFailDialog,
+    deleteFailMessage,
+    deleteFailDialogType,
     showSearchForm,
     showApplicantDialog,
     applicants,
@@ -83,6 +89,8 @@ export const SupportListPageView: React.FC = () => {
     handleDeleteClick,
     handleDeleteConfirm,
     handleDeleteCancel,
+    handleDeleteSuccessDialogClose,
+    handleDeleteFailDialogClose,
     handleSearch,
     handleApplicantClick,
     handleApplicantDialogClose,
@@ -94,6 +102,13 @@ export const SupportListPageView: React.FC = () => {
     addr,
     setAddr,
   } = useSupportList();
+
+  const deleteDialogTitle = selectedDeleteTarget
+    ? `${selectedDeleteTarget.applicantNm} 부과액 : ${selectedDeleteTarget.levyAmtLabel} 삭제`
+    : "삭제 대상을 확인할 수 없습니다.";
+
+  const deleteDialogMessage =
+    "이 작업은 되돌릴 수 없습니다. 계속하시겠습니까 ?";
 
   // 상세(읽기 전용) — 등록 화면과 동일 격자
   const handleDetailClick = (businessId: string) => {
@@ -587,10 +602,16 @@ export const SupportListPageView: React.FC = () => {
                                   type="button"
                                   className="px-2 py-1 text-[12px] text-red-600 border border-red-600 rounded hover:bg-red-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
                                   style={{ minWidth: "44px" }}
+                                  title={
+                                    f.paid ? "납부완료 건은 삭제할 수 없습니다." : undefined
+                                  }
                                   onClick={() =>
                                     handleDeleteClick(
                                       itemId || businessId || f.rowKey,
                                       detailSeq,
+                                      f.name,
+                                      f.levyRaw,
+                                      f.paid,
                                     )
                                   }
                                   disabled={
@@ -726,10 +747,16 @@ export const SupportListPageView: React.FC = () => {
                           <button
                             type="button"
                             className="px-2 py-1 text-[12px] text-red-600 border border-red-600 rounded hover:bg-red-50 transition-colors disabled:opacity-50"
+                            title={
+                              f.paid ? "납부완료 건은 삭제할 수 없습니다." : undefined
+                            }
                             onClick={() =>
                               handleDeleteClick(
                                 itemId || businessId || f.rowKey,
                                 detailSeq,
+                                f.name,
+                                f.levyRaw,
+                                f.paid,
                               )
                             }
                             disabled={
@@ -763,13 +790,35 @@ export const SupportListPageView: React.FC = () => {
       {/* 삭제 확인 다이얼로그 */}
       <ConfirmDialog
         isOpen={showDeleteDialog}
-        title="오수 원인자부담금 삭제"
-        message="해당 건을 삭제하시겠습니까?"
-        confirmText={deleteLoading ? "처리 중..." : "삭제"}
+        title={deleteDialogTitle}
+        message={deleteDialogMessage}
+        confirmText={deleteLoading ? "처리 중..." : "예"}
         cancelText="닫기"
         type="danger"
         onConfirm={handleDeleteConfirm}
         onCancel={handleDeleteCancel}
+      />
+
+      <ConfirmDialog
+        isOpen={showDeleteSuccessDialog}
+        title="삭제 완료"
+        message={deleteSuccessMessage || "정상적으로 삭제되었습니다."}
+        confirmText="확인"
+        cancelText="닫기"
+        type="success"
+        onConfirm={handleDeleteSuccessDialogClose}
+        onCancel={handleDeleteSuccessDialogClose}
+      />
+
+      <ConfirmDialog
+        isOpen={showDeleteFailDialog}
+        title="삭제 실패"
+        message={deleteFailMessage || "오수 원인자부담금 삭제에 실패했습니다."}
+        confirmText="확인"
+        cancelText="닫기"
+        type={deleteFailDialogType}
+        onConfirm={handleDeleteFailDialogClose}
+        onCancel={handleDeleteFailDialogClose}
       />
 
       {/* 신청인 목록 다이얼로그 */}

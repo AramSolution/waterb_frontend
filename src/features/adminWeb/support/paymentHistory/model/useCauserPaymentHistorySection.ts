@@ -46,10 +46,14 @@ function createEntry(): CauserPaymentEntry {
     type: "",
     notifyDate: "2020-01-01",
     sewageVolume: "9.8",
-    causerCharge: "300,000원",
-    paidAmount: "300,000원",
+    causerCharge: "300,000",
+    paidAmount: "300,000",
     lines: [createLine()],
   };
+}
+
+function isEntryPaidStatus(entry: CauserPaymentEntry): boolean {
+  return entry.status === "PAID";
 }
 
 function normalizeEntries(
@@ -87,14 +91,20 @@ export function useCauserPaymentHistorySection(
   }, [initialEntries]);
 
   const removedPaymentsRef = useRef<Array<{ seq: number; seq2: number }>>([]);
+  /** 상세 로드 시점의 `detailSeq`별 납부 상태 — 저장 시 `paySta`만 바뀐 경우 본문에 포함 */
+  const initialStatusByDetailSeqRef = useRef<Map<number, string>>(new Map());
+
   useEffect(() => {
     if (initialEntries === undefined) return;
     removedPaymentsRef.current = [];
+    const m = new Map<number, string>();
+    for (const en of initialEntries) {
+      if (en.detailSeq != null && en.detailSeq > 0) {
+        m.set(en.detailSeq, en.status);
+      }
+    }
+    initialStatusByDetailSeqRef.current = m;
   }, [initialEntries]);
-
-  const handleAddEntry = useCallback(() => {
-    setEntries((prev) => [...prev, createEntry()]);
-  }, []);
 
   const handleSelectChange = useCallback(
     (e: ChangeEvent<HTMLSelectElement>) => {
@@ -143,6 +153,7 @@ export function useCauserPaymentHistorySection(
       setEntries((prev) =>
         prev.map((en) => {
           if (en.id !== entryId) return en;
+          if (isEntryPaidStatus(en)) return en;
           return {
             ...en,
             lines: en.lines.map((L) => {
@@ -161,11 +172,11 @@ export function useCauserPaymentHistorySection(
 
   const handleAddLine = useCallback((entryId: string) => {
     setEntries((prev) =>
-      prev.map((en) =>
-        en.id === entryId
-          ? { ...en, lines: [...en.lines, createLine()] }
-          : en,
-      ),
+      prev.map((en) => {
+        if (en.id !== entryId) return en;
+        if (isEntryPaidStatus(en)) return en;
+        return { ...en, lines: [...en.lines, createLine()] };
+      }),
     );
   }, []);
 
@@ -174,6 +185,7 @@ export function useCauserPaymentHistorySection(
       setEntries((prev) =>
         prev.map((en) => {
           if (en.id !== entryId) return en;
+          if (isEntryPaidStatus(en)) return en;
           if (en.lines.length <= 1) return en;
           const victim = en.lines.find((L) => L.id === lineId);
           if (
@@ -231,8 +243,15 @@ export function useCauserPaymentHistorySection(
               };
             });
           const payments = [...deleted, ...inserted];
-          if (payments.length === 0) return null;
-          return { seq, payments };
+          const initialSt = initialStatusByDetailSeqRef.current.get(seq);
+          const statusChanged =
+            initialSt !== undefined && initialSt !== entry.status;
+          const paySta = entry.status === "PAID" ? "02" : "01";
+          if (payments.length === 0 && !statusChanged) return null;
+          if (payments.length === 0 && statusChanged) {
+            return { seq, paySta };
+          }
+          return { seq, paySta, payments };
         })
         .filter((d): d is NonNullable<typeof d> => d != null);
 
@@ -247,7 +266,6 @@ export function useCauserPaymentHistorySection(
 
   return {
     entries,
-    handleAddEntry,
     categoryStatusOptions: {
       category: [
         { value: "INDIVIDUAL", label: "개별건축물" },

@@ -81,8 +81,7 @@ export function buildSewageEstimateEntriesFromFeeRow(
 
   const levyRaw = rowAny.levyAmt ?? rowAny.impAmt;
   const n = Number(String(levyRaw ?? "").replace(/,/g, ""));
-  const causerCharge =
-    Number.isFinite(n) && n > 0 ? `${n.toLocaleString("ko-KR")}원` : "";
+  const causerCharge = Number.isFinite(n) && n > 0 ? n.toLocaleString("ko-KR") : "";
   const levyRounded =
     Number.isFinite(n) && n > 0 ? String(Math.max(0, Math.round(n))) : "";
 
@@ -121,8 +120,12 @@ function formatIntKo(n: number): string {
   return Math.round(n).toLocaleString("ko-KR");
 }
 
-function formatMetricKo(n: number): string {
-  return n.toLocaleString("ko-KR", { maximumFractionDigits: 2 });
+function formatDecimalPlain(n: number): string {
+  if (!Number.isFinite(n)) return "";
+  return n.toLocaleString("en-US", {
+    maximumFractionDigits: 10,
+    useGrouping: false,
+  });
 }
 
 function normalizeReqDateYmd(raw: string | null | undefined): string {
@@ -277,15 +280,15 @@ export function mapFeePayerDetailDtoToInitialForm(
 
     const wc = block.waterCost != null ? Number(block.waterCost) : NaN;
     const causerCharge =
-      Number.isFinite(wc) && wc !== 0 ? `${formatIntKo(Math.round(wc))}원` : "";
+      Number.isFinite(wc) && wc !== 0 ? formatIntKo(Math.round(wc)) : "";
 
     const wv = block.waterVal != null ? Number(block.waterVal) : NaN;
     const sewageLevyAmount =
-      Number.isFinite(wv) && wv !== 0 ? formatMetricKo(wv) : "";
+      Number.isFinite(wv) && wv !== 0 ? formatDecimalPlain(wv) : "";
 
     const ws = block.waterSum != null ? Number(block.waterSum) : NaN;
     const sewageVolume =
-      Number.isFinite(ws) && ws !== 0 ? formatMetricKo(ws) : "";
+      Number.isFinite(ws) && ws !== 0 ? formatDecimalPlain(ws) : "";
 
     const calcs = [...(block.calculations ?? [])].sort(
       (a, b) => numOrZero(a.seq2) - numOrZero(b.seq2),
