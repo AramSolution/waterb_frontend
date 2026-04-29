@@ -305,6 +305,7 @@ export const CauserPaymentHistorySection: React.FC<
                                 value={line.amount}
                                 onChange={handleLineFieldChange}
                                 placeholder="금액"
+                                inputMode="numeric"
                                 data-entry-id={entry.id}
                                 data-line-id={line.id}
                                 readOnly={lineReadOnly(line)}

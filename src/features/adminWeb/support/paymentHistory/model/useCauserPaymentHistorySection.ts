@@ -159,7 +159,9 @@ export function useCauserPaymentHistorySection(
             lines: en.lines.map((L) => {
               if (L.id !== lineId) return L;
               if (name === "lineDate") return { ...L, lineDate: value };
-              if (name === "amount") return { ...L, amount: value };
+              if (name === "amount") {
+                return { ...L, amount: formatAmountInput(value) };
+              }
               if (name === "remarks") return { ...L, remarks: value };
               return L;
             }),
@@ -290,6 +292,12 @@ function parseAmount(raw: string): number {
   const n = Number(String(raw ?? "").replace(/[^\d.-]/g, "").trim());
   if (!Number.isFinite(n)) return 0;
   return Math.max(0, Math.trunc(n));
+}
+
+function formatAmountInput(raw: string): string {
+  const digits = String(raw ?? "").replace(/\D/g, "");
+  if (!digits) return "";
+  return Number(digits).toLocaleString("ko-KR");
 }
 
 function getTodayYmd(): string {
