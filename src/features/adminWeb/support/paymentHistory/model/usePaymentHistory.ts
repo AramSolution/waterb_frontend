@@ -264,7 +264,7 @@ function buildPaymentSaveMessage(
   const base = String(res.message ?? "").trim() || "납부내역이 저장되었습니다.";
   const skipped = res.skippedDetails ?? [];
   if (skipped.length === 0) return base;
-  return `${base} (일부 ${skipped.length}건은 서버 정책에 따라 반영되지 않았습니다.)`;
+  return `${base} 일부 ${skipped.length}건은 서버 정책에 따라 반영되지 않았습니다.`;
 }
 
 function getTodayYmd(): string {

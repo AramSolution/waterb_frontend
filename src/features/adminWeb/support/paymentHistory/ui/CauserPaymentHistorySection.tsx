@@ -63,16 +63,8 @@ export const CauserPaymentHistorySection: React.FC<
 
   return (
     <div className="bg-white rounded-lg shadow mt-6">
-      <div className="px-6 py-4 border-b border-gray-200 flex flex-wrap items-center justify-between gap-2">
+      <div className="px-6 py-4 border-b border-gray-200 flex flex-wrap items-center gap-2">
         <h5 className="text-lg font-semibold mb-0">원인자부담 납부내역</h5>
-        <button
-          type="button"
-          className="px-3 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          style={{ minWidth: "72px" }}
-          onClick={handleAddEntryClick}
-        >
-          추가
-        </button>
       </div>
 
       <div className="p-0 pb-6">
@@ -392,6 +384,17 @@ export const CauserPaymentHistorySection: React.FC<
             </div>
           </div>
         ))}
+        <div className="relative mx-6 border-t border-[#dee2e6] pt-5 pb-2">
+          <button
+            type="button"
+            className="absolute left-1/2 top-0 z-[1] flex h-10 w-10 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 border-white bg-blue-600 text-2xl font-light leading-none text-white shadow-md transition-colors hover:bg-blue-700"
+            aria-label="원인자부담 납부내역 블록 추가"
+            title="원인자부담 납부내역 블록 추가"
+            onClick={handleAddEntryClick}
+          >
+            +
+          </button>
+        </div>
       </div>
       <ConfirmDialog
         isOpen={showLimitDialog}
