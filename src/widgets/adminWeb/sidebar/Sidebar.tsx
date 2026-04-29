@@ -227,7 +227,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
             aria-label="관리자 홈(대시보드)으로 이동"
             onClick={handleLinkClick}
           >
-            <img src="/images/logo.png" alt="관리자 로고" />
+            <img
+              src={
+                isCollapsed ? '/images/logo_small.png' : '/images/logo.png'
+              }
+              alt="관리자 로고"
+            />
             <span className="font-bold sidebar-logo-text"></span>
           </Link>
           <button className="sidebar-close-btn" onClick={onClose}>

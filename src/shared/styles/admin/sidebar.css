@@ -1,9 +1,9 @@
 .sidebar-header {
-  @apply py-5 px-4 border-b border-gray-300 text-center relative transition-all duration-300;
+  @apply py-[1.15rem] px-4 border-b border-gray-300 text-center relative transition-all duration-300;
 }
 
 .sidebar.collapsed .sidebar-header {
-  @apply px-0;
+  @apply py-[1.25rem] px-0;
 }
 
 .sidebar-logo {
@@ -19,7 +19,8 @@
 }
 
 .sidebar.collapsed .sidebar-logo img {
-  @apply h-8 w-8;
+  /* 축소 시 정사각형 아이콘형 로고 — 가로형 로고와 동일 너비 강제로 찌그러짐 방지 */
+  @apply h-8 w-8 max-h-8 max-w-8 shrink-0 object-contain;
 }
 
 .sidebar-logo span {
@@ -53,7 +54,7 @@
 }
 
 .sidebar-menu {
-  @apply py-4 px-0;
+  @apply pb-4 px-0;
 }
 
 .menu-item {
