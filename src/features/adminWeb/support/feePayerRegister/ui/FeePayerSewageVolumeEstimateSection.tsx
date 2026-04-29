@@ -29,7 +29,7 @@ export interface FeePayerSewageVolumeEstimateSectionProps {
   /** 상세 등: 초기 엔트리 스냅샷. `readOnly`일 때 함께 넘기는 것을 권장. */
   initialEntries?: SewageEstimateEntry[];
   /**
-   * 통지일 블록 하단 원형 `+`(엔트리 추가). 기본 true — 등록·상세 동일.
+   * 통지일 블록 **마지막** 카드 하단 원형 `+`(엔트리 추가). 기본 true — 등록·상세 동일.
    */
   showAddNoticeBlockButton?: boolean;
   /** 기본정보·ITEM_ID — 계산 API(`POST …/fee-payer/calculate`) 연동 시 전달 */
@@ -40,7 +40,7 @@ export interface FeePayerSewageVolumeEstimateSectionProps {
   >;
 }
 
-/** 오수량 발생량 산정 — `UsageLookupModal`은 용도 **조회** 전용. 통지일 블록 추가 `+`는 엔트리 카드 **하단 테두리 가운데**에 반만 걸친 원형(상세·용도 아래 흐름). 상세 `추가` = 층수~삭제 행만. */
+/** 오수량 발생량 산정 — `UsageLookupModal`은 용도 **조회** 전용. 통지일 블록 추가 `+`는 하단 경계선 위에 떠 있도록 배치(레이아웃 높이 미사용). 상세 `추가` = 층수~삭제 행만. */
 export const FeePayerSewageVolumeEstimateSection: React.FC<
   FeePayerSewageVolumeEstimateSectionProps
 > = ({
@@ -193,13 +193,13 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
           >
             <div className="flex flex-col md:flex-row md:items-stretch">
               <div
-                className="hidden md:flex w-11 shrink-0 items-start justify-center py-3 bg-gray-200 text-gray-800 font-semibold text-sm border border-gray-200 border-b-0 md:border-b md:border-r-0"
+                className="hidden md:flex w-11 shrink-0 flex-col items-center self-stretch bg-gray-200 pt-3 font-semibold text-base text-gray-800 border border-gray-200 border-b-0 md:border-b md:border-r-0"
                 aria-hidden
               >
-                {entryIndex + 1}
+                <span>{entryIndex + 1}</span>
               </div>
               <div className="flex-1 min-w-0 border border-gray-200 md:border-l-0">
-                <div className="md:hidden px-3 py-2 bg-gray-100 border-b border-gray-200 text-sm font-semibold text-gray-800">
+                <div className="md:hidden px-3 py-2 bg-gray-100 border-b border-gray-200 text-base font-semibold text-gray-800">
                   {entryIndex + 1}
                 </div>
 
@@ -277,7 +277,7 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                     <div className="feePayerPriceGrid w-full overflow-hidden rounded-none border border-[#e5e7eb] bg-white">
                       <div className="flex w-full flex-col md:flex-row md:items-stretch">
                         <div className="feePayerPricePair flex min-h-[45px] w-full min-w-0 flex-1 flex-col border-b border-[#e5e7eb] md:flex-row md:border-b-0 md:border-r md:border-[#e5e7eb]">
-                          <label className="m-0 flex min-h-[40px] shrink-0 items-center bg-gray-100 px-2 py-1.5 text-[13px] font-bold text-gray-800 register-form-label md:w-[34%] md:max-w-[8.5rem] md:py-2">
+                          <label className="m-0 flex min-h-[40px] shrink-0 items-center bg-gray-100 px-2 py-1.5 font-bold text-gray-800 register-form-label md:w-[34%] md:max-w-[8.5rem] md:py-2">
                             기준단가
                           </label>
                           <div className="register-form-mobile-field flex min-h-[40px] flex-1 items-center border-t border-[#e5e7eb] p-[5px] md:min-h-[45px] md:border-t-0">
@@ -300,7 +300,7 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                           </div>
                         </div>
                         <div className="feePayerPricePair flex min-h-[45px] w-full min-w-0 flex-1 flex-col border-b border-[#e5e7eb] md:flex-row md:border-b-0 md:border-r md:border-[#e5e7eb]">
-                          <label className="m-0 flex min-h-[40px] shrink-0 items-center bg-gray-100 px-2 py-1.5 text-[13px] font-bold text-gray-800 register-form-label md:w-[34%] md:max-w-[8.5rem] md:py-2">
+                          <label className="m-0 flex min-h-[40px] shrink-0 items-center bg-gray-100 px-2 py-1.5 font-bold text-gray-800 register-form-label md:w-[34%] md:max-w-[8.5rem] md:py-2">
                             오수량
                           </label>
                           <div className="register-form-mobile-field flex min-h-[40px] flex-1 items-center border-t border-[#e5e7eb] p-[5px] md:min-h-[45px] md:border-t-0">
@@ -326,8 +326,7 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                           {!readOnly ? (
                             <button
                               type="button"
-                              className="rounded-full border border-gray-300 bg-white px-3 py-1.5 text-[13px] text-gray-800 shadow-sm transition-colors hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                              style={{ minWidth: "80px" }}
+                              className="inline-flex min-h-10 min-w-[80px] items-center justify-center rounded-full border border-gray-300 bg-white px-4 py-1.5 text-base text-gray-800 shadow-sm transition-colors hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                               onClick={() => void handleCalculateEntry(entry.id)}
                               disabled={
                                 calcBusyEntryId === entry.id ||
@@ -346,7 +345,7 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                             </button>
                           ) : (
                             <div
-                              className="flex min-h-[40px] min-w-[80px] items-center justify-center rounded-full border border-gray-200 bg-gray-100 px-3 py-1.5 text-[13px] text-gray-500"
+                              className="inline-flex min-h-10 min-w-[80px] items-center justify-center rounded-full border border-gray-200 bg-gray-100 px-4 py-1.5 text-base text-gray-500"
                               aria-hidden
                             >
                               계산
@@ -357,7 +356,7 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                       {/* 1행↔2행 가로 구분: 데이터 열만(계산 열·스페이서 아래 선 없음) */}
                       <div className="feePayerPriceGridRow2 flex w-full flex-col bg-gray-50/50 md:flex-row md:items-stretch">
                         <div className="feePayerPricePair flex min-h-[45px] w-full min-w-0 flex-1 flex-col border-b border-[#e5e7eb] shadow-[inset_0_1px_0_0_#d1d5db] md:flex-row md:border-b-0 md:border-r md:border-[#e5e7eb]">
-                          <label className="m-0 flex min-h-[40px] shrink-0 items-center bg-gray-100 px-2 py-1.5 text-[13px] font-bold text-gray-800 register-form-label md:w-[34%] md:max-w-[8.5rem] md:border-0 md:py-2">
+                          <label className="m-0 flex min-h-[40px] shrink-0 items-center bg-gray-100 px-2 py-1.5 font-bold text-gray-800 register-form-label md:w-[34%] md:max-w-[8.5rem] md:border-0 md:py-2">
                             원인자부담금
                           </label>
                           <div className="register-form-mobile-field flex min-h-[40px] flex-1 items-center border-t border-[#e5e7eb] p-[5px] md:min-h-[45px] md:border-t-0">
@@ -378,7 +377,7 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                           </div>
                         </div>
                         <div className="feePayerPricePair flex min-h-[45px] w-full min-w-0 flex-1 flex-col md:flex-row md:border-r md:border-[#e5e7eb] md:shadow-[inset_0_1px_0_0_#d1d5db]">
-                          <label className="m-0 flex min-h-[40px] shrink-0 items-center bg-gray-100 px-2 py-1.5 text-[13px] font-bold text-gray-800 register-form-label md:w-[34%] md:max-w-[8.5rem] md:border-0 md:py-2">
+                          <label className="m-0 flex min-h-[40px] shrink-0 items-center bg-gray-100 px-2 py-1.5 font-bold text-gray-800 register-form-label md:w-[34%] md:max-w-[8.5rem] md:border-0 md:py-2">
                             오수부과량
                           </label>
                           <div className="register-form-mobile-field flex min-h-[40px] flex-1 items-center border-t border-[#e5e7eb] p-[5px] md:min-h-[45px] md:border-t-0">
@@ -419,7 +418,7 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                       {!readOnly && !rowReadOnly ? (
                         <button
                           type="button"
-                          className="px-3 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="px-3 py-2 text-base bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                           style={{ minWidth: "72px" }}
                           onClick={() => handleAddDetailLine(entry.id)}
                         >
@@ -455,10 +454,9 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                       <div className="flex w-full flex-col flex-wrap md:flex-row md:items-stretch">
                         <div className="flex min-w-0 w-full flex-col md:ml-0 md:flex-[0.55] md:flex-row md:items-stretch">
                           <label
-                            className="m-0 flex w-full shrink-0 items-center bg-gray-100 register-form-label md:w-1/4"
+                            className="feePayerDetailStripLabel m-0 flex w-full shrink-0 items-center bg-gray-100 register-form-label md:w-1/4"
                             style={{
                               border: "1px solid #dee2e6",
-                              padding: "5px",
                             }}
                           >
                             층수
@@ -481,7 +479,7 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                         </div>
                         <div className="flex min-w-0 w-full flex-col border-t border-[#dee2e6] md:-ml-px md:flex-[1.9] md:flex-row md:items-stretch md:border-t-0">
                           <label
-                            className="m-0 flex w-full shrink-0 items-center bg-gray-100 register-form-label md:w-1/4"
+                            className="m-0 flex w-full shrink-0 items-center whitespace-nowrap bg-gray-100 text-base register-form-label md:w-1/4"
                             style={{
                               border: "1px solid #dee2e6",
                               padding: "5px",
@@ -551,10 +549,9 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                         {lineCalcMode === "default" ? (
                           <div className="flex min-w-0 w-full flex-col border-t border-[#dee2e6] md:-ml-px md:flex-[0.55] md:flex-row md:items-stretch md:border-t-0">
                             <label
-                              className="m-0 flex w-full shrink-0 items-center bg-gray-100 register-form-label md:w-1/4"
+                              className="feePayerDetailStripLabel m-0 flex w-full shrink-0 items-center bg-gray-100 register-form-label md:w-1/4"
                               style={{
                                 border: "1px solid #dee2e6",
-                                padding: "5px",
                               }}
                             >
                               면적
@@ -583,10 +580,9 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                         {lineCalcMode !== "default" ? (
                           <div className="flex min-w-0 w-full flex-col border-t border-[#dee2e6] md:-ml-px md:flex-[0.55] md:flex-row md:items-stretch md:border-t-0">
                             <label
-                              className="m-0 flex w-full shrink-0 items-center bg-gray-100 register-form-label md:w-1/4"
+                              className="feePayerDetailStripLabel m-0 flex w-full shrink-0 items-center bg-gray-100 register-form-label md:w-1/4"
                               style={{
                                 border: "1px solid #dee2e6",
-                                padding: "5px",
                               }}
                             >
                               방수
@@ -616,10 +612,9 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                         {lineCalcMode === "multi" ? (
                           <div className="flex min-w-0 w-full flex-col border-t border-[#dee2e6] md:-ml-px md:flex-[0.55] md:flex-row md:items-stretch md:border-t-0">
                             <label
-                              className="m-0 flex w-full shrink-0 items-center bg-gray-100 register-form-label md:w-1/4"
+                              className="feePayerDetailStripLabel m-0 flex w-full shrink-0 items-center bg-gray-100 register-form-label md:w-1/4"
                               style={{
                                 border: "1px solid #dee2e6",
-                                padding: "5px",
                               }}
                             >
                               세대수
@@ -648,7 +643,7 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                         ) : null}
                         <div className="flex min-w-0 w-full flex-col border-t border-[#dee2e6] md:-ml-px md:min-w-[15.5rem] md:flex-[1.65] md:flex-row md:items-stretch md:border-t-0">
                           <label
-                            className="m-0 flex w-full shrink-0 items-center whitespace-nowrap bg-gray-100 text-sm register-form-label md:w-[42%]"
+                            className="m-0 flex w-full shrink-0 items-center whitespace-nowrap bg-gray-100 text-base register-form-label md:w-[42%]"
                             style={{
                               border: "1px solid #dee2e6",
                               padding: "5px",
@@ -688,9 +683,9 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                             disabled={rowReadOnly}
                           />
                         </div>
-                        <div className="flex w-full shrink-0 flex-col justify-center gap-2 border-t border-solid border-[#dee2e6] px-2 py-2 md:-ml-px md:w-auto md:min-w-0 md:flex-1 md:flex-row md:flex-wrap md:items-center md:border md:border-solid md:border-[#dee2e6] md:py-2">
-                          <div className="flex w-full min-w-[5.5rem] flex-col gap-0.5 md:w-auto md:max-w-[7.5rem]">
-                            <span className="px-0.5 text-[11px] font-medium text-gray-600 md:hidden">
+                        <div className="flex w-full shrink-0 flex-col border-t border-solid border-[#dee2e6] md:-ml-px md:min-h-0 md:min-w-0 md:flex-1 md:flex-row md:items-stretch md:border md:border-solid md:border-[#dee2e6]">
+                          <div className="flex min-w-0 flex-1 flex-col justify-center gap-0.5 px-2 py-2 md:border-r md:border-[#dee2e6]">
+                            <span className="px-0.5 text-base font-medium text-gray-600 md:hidden">
                               오수량
                             </span>
                             <FormInput
@@ -706,26 +701,27 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                             />
                           </div>
                           {!readOnly && !rowReadOnly ? (
-                            <button
-                              type="button"
-                              className="px-4 py-2 text-sm border border-gray-400 rounded-full bg-white text-gray-800 hover:bg-gray-50 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
-                              style={{ minWidth: "72px" }}
-                              onClick={() =>
-                                handleRemoveDetailLine(entry.id, line.id)
-                              }
-                              disabled={
-                                entry.lines.length === 1 &&
-                                entries.length === 1
-                              }
-                              title={
-                                entry.lines.length === 1 &&
-                                entries.length === 1
-                                  ? "최소 한 통지일 블록·한 상세 행은 유지됩니다"
-                                  : undefined
-                              }
-                            >
-                              삭제
-                            </button>
+                            <div className="flex min-h-[48px] shrink-0 items-center justify-center border-t border-[#dee2e6] px-3 py-2 md:min-h-0 md:w-[100px] md:border-t-0 md:border-l-0 md:border-[#dee2e6] md:px-2">
+                              <button
+                                type="button"
+                                className="inline-flex min-h-10 min-w-[72px] items-center justify-center rounded-full border border-gray-400 bg-white px-4 py-1.5 text-base text-gray-800 hover:bg-gray-50 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+                                onClick={() =>
+                                  handleRemoveDetailLine(entry.id, line.id)
+                                }
+                                disabled={
+                                  entry.lines.length === 1 &&
+                                  entries.length === 1
+                                }
+                                title={
+                                  entry.lines.length === 1 &&
+                                  entries.length === 1
+                                    ? "최소 한 통지일 블록·한 상세 행은 유지됩니다"
+                                    : undefined
+                                }
+                              >
+                                삭제
+                              </button>
+                            </div>
                           ) : null}
                         </div>
                       </div>
@@ -734,12 +730,14 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                   );
                 })}
 
-                {/* 통지일 블록(엔트리) 추가: 카드 하단 경계 가운데, 원이 선에 반쯝 걸치게 */}
-                {!readOnly && showAddNoticeBlockButton ? (
-                  <div className="relative border-t border-[#dee2e6] pt-5 pb-4">
+                {/* 통지일 블록 추가 `+`: 맨 마지막 카드에만 표시 — 흐름 높이 0, 버튼은 absolute */}
+                {!readOnly &&
+                showAddNoticeBlockButton &&
+                entryIndex === entries.length - 1 ? (
+                  <div className="relative mt-3 h-0 overflow-visible border-t border-[#dee2e6]">
                     <button
                       type="button"
-                      className="absolute left-1/2 top-0 z-[1] flex h-10 w-10 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 border-white bg-blue-600 text-2xl font-light leading-none text-white shadow-md transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+                      className="absolute left-1/2 top-0 z-[1] flex h-12 w-12 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 border-white bg-blue-600 text-white shadow-md transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
                       aria-label="통지일 블록 추가"
                       title={
                         canAddNoticeBlock
@@ -749,12 +747,14 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                       disabled={!canAddNoticeBlock}
                       onClick={handleAddEntry}
                     >
-                      +
+                      <span className="block translate-y-[-0.08em] text-3xl font-light leading-none">
+                        +
+                      </span>
                     </button>
                   </div>
-                ) : (
-                  <div className="border-t border-[#dee2e6] pt-2 pb-2" />
-                )}
+                ) : readOnly || !showAddNoticeBlockButton ? (
+                  <div className="mt-3 border-t border-[#dee2e6]" aria-hidden />
+                ) : null}
               </div>
             </div>
           </div>

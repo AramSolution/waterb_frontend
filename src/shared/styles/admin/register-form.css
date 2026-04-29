@@ -3,6 +3,27 @@
   @apply justify-end pr-4 font-bold;
 }
 
+/* 원인자부담금 등록·상세: 라벨·필드 글자 크기 통일 (text-base) */
+.fee-payer-register-scope .register-form-label {
+  @apply text-base;
+}
+
+.fee-payer-register-scope .register-form-mobile-field input:not([type='checkbox']):not([type='radio']),
+.fee-payer-register-scope .register-form-mobile-field select {
+  @apply text-base;
+}
+
+/* 오수량 산정 상세행(층수·용도·면적 등): 좁은 열에서 두 글자 줄바꿈 시 —
+   .register-form-label 기본 justify-end/pr-4 와 충돌하지 않도록 데스크톱만 균형 정렬 */
+@media (min-width: 768px) {
+  .fee-payer-register-scope label.feePayerDetailStripLabel.register-form-label {
+    justify-content: center !important;
+    align-items: center !important;
+    text-align: center !important;
+    padding: 5px 10px !important;
+  }
+}
+
 /* 레이블|필드 경계 한 줄만 보이도록 (데스크톱 포함, 다른 지원사업 등록과 동일) */
 .register-form-mobile-field {
   border-left: none !important;

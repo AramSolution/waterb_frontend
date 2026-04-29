@@ -229,7 +229,7 @@ export const CauserPaymentHistorySection: React.FC<
                     <div className="flex w-full justify-end">
                       <button
                         type="button"
-                        className="px-3 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="px-3 py-2 text-base bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         style={{ minWidth: "72px" }}
                         onClick={() => handleAddLine(entry.id)}
                         disabled={isEntryPaid}
@@ -344,11 +344,10 @@ export const CauserPaymentHistorySection: React.FC<
                             </div>
                           </div>
                         </div>
-                        <div className="flex w-full shrink-0 items-center justify-end border-t border-[#dee2e6] py-2 pl-2 md:-ml-px md:min-w-[5.5rem] md:max-w-[6.5rem] md:items-stretch md:border md:border-[#dee2e6] md:px-1 md:py-2">
+                        <div className="flex min-h-[48px] w-full shrink-0 flex-col items-center justify-center border-t border-solid border-[#dee2e6] px-3 py-2 md:-ml-px md:min-h-0 md:w-[100px] md:flex-none md:border md:border-solid md:border-[#dee2e6] md:border-l md:border-t-0 md:px-2 md:py-2">
                           <button
                             type="button"
-                            className="w-full max-w-full rounded-full border border-gray-400 bg-white px-3 py-2 text-sm text-gray-800 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
-                            style={{ minWidth: "64px" }}
+                            className="inline-flex min-h-10 min-w-[72px] items-center justify-center rounded-full border border-gray-400 bg-white px-4 py-1.5 text-base text-gray-800 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
                             onClick={() => handleRemoveLine(entry.id, line.id)}
                             disabled={
                               entry.lines.length <= 1 || isEntryPaid

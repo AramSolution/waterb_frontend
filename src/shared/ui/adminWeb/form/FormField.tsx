@@ -49,7 +49,7 @@ export const FormField: React.FC<FormFieldProps> = ({
   const rowMdWidthClass = mdGridSpan === 4 ? "md:w-1/4" : "md:w-1/2";
   const labelMdWidthClass =
     mdGridSpan === 4
-      ? "md:w-[34%] md:min-w-0 md:shrink-0 md:text-[11px] md:leading-snug"
+      ? "md:w-[34%] md:min-w-0 md:shrink-0 md:text-base md:leading-snug"
       : "md:w-1/4";
   const fieldMdWidthClass =
     mdGridSpan === 4 ? "md:w-[66%] md:min-w-0" : "md:w-3/4";

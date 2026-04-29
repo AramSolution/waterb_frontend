@@ -68,7 +68,7 @@ export const FeePayerBasicRegisterForm: React.FC<
         <div className="flex justify-end mt-4 gap-2">
           <button
             type="button"
-            className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors text-[13px]"
+            className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors text-base"
             style={{ minWidth: "100px" }}
             onClick={handleCancel}
           >
@@ -89,7 +89,11 @@ export const FeePayerBasicRegisterForm: React.FC<
 
   return (
     <>
-      <form onSubmit={handleSubmit} noValidate>
+      <form
+        onSubmit={handleSubmit}
+        noValidate
+        className="fee-payer-register-scope"
+      >
         <div className="bg-white rounded-lg shadow">
           <div className="px-6 py-4 border-b border-gray-200">
             <h5 className="text-lg font-semibold mb-0">기본정보</h5>
@@ -219,7 +223,7 @@ export const FeePayerBasicRegisterForm: React.FC<
         <div className="flex justify-end mt-4 gap-2">
           <button
             type="submit"
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors text-[13px] disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors text-base disabled:opacity-50 disabled:cursor-not-allowed"
             style={{ minWidth: "100px" }}
             disabled={loading}
           >
@@ -227,7 +231,7 @@ export const FeePayerBasicRegisterForm: React.FC<
           </button>
           <button
             type="button"
-            className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors text-[13px]"
+            className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors text-base"
             style={{ minWidth: "100px" }}
             onClick={handleCancel}
             disabled={loading}

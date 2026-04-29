@@ -59,16 +59,16 @@ export const PurposeManagePageView: React.FC = () => {
           {/* 분류 트리 */}
           <aside className="w-full lg:w-64 shrink-0 border border-gray-200 rounded overflow-hidden bg-gray-50">
             <div
-              className="px-3 py-2 text-sm font-medium text-gray-700 border-b border-gray-200 bg-gray-200"
+              className="px-3 py-2 text-base font-medium text-gray-700 border-b border-gray-200 bg-gray-200"
               style={{ letterSpacing: "-0.02em" }}
             >
               분류
             </div>
             <div className="p-2 max-h-[480px] overflow-y-auto">
               {treeLoading ? (
-                <p className="text-sm text-gray-500 py-4 px-2">불러오는 중…</p>
+                <p className="text-base text-gray-500 py-4 px-2">불러오는 중…</p>
               ) : categoryTree.length === 0 ? (
-                <p className="text-sm text-gray-500 py-4 px-2">
+                <p className="text-base text-gray-500 py-4 px-2">
                   등록된 건축용도 분류가 없습니다.
                 </p>
               ) : (
@@ -79,7 +79,7 @@ export const PurposeManagePageView: React.FC = () => {
                       <li key={major.id}>
                         <button
                           type="button"
-                          className="w-full flex items-center gap-1 text-left text-sm py-1.5 px-1 rounded hover:bg-gray-200 text-gray-800"
+                          className="w-full flex items-center gap-1 text-left text-base py-1.5 px-1 rounded hover:bg-gray-200 text-gray-800"
                           onClick={() => toggleMajor(major.id)}
                         >
                           {open ? (
@@ -97,7 +97,7 @@ export const PurposeManagePageView: React.FC = () => {
                                 <li key={leaf.id}>
                                   <button
                                     type="button"
-                                    className={`w-full text-left text-sm py-1 px-2 rounded ${
+                                    className={`w-full text-left text-base py-1 px-2 rounded ${
                                       active
                                         ? "bg-blue-100 text-blue-900 font-medium"
                                         : "text-gray-700 hover:bg-gray-200"
@@ -121,7 +121,7 @@ export const PurposeManagePageView: React.FC = () => {
 
           {/* 용도 행 목록 */}
           <section className="flex-1 min-w-0 flex flex-col border border-gray-200 rounded overflow-hidden">
-            <div className="px-3 py-2 border-b border-gray-200 bg-gray-50 text-sm text-gray-600">
+            <div className="px-3 py-2 border-b border-gray-200 bg-gray-50 text-base text-gray-600">
               {selection ? (
                 <>
                   선택 분류:{" "}
@@ -136,27 +136,27 @@ export const PurposeManagePageView: React.FC = () => {
 
             <div className="flex-1 overflow-x-auto p-3 relative">
               {!selection ? (
-                <p className="text-sm text-gray-500 py-8 text-center">
+                <p className="text-base text-gray-500 py-8 text-center">
                   소분류를 선택하면 이 영역에 건축물 용도·1일 오수발생량·비고를
                   입력할 수 있습니다.
                 </p>
               ) : listLoading ? (
-                <p className="text-sm text-gray-500 py-8 text-center">
+                <p className="text-base text-gray-500 py-8 text-center">
                   목록을 불러오는 중…
                 </p>
               ) : (
-                <div className="min-w-[560px]">
+                <div className="min-w-[620px]">
                   <div
-                    className="grid gap-2 items-end text-xs font-medium text-gray-700 mb-2"
+                    className="grid gap-2 items-end text-base font-medium text-gray-700 mb-2"
                     style={{
                       gridTemplateColumns:
-                        "minmax(200px,2.5fr) minmax(76px,0.42fr) minmax(110px,1.05fr) auto",
+                        "minmax(160px,1.5fr) minmax(148px,0.62fr) minmax(200px,2.45fr) auto",
                     }}
                   >
                     <div className="pl-1">
                       <span className="text-red-600 mr-1">*</span>건축물 용도
                     </div>
-                    <div>
+                    <div className="min-w-0 whitespace-nowrap">
                       <span className="text-red-600 mr-1">*</span>1일 오수발생량
                     </div>
                     <div>비고</div>
@@ -165,7 +165,7 @@ export const PurposeManagePageView: React.FC = () => {
 
                   <div className="space-y-2">
                     {listRows.length === 0 ? (
-                      <p className="text-sm text-gray-500 py-4 text-center border border-dashed border-gray-200 rounded">
+                      <p className="text-base text-gray-500 py-4 text-center border border-dashed border-gray-200 rounded">
                         등록된 건축물 용도가 없습니다. 「추가」로 행을
                         추가하세요.
                       </p>
@@ -178,7 +178,7 @@ export const PurposeManagePageView: React.FC = () => {
                             className="grid gap-2 items-start"
                             style={{
                               gridTemplateColumns:
-                                "minmax(200px,2.5fr) minmax(76px,0.42fr) minmax(110px,1.05fr) auto",
+                                "minmax(160px,1.5fr) minmax(148px,0.62fr) minmax(200px,2.45fr) auto",
                             }}
                           >
                             <FormInput
@@ -195,6 +195,7 @@ export const PurposeManagePageView: React.FC = () => {
                               error={err.buildingUse}
                               maxLength={256}
                               placeholder="건축물 용도"
+                              className="text-base"
                             />
                             <FormInput
                               type="text"
@@ -211,6 +212,7 @@ export const PurposeManagePageView: React.FC = () => {
                               error={err.dailySewage}
                               maxLength={20}
                               placeholder="예: 12.5"
+                              className="text-base"
                             />
                             <FormInput
                               type="text"
@@ -226,11 +228,12 @@ export const PurposeManagePageView: React.FC = () => {
                               error={err.remarks}
                               maxLength={2048}
                               placeholder="비고"
+                              className="text-base"
                             />
-                            <div className="flex items-start justify-center pt-1">
+                            <div className="flex min-h-[48px] shrink-0 items-center justify-center md:min-h-0">
                               <button
                                 type="button"
-                                className="px-4 py-1 text-sm border border-gray-400 rounded-full text-gray-700 hover:bg-gray-100"
+                                className="inline-flex min-h-10 min-w-[72px] items-center justify-center rounded-full border border-gray-400 bg-white px-4 py-1.5 text-base text-gray-800 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
                                 onClick={() => requestDeleteRow(row.rowId)}
                                 disabled={deleteLoading}
                               >
