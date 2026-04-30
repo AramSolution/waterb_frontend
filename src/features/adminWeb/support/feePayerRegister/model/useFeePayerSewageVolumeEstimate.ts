@@ -70,6 +70,10 @@ export interface FeePayerSewageApiBridge {
   onFeePayerItemId?: (itemId: string) => void;
 }
 
+export interface UseFeePayerSewageVolumeEstimateOptions {
+  onStatusChangeBlocked?: (message: string) => void;
+}
+
 /** `<input type="date">`용 로컬 당일 `YYYY-MM-DD` */
 function getTodayYmd(): string {
   const d = new Date();
@@ -270,6 +274,7 @@ function initialEntriesOrDefault(
 export function useFeePayerSewageVolumeEstimate(
   initialEntries?: SewageEstimateEntry[],
   apiBridge?: FeePayerSewageApiBridge | null,
+  options?: UseFeePayerSewageVolumeEstimateOptions,
 ) {
   const [entries, setEntries] = useState<SewageEstimateEntry[]>(() =>
     initialEntriesOrDefault(initialEntries),
@@ -430,7 +435,8 @@ export function useFeePayerSewageVolumeEstimate(
       if (key === "id" || key === "lines") return;
 
       const hostEntry = entriesRef.current.find((en) => en.id === entryId);
-      if (hostEntry && isEntryPaid(hostEntry)) return;
+      // 납부(PAID) 상태에서도 상태값 자체는 다시 미납으로 변경 가능해야 한다.
+      if (hostEntry && isEntryPaid(hostEntry) && key !== "status") return;
 
       if (key === "category") {
         const nextType = firstSewageTypeForCategory(value);
@@ -464,13 +470,42 @@ export function useFeePayerSewageVolumeEstimate(
         return;
       }
 
+      if (key === "status") {
+        setEntries((prev) => {
+          const targetIndex = prev.findIndex((row) => row.id === entryId);
+          if (targetIndex < 0) return prev;
+          const target = prev[targetIndex];
+          if (!target) return prev;
+          if (target.status === value) return prev;
+          if (value === "UNPAID") {
+            const hasNewerPaid = prev
+              .slice(targetIndex + 1)
+              .some((row) => row.status === "PAID");
+            if (hasNewerPaid) {
+              const message =
+                "가장 최근 통지일 블록이 납부 상태이면 이전 블록은 미납으로 변경할 수 없습니다.";
+              if (options?.onStatusChangeBlocked) {
+                options.onStatusChangeBlocked(message);
+              } else {
+                window.alert(message);
+              }
+              return prev;
+            }
+          }
+          return prev.map((row) =>
+            row.id === entryId ? { ...row, status: value } : row,
+          );
+        });
+        return;
+      }
+
       setEntries((prev) =>
         prev.map((row) =>
           row.id === entryId ? { ...row, [key]: nextValue } : row,
         ),
       );
     },
-    [],
+    [options],
   );
 
   const handleCalculateEntry = useCallback(
@@ -520,6 +555,7 @@ export function useFeePayerSewageVolumeEstimate(
         basicInfo,
         itemId: bridge.feePayerItemId,
         entries: snapshot,
+        initialEntries,
         removedDetailSeqs: removedDetailSeqsRef.current,
         removedCalcs: removedCalcsRef.current,
         calculateTargetEntryId: entryId,
@@ -595,7 +631,7 @@ export function useFeePayerSewageVolumeEstimate(
         setCalcBusyEntryId(null);
       }
     },
-    [apiBridge],
+    [apiBridge, initialEntries],
   );
 
   const applyUsageFromLookup = useCallback(

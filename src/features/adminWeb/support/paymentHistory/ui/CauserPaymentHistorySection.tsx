@@ -9,10 +9,7 @@ import {
 } from "../model/useCauserPaymentHistorySection";
 import type { SupportFeePayerPaymentSaveRequest } from "@/entities/adminWeb/support/api/feePayerManageApi";
 import "@/shared/styles/admin/register-form.css";
-import {
-  feePayStatusReadOnlyFieldClassName,
-  feePayStatusSelectClassName,
-} from "@/features/adminWeb/support/lib/feePayStatusUi";
+import { feePayStatusReadOnlyFieldClassName } from "@/features/adminWeb/support/lib/feePayStatusUi";
 import { FEE_PAYER_SEWAGE_INPUT_BACKGROUND_RGBA } from "@/features/adminWeb/support/lib/feePayerSewageInputTint";
 
 /** 납부내역 — 원인자부담 납부내역 (블록 내 `추가` = 일자·금액·비고 행). */
@@ -41,11 +38,19 @@ export const CauserPaymentHistorySection: React.FC<
     persistRequestBuilderRef,
   );
 
-  const { category: catOpt, status: stOpt } = categoryStatusOptions;
+  const { category: catOpt } = categoryStatusOptions;
   const readOnlyClass = "bg-gray-100 !cursor-not-allowed";
   const sewageVolumeInputStyle: React.CSSProperties = {
     backgroundColor: FEE_PAYER_SEWAGE_INPUT_BACKGROUND_RGBA,
   };
+  const renderWonInput = (props: React.ComponentProps<typeof FormInput>) => (
+    <div className="relative w-full">
+      <FormInput {...props} className={`pr-8 ${props.className ?? ""}`.trim()} />
+      <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">
+        원
+      </span>
+    </div>
+  );
 
   return (
     <div className="bg-white rounded-lg shadow mt-6">
@@ -88,27 +93,15 @@ export const CauserPaymentHistorySection: React.FC<
                     forceTopBorder={entryIndex > 0}
                     mdGridSpan={4}
                   >
-                    {entry.status === "PAID" ? (
-                      <div className="flex w-full min-w-0 flex-1 self-stretch">
-                        <span
-                          className={feePayStatusReadOnlyFieldClassName(true)}
-                        >
-                          납부
-                        </span>
-                      </div>
-                    ) : (
-                      <FormSelect
-                        name="status"
-                        value={entry.status}
-                        onChange={handleSelectChange}
-                        options={stOpt}
-                        data-entry-id={entry.id}
-                        disabled={false}
-                        selectClassName={feePayStatusSelectClassName(
-                          entry.status,
+                    <div className="flex w-full min-w-0 flex-1 self-stretch">
+                      <span
+                        className={feePayStatusReadOnlyFieldClassName(
+                          entry.status === "PAID",
                         )}
-                      />
-                    )}
+                      >
+                        {entry.status === "PAID" ? "납부" : "미납"}
+                      </span>
+                    </div>
                   </FormField>
                   <FormField
                     label="구분"
@@ -198,16 +191,16 @@ export const CauserPaymentHistorySection: React.FC<
                         </label>
                         <div className="register-form-mobile-field flex w-full min-w-0 items-center border border-solid border-[#dee2e6] border-t-0 p-[5px] md:flex-1 md:border-l-0 md:border-t">
                           <div className="w-full">
-                            <FormInput
-                              type="text"
-                              name="causerCharge"
-                              value={entry.causerCharge}
-                              onChange={handleFieldChange}
-                              placeholder="예: 300,000"
-                              data-entry-id={entry.id}
-                              readOnly
-                              className={readOnlyClass}
-                            />
+                            {renderWonInput({
+                              type: "text",
+                              name: "causerCharge",
+                              value: entry.causerCharge,
+                              onChange: handleFieldChange,
+                              placeholder: "예: 300,000",
+                              "data-entry-id": entry.id,
+                              readOnly: true,
+                              className: readOnlyClass,
+                            })}
                           </div>
                         </div>
                       </div>
@@ -223,16 +216,16 @@ export const CauserPaymentHistorySection: React.FC<
                         </label>
                         <div className="register-form-mobile-field flex w-full min-w-0 items-center border border-solid border-[#dee2e6] border-t-0 p-[5px] md:flex-1 md:border-l-0 md:border-t">
                           <div className="w-full">
-                            <FormInput
-                              type="text"
-                              name="paidAmount"
-                              value={entry.paidAmount}
-                              onChange={handleFieldChange}
-                              placeholder="납부금액"
-                              data-entry-id={entry.id}
-                              readOnly
-                              className={readOnlyClass}
-                            />
+                            {renderWonInput({
+                              type: "text",
+                              name: "paidAmount",
+                              value: entry.paidAmount,
+                              onChange: handleFieldChange,
+                              placeholder: "납부금액",
+                              "data-entry-id": entry.id,
+                              readOnly: true,
+                              className: readOnlyClass,
+                            })}
                           </div>
                         </div>
                       </div>
@@ -321,20 +314,18 @@ export const CauserPaymentHistorySection: React.FC<
                           </label>
                           <div className="register-form-mobile-field flex w-full min-w-0 items-center border border-solid border-[#dee2e6] border-t-0 p-[5px] md:flex-1 md:border-l-0 md:border-t">
                             <div className="w-full">
-                              <FormInput
-                                type="text"
-                                name="amount"
-                                value={line.amount}
-                                onChange={handleLineFieldChange}
-                                placeholder="금액"
-                                inputMode="numeric"
-                                data-entry-id={entry.id}
-                                data-line-id={line.id}
-                                readOnly={lineReadOnly(line)}
-                                className={
-                                  lineReadOnly(line) ? readOnlyClass : ""
-                                }
-                              />
+                              {renderWonInput({
+                                type: "text",
+                                name: "amount",
+                                value: line.amount,
+                                onChange: handleLineFieldChange,
+                                placeholder: "금액",
+                                inputMode: "numeric",
+                                "data-entry-id": entry.id,
+                                "data-line-id": line.id,
+                                readOnly: lineReadOnly(line),
+                                className: lineReadOnly(line) ? readOnlyClass : "",
+                              })}
                             </div>
                           </div>
                         </div>

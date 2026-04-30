@@ -6,6 +6,7 @@ import React, {
   useState,
   type MutableRefObject,
 } from "react";
+import { ConfirmDialog } from "@/shared/ui/adminWeb";
 import { FormField, FormInput, FormSelect } from "@/shared/ui/adminWeb/form";
 import {
   getSewageTypeOptionsForCategory,
@@ -60,6 +61,8 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
   persistRequestBuilderRef,
 }) => {
   const [usageLookupOpen, setUsageLookupOpen] = useState(false);
+  const [showStatusRuleDialog, setShowStatusRuleDialog] = useState(false);
+  const [statusRuleDialogMessage, setStatusRuleDialogMessage] = useState("");
   const [usageLookupTarget, setUsageLookupTarget] = useState<{
     entryId: string;
     lineId: string;
@@ -76,7 +79,20 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
     handleEntryFieldChange,
     handleCalculateEntry,
     applyUsageFromLookup,
-  } = useFeePayerSewageVolumeEstimate(initialEntries, feePayerApi);
+  } = useFeePayerSewageVolumeEstimate(initialEntries, feePayerApi, {
+    onStatusChangeBlocked: (message) => {
+      setStatusRuleDialogMessage(message);
+      setShowStatusRuleDialog(true);
+    },
+  });
+  const renderWonInput = (props: React.ComponentProps<typeof FormInput>) => (
+    <div className="relative w-full">
+      <FormInput {...props} className={`pr-8 ${props.className ?? ""}`.trim()} />
+      <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">
+        원
+      </span>
+    </div>
+  );
 
   useLayoutEffect(() => {
     if (!persistRequestBuilderRef) return;
@@ -96,6 +112,7 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
         basicInfo,
         itemId,
         entries,
+        initialEntries,
         removedDetailSeqs: removedDetailSeqsRef.current,
         removedCalcs: removedCalcsRef.current,
       });
@@ -221,7 +238,7 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                     forceTopBorder={entryIndex > 0}
                     mdGridSpan={4}
                   >
-                    {rowReadOnly ? (
+                    {readOnly ? (
                       <div className="flex w-full min-w-0 flex-1 self-stretch">
                         <span
                           className={feePayStatusReadOnlyFieldClassName(
@@ -238,7 +255,7 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                         onChange={handleEntryFieldChange}
                         options={statusOptions}
                         data-entry-id={entry.id}
-                        disabled={false}
+                        disabled={readOnly}
                         selectClassName={feePayStatusSelectClassName(
                           entry.status,
                         )}
@@ -306,20 +323,25 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                           </label>
                           <div className="register-form-mobile-field flex min-h-[40px] flex-1 items-center border-t border-[#e5e7eb] p-[5px] md:min-h-[45px] md:border-t-0">
                             <div className="w-full min-w-0">
-                              <FormInput
-                                type="text"
-                                name="unitPrice"
-                                value={entry.unitPrice}
-                                onChange={handleEntryFieldChange}
-                                placeholder="예: 12,000"
-                                readOnly={rowReadOnly || !isPermitChangeCategory}
-                                className={
-                                  rowReadOnly || !isPermitChangeCategory
-                                    ? readOnlyInputClass
-                                    : undefined
-                                }
-                                data-entry-id={entry.id}
-                              />
+                              <div className="relative w-full">
+                                <FormInput
+                                  type="text"
+                                  name="unitPrice"
+                                  value={entry.unitPrice}
+                                  onChange={handleEntryFieldChange}
+                                  placeholder="예: 12,000"
+                                  readOnly={rowReadOnly || !isPermitChangeCategory}
+                                  className={`pr-8 ${
+                                    rowReadOnly || !isPermitChangeCategory
+                                      ? readOnlyInputClass
+                                      : ""
+                                  }`.trim()}
+                                  data-entry-id={entry.id}
+                                />
+                                <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">
+                                  원
+                                </span>
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -336,11 +358,11 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                                 onChange={handleEntryFieldChange}
                                 placeholder="예: 9.8"
                                 readOnly={rowReadOnly || !isPermitChangeCategory}
-                                className={
+                                className={`text-right placeholder:text-left ${
                                   rowReadOnly || !isPermitChangeCategory
                                     ? readOnlyInputClass
-                                    : undefined
-                                }
+                                    : ""
+                                }`.trim()}
                                 style={sewageVolumeInputStyle}
                                 data-entry-id={entry.id}
                               />
@@ -386,18 +408,23 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                           </label>
                           <div className="register-form-mobile-field flex min-h-[40px] flex-1 items-center border-t border-[#e5e7eb] p-[5px] md:min-h-[45px] md:border-t-0">
                             <div className="w-full min-w-0">
-                              <FormInput
-                                type="text"
-                                name="causerCharge"
-                                value={entry.causerCharge}
-                                onChange={handleEntryFieldChange}
-                                placeholder="예: 300,000"
-                                data-entry-id={entry.id}
-                                readOnly={rowReadOnly}
-                                className={
-                                  rowReadOnly ? readOnlyInputClass : undefined
-                                }
-                              />
+                              <div className="relative w-full">
+                                <FormInput
+                                  type="text"
+                                  name="causerCharge"
+                                  value={entry.causerCharge}
+                                  onChange={handleEntryFieldChange}
+                                  placeholder="예: 300,000"
+                                  data-entry-id={entry.id}
+                                  readOnly={rowReadOnly}
+                                  className={`pr-8 ${
+                                    rowReadOnly ? readOnlyInputClass : ""
+                                  }`.trim()}
+                                />
+                                <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">
+                                  원
+                                </span>
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -440,16 +467,20 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                   <div className="w-full">
                     <span className="sr-only">층수~삭제 상세 행 추가</span>
                     <div className="flex w-full justify-end">
-                      {!readOnly && !rowReadOnly ? (
                         <button
                           type="button"
                           className="px-3 py-2 text-base bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                           style={{ minWidth: "72px" }}
                           onClick={() => handleAddDetailLine(entry.id)}
+                          disabled={readOnly || rowReadOnly}
+                          title={
+                            readOnly || rowReadOnly
+                              ? "읽기 전용 상태에서는 상세 행을 추가할 수 없습니다."
+                              : undefined
+                          }
                         >
                           추가
                         </button>
-                      ) : null}
                     </div>
                   </div>
                 </FormField>
@@ -461,6 +492,13 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                     buildingUse: line.usage,
                     midCategoryLabel: line.midCategoryLabel,
                   });
+                  const canEditArea =
+                    !rowReadOnly && lineCalcMode === "default";
+                  const canEditRoomCount =
+                    !rowReadOnly &&
+                    (lineCalcMode === "standalone" || lineCalcMode === "multi");
+                  const canEditHouseholdCount =
+                    !rowReadOnly && lineCalcMode === "multi";
                   return (
                   <FormField
                     key={line.id}
@@ -477,9 +515,9 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                         오수량(산출), 삭제
                       </span>
                       <div className="flex w-full flex-col flex-wrap md:flex-row md:items-stretch">
-                        <div className="flex min-w-0 w-full flex-col md:ml-0 md:flex-[0.55] md:flex-row md:items-stretch">
+                        <div className="flex min-w-0 w-full flex-col md:ml-0 md:flex-[0.7] md:flex-row md:items-stretch">
                           <label
-                            className="feePayerDetailStripLabel m-0 flex w-full shrink-0 items-center bg-gray-100 register-form-label md:w-1/4"
+                            className="feePayerDetailStripLabel m-0 flex w-full shrink-0 items-center whitespace-nowrap bg-gray-100 register-form-label md:w-[34%]"
                             style={{
                               border: "1px solid #dee2e6",
                             }}
@@ -530,142 +568,43 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                                   data-line-id={line.id}
                                 />
                               </div>
-                              {!readOnly && !rowReadOnly ? (
-                                <button
-                                  type="button"
-                                  className="flex h-10 min-h-[2.5rem] w-10 min-w-[2.5rem] flex-shrink-0 items-center justify-center rounded-none border-0 bg-[#1967d2] text-white transition-colors hover:bg-[#1557b0]"
-                                  title="용도 조회"
-                                  aria-label="용도 조회"
-                                  onClick={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    setUsageLookupTarget({
-                                      entryId: entry.id,
-                                      lineId: line.id,
-                                    });
-                                    setUsageLookupOpen(true);
-                                  }}
-                                >
-                                  <svg
-                                    width="18"
-                                    height="18"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth="2"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    aria-hidden
-                                  >
-                                    <circle cx="11" cy="11" r="8" />
-                                    <path d="m21 21-4.35-4.35" />
-                                  </svg>
-                                </button>
-                              ) : (
-                                <div
-                                  className="flex h-10 min-h-[2.5rem] w-10 min-w-[2.5rem] flex-shrink-0 items-center justify-center rounded-none border border-gray-200 bg-gray-200"
-                                  title="읽기 전용"
+                              <button
+                                type="button"
+                                className="flex h-10 min-h-[2.5rem] w-10 min-w-[2.5rem] flex-shrink-0 items-center justify-center rounded-none border-0 bg-[#1967d2] text-white transition-colors hover:bg-[#1557b0] disabled:cursor-not-allowed disabled:opacity-60"
+                                title={
+                                  readOnly || rowReadOnly ? "읽기 전용" : "용도 조회"
+                                }
+                                aria-label="용도 조회"
+                                disabled={readOnly || rowReadOnly}
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  if (readOnly || rowReadOnly) return;
+                                  setUsageLookupTarget({
+                                    entryId: entry.id,
+                                    lineId: line.id,
+                                  });
+                                  setUsageLookupOpen(true);
+                                }}
+                              >
+                                <svg
+                                  width="18"
+                                  height="18"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  strokeWidth="2"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
                                   aria-hidden
-                                />
-                              )}
+                                >
+                                  <circle cx="11" cy="11" r="8" />
+                                  <path d="m21 21-4.35-4.35" />
+                                </svg>
+                              </button>
                             </div>
                           </div>
                         </div>
-                        {lineCalcMode === "default" ? (
-                          <div className="flex min-w-0 w-full flex-col border-t border-[#dee2e6] md:-ml-px md:flex-[0.55] md:flex-row md:items-stretch md:border-t-0">
-                            <label
-                              className="feePayerDetailStripLabel m-0 flex w-full shrink-0 items-center bg-gray-100 register-form-label md:w-1/4"
-                              style={{
-                                border: "1px solid #dee2e6",
-                              }}
-                            >
-                              면적
-                            </label>
-                            <div
-                              className="register-form-mobile-field flex w-full min-w-0 items-center border border-solid border-[#dee2e6] border-t-0 p-[5px] md:flex-1 md:border-l-0 md:border-t"
-                            >
-                              <div className="w-full">
-                                <FormInput
-                                  type="text"
-                                  name="area"
-                                  value={line.area}
-                                  onChange={handleEntryFieldChange}
-                                  placeholder="면적"
-                                  data-entry-id={entry.id}
-                                  data-line-id={line.id}
-                                  readOnly={rowReadOnly}
-                                  className={
-                                    rowReadOnly ? readOnlyInputClass : undefined
-                                  }
-                                />
-                              </div>
-                            </div>
-                          </div>
-                        ) : null}
-                        {lineCalcMode !== "default" ? (
-                          <div className="flex min-w-0 w-full flex-col border-t border-[#dee2e6] md:-ml-px md:flex-[0.55] md:flex-row md:items-stretch md:border-t-0">
-                            <label
-                              className="feePayerDetailStripLabel m-0 flex w-full shrink-0 items-center bg-gray-100 register-form-label md:w-1/4"
-                              style={{
-                                border: "1px solid #dee2e6",
-                              }}
-                            >
-                              방수
-                            </label>
-                            <div
-                              className="register-form-mobile-field flex w-full min-w-0 items-center border border-solid border-[#dee2e6] border-t-0 p-[5px] md:flex-1 md:border-l-0 md:border-t"
-                            >
-                              <div className="w-full">
-                                <FormInput
-                                  type="text"
-                                  name="roomCount"
-                                  value={line.roomCount ?? ""}
-                                  onChange={handleEntryFieldChange}
-                                  placeholder="방"
-                                  inputMode="decimal"
-                                  data-entry-id={entry.id}
-                                  data-line-id={line.id}
-                                  readOnly={rowReadOnly}
-                                  className={
-                                    rowReadOnly ? readOnlyInputClass : undefined
-                                  }
-                                />
-                              </div>
-                            </div>
-                          </div>
-                        ) : null}
-                        {lineCalcMode === "multi" ? (
-                          <div className="flex min-w-0 w-full flex-col border-t border-[#dee2e6] md:-ml-px md:flex-[0.55] md:flex-row md:items-stretch md:border-t-0">
-                            <label
-                              className="feePayerDetailStripLabel m-0 flex w-full shrink-0 items-center bg-gray-100 register-form-label md:w-1/4"
-                              style={{
-                                border: "1px solid #dee2e6",
-                              }}
-                            >
-                              세대수
-                            </label>
-                            <div
-                              className="register-form-mobile-field flex w-full min-w-0 items-center border border-solid border-[#dee2e6] border-t-0 p-[5px] md:flex-1 md:border-l-0 md:border-t"
-                            >
-                              <div className="w-full">
-                                <FormInput
-                                  type="text"
-                                  name="householdCount"
-                                  value={line.householdCount ?? ""}
-                                  onChange={handleEntryFieldChange}
-                                  placeholder="세대"
-                                  inputMode="numeric"
-                                  data-entry-id={entry.id}
-                                  data-line-id={line.id}
-                                  readOnly={rowReadOnly}
-                                  className={
-                                    rowReadOnly ? readOnlyInputClass : undefined
-                                  }
-                                />
-                              </div>
-                            </div>
-                          </div>
-                        ) : null}
                         <div className="flex min-w-0 w-full flex-col border-t border-[#dee2e6] md:-ml-px md:min-w-[15.5rem] md:flex-[1.65] md:flex-row md:items-stretch md:border-t-0">
                           <label
                             className="m-0 flex w-full shrink-0 items-center whitespace-nowrap bg-gray-100 text-base register-form-label md:w-[42%]"
@@ -694,40 +633,40 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                             </div>
                           </div>
                         </div>
-                        <div className="flex w-full shrink-0 items-center justify-center border-t border-solid border-[#dee2e6] py-2 md:-ml-px md:min-h-0 md:w-11 md:flex-none md:border md:border-solid md:border-[#dee2e6] md:px-0 md:py-0">
-                          <input
-                            type="checkbox"
-                            name="selected"
-                            checked={line.selected}
-                            onChange={handleEntryFieldChange}
-                            data-entry-id={entry.id}
-                            data-line-id={line.id}
-                            className="h-4 w-4 rounded border-gray-300"
-                            aria-label="체크 시 오수량 산정식 끝에 곱하기 0, 미체크 시 곱하기 1"
-                            title="체크: 산정 결과×0 / 미체크: ×1"
-                            disabled={rowReadOnly}
-                          />
-                        </div>
-                        <div className="flex w-full shrink-0 flex-col border-t border-solid border-[#dee2e6] md:-ml-px md:min-h-0 md:min-w-0 md:flex-1 md:flex-row md:items-stretch md:border md:border-solid md:border-[#dee2e6]">
-                          <div className="flex min-w-0 flex-1 flex-col justify-center gap-0.5 px-2 py-2 md:border-r md:border-[#dee2e6]">
+                        <div className="flex w-full shrink-0 flex-col border-t border-solid border-[#dee2e6] md:-ml-px md:min-h-[45px] md:min-w-0 md:flex-1 md:flex-row md:items-center md:border-t md:border-b-0 md:border-solid md:border-[#dee2e6]">
+                          <div className="flex min-w-0 flex-1 items-center gap-2 px-2 py-2 md:translate-y-[22px] md:py-0 md:border-r md:border-[#dee2e6]">
+                            <input
+                              type="checkbox"
+                              name="selected"
+                              checked={line.selected}
+                              onChange={handleEntryFieldChange}
+                              data-entry-id={entry.id}
+                              data-line-id={line.id}
+                              className="h-10 w-10 shrink-0 rounded border-gray-300"
+                              aria-label="체크 시 오수량 산정식 끝에 곱하기 0, 미체크 시 곱하기 1"
+                              title="체크: 산정 결과×0 / 미체크: ×1"
+                              disabled={rowReadOnly}
+                            />
                             <span className="px-0.5 text-base font-medium text-gray-600 md:hidden">
                               오수량
                             </span>
-                            <FormInput
-                              type="text"
-                              name="sewageQty"
-                              value={line.sewageQty ?? ""}
-                              placeholder="오수량"
-                              title="분류 중분류(단독주택·공동주택 등)·면적·방·세대·1일오수에 따라 자동 산출"
-                              readOnly
-                              className={readOnlyInputClass}
-                              style={sewageVolumeInputStyle}
-                              data-entry-id={entry.id}
-                              data-line-id={line.id}
-                            />
+                            <div className="min-w-0 flex-1">
+                              <FormInput
+                                type="text"
+                                name="sewageQty"
+                                value={line.sewageQty ?? ""}
+                                placeholder="오수량"
+                                title="분류 중분류(단독주택·공동주택 등)·면적·방·세대·1일오수에 따라 자동 산출"
+                                readOnly
+                                className={`${readOnlyInputClass} text-right placeholder:text-left`}
+                                style={sewageVolumeInputStyle}
+                                data-entry-id={entry.id}
+                                data-line-id={line.id}
+                              />
+                            </div>
                           </div>
                           {!readOnly && !rowReadOnly ? (
-                            <div className="flex min-h-[48px] shrink-0 items-center justify-center border-t border-[#dee2e6] px-3 py-2 md:min-h-0 md:w-[100px] md:border-t-0 md:border-l-0 md:border-[#dee2e6] md:px-2">
+                            <div className="flex min-h-[48px] shrink-0 items-center justify-center border-t border-[#dee2e6] px-3 py-2 md:min-h-[45px] md:w-[100px] md:translate-y-[22px] md:border-t-0 md:border-l-0 md:border-[#dee2e6] md:px-2 md:py-0">
                               <button
                                 type="button"
                                 className="inline-flex min-h-10 min-w-[72px] items-center justify-center rounded-full border border-gray-400 bg-white px-4 py-1.5 text-base text-gray-800 hover:bg-gray-50 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
@@ -749,6 +688,106 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                               </button>
                             </div>
                           ) : null}
+                        </div>
+                      </div>
+                      <div className="mt-0 flex w-full flex-col md:flex-row md:items-stretch">
+                        <div className="flex min-w-0 w-full flex-col border-t border-[#e5e7eb] md:flex-[0.7] md:flex-row md:items-stretch">
+                          <label
+                            className="feePayerDetailStripLabel m-0 flex w-full shrink-0 items-center whitespace-nowrap bg-gray-100 register-form-label md:w-[34%]"
+                            style={{ border: "1px solid #dee2e6", borderTop: "none" }}
+                          >
+                            면적
+                          </label>
+                          <div className="register-form-mobile-field flex w-full min-w-0 items-center border border-solid border-[#dee2e6] border-t-0 p-[5px] md:flex-1 md:border-l-0 md:border-t-0 md:border-[#e5e7eb]">
+                            <div className="relative w-full">
+                              <FormInput
+                                type="text"
+                                name="area"
+                                value={line.area}
+                                onChange={handleEntryFieldChange}
+                                placeholder="면적"
+                                data-entry-id={entry.id}
+                                data-line-id={line.id}
+                                readOnly={!canEditArea}
+                                className={`pr-12 text-right placeholder:text-left ${
+                                  !canEditArea ? readOnlyInputClass : ""
+                                }`.trim()}
+                              />
+                              <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">
+                                m2
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex min-w-0 w-full flex-col border-t border-[#e5e7eb] md:-ml-px md:flex-[1.9] md:flex-row md:items-stretch">
+                          <label
+                            className="m-0 flex w-full shrink-0 items-center bg-gray-100 register-form-label md:w-1/4"
+                            style={{ border: "1px solid #dee2e6", borderTop: "none" }}
+                          >
+                            방수
+                          </label>
+                          <div className="register-form-mobile-field flex w-full min-w-0 items-center border border-solid border-[#dee2e6] border-t-0 p-[5px] md:flex-1 md:border-l-0 md:border-t-0 md:border-[#e5e7eb]">
+                            <div className="relative w-full">
+                              <FormInput
+                                type="text"
+                                name="roomCount"
+                                value={line.roomCount ?? ""}
+                                onChange={handleEntryFieldChange}
+                                placeholder="방"
+                                inputMode="decimal"
+                                data-entry-id={entry.id}
+                                data-line-id={line.id}
+                                readOnly={!canEditRoomCount}
+                                className={`pr-12 text-right placeholder:text-left ${
+                                  !canEditRoomCount ? readOnlyInputClass : ""
+                                }`.trim()}
+                              />
+                              <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">
+                                개
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex min-w-0 w-full flex-col border-t border-[#e5e7eb] md:-ml-px md:min-w-[15.5rem] md:flex-[1.65] md:flex-row md:items-stretch">
+                          <label
+                            className="m-0 flex w-full shrink-0 items-center whitespace-nowrap bg-gray-100 text-base register-form-label md:w-[42%]"
+                            style={{
+                              border: "1px solid #dee2e6",
+                              borderTop: "none",
+                              padding: "5px",
+                            }}
+                          >
+                            세대수
+                          </label>
+                          <div className="register-form-mobile-field flex w-full min-w-0 items-center border border-solid border-[#dee2e6] border-t-0 p-[5px] md:flex-1 md:border-l-0 md:border-t-0 md:border-[#e5e7eb]">
+                            <div className="relative w-full">
+                              <FormInput
+                                type="text"
+                                name="householdCount"
+                                value={line.householdCount ?? ""}
+                                onChange={handleEntryFieldChange}
+                                placeholder="세대"
+                                inputMode="numeric"
+                                data-entry-id={entry.id}
+                                data-line-id={line.id}
+                                readOnly={!canEditHouseholdCount}
+                                className={`pr-14 ${
+                                  !canEditHouseholdCount
+                                    ? `${readOnlyInputClass} text-right placeholder:text-left`
+                                    : "text-right placeholder:text-left"
+                                }`.trim()}
+                              />
+                              <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">
+                                세대
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                        <div
+                          className="hidden md:flex md:-ml-px md:min-w-0 md:flex-1 md:items-stretch"
+                          aria-hidden
+                        >
+                          <div className="w-full border-b border-solid border-[#dee2e6]" />
                         </div>
                       </div>
                     </div>
@@ -787,6 +826,17 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
         );
         })}
       </div>
+
+      <ConfirmDialog
+        isOpen={showStatusRuleDialog}
+        title="알림"
+        message={statusRuleDialogMessage}
+        type="primary"
+        confirmText="확인"
+        cancelText="닫기"
+        onConfirm={() => setShowStatusRuleDialog(false)}
+        onCancel={() => setShowStatusRuleDialog(false)}
+      />
     </div>
   );
 };

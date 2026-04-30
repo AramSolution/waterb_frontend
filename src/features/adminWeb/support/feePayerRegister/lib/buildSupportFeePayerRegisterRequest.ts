@@ -25,6 +25,10 @@ function parseIntSafe(raw: string): number {
   return n !== undefined && Number.isFinite(n) ? Math.trunc(n) : 0;
 }
 
+function normalizeText(raw: string | null | undefined): string {
+  return String(raw ?? "").trim();
+}
+
 /** 상세 줄 오수량 합산(문자열 숫자 허용) */
 export function sumLineWaterVol(lines: SewageDetailLine[]): number {
   let s = 0;
@@ -35,19 +39,36 @@ export function sumLineWaterVol(lines: SewageDetailLine[]): number {
   return s;
 }
 
-function mapLineToCalculation(line: SewageDetailLine): SupportFeePayerCalcRequest {
+type CalcComparable = {
+  floor?: number;
+  buildId?: string;
+  roomCnt?: number;
+  homeCnt?: number;
+  buildSize?: number;
+  dayVal?: number;
+  costYn?: string;
+  waterVol?: number;
+};
+
+type DetailComparable = {
+  paySta?: string;
+  type1?: string;
+  type2?: string;
+  reqDate?: string;
+  baseCost?: number;
+  waterSum?: number;
+};
+
+function toComparableCalculation(line: SewageDetailLine): CalcComparable {
   const floor = parseIntSafe(line.floor);
   const roomCnt = parseIntSafe(line.roomCount);
   const homeCnt = parseIntSafe(line.householdCount);
   const buildSize = parseNumericInput(line.area);
   const dayVal = parseNumericInput(line.dailySewage);
   const waterVol = parseNumericInput(line.sewageQty);
-  const hasSeq2 = line.calcSeq2 != null && line.calcSeq2 > 0;
   return {
-    rowStatus: hasSeq2 ? "U" : "I",
-    seq2: hasSeq2 ? line.calcSeq2 : undefined,
     floor,
-    buildId: line.armbuildBuildId?.trim() || undefined,
+    buildId: normalizeText(line.armbuildBuildId) || undefined,
     roomCnt: roomCnt || undefined,
     homeCnt: homeCnt || undefined,
     buildSize,
@@ -57,11 +78,131 @@ function mapLineToCalculation(line: SewageDetailLine): SupportFeePayerCalcReques
   };
 }
 
+function isSameNumber(
+  a: number | undefined,
+  b: number | undefined,
+): boolean {
+  if (a == null && b == null) return true;
+  if (a == null || b == null) return false;
+  return a === b;
+}
+
+function isSameText(a: string | undefined, b: string | undefined): boolean {
+  return normalizeText(a) === normalizeText(b);
+}
+
+function isSameCalcComparable(
+  a: CalcComparable | undefined,
+  b: CalcComparable,
+): boolean {
+  if (!a) return true;
+  return (
+    isSameNumber(a.floor, b.floor) &&
+    isSameText(a.buildId, b.buildId) &&
+    isSameNumber(a.roomCnt, b.roomCnt) &&
+    isSameNumber(a.homeCnt, b.homeCnt) &&
+    isSameNumber(a.buildSize, b.buildSize) &&
+    isSameNumber(a.dayVal, b.dayVal) &&
+    isSameText(a.costYn, b.costYn) &&
+    isSameNumber(a.waterVol, b.waterVol)
+  );
+}
+
+function buildCalculationRequest(
+  line: SewageDetailLine,
+  originalBySeq2: ReadonlyMap<number, CalcComparable>,
+): SupportFeePayerCalcRequest | null {
+  const current = toComparableCalculation(line);
+  const seq2 = line.calcSeq2;
+  const hasSeq2 = seq2 != null && seq2 > 0;
+  if (!hasSeq2) {
+    return {
+      rowStatus: "I",
+      ...current,
+    };
+  }
+  const original = originalBySeq2.get(seq2);
+  const changed = !isSameCalcComparable(original, current);
+  if (!changed) return null;
+  return {
+    rowStatus: "U",
+    seq2,
+    ...current,
+  };
+}
+
+function toComparableDetail(entry: SewageEstimateEntry): DetailComparable | null {
+  const type1 = mapCategoryToType1(entry.category);
+  const type2 = mapSewageTypeValueToType2(entry.type);
+  if (!type1 || !type2) return null;
+  const baseCostRaw = parseNumericInput(entry.unitPrice);
+  const baseCost =
+    baseCostRaw !== undefined && Number.isFinite(baseCostRaw)
+      ? Math.round(baseCostRaw)
+      : 0;
+  const waterSum = sumLineWaterVol(entry.lines);
+  const paySta = entry.status === "PAID" ? "02" : "01";
+  return {
+    paySta,
+    type1,
+    type2,
+    reqDate: normalizeText(entry.notifyDate) || undefined,
+    baseCost,
+    waterSum,
+  };
+}
+
+function isSameDetailComparable(
+  a: DetailComparable | undefined,
+  b: DetailComparable,
+): boolean {
+  if (!a) return true;
+  return (
+    isSameText(a.paySta, b.paySta) &&
+    isSameText(a.type1, b.type1) &&
+    isSameText(a.type2, b.type2) &&
+    isSameText(a.reqDate, b.reqDate) &&
+    isSameNumber(a.baseCost, b.baseCost) &&
+    isSameNumber(a.waterSum, b.waterSum)
+  );
+}
+
+function buildOriginalCalcMap(
+  initialEntries: readonly SewageEstimateEntry[],
+): Map<number, CalcComparable> {
+  const m = new Map<number, CalcComparable>();
+  for (const entry of initialEntries) {
+    for (const line of entry.lines) {
+      const seq2 = line.calcSeq2;
+      if (seq2 == null || seq2 <= 0) continue;
+      m.set(seq2, toComparableCalculation(line));
+    }
+  }
+  return m;
+}
+
+function buildOriginalDetailMap(
+  initialEntries: readonly SewageEstimateEntry[],
+): Map<number, DetailComparable> {
+  const m = new Map<number, DetailComparable>();
+  for (const entry of initialEntries) {
+    const seq = entry.detailSeq;
+    if (seq == null || seq <= 0) continue;
+    const comparable = toComparableDetail(entry);
+    if (comparable) {
+      m.set(seq, comparable);
+    }
+  }
+  return m;
+}
+
 function mapEntryToPersistDetail(
   entry: SewageEstimateEntry,
   removedCalcs: ReadonlyArray<{ seq: number; seq2: number }>,
+  originalDetailBySeq: ReadonlyMap<number, DetailComparable>,
+  originalCalcBySeq2: ReadonlyMap<number, CalcComparable>,
 ): SupportFeePayerDetailRequest | null {
-  const base = mapEntryToDetail(entry);
+  const base = mapEntryToDetail(entry, originalDetailBySeq, originalCalcBySeq2);
   if (!base) return null;
   const seq = entry.detailSeq;
   const prefix: SupportFeePayerCalcRequest[] = [];
@@ -73,40 +214,43 @@ function mapEntryToPersistDetail(
     }
   }
   base.calculations = [...prefix, ...(base.calculations ?? [])];
+  if (base.calculations.length === 0) {
+    delete base.calculations;
+  }
+  const hasExistingSeq = seq != null && seq > 0;
+  if (
+    hasExistingSeq &&
+    !base.rowStatus &&
+    (!base.calculations || base.calculations.length === 0)
+  ) {
+    return null;
+  }
   return base;
 }
 
 function mapEntryToDetail(
   entry: SewageEstimateEntry,
+  originalDetailBySeq: ReadonlyMap<number, DetailComparable>,
+  originalCalcBySeq2: ReadonlyMap<number, CalcComparable>,
 ): SupportFeePayerDetailRequest | null {
-  const type1 = mapCategoryToType1(entry.category);
-  const type2 = mapSewageTypeValueToType2(entry.type);
-  if (!type1 || !type2) return null;
+  const detailComparable = toComparableDetail(entry);
+  if (!detailComparable) return null;
 
-  const baseCostRaw = parseNumericInput(entry.unitPrice);
-  const baseCost =
-    baseCostRaw !== undefined && Number.isFinite(baseCostRaw)
-      ? Math.round(baseCostRaw)
-      : 0;
-
-  const waterSumNum = sumLineWaterVol(entry.lines);
-
-  const paySta = entry.status === "PAID" ? "02" : "01";
-
-  const calculations = entry.lines.map(mapLineToCalculation);
+  const calculations = entry.lines
+    .map((line) => buildCalculationRequest(line, originalCalcBySeq2))
+    .filter((calc): calc is SupportFeePayerCalcRequest => calc != null);
 
   const hasSeq = entry.detailSeq != null && entry.detailSeq > 0;
+  const seq = hasSeq ? (entry.detailSeq as number) : undefined;
+  const originalDetail = seq != null ? originalDetailBySeq.get(seq) : undefined;
+  const detailChanged = !isSameDetailComparable(originalDetail, detailComparable);
+  const rowStatus = !hasSeq ? "I" : detailChanged ? "U" : undefined;
 
   return {
-    rowStatus: hasSeq ? "U" : "I",
-    seq: hasSeq ? entry.detailSeq : undefined,
-    paySta,
-    type1,
-    type2,
-    reqDate: entry.notifyDate?.trim() || undefined,
-    baseCost,
-    waterSum: waterSumNum,
-    calculations,
+    rowStatus,
+    seq,
+    ...detailComparable,
+    calculations: calculations.length > 0 ? calculations : undefined,
   };
 }
 
@@ -115,6 +259,8 @@ export interface BuildFeePayerRegisterBodyInput {
   /** 서버에 이미 있는 ITEM_ID (첫 계산 후 콜백) */
   itemId?: string | null;
   entries: SewageEstimateEntry[];
+  /** 상세 최초 로드 스냅샷(변경 감지 기준) */
+  initialEntries?: readonly SewageEstimateEntry[];
   /** 계산 요청에도 저장과 동일하게 삭제 D 행을 포함한다. */
   removedDetailSeqs: readonly number[];
   removedCalcs: ReadonlyArray<{ seq: number; seq2: number }>;
@@ -129,6 +275,7 @@ export function buildSupportFeePayerRegisterRequest(
     basicInfo,
     itemId,
     entries,
+    initialEntries = [],
     removedDetailSeqs,
     removedCalcs,
     calculateTargetEntryId,
@@ -144,6 +291,8 @@ export function buildSupportFeePayerRegisterRequest(
       .map((e) => e.detailSeq)
       .filter((s): s is number => s != null && s > 0),
   );
+  const originalDetailBySeq = buildOriginalDetailMap(initialEntries);
+  const originalCalcBySeq2 = buildOriginalCalcMap(initialEntries);
 
   const details: SupportFeePayerDetailRequest[] = [];
   const uniqRemoved = Array.from(
@@ -155,9 +304,13 @@ export function buildSupportFeePayerRegisterRequest(
   }
 
   for (const e of ordered) {
-    const d = mapEntryToPersistDetail(e, removedCalcs);
-    if (!d) return null;
-    details.push(d);
+    const d = mapEntryToPersistDetail(
+      e,
+      removedCalcs,
+      originalDetailBySeq,
+      originalCalcBySeq2,
+    );
+    if (d) details.push(d);
   }
 
   const body: SupportFeePayerRegisterRequest = {
@@ -173,6 +326,8 @@ export interface BuildFeePayerRegisterPersistInput {
   basicInfo: SupportFeePayerBasicInfoRequest;
   itemId?: string | null;
   entries: SewageEstimateEntry[];
+  /** 상세 최초 로드 스냅샷(변경 감지 기준) */
+  initialEntries?: readonly SewageEstimateEntry[];
   removedDetailSeqs: readonly number[];
   removedCalcs: ReadonlyArray<{ seq: number; seq2: number }>;
 }
@@ -184,7 +339,14 @@ export interface BuildFeePayerRegisterPersistInput {
 export function buildSupportFeePayerRegisterRequestForPersist(
   input: BuildFeePayerRegisterPersistInput,
 ): SupportFeePayerRegisterRequest | null {
-  const { basicInfo, itemId, entries, removedDetailSeqs, removedCalcs } =
+  const {
+    basicInfo,
+    itemId,
+    entries,
+    initialEntries = [],
+    removedDetailSeqs,
+    removedCalcs,
+  } =
     input;
 
   const activeSeqs = new Set(
@@ -194,6 +356,8 @@ export function buildSupportFeePayerRegisterRequestForPersist(
   );
 
   const details: SupportFeePayerDetailRequest[] = [];
+  const originalDetailBySeq = buildOriginalDetailMap(initialEntries);
+  const originalCalcBySeq2 = buildOriginalCalcMap(initialEntries);
   const uniqRemoved = Array.from(
     new Set(removedDetailSeqs.filter((n) => n > 0)),
   );
@@ -203,9 +367,13 @@ export function buildSupportFeePayerRegisterRequestForPersist(
   }
 
   for (const e of entries) {
-    const d = mapEntryToPersistDetail(e, removedCalcs);
-    if (!d) return null;
-    details.push(d);
+    const d = mapEntryToPersistDetail(
+      e,
+      removedCalcs,
+      originalDetailBySeq,
+      originalCalcBySeq2,
+    );
+    if (d) details.push(d);
   }
 
   if (details.length === 0) return null;

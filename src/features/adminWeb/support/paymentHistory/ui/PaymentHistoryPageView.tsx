@@ -118,13 +118,28 @@ export const PaymentHistoryPageView: React.FC = () => {
                           autoComplete="off"
                         />
                       </div>
-                      <div
-                        className="flex w-10 min-w-[2.5rem] h-10 min-h-[2.5rem] flex-shrink-0 items-center justify-center rounded-none border border-gray-200 bg-gray-200"
+                      <button
+                        type="button"
+                        className="flex items-center justify-center w-10 min-w-[2.5rem] h-10 min-h-[2.5rem] flex-shrink-0 rounded-none border-0 bg-[#1967d2] hover:bg-[#1557b0] text-white transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                         title="읽기 전용"
-                        aria-hidden
+                        aria-label="주소 검색"
+                        disabled
                       >
-                        <span className="sr-only">주소 검색 사용 불가</span>
-                      </div>
+                        <svg
+                          width="20"
+                          height="20"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          aria-hidden
+                        >
+                          <circle cx="11" cy="11" r="8" />
+                          <path d="m21 21-4.35-4.35" />
+                        </svg>
+                      </button>
                     </div>
                     <div className="flex-1 min-w-0 flex flex-col">
                       <FormInput

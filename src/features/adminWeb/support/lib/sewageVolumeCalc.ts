@@ -19,6 +19,15 @@ export function lineTextIndicatesMultiFamilyHouse(line: {
   return t.includes("다중주택");
 }
 
+/** 용도명·분류 라벨에 「농업인주택」이 포함되는지 — 면적 식(default) 예외 */
+export function lineTextIndicatesAgriculturalHouse(line: {
+  buildingUse?: string;
+  midCategoryLabel?: string;
+}): boolean {
+  const t = `${compact(line.buildingUse ?? "")}${compact(line.midCategoryLabel ?? "")}`;
+  return t.includes("농업인주택") || t.includes("농업인");
+}
+
 /** WAT002: `0101*`만 단독 식. `0102`(공동주택)는 코드만으로는 multi 아님 */
 export function getSewageCalcModeFromBuildingUseSubCode(
   subCode: string,
@@ -35,6 +44,9 @@ export function getSewageCalcModeForLine(line: {
   buildingUse?: string;
   midCategoryLabel?: string;
 }): SewageCalcMode {
+  // 농업인 주택은 방수식이 아니라 면적식으로 본다.
+  if (lineTextIndicatesAgriculturalHouse(line)) return "default";
+
   if (lineTextIndicatesMultiFamilyHouse(line)) return "multi";
 
   const sub = (line.buildingUseSubCode ?? "").trim();

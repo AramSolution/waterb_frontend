@@ -56,22 +56,40 @@ function isEntryPaidStatus(entry: CauserPaymentEntry): boolean {
   return entry.status === "PAID";
 }
 
+function syncEntryPaymentStatus(entry: CauserPaymentEntry): CauserPaymentEntry {
+  const charge = parseAmount(entry.causerCharge);
+  const paidTotal = entry.lines.reduce((sum, line) => sum + parseAmount(line.amount), 0);
+  const nextStatus =
+    charge > 0 && paidTotal >= charge ? "PAID" : "UNPAID";
+  const nextPaidAmount = paidTotal > 0 ? formatAmountInput(String(paidTotal)) : "";
+  if (entry.status === nextStatus && entry.paidAmount === nextPaidAmount) {
+    return entry;
+  }
+  return {
+    ...entry,
+    status: nextStatus,
+    paidAmount: nextPaidAmount,
+  };
+}
+
 function normalizeEntries(
   src: CauserPaymentEntry[] | undefined,
 ): CauserPaymentEntry[] {
   if (!src || src.length === 0) return [createEntry()];
-  return src.map((entry) => ({
-    ...entry,
-    id: entry.id || crypto.randomUUID(),
-    lines:
-      entry.lines && entry.lines.length > 0
-        ? entry.lines.map((line) => ({
-            ...line,
-            id: line.id || crypto.randomUUID(),
-            lineDate: line.lineDate || getTodayYmd(),
-          }))
-        : [createLine()],
-  }));
+  return src.map((entry) =>
+    syncEntryPaymentStatus({
+      ...entry,
+      id: entry.id || crypto.randomUUID(),
+      lines:
+        entry.lines && entry.lines.length > 0
+          ? entry.lines.map((line) => ({
+              ...line,
+              id: line.id || crypto.randomUUID(),
+              lineDate: line.lineDate || getTodayYmd(),
+            }))
+          : [createLine()],
+    }),
+  );
 }
 
 export function useCauserPaymentHistorySection(
@@ -154,7 +172,7 @@ export function useCauserPaymentHistorySection(
         prev.map((en) => {
           if (en.id !== entryId) return en;
           if (isEntryPaidStatus(en)) return en;
-          return {
+          const nextEntry = {
             ...en,
             lines: en.lines.map((L) => {
               if (L.id !== lineId) return L;
@@ -166,6 +184,7 @@ export function useCauserPaymentHistorySection(
               return L;
             }),
           };
+          return syncEntryPaymentStatus(nextEntry);
         }),
       );
     },
@@ -177,7 +196,10 @@ export function useCauserPaymentHistorySection(
       prev.map((en) => {
         if (en.id !== entryId) return en;
         if (isEntryPaidStatus(en)) return en;
-        return { ...en, lines: [...en.lines, createLine()] };
+        return syncEntryPaymentStatus({
+          ...en,
+          lines: [...en.lines, createLine()],
+        });
       }),
     );
   }, []);
@@ -201,10 +223,10 @@ export function useCauserPaymentHistorySection(
               seq2: victim.paymentSeq2,
             });
           }
-          return {
+          return syncEntryPaymentStatus({
             ...en,
             lines: en.lines.filter((L) => L.id !== lineId),
-          };
+          });
         }),
       );
     },
