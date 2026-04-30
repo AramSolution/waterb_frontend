@@ -282,6 +282,7 @@ export function useFeePayerSewageVolumeEstimate(
   const [calcBusyEntryId, setCalcBusyEntryId] = useState<string | null>(null);
   const entriesRef = useRef(entries);
   entriesRef.current = entries;
+  const unitPriceRequestedRef = useRef<Set<string>>(new Set());
 
   /** 저장 시 `details[].rowStatus=D` 로 보낼 ARTITED.SEQ (통지일 블록 삭제) */
   const removedDetailSeqsRef = useRef<number[]>([]);
@@ -293,7 +294,41 @@ export function useFeePayerSewageVolumeEstimate(
     setEntries(initialEntriesOrDefault(initialEntries));
     removedDetailSeqsRef.current = [];
     removedCalcsRef.current = [];
+    unitPriceRequestedRef.current.clear();
   }, [initialEntries]);
+
+  const fetchAndApplyUnitPrice = useCallback((entryId: string, category: string) => {
+    const cat = category.trim();
+    if (!cat || cat === SEWAGE_CATEGORY.PERMIT_CHANGE) return;
+    const requestKey = `${entryId}:${cat}`;
+    if (unitPriceRequestedRef.current.has(requestKey)) return;
+    unitPriceRequestedRef.current.add(requestKey);
+    void (async () => {
+      try {
+        const rows = await CmmCodeService.getBuildingUseCodeUnitPrice(
+          isOtherActCategory(cat),
+        );
+        const n = parseBaseCostFromWat003(rows);
+        if (n == null) return;
+        setEntries((prev) =>
+          prev.map((row) =>
+            row.id === entryId && String(row.unitPrice ?? "").trim() === ""
+              ? { ...row, unitPrice: formatIntKo(n) }
+              : row,
+          ),
+        );
+      } catch {
+        /* 기준단가 조회 실패 시 수동 입력 대기 */
+      }
+    })();
+  }, []);
+
+  useEffect(() => {
+    for (const row of entries) {
+      if (String(row.unitPrice ?? "").trim() !== "") continue;
+      fetchAndApplyUnitPrice(row.id, row.category);
+    }
+  }, [entries, fetchAndApplyUnitPrice]);
 
   const handleAddEntry = useCallback(() => {
     setEntries((prev) => {
@@ -447,26 +482,7 @@ export function useFeePayerSewageVolumeEstimate(
               : row,
           ),
         );
-        const cat = value.trim();
-        if (!cat || cat === SEWAGE_CATEGORY.PERMIT_CHANGE) return;
-        void (async () => {
-          try {
-            const rows = await CmmCodeService.getBuildingUseCodeUnitPrice(
-              isOtherActCategory(cat),
-            );
-            const n = parseBaseCostFromWat003(rows);
-            if (n == null) return;
-            setEntries((prev) =>
-              prev.map((row) =>
-                row.id === entryId
-                  ? { ...row, unitPrice: formatIntKo(n) }
-                  : row,
-              ),
-            );
-          } catch {
-            /* 기준단가 조회 실패 시 수동 입력 대기 */
-          }
-        })();
+        fetchAndApplyUnitPrice(entryId, value);
         return;
       }
 
@@ -505,7 +521,7 @@ export function useFeePayerSewageVolumeEstimate(
         ),
       );
     },
-    [options],
+    [fetchAndApplyUnitPrice, options],
   );
 
   const handleCalculateEntry = useCallback(

@@ -18,7 +18,10 @@ import {
   type FeePayerSewageApiBridge,
   type SewageEstimateEntry,
 } from "../model/useFeePayerSewageVolumeEstimate";
-import { buildSupportFeePayerRegisterRequestForPersist } from "../lib/buildSupportFeePayerRegisterRequest";
+import {
+  buildSupportFeePayerRegisterRequestForPersist,
+  hasInvalidRequiredFieldsInEntries,
+} from "../lib/buildSupportFeePayerRegisterRequest";
 import type { SupportFeePayerRegisterRequest } from "@/entities/adminWeb/support/api/feePayerManageApi";
 import { UsageLookupModal } from "./UsageLookupModal";
 import {
@@ -48,6 +51,9 @@ export interface FeePayerSewageVolumeEstimateSectionProps {
   persistRequestBuilderRef?: MutableRefObject<
     (() => SupportFeePayerRegisterRequest | null) | null
   >;
+  persistBuildStateRef?: MutableRefObject<
+    "invalid_required" | "no_changes" | null
+  >;
 }
 
 /** 오수량 발생량 산정 — `UsageLookupModal`은 용도 **조회** 전용. 통지일 블록 추가 `+`는 하단 경계선 위에 떠 있도록 배치(레이아웃 높이 미사용). 상세 `추가` = 층수~삭제 행만. */
@@ -59,6 +65,7 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
   showAddNoticeBlockButton = true,
   feePayerApi = null,
   persistRequestBuilderRef,
+  persistBuildStateRef,
 }) => {
   const [usageLookupOpen, setUsageLookupOpen] = useState(false);
   const [showStatusRuleDialog, setShowStatusRuleDialog] = useState(false);
@@ -98,9 +105,15 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
     if (!persistRequestBuilderRef) return;
     if (!feePayerApi?.getBasicInfoBody) {
       persistRequestBuilderRef.current = null;
+      if (persistBuildStateRef) {
+        persistBuildStateRef.current = null;
+      }
       return;
     }
     persistRequestBuilderRef.current = () => {
+      if (persistBuildStateRef) {
+        persistBuildStateRef.current = null;
+      }
       const basicInfo = feePayerApi.getBasicInfoBody?.();
       if (!basicInfo) return null;
       const rawId = feePayerApi.feePayerItemId;
@@ -108,7 +121,14 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
         rawId != null && String(rawId).trim() !== ""
           ? String(rawId).trim()
           : undefined;
-      return buildSupportFeePayerRegisterRequestForPersist({
+      const invalidRequired = hasInvalidRequiredFieldsInEntries(entries);
+      if (invalidRequired) {
+        if (persistBuildStateRef) {
+          persistBuildStateRef.current = "invalid_required";
+        }
+        return null;
+      }
+      const body = buildSupportFeePayerRegisterRequestForPersist({
         basicInfo,
         itemId,
         entries,
@@ -116,16 +136,25 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
         removedDetailSeqs: removedDetailSeqsRef.current,
         removedCalcs: removedCalcsRef.current,
       });
+      if (!body && persistBuildStateRef) {
+        persistBuildStateRef.current = "no_changes";
+      }
+      return body;
     };
     return () => {
       persistRequestBuilderRef.current = null;
+      if (persistBuildStateRef) {
+        persistBuildStateRef.current = null;
+      }
     };
   }, [
     entries,
     feePayerApi,
     persistRequestBuilderRef,
+    persistBuildStateRef,
     removedDetailSeqsRef,
     removedCalcsRef,
+    initialEntries,
   ]);
 
   const statusOptions = useMemo(

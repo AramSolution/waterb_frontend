@@ -39,6 +39,7 @@ export const FeePayerBasicRegisterForm: React.FC<
     feePayerItemId,
     setFeePayerItemId,
     getBasicInfoBody,
+    persistBuildStateRef,
     handleInputChange,
     noopInputChange,
     handleAddressSearch,
@@ -218,6 +219,7 @@ export const FeePayerBasicRegisterForm: React.FC<
           initialEntries={sewageInitialEntries}
           feePayerApi={feePayerApi}
           persistRequestBuilderRef={persistRequestBuilderRef}
+          persistBuildStateRef={persistBuildStateRef}
         />
 
         <div className="flex justify-end mt-4 gap-2">

@@ -67,6 +67,7 @@ export function usePaymentHistory() {
     try {
       const res = await getFeePayerPaymentDetail(itemIdParam);
       const data = res.data;
+      console.log(data);
       if (!data) {
         setFound(false);
         setDetailEntries([]);

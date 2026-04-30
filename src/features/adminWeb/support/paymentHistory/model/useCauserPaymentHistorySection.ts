@@ -260,7 +260,11 @@ export function useCauserPaymentHistorySection(
             seq2: d.seq2,
           }));
           const inserted = entry.lines
-            .filter((line) => !(line.paymentSeq2 != null && line.paymentSeq2 > 0))
+            .filter(
+              (line) =>
+                !(line.paymentSeq2 != null && line.paymentSeq2 > 0) &&
+                isMeaningfulNewPaymentLine(line),
+            )
             .map((line) => {
               const pay = parseAmount(line.amount);
               return {
@@ -324,6 +328,13 @@ function formatAmountInput(raw: string): string {
   const digits = String(raw ?? "").replace(/\D/g, "");
   if (!digits) return "";
   return Number(digits).toLocaleString("ko-KR");
+}
+
+function isMeaningfulNewPaymentLine(line: CauserPayLine): boolean {
+  const pay = parseAmount(line.amount);
+  if (pay > 0) return true;
+  if (String(line.remarks ?? "").trim() !== "") return true;
+  return false;
 }
 
 function getTodayYmd(): string {

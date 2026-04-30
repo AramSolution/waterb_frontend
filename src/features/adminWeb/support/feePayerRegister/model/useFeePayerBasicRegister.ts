@@ -54,6 +54,9 @@ export function useFeePayerBasicRegister(
   const internalPersistRef = useRef<
     (() => SupportFeePayerRegisterRequest | null) | null
   >(null);
+  const persistBuildStateRef = useRef<"invalid_required" | "no_changes" | null>(
+    null,
+  );
   const persistRef = persistRequestBuilderRef ?? internalPersistRef;
   const [applicantNm, setApplicantNm] = useState("");
   const [telNo, setTelNo] = useState("");
@@ -247,9 +250,13 @@ export function useFeePayerBasicRegister(
       }
       const body = build();
       if (!body) {
-        window.alert(
-          "구분·유형·통지일 등 오수량 산정 필수 항목을 확인해 주세요.",
-        );
+        if (persistBuildStateRef.current === "no_changes") {
+          window.alert("변경된 내용이 없습니다.");
+        } else {
+          window.alert(
+            "구분·유형·통지일 등 오수량 산정 필수 항목을 확인해 주세요.",
+          );
+        }
         return;
       }
       setLoading(true);
@@ -314,6 +321,7 @@ export function useFeePayerBasicRegister(
     feePayerItemId,
     setFeePayerItemId,
     getBasicInfoBody,
+    persistBuildStateRef,
     handleInputChange,
     noopInputChange,
     handleAddressSearch,
