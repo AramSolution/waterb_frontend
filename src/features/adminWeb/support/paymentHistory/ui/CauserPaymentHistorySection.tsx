@@ -43,14 +43,6 @@ export const CauserPaymentHistorySection: React.FC<
   const sewageVolumeInputStyle: React.CSSProperties = {
     backgroundColor: FEE_PAYER_SEWAGE_INPUT_BACKGROUND_RGBA,
   };
-  const renderWonInput = (props: React.ComponentProps<typeof FormInput>) => (
-    <div className="relative w-full">
-      <FormInput {...props} className={`pr-8 ${props.className ?? ""}`.trim()} />
-      <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">
-        원
-      </span>
-    </div>
-  );
 
   return (
     <div className="bg-white rounded-lg shadow mt-6">
@@ -151,83 +143,114 @@ export const CauserPaymentHistorySection: React.FC<
                   alignFieldStart
                 >
                   <div className="w-full">
-                    <span className="sr-only">오수량, 원인자부담금, 납부금액</span>
-                    <div className="flex w-full flex-col md:flex-row md:flex-nowrap md:items-stretch">
-                      <div className="flex min-w-0 w-full flex-col md:ml-0 md:flex-1 md:flex-row md:items-stretch">
-                        <label
-                          className="m-0 flex w-full shrink-0 items-center bg-gray-100 register-form-label md:w-1/4"
-                          style={{
-                            border: "1px solid #dee2e6",
-                            padding: "5px",
-                          }}
-                        >
-                          오수량
-                        </label>
-                        <div className="register-form-mobile-field flex w-full min-w-0 items-center border border-solid border-[#dee2e6] border-t-0 p-[5px] md:flex-1 md:border-l-0 md:border-t">
-                          <div className="w-full">
-                            <FormInput
-                              type="text"
-                              name="sewageVolume"
-                              value={entry.sewageVolume}
-                              onChange={handleFieldChange}
-                              placeholder="예: 9.8"
-                              data-entry-id={entry.id}
-                              readOnly
-                              className={readOnlyClass}
-                              style={sewageVolumeInputStyle}
-                            />
+                    <span className="sr-only">
+                      기준단가, 오수량, 계산 버튼, 원인자부담금, 오수부과량
+                    </span>
+                    <div className="feePayerPriceGrid w-full overflow-hidden rounded-none border border-[#e5e7eb] bg-white">
+                      <div className="flex w-full flex-col md:flex-row md:items-stretch">
+                        <div className="feePayerPricePair flex min-h-[45px] w-full min-w-0 flex-1 flex-col border-b border-[#e5e7eb] md:flex-row md:border-b-0 md:border-r md:border-[#e5e7eb]">
+                          <label className="m-0 flex min-h-[40px] shrink-0 items-center bg-gray-100 px-2 py-1.5 font-bold text-gray-800 register-form-label md:w-[34%] md:max-w-[8.5rem] md:py-2">
+                            기준단가
+                          </label>
+                          <div className="register-form-mobile-field flex min-h-[40px] flex-1 items-center border-t border-[#e5e7eb] p-[5px] md:min-h-[45px] md:border-t-0">
+                            <div className="relative w-full min-w-0">
+                              <FormInput
+                                type="text"
+                                name="unitPrice"
+                                value={entry.unitPrice}
+                                onChange={handleFieldChange}
+                                placeholder="예: 12,000"
+                                data-entry-id={entry.id}
+                                readOnly
+                                className={`pr-8 ${readOnlyClass}`}
+                              />
+                              <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">
+                                원
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="feePayerPricePair flex min-h-[45px] w-full min-w-0 flex-1 flex-col border-b border-[#e5e7eb] md:flex-row md:border-b-0 md:border-r md:border-[#e5e7eb]">
+                          <label className="m-0 flex min-h-[40px] shrink-0 items-center bg-gray-100 px-2 py-1.5 font-bold text-gray-800 register-form-label md:w-[34%] md:max-w-[8.5rem] md:py-2">
+                            오수량
+                          </label>
+                          <div className="register-form-mobile-field flex min-h-[40px] flex-1 items-center border-t border-[#e5e7eb] p-[5px] md:min-h-[45px] md:border-t-0">
+                            <div className="relative w-full min-w-0">
+                              <FormInput
+                                type="text"
+                                name="sewageVolume"
+                                value={entry.sewageVolume}
+                                onChange={handleFieldChange}
+                                placeholder="예: 9.8"
+                                data-entry-id={entry.id}
+                                readOnly
+                                className={`${readOnlyClass} pr-8 text-right placeholder:text-left`}
+                                style={sewageVolumeInputStyle}
+                              />
+                              <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">
+                                t
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex min-h-[45px] w-full shrink-0 items-center justify-center border-b border-[#e5e7eb] px-2 py-2 md:w-[104px] md:border-b-0 md:border-r-0 md:bg-gray-50/60">
+                          <div
+                            className="inline-flex min-h-10 min-w-[80px] items-center justify-center rounded-full border border-gray-200 bg-gray-100 px-4 py-1.5 text-base text-gray-500"
+                            aria-hidden
+                          >
+                            계산
                           </div>
                         </div>
                       </div>
-                      <div className="flex min-w-0 w-full flex-col border-t border-[#dee2e6] md:-ml-px md:flex-1 md:flex-row md:items-stretch md:border-t-0">
-                        <label
-                          className="m-0 flex w-full shrink-0 items-center bg-gray-100 register-form-label md:w-1/4"
-                          style={{
-                            border: "1px solid #dee2e6",
-                            padding: "5px",
-                          }}
-                        >
-                          원인자부담금
-                        </label>
-                        <div className="register-form-mobile-field flex w-full min-w-0 items-center border border-solid border-[#dee2e6] border-t-0 p-[5px] md:flex-1 md:border-l-0 md:border-t">
-                          <div className="w-full">
-                            {renderWonInput({
-                              type: "text",
-                              name: "causerCharge",
-                              value: entry.causerCharge,
-                              onChange: handleFieldChange,
-                              placeholder: "예: 300,000",
-                              "data-entry-id": entry.id,
-                              readOnly: true,
-                              className: readOnlyClass,
-                            })}
+                      <div className="feePayerPriceGridRow2 flex w-full flex-col bg-gray-50/50 md:flex-row md:items-stretch">
+                        <div className="feePayerPricePair flex min-h-[45px] w-full min-w-0 flex-1 flex-col border-b border-[#e5e7eb] shadow-[inset_0_1px_0_0_#d1d5db] md:flex-row md:border-b-0 md:border-r md:border-[#e5e7eb]">
+                          <label className="m-0 flex min-h-[40px] shrink-0 items-center bg-gray-100 px-2 py-1.5 font-bold text-gray-800 register-form-label md:w-[34%] md:max-w-[8.5rem] md:border-0 md:py-2">
+                            원인자부담금
+                          </label>
+                          <div className="register-form-mobile-field flex min-h-[40px] flex-1 items-center border-t border-[#e5e7eb] p-[5px] md:min-h-[45px] md:border-t-0">
+                            <div className="relative w-full min-w-0">
+                              <FormInput
+                                type="text"
+                                name="causerCharge"
+                                value={entry.causerCharge}
+                                onChange={handleFieldChange}
+                                placeholder="예: 300,000"
+                                data-entry-id={entry.id}
+                                readOnly
+                                className={`pr-8 ${readOnlyClass}`}
+                              />
+                              <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">
+                                원
+                              </span>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                      <div className="flex min-w-0 w-full flex-col border-t border-[#dee2e6] md:-ml-px md:flex-1 md:flex-row md:items-stretch md:border-t-0">
-                        <label
-                          className="m-0 flex w-full shrink-0 items-center bg-gray-100 register-form-label md:w-1/4"
-                          style={{
-                            border: "1px solid #dee2e6",
-                            padding: "5px",
-                          }}
-                        >
-                          납부금액
-                        </label>
-                        <div className="register-form-mobile-field flex w-full min-w-0 items-center border border-solid border-[#dee2e6] border-t-0 p-[5px] md:flex-1 md:border-l-0 md:border-t">
-                          <div className="w-full">
-                            {renderWonInput({
-                              type: "text",
-                              name: "paidAmount",
-                              value: entry.paidAmount,
-                              onChange: handleFieldChange,
-                              placeholder: "납부금액",
-                              "data-entry-id": entry.id,
-                              readOnly: true,
-                              className: readOnlyClass,
-                            })}
+                        <div className="feePayerPricePair flex min-h-[45px] w-full min-w-0 flex-1 flex-col md:flex-row md:border-r md:border-[#e5e7eb] md:shadow-[inset_0_1px_0_0_#d1d5db]">
+                          <label className="m-0 flex min-h-[40px] shrink-0 items-center bg-gray-100 px-2 py-1.5 font-bold text-gray-800 register-form-label md:w-[34%] md:max-w-[8.5rem] md:border-0 md:py-2">
+                            오수부과량
+                          </label>
+                          <div className="register-form-mobile-field flex min-h-[40px] flex-1 items-center border-t border-[#e5e7eb] p-[5px] md:min-h-[45px] md:border-t-0">
+                            <div className="relative w-full min-w-0">
+                              <FormInput
+                                type="text"
+                                name="sewageLevyAmount"
+                                value={entry.sewageLevyAmount}
+                                onChange={handleFieldChange}
+                                placeholder="오수부과량"
+                                data-entry-id={entry.id}
+                                readOnly
+                                className={`${readOnlyClass} pr-8 text-right placeholder:text-left`}
+                              />
+                              <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">
+                                t
+                              </span>
+                            </div>
                           </div>
                         </div>
+                        <div
+                          className="hidden min-h-[45px] shrink-0 md:block md:w-[104px] md:bg-gray-50/50"
+                          aria-hidden
+                        />
                       </div>
                     </div>
                   </div>
@@ -314,18 +337,25 @@ export const CauserPaymentHistorySection: React.FC<
                           </label>
                           <div className="register-form-mobile-field flex w-full min-w-0 items-center border border-solid border-[#dee2e6] border-t-0 p-[5px] md:flex-1 md:border-l-0 md:border-t">
                             <div className="w-full">
-                              {renderWonInput({
-                                type: "text",
-                                name: "amount",
-                                value: line.amount,
-                                onChange: handleLineFieldChange,
-                                placeholder: "금액",
-                                inputMode: "numeric",
-                                "data-entry-id": entry.id,
-                                "data-line-id": line.id,
-                                readOnly: lineReadOnly(line),
-                                className: lineReadOnly(line) ? readOnlyClass : "",
-                              })}
+                              <div className="relative w-full">
+                                <FormInput
+                                  type="text"
+                                  name="amount"
+                                  value={line.amount}
+                                  onChange={handleLineFieldChange}
+                                  placeholder="금액"
+                                  inputMode="numeric"
+                                  data-entry-id={entry.id}
+                                  data-line-id={line.id}
+                                  readOnly={lineReadOnly(line)}
+                                  className={`pr-8 ${
+                                    lineReadOnly(line) ? readOnlyClass : ""
+                                  }`.trim()}
+                                />
+                                <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">
+                                  원
+                                </span>
+                              </div>
                             </div>
                           </div>
                         </div>

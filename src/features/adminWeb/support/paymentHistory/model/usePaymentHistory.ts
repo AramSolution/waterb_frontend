@@ -229,7 +229,9 @@ function mapPaymentDetailToEntry(
       : "UNPAID";
 
   const waterSum = Number(d.waterSum ?? NaN);
+  const baseCost = Number(d.baseCost ?? NaN);
   const waterCost = Number(d.waterCost ?? NaN);
+  const waterVal = Number(d.waterVal ?? NaN);
   const waterPay = Number(d.waterPay ?? NaN);
 
   const linesRaw = [...(d.payments ?? [])].sort(
@@ -246,12 +248,16 @@ function mapPaymentDetailToEntry(
     status,
     type,
     notifyDate: normalizeYmd(d.reqDate),
+    unitPrice:
+      Number.isFinite(baseCost) && baseCost !== 0 ? formatIntKo(baseCost) : "",
     sewageVolume:
       Number.isFinite(waterSum) && waterSum !== 0 ? formatMetricKo(waterSum) : "",
     causerCharge:
       Number.isFinite(waterCost) && waterCost !== 0
         ? formatIntKo(waterCost)
         : "",
+    sewageLevyAmount:
+      Number.isFinite(waterVal) && waterVal !== 0 ? formatMetricKo(waterVal) : "",
     paidAmount:
       Number.isFinite(waterPay) && waterPay !== 0 ? formatIntKo(waterPay) : "",
     lines,

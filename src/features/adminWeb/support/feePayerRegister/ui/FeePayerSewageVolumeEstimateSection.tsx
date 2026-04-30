@@ -350,7 +350,7 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                             오수량
                           </label>
                           <div className="register-form-mobile-field flex min-h-[40px] flex-1 items-center border-t border-[#e5e7eb] p-[5px] md:min-h-[45px] md:border-t-0">
-                            <div className="w-full min-w-0">
+                            <div className="relative w-full min-w-0">
                               <FormInput
                                 type="text"
                                 name="sewageVolume"
@@ -358,7 +358,7 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                                 onChange={handleEntryFieldChange}
                                 placeholder="예: 9.8"
                                 readOnly={rowReadOnly || !isPermitChangeCategory}
-                                className={`text-right placeholder:text-left ${
+                                className={`pr-8 text-right placeholder:text-left ${
                                   rowReadOnly || !isPermitChangeCategory
                                     ? readOnlyInputClass
                                     : ""
@@ -366,6 +366,9 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                                 style={sewageVolumeInputStyle}
                                 data-entry-id={entry.id}
                               />
+                              <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">
+                                t
+                              </span>
                             </div>
                           </div>
                         </div>
@@ -433,7 +436,7 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                             오수부과량
                           </label>
                           <div className="register-form-mobile-field flex min-h-[40px] flex-1 items-center border-t border-[#e5e7eb] p-[5px] md:min-h-[45px] md:border-t-0">
-                            <div className="w-full min-w-0">
+                            <div className="relative w-full min-w-0">
                               <FormInput
                                 type="text"
                                 name="sewageLevyAmount"
@@ -442,10 +445,13 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                                 placeholder="오수부과량"
                                 data-entry-id={entry.id}
                                 readOnly={rowReadOnly}
-                                className={
-                                  rowReadOnly ? readOnlyInputClass : undefined
-                                }
+                                className={`pr-8 text-right placeholder:text-left ${
+                                  rowReadOnly ? readOnlyInputClass : ""
+                                }`.trim()}
                               />
+                              <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">
+                                t
+                              </span>
                             </div>
                           </div>
                         </div>
@@ -618,7 +624,7 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                           <div
                             className="register-form-mobile-field flex w-full min-w-0 items-center border border-solid border-[#dee2e6] border-t-0 p-[5px] md:flex-1 md:border-l-0 md:border-t"
                           >
-                            <div className="w-full">
+                            <div className="relative w-full">
                               <FormInput
                                 type="text"
                                 name="dailySewage"
@@ -626,10 +632,13 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                                 onChange={handleEntryFieldChange}
                                 placeholder="1일 오수발생량"
                                 readOnly
-                                className="bg-gray-100"
+                                className="bg-gray-100 pr-8 text-right placeholder:text-left"
                                 data-entry-id={entry.id}
                                 data-line-id={line.id}
                               />
+                              <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">
+                                t
+                              </span>
                             </div>
                           </div>
                         </div>
@@ -650,7 +659,7 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                             <span className="px-0.5 text-base font-medium text-gray-600 md:hidden">
                               오수량
                             </span>
-                            <div className="min-w-0 flex-1">
+                            <div className="relative min-w-0 flex-1">
                               <FormInput
                                 type="text"
                                 name="sewageQty"
@@ -658,11 +667,14 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                                 placeholder="오수량"
                                 title="분류 중분류(단독주택·공동주택 등)·면적·방·세대·1일오수에 따라 자동 산출"
                                 readOnly
-                                className={`${readOnlyInputClass} text-right placeholder:text-left`}
+                                className={`${readOnlyInputClass} pr-8 text-right placeholder:text-left`}
                                 style={sewageVolumeInputStyle}
                                 data-entry-id={entry.id}
                                 data-line-id={line.id}
                               />
+                              <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">
+                                t
+                              </span>
                             </div>
                           </div>
                           {!readOnly && !rowReadOnly ? (

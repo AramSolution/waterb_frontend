@@ -23,8 +23,10 @@ export type CauserPaymentEntry = {
   status: string;
   type: string;
   notifyDate: string;
+  unitPrice: string;
   sewageVolume: string;
   causerCharge: string;
+  sewageLevyAmount: string;
   paidAmount: string;
   lines: CauserPayLine[];
 };
@@ -45,8 +47,10 @@ function createEntry(): CauserPaymentEntry {
     status: "UNPAID",
     type: "",
     notifyDate: "2020-01-01",
+    unitPrice: "12,000",
     sewageVolume: "9.8",
     causerCharge: "300,000",
+    sewageLevyAmount: "9.8",
     paidAmount: "300,000",
     lines: [createLine()],
   };
