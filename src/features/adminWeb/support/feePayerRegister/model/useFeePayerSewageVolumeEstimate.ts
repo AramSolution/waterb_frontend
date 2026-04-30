@@ -10,6 +10,7 @@ import {
   getSewageCalcModeForLine,
 } from "@/features/adminWeb/support/lib/sewageVolumeCalc";
 import {
+  getSewageTypeOptionsForCategory,
   isOtherActCategory,
   SEWAGE_CATEGORY,
 } from "@/features/adminWeb/support/lib/sewageCategoryTypeOptions";
@@ -167,6 +168,27 @@ function withSewageQty(line: SewageDetailLine): SewageDetailLine {
   };
 }
 
+function firstSewageTypeForCategory(category: string): string {
+  const opts = getSewageTypeOptionsForCategory(category);
+  return opts[0]?.value ?? "";
+}
+
+/** 구분·유형이 옵션과 맞도록(빈 값·불일치 시 목록 첫 항목) */
+function ensureEntryCategoryTypeCoherent(
+  e: SewageEstimateEntry,
+): SewageEstimateEntry {
+  let category = (e.category || "").trim();
+  if (!category || getSewageTypeOptionsForCategory(category).length === 0) {
+    category = SEWAGE_CATEGORY.INDIVIDUAL;
+  }
+  const opts = getSewageTypeOptionsForCategory(category);
+  const first = opts[0]?.value ?? "";
+  const typeValid = opts.some((o) => o.value === e.type);
+  const type = typeValid ? e.type : first;
+  if (category === e.category && type === e.type) return e;
+  return { ...e, category, type };
+}
+
 function createDetailLine(): SewageDetailLine {
   return withSewageQty({
     id: crypto.randomUUID(),
@@ -188,11 +210,13 @@ function isEntryPaid(entry: SewageEstimateEntry): boolean {
 }
 
 function createEntry(): SewageEstimateEntry {
+  const category = SEWAGE_CATEGORY.INDIVIDUAL;
+  const type = firstSewageTypeForCategory(category);
   return {
     id: crypto.randomUUID(),
     status: "UNPAID",
-    category: "",
-    type: "",
+    category,
+    type,
     notifyDate: getTodayYmd(),
     unitPrice: "",
     sewageVolume: "",
@@ -213,15 +237,23 @@ function normalizeDetailLine(l: SewageDetailLine): SewageDetailLine {
     calcSeq2: l.calcSeq2,
     armbuildBuildId: bul || undefined,
   };
-  return withSewageQty(merged);
+  const preservedQty = String(merged.sewageQty ?? "").trim();
+  const recalculated = withSewageQty(merged);
+  const nextQty = String(recalculated.sewageQty ?? "").trim();
+  // 상세 API `waterVol` 등은 줄 단위로만 오고, 클라 산식 입력이 부족하면 `computeLineSewageQty`가 ""가 되어 값이 지워짐 → 서버에서 온 수치는 유지
+  if (nextQty === "" && preservedQty !== "") {
+    return { ...recalculated, sewageQty: preservedQty };
+  }
+  return recalculated;
 }
 
 function normalizeEntry(e: SewageEstimateEntry): SewageEstimateEntry {
-  return {
+  const merged: SewageEstimateEntry = {
     ...e,
     detailSeq: e.detailSeq,
     lines: e.lines.map(normalizeDetailLine),
   };
+  return ensureEntryCategoryTypeCoherent(merged);
 }
 
 function initialEntriesOrDefault(
@@ -401,9 +433,12 @@ export function useFeePayerSewageVolumeEstimate(
       if (hostEntry && isEntryPaid(hostEntry)) return;
 
       if (key === "category") {
+        const nextType = firstSewageTypeForCategory(value);
         setEntries((prev) =>
           prev.map((row) =>
-            row.id === entryId ? { ...row, category: value, type: "" } : row,
+            row.id === entryId
+              ? { ...row, category: value, type: nextType }
+              : row,
           ),
         );
         const cat = value.trim();

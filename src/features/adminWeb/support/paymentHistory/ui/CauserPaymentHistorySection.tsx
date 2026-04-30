@@ -9,6 +9,11 @@ import {
 } from "../model/useCauserPaymentHistorySection";
 import type { SupportFeePayerPaymentSaveRequest } from "@/entities/adminWeb/support/api/feePayerManageApi";
 import "@/shared/styles/admin/register-form.css";
+import {
+  feePayStatusReadOnlyFieldClassName,
+  feePayStatusSelectClassName,
+} from "@/features/adminWeb/support/lib/feePayStatusUi";
+import { FEE_PAYER_SEWAGE_INPUT_BACKGROUND_RGBA } from "@/features/adminWeb/support/lib/feePayerSewageInputTint";
 
 /** 납부내역 — 원인자부담 납부내역 (블록 내 `추가` = 일자·금액·비고 행). */
 export interface CauserPaymentHistorySectionProps {
@@ -38,6 +43,9 @@ export const CauserPaymentHistorySection: React.FC<
 
   const { category: catOpt, status: stOpt } = categoryStatusOptions;
   const readOnlyClass = "bg-gray-100 !cursor-not-allowed";
+  const sewageVolumeInputStyle: React.CSSProperties = {
+    backgroundColor: FEE_PAYER_SEWAGE_INPUT_BACKGROUND_RGBA,
+  };
 
   return (
     <div className="bg-white rounded-lg shadow mt-6">
@@ -80,14 +88,27 @@ export const CauserPaymentHistorySection: React.FC<
                     forceTopBorder={entryIndex > 0}
                     mdGridSpan={4}
                   >
-                    <FormSelect
-                      name="status"
-                      value={entry.status}
-                      onChange={handleSelectChange}
-                      options={stOpt}
-                      data-entry-id={entry.id}
-                      disabled={entry.status === "PAID"}
-                    />
+                    {entry.status === "PAID" ? (
+                      <div className="flex w-full min-w-0 flex-1 self-stretch">
+                        <span
+                          className={feePayStatusReadOnlyFieldClassName(true)}
+                        >
+                          납부
+                        </span>
+                      </div>
+                    ) : (
+                      <FormSelect
+                        name="status"
+                        value={entry.status}
+                        onChange={handleSelectChange}
+                        options={stOpt}
+                        data-entry-id={entry.id}
+                        disabled={false}
+                        selectClassName={feePayStatusSelectClassName(
+                          entry.status,
+                        )}
+                      />
+                    )}
                   </FormField>
                   <FormField
                     label="구분"
@@ -100,7 +121,7 @@ export const CauserPaymentHistorySection: React.FC<
                       value={entry.category}
                       onChange={handleSelectChange}
                       options={catOpt}
-                      placeholder="--------선택하세요-----"
+                      emptyText=""
                       data-entry-id={entry.id}
                       disabled
                     />
@@ -111,7 +132,7 @@ export const CauserPaymentHistorySection: React.FC<
                       value={entry.type}
                       onChange={handleSelectChange}
                       options={getSewageTypeOptionsForCategory(entry.category)}
-                      placeholder="선택하세요"
+                      emptyText=""
                       data-entry-id={entry.id}
                       disabled
                     />
@@ -160,6 +181,7 @@ export const CauserPaymentHistorySection: React.FC<
                               data-entry-id={entry.id}
                               readOnly
                               className={readOnlyClass}
+                              style={sewageVolumeInputStyle}
                             />
                           </div>
                         </div>

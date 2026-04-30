@@ -13,6 +13,7 @@ import "@/shared/styles/admin/mobile-table.css";
 import "@/shared/styles/admin/resizable-table.css";
 import "@/shared/styles/admin/search-form.css";
 import { decodeDisplayText } from "@/shared/lib";
+import { feePayBadgeClassName } from "@/features/adminWeb/support/lib/feePayStatusUi";
 
 function formatFeeCurrency(v: unknown): string {
   if (v === null || v === undefined || v === "") return "-";
@@ -44,18 +45,6 @@ function feeListRowFields(row: Support, index: number, page: number, ps: number)
       ? `${itemId}-${det}`
       : itemId || `row-${index}`;
   return { seq, paid, name, addr, notify, levyRaw, payDd, payAmtRaw, rowKey };
-}
-
-/**
- * 미납·납부 배지 색 (list-pagination / UI 톤)
- * - 미납: 배경 #FFE5E5, 글자 #D32F2F — 경고는 주되 부드러움
- * - 납부: 배경 #E8F5E9, 글자 #2E7D32 — 안정적이고 깔끔함
- * (min-w·rounded·font-medium 등 표시 규격은 리스트 가이드와 호출부 span에 맞춤)
- */
-function feePayBadgeClassName(paid: boolean): string {
-  return paid
-    ? "bg-[#E8F5E9] text-[#2E7D32] font-medium border border-[#C8E6C9]"
-    : "bg-[#FFE5E5] text-[#D32F2F] font-medium border border-[#FFCDD2]";
 }
 
 export const SupportListPageView: React.FC = () => {
@@ -816,7 +805,11 @@ export const SupportListPageView: React.FC = () => {
         message={deleteFailMessage || "오수 원인자부담금 삭제에 실패했습니다."}
         confirmText="확인"
         cancelText="닫기"
-        type={deleteFailDialogType}
+        type={
+          deleteFailDialogType === "warning"
+            ? "primary"
+            : deleteFailDialogType
+        }
         onConfirm={handleDeleteFailDialogClose}
         onCancel={handleDeleteFailDialogClose}
       />

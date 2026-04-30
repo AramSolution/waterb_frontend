@@ -71,6 +71,11 @@ input[type='number'] {
   }
 }
 
+/* 오수량 산정 기준단가·오수량·원인자부담금·오수부과량: 값 입력 오른쪽 정렬 */
+.feePayerPriceGrid .feePayerPricePair .register-form-mobile-field input:not([type='checkbox']):not([type='radio']) {
+  text-align: right;
+}
+
 /* 가맹 학원 등록: 데스크톱에서 모든 행 높이 45px 통일 */
 @media (min-width: 768px) {
   .franchise-register-form .register-form-mobile-wrapper {
@@ -79,9 +84,9 @@ input[type='number'] {
 
   /* 원인자부담 오수량 산정: 기준단가·오수량 / 원인자부담금·오수부과량 열 맞춤 + 연한 구분선 */
   .feePayerPriceGrid .feePayerPricePair .register-form-label {
-    justify-content: flex-start;
+    justify-content: flex-end;
     padding-left: 0.5rem;
-    padding-right: 0.5rem;
+    padding-right: 1rem;
     border-right: 1px solid #e5e7eb;
     width: 34% !important;
     max-width: 8.5rem;
@@ -104,6 +109,8 @@ input[type='number'] {
 @media (max-width: 767px) {
   .feePayerPriceGrid .feePayerPricePair .register-form-label {
     border-color: #e5e7eb !important;
+    justify-content: flex-end !important;
+    padding-right: 1rem !important;
   }
 
   .feePayerPriceGrid .feePayerPricePair .register-form-mobile-field {

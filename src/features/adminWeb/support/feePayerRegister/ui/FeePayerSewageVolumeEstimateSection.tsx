@@ -20,8 +20,17 @@ import {
 import { buildSupportFeePayerRegisterRequestForPersist } from "../lib/buildSupportFeePayerRegisterRequest";
 import type { SupportFeePayerRegisterRequest } from "@/entities/adminWeb/support/api/feePayerManageApi";
 import { UsageLookupModal } from "./UsageLookupModal";
+import {
+  feePayStatusReadOnlyFieldClassName,
+  feePayStatusSelectClassName,
+} from "@/features/adminWeb/support/lib/feePayStatusUi";
+import { FEE_PAYER_SEWAGE_INPUT_BACKGROUND_RGBA } from "@/features/adminWeb/support/lib/feePayerSewageInputTint";
 
 const readOnlyInputClass = "bg-gray-100 !cursor-not-allowed";
+
+const sewageVolumeInputStyle: React.CSSProperties = {
+  backgroundColor: FEE_PAYER_SEWAGE_INPUT_BACKGROUND_RGBA,
+};
 
 export interface FeePayerSewageVolumeEstimateSectionProps {
   /** 읽기 전용(상세). 버튼·추가·모달 비활성. */
@@ -212,14 +221,29 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                     forceTopBorder={entryIndex > 0}
                     mdGridSpan={4}
                   >
-                    <FormSelect
-                      name="status"
-                      value={entry.status}
-                      onChange={handleEntryFieldChange}
-                      options={statusOptions}
-                      data-entry-id={entry.id}
-                      disabled={rowReadOnly}
-                    />
+                    {rowReadOnly ? (
+                      <div className="flex w-full min-w-0 flex-1 self-stretch">
+                        <span
+                          className={feePayStatusReadOnlyFieldClassName(
+                            entry.status === "PAID",
+                          )}
+                        >
+                          {entry.status === "PAID" ? "납부" : "미납"}
+                        </span>
+                      </div>
+                    ) : (
+                      <FormSelect
+                        name="status"
+                        value={entry.status}
+                        onChange={handleEntryFieldChange}
+                        options={statusOptions}
+                        data-entry-id={entry.id}
+                        disabled={false}
+                        selectClassName={feePayStatusSelectClassName(
+                          entry.status,
+                        )}
+                      />
+                    )}
                   </FormField>
                   <FormField
                     label="구분"
@@ -232,7 +256,7 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                       value={entry.category}
                       onChange={handleEntryFieldChange}
                       options={categoryOptions}
-                      placeholder="선택하세요"
+                      emptyText=""
                       data-entry-id={entry.id}
                       disabled={rowReadOnly}
                     />
@@ -243,7 +267,7 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                       value={entry.type}
                       onChange={handleEntryFieldChange}
                       options={getSewageTypeOptionsForCategory(entry.category)}
-                      placeholder="선택하세요"
+                      emptyText=""
                       data-entry-id={entry.id}
                       disabled={rowReadOnly}
                     />
@@ -317,6 +341,7 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                                     ? readOnlyInputClass
                                     : undefined
                                 }
+                                style={sewageVolumeInputStyle}
                                 data-entry-id={entry.id}
                               />
                             </div>
@@ -696,6 +721,7 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                               title="분류 중분류(단독주택·공동주택 등)·면적·방·세대·1일오수에 따라 자동 산출"
                               readOnly
                               className={readOnlyInputClass}
+                              style={sewageVolumeInputStyle}
                               data-entry-id={entry.id}
                               data-line-id={line.id}
                             />
