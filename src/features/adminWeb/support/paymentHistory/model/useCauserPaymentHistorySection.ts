@@ -7,7 +7,7 @@ import {
   type MutableRefObject,
 } from "react";
 import {
-  postFeePayerPaymentSave,
+  deleteFeePayerPayment,
   type SupportFeePayerPaymentSaveItemRequest,
   type SupportFeePayerPaymentSaveRequest,
 } from "@/entities/adminWeb/support/api/feePayerManageApi";
@@ -318,16 +318,10 @@ export function useCauserPaymentHistorySection(
 
     setLineDeleteSubmitting(true);
     try {
-      await postFeePayerPaymentSave({
+      await deleteFeePayerPayment({
         itemId: id,
-        details: [
-          {
-            seq: entry.detailSeq as number,
-            payments: [
-              { rowStatus: "D", seq2: victim.paymentSeq2 as number },
-            ],
-          },
-        ],
+        seq: entry.detailSeq as number,
+        seq2: victim.paymentSeq2 as number,
       });
       handleLineDeleteCancel();
       if (onReloadDetail) {

@@ -69,6 +69,8 @@ export interface SupportFeePayerRegisterResponse {
 export interface SupportFeePayerDeleteRequest {
   itemId: string;
   seq: number;
+  /** 지정 시 해당 산정 행(ARTITEC)만 삭제. 생략 시 통지일 블록(ARTITED) 전체 삭제 */
+  seq2?: number;
 }
 
 export interface SupportFeePayerDeleteResponse {
@@ -76,6 +78,14 @@ export interface SupportFeePayerDeleteResponse {
   message?: string;
   itemId?: string | null;
   seq?: number | null;
+  seq2?: number | null;
+}
+
+/** `SupportFeePayerPaymentDeleteRequest` — 납부내역(ARTITEP) 1건 삭제 */
+export interface SupportFeePayerPaymentDeleteRequest {
+  itemId: string;
+  seq: number;
+  seq2: number;
 }
 
 /**
@@ -505,6 +515,57 @@ export async function postFeePayerPaymentSave(
   }
 }
 
+/**
+ * 오수 원인자부담금 납부내역 1건 삭제 (ARTITEP)
+ * DELETE `/api/admin/support/fee-payer/payment/delete`
+ */
+export async function deleteFeePayerPayment(
+  body: SupportFeePayerPaymentDeleteRequest,
+): Promise<SupportFeePayerDeleteResponse> {
+  const itemId = String(body.itemId ?? "").trim();
+  const seq = Number(body.seq);
+  const seq2 = Number(body.seq2);
+  if (!itemId) {
+    throw new ApiError(0, "ITEM_ID가 없습니다.");
+  }
+  if (!Number.isFinite(seq) || seq <= 0) {
+    throw new ApiError(0, "SEQ가 올바르지 않습니다.");
+  }
+  if (!Number.isFinite(seq2) || seq2 <= 0) {
+    throw new ApiError(0, "납부내역 SEQ2가 올바르지 않습니다.");
+  }
+  const payload: SupportFeePayerPaymentDeleteRequest = {
+    itemId,
+    seq: Math.trunc(seq),
+    seq2: Math.trunc(seq2),
+  };
+  try {
+    const res = await apiClient.delete<SupportFeePayerDeleteResponse>(
+      API_ENDPOINTS.SUPPORT.FEE_PAYER_PAYMENT_DELETE,
+      {
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      },
+    );
+    const code = String(res?.result ?? "").trim();
+    if (code !== "00") {
+      throw new ApiError(
+        0,
+        String(res?.message ?? "").trim() ||
+          "오수 원인자부담금 납부내역 삭제에 실패했습니다.",
+        res,
+      );
+    }
+    return res ?? {};
+  } catch (e) {
+    if (e instanceof ApiError) throw e;
+    throw new ApiError(
+      0,
+      "오수 원인자부담금 납부내역 삭제 요청 중 오류가 발생했습니다.",
+    );
+  }
+}
+
 export async function postFeePayerList(
   body?: SupportFeePayerListRequest | null,
 ): Promise<SupportFeePayerListResponse> {
@@ -535,13 +596,22 @@ export async function deleteFeePayerDetail(
 ): Promise<SupportFeePayerDeleteResponse> {
   const itemId = String(body.itemId ?? "").trim();
   const seq = Number(body.seq);
+  const seq2Raw = body.seq2;
+  const seq2 =
+    seq2Raw != null && Number.isFinite(Number(seq2Raw))
+      ? Math.trunc(Number(seq2Raw))
+      : undefined;
   if (!itemId) {
     throw new ApiError(0, "ITEM_ID가 없습니다.");
   }
   if (!Number.isFinite(seq) || seq <= 0) {
     throw new ApiError(0, "SEQ가 올바르지 않습니다.");
   }
-  const payload: SupportFeePayerDeleteRequest = { itemId, seq: Math.trunc(seq) };
+  const payload: SupportFeePayerDeleteRequest = {
+    itemId,
+    seq: Math.trunc(seq),
+    ...(seq2 != null && seq2 > 0 ? { seq2 } : {}),
+  };
   try {
     const res = await apiClient.delete<SupportFeePayerDeleteResponse>(
       API_ENDPOINTS.SUPPORT.FEE_PAYER_DELETE,

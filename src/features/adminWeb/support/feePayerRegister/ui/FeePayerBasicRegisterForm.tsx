@@ -1,9 +1,13 @@
 "use client";
 
 import React, { useMemo, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { ConfirmDialog } from "@/shared/ui/adminWeb";
 import { FormField, FormInput } from "@/shared/ui/adminWeb/form";
-import type { SupportFeePayerRegisterRequest } from "@/entities/adminWeb/support/api/feePayerManageApi";
+import {
+  deleteFeePayerDetail,
+  type SupportFeePayerRegisterRequest,
+} from "@/entities/adminWeb/support/api/feePayerManageApi";
 import { useFeePayerBasicRegister } from "../model";
 import { FeePayerSewageVolumeEstimateSection } from "./FeePayerSewageVolumeEstimateSection";
 import "@/shared/styles/admin/register-form.css";
@@ -16,6 +20,7 @@ export interface FeePayerBasicRegisterFormProps {
 export const FeePayerBasicRegisterForm: React.FC<
   FeePayerBasicRegisterFormProps
 > = ({ seedProId = null }) => {
+  const router = useRouter();
   const persistRequestBuilderRef = useRef<
     (() => SupportFeePayerRegisterRequest | null) | null
   >(null);
@@ -54,9 +59,30 @@ export const FeePayerBasicRegisterForm: React.FC<
     () => ({
       getBasicInfoBody,
       feePayerItemId: feePayerItemId ?? seedProId?.trim() ?? undefined,
-      onFeePayerItemId: setFeePayerItemId,
+      onFeePayerItemId: (id: string) => {
+        setFeePayerItemId(id);
+        if (!seedProId?.trim()) {
+          const w = String(id ?? "").trim();
+          if (w) {
+            router.replace(
+              `/adminWeb/support/list/basic-detail?proId=${encodeURIComponent(w)}`,
+            );
+          }
+        }
+      },
+      deleteCalculationRow: async (params: {
+        itemId: string;
+        seq: number;
+        seq2: number;
+      }) => {
+        await deleteFeePayerDetail({
+          itemId: params.itemId,
+          seq: params.seq,
+          seq2: params.seq2,
+        });
+      },
     }),
-    [getBasicInfoBody, feePayerItemId, seedProId, setFeePayerItemId],
+    [getBasicInfoBody, feePayerItemId, seedProId, setFeePayerItemId, router],
   );
 
   if (seedInvalid) {

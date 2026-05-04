@@ -147,6 +147,8 @@ export const API_ENDPOINTS = {
       `/api/admin/support/fee-payer/${encodeURIComponent(itemId)}/payment-detail`,
     /** 오수 원인자부담금 납부내역 저장 — POST */
     FEE_PAYER_PAYMENT_SAVE: "/api/admin/support/fee-payer/payment",
+    /** 오수 원인자부담금 납부내역 1건 삭제 — DELETE JSON { itemId, seq, seq2 } */
+    FEE_PAYER_PAYMENT_DELETE: "/api/admin/support/fee-payer/payment/delete",
     /** 오수 원인자부담금 목록 삭제 — DELETE JSON { itemId, seq } */
     FEE_PAYER_DELETE: "/api/admin/support/fee-payer/delete",
   },

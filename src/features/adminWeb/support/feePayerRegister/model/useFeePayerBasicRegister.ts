@@ -281,6 +281,13 @@ export function useFeePayerBasicRegister(
         const res = await postFeePayerRegister(body);
         const wid = String(res.itemId ?? "").trim();
         if (wid) setFeePayerItemId(wid);
+        const isRegisterOnly = !seedProId?.trim();
+        if (isRegisterOnly && wid) {
+          router.replace(
+            `/adminWeb/support/list/basic-detail?proId=${encodeURIComponent(wid)}`,
+          );
+          return;
+        }
         const isUpdate = Boolean(seedProId?.trim() || body.itemId?.trim());
         setInfoDialogTitle(isUpdate ? "수정 완료" : "등록 완료");
         setInfoDialogMessage(
@@ -306,7 +313,7 @@ export function useFeePayerBasicRegister(
         setLoading(false);
       }
     },
-    [validate, persistRef, seedProId],
+    [validate, persistRef, seedProId, router],
   );
 
   const handleCancel = useCallback(() => {
@@ -314,12 +321,8 @@ export function useFeePayerBasicRegister(
   }, [router]);
 
   const handleInfoDialogClose = useCallback(() => {
-    const wasSuccess = infoDialogType === "success";
     setShowInfoDialog(false);
-    if (wasSuccess) {
-      router.push("/adminWeb/support/list");
-    }
-  }, [router, infoDialogType]);
+  }, []);
 
   return {
     applicantNm,

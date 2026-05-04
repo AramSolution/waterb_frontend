@@ -71,6 +71,12 @@ export interface FeePayerSewageApiBridge {
   getBasicInfoBody: () => SupportFeePayerBasicInfoRequest | null;
   feePayerItemId?: string | null;
   onFeePayerItemId?: (itemId: string) => void;
+  /** 서버에 반영된 산정 행 삭제 — 성공 시 로컬에서 `skipPersistTracking`으로 D 누적 생략 */
+  deleteCalculationRow?: (params: {
+    itemId: string;
+    seq: number;
+    seq2: number;
+  }) => Promise<void>;
 }
 
 export interface UseFeePayerSewageVolumeEstimateOptions {
@@ -109,17 +115,53 @@ function formatDecimalPlain(n: number): string {
   });
 }
 
+/** 상단 오수량 문자열을 숫자로 같게 보정 비교(표시·합산 반올림 차이 흡수) */
+function volumesNumericallyEqual(a: string, b: string): boolean {
+  const ta = String(a ?? "").replace(/,/g, "").trim();
+  const tb = String(b ?? "").replace(/,/g, "").trim();
+  if (ta === "" && tb === "") return true;
+  const na = Number(ta);
+  const nb = Number(tb);
+  if (!Number.isFinite(na) && !Number.isFinite(nb)) return ta === tb;
+  if (!Number.isFinite(na) || !Number.isFinite(nb)) return false;
+  return Math.abs(na - nb) < 1e-9;
+}
+
+interface ApplyLineSumToSewageVolumeOptions {
+  /**
+   * true(기본): 하단 합으로 상단 오수량이 바뀌면 원인자부담금·오수부과량을 0으로 초기화
+   * (이전 계산 결과 무효 안내). 초기 스냅샷·계산 API 직후에는 false.
+   */
+  resetDerivedChargesOnVolumeChange?: boolean;
+}
+
 /** 허가사항변경 제외: 하위 행 `sewageQty` 합 → 상단 `sewageVolume` 반영 */
-function applyLineSumToSewageVolume(en: SewageEstimateEntry): SewageEstimateEntry {
+function applyLineSumToSewageVolume(
+  en: SewageEstimateEntry,
+  options?: ApplyLineSumToSewageVolumeOptions,
+): SewageEstimateEntry {
   if (en.category === SEWAGE_CATEGORY.PERMIT_CHANGE) return en;
+  const resetCharges = options?.resetDerivedChargesOnVolumeChange !== false;
   const sum = sumLineWaterVol(en.lines);
   const hasLineQty = en.lines.some((L) => {
     const raw = String(L.sewageQty ?? "").replace(/,/g, "").trim();
     return raw !== "" && Number.isFinite(Number(raw));
   });
-  const sewageVolume =
-    !hasLineQty && sum === 0 ? "" : formatDecimalPlain(sum);
-  return { ...en, sewageVolume };
+  const nextSewageVolume =
+    !hasLineQty && sum === 0 ? "0" : formatDecimalPlain(sum);
+  const volumeChanged = !volumesNumericallyEqual(
+    en.sewageVolume,
+    nextSewageVolume,
+  );
+  const next: SewageEstimateEntry = { ...en, sewageVolume: nextSewageVolume };
+  if (resetCharges && volumeChanged) {
+    return {
+      ...next,
+      causerCharge: "0",
+      sewageLevyAmount: "0",
+    };
+  }
+  return next;
 }
 
 function digitsOnly(raw: string): string {
@@ -239,9 +281,9 @@ function createEntry(): SewageEstimateEntry {
     type,
     notifyDate: getTodayYmd(),
     unitPrice: "",
-    sewageVolume: "",
-    causerCharge: "",
-    sewageLevyAmount: "",
+    sewageVolume: "0",
+    causerCharge: "0",
+    sewageLevyAmount: "0",
     lines: [createDetailLine()],
   };
 }
@@ -267,14 +309,30 @@ function normalizeDetailLine(l: SewageDetailLine): SewageDetailLine {
   return recalculated;
 }
 
+/** 표시용: 미입력·빈 문자열은 0으로 본다. */
+function withEmptyAmountFieldsAsZero(
+  en: SewageEstimateEntry,
+): SewageEstimateEntry {
+  const z = (v: string | undefined) =>
+    String(v ?? "").trim() === "" ? "0" : String(v);
+  return {
+    ...en,
+    sewageVolume: z(en.sewageVolume),
+    causerCharge: z(en.causerCharge),
+    sewageLevyAmount: z(en.sewageLevyAmount),
+  };
+}
+
 function normalizeEntry(e: SewageEstimateEntry): SewageEstimateEntry {
   const merged: SewageEstimateEntry = {
     ...e,
     detailSeq: e.detailSeq,
     lines: e.lines.map(normalizeDetailLine),
   };
-  return applyLineSumToSewageVolume(
-    ensureEntryCategoryTypeCoherent(merged),
+  return withEmptyAmountFieldsAsZero(
+    applyLineSumToSewageVolume(ensureEntryCategoryTypeCoherent(merged), {
+      resetDerivedChargesOnVolumeChange: false,
+    }),
   );
 }
 
@@ -382,7 +440,12 @@ export function useFeePayerSewageVolumeEstimate(
   }, []);
 
   const handleRemoveDetailLine = useCallback(
-    (entryId: string, lineId: string) => {
+    (
+      entryId: string,
+      lineId: string,
+      opts?: { skipPersistTracking?: boolean },
+    ) => {
+      const skip = Boolean(opts?.skipPersistTracking);
       setEntries((prev) => {
         const e = prev.find((x) => x.id === entryId);
         if (!e) return prev;
@@ -390,7 +453,14 @@ export function useFeePayerSewageVolumeEstimate(
         const line = e.lines.find((l) => l.id === lineId);
         const seq = e.detailSeq;
         const s2 = line?.calcSeq2;
-        if (line != null && seq != null && seq > 0 && s2 != null && s2 > 0) {
+        if (
+          !skip &&
+          line != null &&
+          seq != null &&
+          seq > 0 &&
+          s2 != null &&
+          s2 > 0
+        ) {
           removedCalcsRef.current.push({ seq, seq2: s2 });
         }
         if (e.lines.length > 1) {
@@ -405,7 +475,7 @@ export function useFeePayerSewageVolumeEstimate(
         }
         if (e.lines[0]?.id !== lineId) return prev;
         if (prev.length > 1) {
-          if (seq != null && seq > 0) {
+          if (!skip && seq != null && seq > 0) {
             removedDetailSeqsRef.current.push(seq);
           }
           return prev.filter((x) => x.id !== entryId);
@@ -549,6 +619,21 @@ export function useFeePayerSewageVolumeEstimate(
         return;
       }
 
+      if (key === "sewageVolume") {
+        setEntries((prev) =>
+          prev.map((row) => {
+            if (row.id !== entryId) return row;
+            return {
+              ...row,
+              sewageVolume: nextValue,
+              causerCharge: "0",
+              sewageLevyAmount: "0",
+            };
+          }),
+        );
+        return;
+      }
+
       setEntries((prev) =>
         prev.map((row) =>
           row.id === entryId ? { ...row, [key]: nextValue } : row,
@@ -585,7 +670,7 @@ export function useFeePayerSewageVolumeEstimate(
             const won = Math.round(price * vol);
             return {
               ...row,
-              causerCharge: won > 0 ? formatIntKo(won) : "",
+              causerCharge: Number.isFinite(won) ? formatIntKo(won) : "0",
             };
           }),
         );
@@ -634,15 +719,17 @@ export function useFeePayerSewageVolumeEstimate(
             detailSeq: Number.isFinite(seq) ? seq : en.detailSeq,
             causerCharge: Number.isFinite(wc)
               ? formatIntKo(Math.round(wc))
-              : en.causerCharge,
+              : String(en.causerCharge ?? "").trim() || "0",
             sewageLevyAmount: Number.isFinite(wv)
               ? formatDecimalPlain(wv)
-              : en.sewageLevyAmount,
+              : String(en.sewageLevyAmount ?? "").trim() || "0",
             sewageVolume: Number.isFinite(ws)
               ? formatDecimalPlain(ws)
-              : en.sewageVolume,
+              : String(en.sewageVolume ?? "").trim() || "0",
           };
-          return applyLineSumToSewageVolume(mergedRow);
+          return applyLineSumToSewageVolume(mergedRow, {
+            resetDerivedChargesOnVolumeChange: false,
+          });
         });
 
         if (wid && Number.isFinite(seq)) {
@@ -662,7 +749,10 @@ export function useFeePayerSewageVolumeEstimate(
                     ? Number(calcs[i].seq2)
                     : line.calcSeq2,
               }));
-              return applyLineSumToSewageVolume({ ...en, lines: nextLines });
+              return applyLineSumToSewageVolume(
+                { ...en, lines: nextLines },
+                { resetDerivedChargesOnVolumeChange: false },
+              );
             });
           } catch {
             /* seq2 동기화 실패해도 금액 반영은 유지 */

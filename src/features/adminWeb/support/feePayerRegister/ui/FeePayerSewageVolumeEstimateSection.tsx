@@ -24,6 +24,7 @@ import {
   validateEntriesSewageVolumeVsLines,
 } from "../lib/buildSupportFeePayerRegisterRequest";
 import type { SupportFeePayerRegisterRequest } from "@/entities/adminWeb/support/api/feePayerManageApi";
+import { ApiError } from "@/shared/lib/apiClient";
 import { UsageLookupModal } from "./UsageLookupModal";
 import {
   feePayStatusReadOnlyFieldClassName,
@@ -86,6 +87,7 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
     entryId: string;
     lineId: string;
   } | null>(null);
+  const [lineDeleteSubmitting, setLineDeleteSubmitting] = useState(false);
 
   const {
     entries,
@@ -905,13 +907,52 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
         type="danger"
         useDeleteHeader
         confirmText="삭제"
+        disabled={lineDeleteSubmitting}
         onConfirm={() => {
-          if (!pendingDeleteLine) return;
+          if (!pendingDeleteLine || lineDeleteSubmitting) return;
           const { entryId, lineId } = pendingDeleteLine;
-          setPendingDeleteLine(null);
-          handleRemoveDetailLine(entryId, lineId);
+          const entry = entries.find((e) => e.id === entryId);
+          const line = entry?.lines.find((l) => l.id === lineId);
+          const rawItemId = feePayerApi?.feePayerItemId;
+          const itemId =
+            rawItemId != null ? String(rawItemId).trim() : "";
+          const seq = entry?.detailSeq;
+          const seq2 = line?.calcSeq2;
+          const del = feePayerApi?.deleteCalculationRow;
+          const useApi =
+            typeof del === "function" &&
+            itemId !== "" &&
+            seq != null &&
+            seq > 0 &&
+            seq2 != null &&
+            seq2 > 0;
+
+          void (async () => {
+            setLineDeleteSubmitting(true);
+            try {
+              if (useApi) {
+                await del({ itemId, seq, seq2 });
+              }
+              handleRemoveDetailLine(entryId, lineId, {
+                skipPersistTracking: useApi,
+              });
+              setPendingDeleteLine(null);
+            } catch (err) {
+              const msg =
+                err instanceof ApiError
+                  ? String(err.message || "").trim()
+                  : "삭제 요청 중 오류가 발생했습니다.";
+              window.alert(msg || "삭제 요청 중 오류가 발생했습니다.");
+            } finally {
+              setLineDeleteSubmitting(false);
+            }
+          })();
         }}
-        onCancel={() => setPendingDeleteLine(null)}
+        onCancel={() => {
+          if (!lineDeleteSubmitting) {
+            setPendingDeleteLine(null);
+          }
+        }}
       />
     </div>
   );
