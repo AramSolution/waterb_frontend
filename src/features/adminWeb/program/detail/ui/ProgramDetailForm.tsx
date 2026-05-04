@@ -51,6 +51,7 @@ export const ProgramDetailForm: React.FC<ProgramDetailFormProps> = ({
             isOpen={showMessageDialog}
             title={messageDialogTitle}
             message={messageDialogMessage}
+            confirmText="확인"
             type={messageDialogType}
             onConfirm={handleMessageDialogClose}
             onCancel={handleMessageDialogClose}

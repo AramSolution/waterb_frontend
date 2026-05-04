@@ -2,7 +2,11 @@
 
 import React from "react";
 import { useRouter } from "next/navigation";
-import { Pagination, ConfirmDialog } from "@/shared/ui/adminWeb";
+import {
+  AdminExcelDownloadButton,
+  ConfirmDialog,
+  Pagination,
+} from "@/shared/ui/adminWeb";
 import { FormDatePicker } from "@/shared/ui/adminWeb/form";
 import { useSupportList } from "../model";
 import {
@@ -262,13 +266,10 @@ export const SupportListPageView: React.FC = () => {
             오수 원인자부담금 관리 목록 (총 {totalElements.toLocaleString()}개)
           </h5>
           <div className="flex gap-2">
-            <button
-              className="px-3 py-1 text-[13px] bg-green-600 text-white rounded hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            <AdminExcelDownloadButton
               onClick={handleExcelDownload}
-              disabled={loading}
-            >
-              {loading ? "⏳ 다운로드 중..." : "📊 엑셀"}
-            </button>
+              loading={loading}
+            />
           </div>
         </div>
         <div className="p-0">
@@ -782,7 +783,6 @@ export const SupportListPageView: React.FC = () => {
         title={deleteDialogTitle}
         message={deleteDialogMessage}
         confirmText={deleteLoading ? "처리 중..." : "예"}
-        cancelText="닫기"
         type="danger"
         onConfirm={handleDeleteConfirm}
         onCancel={handleDeleteCancel}
@@ -793,7 +793,6 @@ export const SupportListPageView: React.FC = () => {
         title="삭제 완료"
         message={deleteSuccessMessage || "정상적으로 삭제되었습니다."}
         confirmText="확인"
-        cancelText="닫기"
         type="success"
         onConfirm={handleDeleteSuccessDialogClose}
         onCancel={handleDeleteSuccessDialogClose}
@@ -804,7 +803,6 @@ export const SupportListPageView: React.FC = () => {
         title="삭제 실패"
         message={deleteFailMessage || "오수 원인자부담금 삭제에 실패했습니다."}
         confirmText="확인"
-        cancelText="닫기"
         type={
           deleteFailDialogType === "warning"
             ? "primary"

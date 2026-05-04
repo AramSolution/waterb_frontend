@@ -54,9 +54,14 @@ export function useFeePayerBasicRegister(
   const internalPersistRef = useRef<
     (() => SupportFeePayerRegisterRequest | null) | null
   >(null);
-  const persistBuildStateRef = useRef<"invalid_required" | "no_changes" | null>(
-    null,
-  );
+  const persistBuildStateRef = useRef<
+    | "invalid_required"
+    | "no_changes"
+    | "sewage_volume_mismatch"
+    | null
+  >(null);
+  /** 저장 본문 조립 실패 시(`sewage_volume_mismatch`) 사용자에게 보여줄 메시지 */
+  const persistRegisterFailMessageRef = useRef<string | null>(null);
   const persistRef = persistRequestBuilderRef ?? internalPersistRef;
   const [applicantNm, setApplicantNm] = useState("");
   const [telNo, setTelNo] = useState("");
@@ -250,7 +255,13 @@ export function useFeePayerBasicRegister(
       }
       const body = build();
       if (!body) {
-        if (persistBuildStateRef.current === "no_changes") {
+        if (persistBuildStateRef.current === "sewage_volume_mismatch") {
+          window.alert(
+            persistRegisterFailMessageRef.current?.trim() ||
+              "상단 오수량과 하위 행 오수량 합계가 일치하지 않습니다. 오수량 산정 행을 확인해 주세요.",
+          );
+          persistRegisterFailMessageRef.current = null;
+        } else if (persistBuildStateRef.current === "no_changes") {
           window.alert("변경된 내용이 없습니다.");
         } else {
           window.alert(
@@ -322,6 +333,7 @@ export function useFeePayerBasicRegister(
     setFeePayerItemId,
     getBasicInfoBody,
     persistBuildStateRef,
+    persistRegisterFailMessageRef,
     handleInputChange,
     noopInputChange,
     handleAddressSearch,

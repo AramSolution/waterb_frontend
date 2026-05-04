@@ -52,7 +52,7 @@ alwaysApply: false
 
 **`상태`:** 신규 엔트리 기본값 **`UNPAID`(미납)**, `FormSelect`에 **`placeholder` 없음**(빈 value 선택 행 없음). `구분`·`유형` 등은 기존처럼 placeholder로 미선택 유도 가능.
 
-**오수량 발생량 산정:** 통지일 블록 추가는 **엔트리 카드 하단 경계 가운데** 원형 `+`가 **선에 반쯝 걸리게**; **`aria-label`/`title`** 필수.
+**오수량 발생량 산정:** 통지일 블록 추가는 **엔트리 카드 하단 경계 가운데** 원형 `+`가 **선에 반쯝 걸리게**; **`aria-label`/`title`** 필수. 층수~삭제 구역의 **상세 행 `삭제`**는 **즉시 제거하지 않고** `ConfirmDialog`로 확인(제목 `상세 행 삭제`, 본문 `해당 상세 행을 삭제하시겠습니까?`, `type="danger"`, `confirmText="삭제"`) 후 `handleRemoveDetailLine` 실행 — `FeePayerSewageVolumeEstimateSection`.
 
 **기준단가 블록:** 첫 줄에 **기준단가·오수량·계산**만 두고, **다음 줄**에 **원인자부담금·오수부과량** 입력을 둔다(`FeePayerSewageVolumeEstimateSection`, `useFeePayerSewageVolumeEstimate`의 `sewageLevyAmount`). **열 맞춤**은 `feePayerPriceGrid`·동일 폭 계산열 스페이서·연한 세로선(`#e5e7eb`, `register-form.css`)을 따른다. **두 줄 사이**에는 **데이터 열(원인자부담금·오수부과량 쌍)에만** 가로 구분(예 `#d1d5db`, `shadow-[inset_0_1px_0_0_#d1d5db]` 등); **`feePayerPriceGridRow2` 루트 전체 폭 `border-t` 금지**로 **계산 열 아래 선 없음**을 유지한다. 유효성 메시지는 필드별 하단 규칙을 따른다.
 

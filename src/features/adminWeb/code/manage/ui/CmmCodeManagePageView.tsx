@@ -2,7 +2,11 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useCmmCodeList } from '../model';
-import { Pagination, ConfirmDialog } from '@/shared/ui/adminWeb';
+import {
+  AdminExcelDownloadButton,
+  ConfirmDialog,
+  Pagination,
+} from '@/shared/ui/adminWeb';
 import {
   FormField,
   FormInput,
@@ -2111,13 +2115,10 @@ export const CmmCodeManagePageView: React.FC = () => {
                 >
                   {showFilters ? '🔽' : '🔼'} 필터
                 </button>
-                <button
-                  className="px-3 py-1 text-[13px] bg-green-600 text-white rounded hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                <AdminExcelDownloadButton
                   onClick={handleExcelDownload}
-                  disabled={loading}
-                >
-                  {loading ? '⏳ 다운로드 중...' : '📊 엑셀'}
-                </button>
+                  loading={loading}
+                />
               </div>
             </div>
             <div className="p-0">
@@ -2619,13 +2620,11 @@ export const CmmCodeManagePageView: React.FC = () => {
                 >
                   {detailShowFilters ? '🔽' : '🔼'} 필터
                 </button>
-                <button
-                  className="px-3 py-1 text-[13px] bg-green-600 text-white rounded hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                <AdminExcelDownloadButton
                   onClick={handleDetailExcelDownload}
-                  disabled={detailLoading || !detailCodeId}
-                >
-                  {detailLoading ? '⏳ 다운로드 중...' : '📊 엑셀'}
-                </button>
+                  loading={detailLoading}
+                  disabled={!detailCodeId}
+                />
               </div>
             </div>
             <div className="p-0">
@@ -3339,7 +3338,6 @@ export const CmmCodeManagePageView: React.FC = () => {
         onConfirm={handleDeleteCmmCode}
         onCancel={handleCloseDeleteConfirm}
         confirmText={deleteLoading ? '삭제 중...' : '삭제'}
-        cancelText="닫기"
       />
 
       {/* 소분류코드 삭제 확인 다이얼로그 */}
@@ -3357,7 +3355,6 @@ export const CmmCodeManagePageView: React.FC = () => {
         onConfirm={handleDeleteCmmDetailCode}
         onCancel={handleCloseDetailDeleteConfirm}
         confirmText={detailDeleteLoading ? '삭제 중...' : '삭제'}
-        cancelText="닫기"
       />
 
       {/* 소분류코드 등록 모달 */}

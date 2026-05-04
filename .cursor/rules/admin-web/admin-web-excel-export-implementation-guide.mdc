@@ -162,9 +162,22 @@ const handleExcelDownload = async () => {
 };
 ```
 
-### Step 7: UI button
+### Step 7: UI button (Excel download)
 
-Same green Excel button pattern; `onClick={handleExcelDownload}`, `disabled={loading}`.
+**MUST** use the shared **`AdminExcelDownloadButton`** from `@/shared/ui/adminWeb` (not green `bg-green-600`; green is reserved for **✏️ 등록** in the search bar).
+
+```tsx
+import { AdminExcelDownloadButton } from "@/shared/ui/adminWeb";
+
+<AdminExcelDownloadButton
+  onClick={handleExcelDownload}
+  loading={loading}
+/>
+```
+
+- Default labels: idle `📊 엑셀`, loading `⏳ 다운로드 중...` — override with `idleLabel` / `loadingLabel` if needed.
+- Visual: **background `#FFFFFF`**, **border `#D1D5DB`** (implemented as `bg-white` + `border-gray-300` in Tailwind default palette), `text-gray-800`, `hover:bg-gray-50`, `px-3 py-1 text-[13px] rounded`, disabled/loading opacity per component.
+- Optional: `className`, `style` (e.g. `inline-flex` + `minHeight` on dense toolbars).
 
 ---
 

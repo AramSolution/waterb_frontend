@@ -15,6 +15,7 @@ import {
   loadXlsxFirstSheetMatrix,
   writeWorkbookToXlsxDownload,
 } from "@/shared/lib/exceljsAdminExcel";
+import { AdminExcelDownloadButton } from "@/shared/ui/adminWeb";
 import {
   MemberService,
   type MemberArtchoiListItem,
@@ -924,13 +925,12 @@ export const SelectionWorkPageView: React.FC = () => {
             >
               업로드
             </button>
-            <button
+            <AdminExcelDownloadButton
               type="button"
-              className="inline-flex items-center justify-center min-w-[76px] px-2.5 py-1 text-[13px] bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors"
+              className="inline-flex items-center justify-center min-w-[76px]"
+              idleLabel="엑셀"
               onClick={() => handleDownloadClick("all")}
-            >
-              엑셀
-            </button>
+            />
           </div>
           {saveError && (
             <div className="w-full px-4 pt-2 pb-1 text-[13px] text-red-600">{saveError}</div>

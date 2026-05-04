@@ -2,8 +2,11 @@
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
-import { Pagination } from '@/shared/ui/adminWeb';
-import { ConfirmDialog } from '@/shared/ui/adminWeb';
+import {
+  AdminExcelDownloadButton,
+  ConfirmDialog,
+  Pagination,
+} from '@/shared/ui/adminWeb';
 import { OpinionSearchPopup } from '@/entities/adminWeb/member/ui';
 import { useMemberList } from '../model';
 import '@/shared/styles/admin/mobile-table.css';
@@ -156,13 +159,10 @@ export const MemberListPageView: React.FC = () => {
             관리자회원 목록 (총 {totalElements.toLocaleString()}명)
           </h5>
           <div className="flex gap-2">
-            <button
-              className="px-3 py-1 text-[13px] bg-green-600 text-white rounded hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            <AdminExcelDownloadButton
               onClick={handleExcelDownload}
-              disabled={loading}
-            >
-              {loading ? '⏳ 다운로드 중...' : '📊 엑셀'}
-            </button>
+              loading={loading}
+            />
           </div>
         </div>
         <div className="p-0">
@@ -834,7 +834,6 @@ export const MemberListPageView: React.FC = () => {
         title="회원 탈퇴"
         message={`해당 회원을 탈퇴 처리하시겠습니까?`}
         confirmText={deleteLoading ? '처리 중...' : '탈퇴'}
-        cancelText="닫기"
         type="danger"
         onConfirm={handleDeleteConfirm}
         onCancel={handleDeleteCancel}

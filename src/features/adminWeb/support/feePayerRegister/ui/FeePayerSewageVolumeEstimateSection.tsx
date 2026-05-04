@@ -21,6 +21,7 @@ import {
 import {
   buildSupportFeePayerRegisterRequestForPersist,
   hasInvalidRequiredFieldsInEntries,
+  validateEntriesSewageVolumeVsLines,
 } from "../lib/buildSupportFeePayerRegisterRequest";
 import type { SupportFeePayerRegisterRequest } from "@/entities/adminWeb/support/api/feePayerManageApi";
 import { UsageLookupModal } from "./UsageLookupModal";
@@ -52,8 +53,13 @@ export interface FeePayerSewageVolumeEstimateSectionProps {
     (() => SupportFeePayerRegisterRequest | null) | null
   >;
   persistBuildStateRef?: MutableRefObject<
-    "invalid_required" | "no_changes" | null
+    | "invalid_required"
+    | "no_changes"
+    | "sewage_volume_mismatch"
+    | null
   >;
+  /** 저장 검증 실패 시 알림 본문(`validateEntriesSewageVolumeVsLines`) */
+  persistRegisterFailMessageRef?: MutableRefObject<string | null>;
 }
 
 /** 오수량 발생량 산정 — `UsageLookupModal`은 용도 **조회** 전용. 통지일 블록 추가 `+`는 하단 경계선 위에 떠 있도록 배치(레이아웃 높이 미사용). 상세 `추가` = 층수~삭제 행만. */
@@ -66,11 +72,19 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
   feePayerApi = null,
   persistRequestBuilderRef,
   persistBuildStateRef,
+  persistRegisterFailMessageRef,
 }) => {
   const [usageLookupOpen, setUsageLookupOpen] = useState(false);
   const [showStatusRuleDialog, setShowStatusRuleDialog] = useState(false);
   const [statusRuleDialogMessage, setStatusRuleDialogMessage] = useState("");
+  const [showCalculateNoChangeDialog, setShowCalculateNoChangeDialog] =
+    useState(false);
   const [usageLookupTarget, setUsageLookupTarget] = useState<{
+    entryId: string;
+    lineId: string;
+  } | null>(null);
+  /** 오수량 발생량 산정 — 상세 행 `삭제` 클릭 시 확인 후 `handleRemoveDetailLine` 실행 */
+  const [pendingDeleteLine, setPendingDeleteLine] = useState<{
     entryId: string;
     lineId: string;
   } | null>(null);
@@ -91,6 +105,7 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
       setStatusRuleDialogMessage(message);
       setShowStatusRuleDialog(true);
     },
+    onCalculateNoChanges: () => setShowCalculateNoChangeDialog(true),
   });
   const renderWonInput = (props: React.ComponentProps<typeof FormInput>) => (
     <div className="relative w-full">
@@ -114,6 +129,9 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
       if (persistBuildStateRef) {
         persistBuildStateRef.current = null;
       }
+      if (persistRegisterFailMessageRef) {
+        persistRegisterFailMessageRef.current = null;
+      }
       const basicInfo = feePayerApi.getBasicInfoBody?.();
       if (!basicInfo) return null;
       const rawId = feePayerApi.feePayerItemId;
@@ -125,6 +143,16 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
       if (invalidRequired) {
         if (persistBuildStateRef) {
           persistBuildStateRef.current = "invalid_required";
+        }
+        return null;
+      }
+      const sewageMismatch = validateEntriesSewageVolumeVsLines(entries);
+      if (sewageMismatch) {
+        if (persistRegisterFailMessageRef) {
+          persistRegisterFailMessageRef.current = sewageMismatch;
+        }
+        if (persistBuildStateRef) {
+          persistBuildStateRef.current = "sewage_volume_mismatch";
         }
         return null;
       }
@@ -152,6 +180,7 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
     feePayerApi,
     persistRequestBuilderRef,
     persistBuildStateRef,
+    persistRegisterFailMessageRef,
     removedDetailSeqsRef,
     removedCalcsRef,
     initialEntries,
@@ -712,7 +741,10 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                                 type="button"
                                 className="inline-flex min-h-10 min-w-[72px] items-center justify-center rounded-full border border-gray-400 bg-white px-4 py-1.5 text-base text-gray-800 hover:bg-gray-50 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
                                 onClick={() =>
-                                  handleRemoveDetailLine(entry.id, line.id)
+                                  setPendingDeleteLine({
+                                    entryId: entry.id,
+                                    lineId: line.id,
+                                  })
                                 }
                                 disabled={
                                   entry.lines.length === 1 &&
@@ -874,9 +906,33 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
         message={statusRuleDialogMessage}
         type="primary"
         confirmText="확인"
-        cancelText="닫기"
         onConfirm={() => setShowStatusRuleDialog(false)}
         onCancel={() => setShowStatusRuleDialog(false)}
+      />
+
+      <ConfirmDialog
+        isOpen={showCalculateNoChangeDialog}
+        title="알림"
+        message="변경된 내용이 없습니다. 수정 후 다시 계산해 주세요."
+        type="primary"
+        confirmText="확인"
+        onConfirm={() => setShowCalculateNoChangeDialog(false)}
+        onCancel={() => setShowCalculateNoChangeDialog(false)}
+      />
+
+      <ConfirmDialog
+        isOpen={pendingDeleteLine !== null}
+        title="상세 행 삭제"
+        message="해당 상세 행을 삭제하시겠습니까?"
+        type="danger"
+        confirmText="삭제"
+        onConfirm={() => {
+          if (!pendingDeleteLine) return;
+          const { entryId, lineId } = pendingDeleteLine;
+          setPendingDeleteLine(null);
+          handleRemoveDetailLine(entryId, lineId);
+        }}
+        onCancel={() => setPendingDeleteLine(null)}
       />
     </div>
   );

@@ -2,8 +2,11 @@
 
 import React, { useRef, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { Pagination } from '@/shared/ui/adminWeb';
-import { ConfirmDialog } from '@/shared/ui/adminWeb';
+import {
+  AdminExcelDownloadButton,
+  ConfirmDialog,
+  Pagination,
+} from '@/shared/ui/adminWeb';
 import { OpinionSearchPopup } from '@/entities/adminWeb/member/ui';
 import { useMemberList } from '@/features/adminWeb/member/list/model';
 import '@/shared/styles/admin/mobile-table.css';
@@ -288,9 +291,7 @@ export const MemberTestPageView: React.FC = () => {
             >
               {showFilters ? '🔽' : '🔼'} 필터
             </button>
-            <button className="px-3 py-1 text-[13px] bg-green-600 text-white rounded hover:bg-green-700 transition-colors">
-              📊 엑셀
-            </button>
+            <AdminExcelDownloadButton onClick={() => {}} />
           </div>
         </div>
         <div className="p-0">
@@ -833,7 +834,6 @@ export const MemberTestPageView: React.FC = () => {
         title="회원 삭제"
         message={`정말로 해당 회원을 삭제하시겠습니까?`}
         confirmText="삭제"
-        cancelText="닫기"
         type="danger"
         onConfirm={handleDeleteConfirm}
         onCancel={handleDeleteCancel}

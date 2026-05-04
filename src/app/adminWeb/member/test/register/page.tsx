@@ -109,7 +109,7 @@ export default function MemberTestRegisterPage() {
                     className="w-full md:w-1/4 flex items-center m-0 register-form-label bg-gray-100"
                     style={{ border: "1px solid #dee2e6", padding: "5px" }}
                   >
-                    아이디 <span className="text-red-600 ml-1">*</span>
+                    <span className="text-red-600 mr-1">*</span>아이디
                   </label>
                   <div
                     className="register-form-mobile-field w-full md:w-3/4 flex items-center"
@@ -148,7 +148,7 @@ export default function MemberTestRegisterPage() {
                       padding: "5px",
                     }}
                   >
-                    비밀번호 <span className="text-red-600 ml-1">*</span>
+                    <span className="text-red-600 mr-1">*</span>비밀번호
                   </label>
                   <div
                     className="register-form-mobile-field w-full md:w-3/4 flex items-center"
@@ -184,7 +184,7 @@ export default function MemberTestRegisterPage() {
                       padding: "5px",
                     }}
                   >
-                    비밀번호 확인 <span className="text-red-600 ml-1">*</span>
+                    <span className="text-red-600 mr-1">*</span>비밀번호 확인
                   </label>
                   <div
                     className="register-form-mobile-field w-full md:w-3/4 flex items-center"
@@ -219,7 +219,7 @@ export default function MemberTestRegisterPage() {
                       padding: "5px",
                     }}
                   >
-                    이름 <span className="text-red-600 ml-1">*</span>
+                    <span className="text-red-600 mr-1">*</span>이름
                   </label>
                   <div
                     className="register-form-mobile-field w-full md:w-3/4 flex items-center"

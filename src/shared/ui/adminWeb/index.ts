@@ -8,4 +8,5 @@ export { LayerPopup } from './LayerPopup';
 export { DuplicateLoginDialog } from './DuplicateLoginDialog';
 export { ForceLogoutDialog } from './ForceLogoutDialog';
 export { LoadingFallback } from './LoadingFallback';
+export { AdminExcelDownloadButton } from './AdminExcelDownloadButton';
 export * from './form';

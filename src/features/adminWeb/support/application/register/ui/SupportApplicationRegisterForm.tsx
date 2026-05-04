@@ -1311,7 +1311,6 @@ export const SupportApplicationRegisterForm: React.FC<
           setFileToDelete(null);
         }}
         confirmText="삭제"
-        cancelText="닫기"
       />
 
       {/* 메시지 다이얼로그 */}
@@ -1323,7 +1322,6 @@ export const SupportApplicationRegisterForm: React.FC<
         onConfirm={handleMessageDialogClose}
         onCancel={handleMessageDialogClose}
         confirmText="확인"
-        cancelText="닫기"
       />
     </>
   );

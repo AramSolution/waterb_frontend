@@ -462,7 +462,7 @@ export async function downloadStudyCertificateExcel(
 }
 
 /**
- * 오수 원인자부담금 관리 목록 엑셀 (`POST .../fee-payer/list` 결과와 동일 컬럼)
+ * 오수 원인자부담금 관리 목록 엑셀 (목록 화면과 동일한 표시 컬럼; 내부 식별자 제외)
  */
 export async function downloadFeePayerListExcel(
   supports: Support[],
@@ -477,8 +477,6 @@ export async function downloadFeePayerListExcel(
     "부과액(원)",
     "납부일",
     "납부액(원)",
-    "ITEM_ID",
-    "SEQ",
   ];
   const fmtNum = (v: unknown): string | number => {
     if (v === null || v === undefined || v === "") return "";
@@ -500,14 +498,12 @@ export async function downloadFeePayerListExcel(
       fmtNum(levy),
       String(rowAny.payDd ?? "").trim(),
       fmtNum(payAmt),
-      String(rowAny.itemId ?? row.businessId ?? ""),
-      rowAny.feeDetailSeq ?? rowAny.seq ?? "",
     ];
   });
   await downloadAdminListExcelFile("오수 원인자부담금 관리", fileName, {
     title: fileName,
     headers,
     dataRows,
-    columnWidths: [8, 10, 12, 32, 12, 14, 12, 14, 18, 8],
+    columnWidths: [8, 10, 12, 32, 12, 14, 12, 14],
   });
 }

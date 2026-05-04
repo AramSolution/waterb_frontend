@@ -117,7 +117,6 @@ export const ArticleReplyForm: React.FC = () => {
         title={messageDialogTitle}
         message={messageDialogMessage}
         confirmText="확인"
-        cancelText="닫기"
         type={messageDialogType}
         onConfirm={handleMessageDialogClose}
         onCancel={handleMessageDialogClose}

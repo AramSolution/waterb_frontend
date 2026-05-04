@@ -23,7 +23,7 @@ interface FormFieldProps {
    * `4` = 원인자부담 등 상태·구분·유형·통지일 한 줄(각 `md:w-1/4`).
    */
   mdGridSpan?: 2 | 4;
-  requiredIndicatorPosition?: "before" | "after"; // 필수 표시 위치 (기본값: "after")
+  requiredIndicatorPosition?: "before" | "after"; // 필수 표시 위치 (기본값: 라벨 왼쪽 "before")
   children: React.ReactNode;
   error?: string;
 }
@@ -42,7 +42,7 @@ export const FormField: React.FC<FormFieldProps> = ({
   suppressBottomBorder = false,
   alignFieldStart = false,
   mdGridSpan = 2,
-  requiredIndicatorPosition = "after",
+  requiredIndicatorPosition = "before",
   children,
   error,
 }) => {

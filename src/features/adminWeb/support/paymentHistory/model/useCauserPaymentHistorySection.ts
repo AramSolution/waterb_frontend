@@ -6,7 +6,10 @@ import {
   type ChangeEvent,
   type MutableRefObject,
 } from "react";
-import type { SupportFeePayerPaymentSaveRequest } from "@/entities/adminWeb/support/api/feePayerManageApi";
+import type {
+  SupportFeePayerPaymentSaveItemRequest,
+  SupportFeePayerPaymentSaveRequest,
+} from "@/entities/adminWeb/support/api/feePayerManageApi";
 
 export type CauserPayLine = {
   id: string;
@@ -60,18 +63,19 @@ function isEntryPaidStatus(entry: CauserPaymentEntry): boolean {
   return entry.status === "PAID";
 }
 
-function syncEntryPaymentStatus(entry: CauserPaymentEntry): CauserPaymentEntry {
-  const charge = parseAmount(entry.causerCharge);
-  const paidTotal = entry.lines.reduce((sum, line) => sum + parseAmount(line.amount), 0);
-  const nextStatus =
-    charge > 0 && paidTotal >= charge ? "PAID" : "UNPAID";
-  const nextPaidAmount = paidTotal > 0 ? formatAmountInput(String(paidTotal)) : "";
-  if (entry.status === nextStatus && entry.paidAmount === nextPaidAmount) {
+/** 라인 금액 합으로 납부금액 표시만 갱신. `paySta`/상세 연동 `status`는 저장·서버 값만 따른다(입력 중 자동 미납↔납부 전환 없음). */
+function syncEntryPaidAmountFromLines(entry: CauserPaymentEntry): CauserPaymentEntry {
+  const paidTotal = entry.lines.reduce(
+    (sum, line) => sum + parseAmount(line.amount),
+    0,
+  );
+  const nextPaidAmount =
+    paidTotal > 0 ? formatAmountInput(String(paidTotal)) : "";
+  if (entry.paidAmount === nextPaidAmount) {
     return entry;
   }
   return {
     ...entry,
-    status: nextStatus,
     paidAmount: nextPaidAmount,
   };
 }
@@ -81,7 +85,7 @@ function normalizeEntries(
 ): CauserPaymentEntry[] {
   if (!src || src.length === 0) return [createEntry()];
   return src.map((entry) =>
-    syncEntryPaymentStatus({
+    syncEntryPaidAmountFromLines({
       ...entry,
       id: entry.id || crypto.randomUUID(),
       lines:
@@ -102,6 +106,7 @@ export function useCauserPaymentHistorySection(
   persistRequestBuilderRef?: MutableRefObject<
     (() => SupportFeePayerPaymentSaveRequest | null) | null
   >,
+  preSaveValidateRef?: MutableRefObject<(() => string | null) | null>,
 ) {
   const [entries, setEntries] = useState<CauserPaymentEntry[]>(() => [
     ...normalizeEntries(initialEntries),
@@ -115,17 +120,34 @@ export function useCauserPaymentHistorySection(
   const removedPaymentsRef = useRef<Array<{ seq: number; seq2: number }>>([]);
   /** 상세 로드 시점의 `detailSeq`별 납부 상태 — 저장 시 `paySta`만 바뀐 경우 본문에 포함 */
   const initialStatusByDetailSeqRef = useRef<Map<number, string>>(new Map());
+  /**
+   * 조회 직후 각 납부 행(SEQ2)의 일자·금액·비고 — 서버는 U 미지원이므로 변경분은 저장 시 D+I로 치환.
+   */
+  const initialPaymentLineSnapshotRef = useRef<
+    Map<string, { date: string; pay: number; desc: string }>
+  >(new Map());
 
   useEffect(() => {
     if (initialEntries === undefined) return;
     removedPaymentsRef.current = [];
     const m = new Map<number, string>();
+    const snap = new Map<string, { date: string; pay: number; desc: string }>();
     for (const en of initialEntries) {
       if (en.detailSeq != null && en.detailSeq > 0) {
         m.set(en.detailSeq, en.status);
+        for (const L of en.lines) {
+          if (L.paymentSeq2 != null && L.paymentSeq2 > 0) {
+            snap.set(paymentLineSnapshotKey(en.detailSeq, L.paymentSeq2), {
+              date: normalizeYmd(L.lineDate),
+              pay: parseAmount(L.amount),
+              desc: String(L.remarks ?? "").trim(),
+            });
+          }
+        }
       }
     }
     initialStatusByDetailSeqRef.current = m;
+    initialPaymentLineSnapshotRef.current = snap;
   }, [initialEntries]);
 
   const handleSelectChange = useCallback(
@@ -188,7 +210,7 @@ export function useCauserPaymentHistorySection(
               return L;
             }),
           };
-          return syncEntryPaymentStatus(nextEntry);
+          return syncEntryPaidAmountFromLines(nextEntry);
         }),
       );
     },
@@ -200,7 +222,7 @@ export function useCauserPaymentHistorySection(
       prev.map((en) => {
         if (en.id !== entryId) return en;
         if (isEntryPaidStatus(en)) return en;
-        return syncEntryPaymentStatus({
+        return syncEntryPaidAmountFromLines({
           ...en,
           lines: [...en.lines, createLine()],
         });
@@ -227,7 +249,7 @@ export function useCauserPaymentHistorySection(
               seq2: victim.paymentSeq2,
             });
           }
-          return syncEntryPaymentStatus({
+          return syncEntryPaidAmountFromLines({
             ...en,
             lines: en.lines.filter((L) => L.id !== lineId),
           });
@@ -236,6 +258,27 @@ export function useCauserPaymentHistorySection(
     },
     [],
   );
+
+  useEffect(() => {
+    if (!preSaveValidateRef) return;
+    preSaveValidateRef.current = () => {
+      for (const entry of entries) {
+        if (entry.detailSeq == null || entry.detailSeq <= 0) continue;
+        const charge = parseAmount(entry.causerCharge);
+        const paidTotal = entry.lines.reduce(
+          (sum, line) => sum + parseAmount(line.amount),
+          0,
+        );
+        if (charge > 0 && paidTotal > charge) {
+          return "납부 금액 합계가 원인자부담금(부과액)보다 큽니다. 금액을 확인한 뒤 저장해 주세요.";
+        }
+      }
+      return null;
+    };
+    return () => {
+      preSaveValidateRef.current = null;
+    };
+  }, [entries, preSaveValidateRef]);
 
   useEffect(() => {
     if (!persistRequestBuilderRef) return;
@@ -259,6 +302,32 @@ export function useCauserPaymentHistorySection(
             rowStatus: "D",
             seq2: d.seq2,
           }));
+          const replacedExisting: SupportFeePayerPaymentSaveItemRequest[] = [];
+          for (const line of entry.lines) {
+            if (line.paymentSeq2 == null || line.paymentSeq2 <= 0) continue;
+            const key = paymentLineSnapshotKey(seq, line.paymentSeq2);
+            const prev = initialPaymentLineSnapshotRef.current.get(key);
+            if (!prev) continue;
+            const curDate = normalizeYmd(line.lineDate);
+            const curPay = parseAmount(line.amount);
+            const curDesc = String(line.remarks ?? "").trim();
+            if (
+              curDate === prev.date &&
+              curPay === prev.pay &&
+              curDesc === prev.desc
+            ) {
+              continue;
+            }
+            replacedExisting.push(
+              { rowStatus: "D", seq2: line.paymentSeq2 },
+              {
+                rowStatus: "I",
+                payDay: line.lineDate || undefined,
+                pay: curPay > 0 ? curPay : 0,
+                payDesc: curDesc || undefined,
+              },
+            );
+          }
           const inserted = entry.lines
             .filter(
               (line) =>
@@ -274,7 +343,7 @@ export function useCauserPaymentHistorySection(
                 payDesc: line.remarks.trim() || undefined,
               };
             });
-          const payments = [...deleted, ...inserted];
+          const payments = [...deleted, ...replacedExisting, ...inserted];
           const initialSt = initialStatusByDetailSeqRef.current.get(seq);
           const statusChanged =
             initialSt !== undefined && initialSt !== entry.status;
@@ -343,4 +412,18 @@ function getTodayYmd(): string {
   const m = String(d.getMonth() + 1).padStart(2, "0");
   const day = String(d.getDate()).padStart(2, "0");
   return `${y}-${m}-${day}`;
+}
+
+function paymentLineSnapshotKey(detailSeq: number, seq2: number): string {
+  return `${detailSeq}:${seq2}`;
+}
+
+function normalizeYmd(raw: string | null | undefined): string {
+  const t = String(raw ?? "").trim();
+  if (!t) return "";
+  if (t.length >= 10 && t[4] === "-" && t[7] === "-") return t.slice(0, 10);
+  if (t.length === 8 && /^\d{8}$/.test(t)) {
+    return `${t.slice(0, 4)}-${t.slice(4, 6)}-${t.slice(6, 8)}`;
+  }
+  return t.slice(0, 10);
 }

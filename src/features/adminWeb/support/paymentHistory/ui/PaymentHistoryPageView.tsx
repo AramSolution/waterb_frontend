@@ -26,8 +26,10 @@ export const PaymentHistoryPageView: React.FC = () => {
     detailAdres,
     detailEntries,
     persistRequestBuilderRef,
+    preSaveValidateRef,
     loading,
     showSaveDialog,
+    saveDialogVariant,
     saveDialogMessage,
     handleBack,
     handleSave,
@@ -167,6 +169,7 @@ export const PaymentHistoryPageView: React.FC = () => {
           itemId={itemId}
           initialEntries={detailEntries}
           persistRequestBuilderRef={persistRequestBuilderRef}
+          preSaveValidateRef={preSaveValidateRef}
         />
       ) : null}
 
@@ -197,9 +200,8 @@ export const PaymentHistoryPageView: React.FC = () => {
         isOpen={showSaveDialog}
         title="알림"
         message={saveDialogMessage || "처리 결과를 확인해주세요."}
-        type="primary"
+        type={saveDialogVariant}
         confirmText="확인"
-        cancelText="닫기"
         onConfirm={handleSaveDialogClose}
         onCancel={handleSaveDialogClose}
       />

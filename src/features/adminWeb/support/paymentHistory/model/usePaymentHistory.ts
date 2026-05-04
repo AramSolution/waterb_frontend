@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type MutableRefObject } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   getFeePayerPaymentDetail,
@@ -54,6 +54,11 @@ export function usePaymentHistory() {
   const persistRequestBuilderRef = useRef<
     (() => SupportFeePayerPaymentSaveRequest | null) | null
   >(null);
+  const preSaveValidateRef: MutableRefObject<(() => string | null) | null> =
+    useRef(null);
+  const [saveDialogVariant, setSaveDialogVariant] = useState<
+    "primary" | "danger"
+  >("primary");
 
   const loadPaymentDetail = useCallback(async () => {
     if (!itemIdParam) {
@@ -67,7 +72,6 @@ export function usePaymentHistory() {
     try {
       const res = await getFeePayerPaymentDetail(itemIdParam);
       const data = res.data;
-      console.log(data);
       if (!data) {
         setFound(false);
         setDetailEntries([]);
@@ -120,8 +124,16 @@ export function usePaymentHistory() {
 
   const handleSave = useCallback(async () => {
     if (!found) return;
+    const validationMessage = preSaveValidateRef.current?.() ?? null;
+    if (validationMessage) {
+      setSaveDialogVariant("danger");
+      setSaveDialogMessage(validationMessage);
+      setShowSaveDialog(true);
+      return;
+    }
     const body = persistRequestBuilderRef.current?.();
     if (!body) {
+      setSaveDialogVariant("primary");
       setSaveDialogMessage("등록/삭제할 납부내역 변경사항이 없습니다.");
       setShowSaveDialog(true);
       return;
@@ -129,10 +141,12 @@ export function usePaymentHistory() {
     setLoading(true);
     try {
       const res = await postFeePayerPaymentSave(body);
+      setSaveDialogVariant("primary");
       setSaveDialogMessage(buildPaymentSaveMessage(res));
       await loadPaymentDetail();
       setShowSaveDialog(true);
     } catch (e) {
+      setSaveDialogVariant("danger");
       setSaveDialogMessage(
         e instanceof ApiError
           ? e.message
@@ -146,6 +160,7 @@ export function usePaymentHistory() {
 
   const handleSaveDialogClose = useCallback(() => {
     setShowSaveDialog(false);
+    setSaveDialogVariant("primary");
   }, []);
 
   const noopChange = useCallback(() => {}, []);
@@ -162,8 +177,10 @@ export function usePaymentHistory() {
     detailAdres,
     detailEntries,
     persistRequestBuilderRef,
+    preSaveValidateRef,
     loading,
     showSaveDialog,
+    saveDialogVariant,
     saveDialogMessage,
     handleBack,
     handleSave,

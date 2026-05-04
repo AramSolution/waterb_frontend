@@ -40,19 +40,21 @@ export const DuplicateLoginDialog: React.FC<DuplicateLoginDialogProps> = ({
           기존 세션을 종료하고 로그인하시겠습니까?
         </p>
 
-        {/* 버튼 */}
+        {/* 버튼: 왼쪽 예(진행) · 오른쪽 아니요(취소) */}
         <div className="flex gap-3">
           <button
-            onClick={onCancel}
-            className="flex-1 px-4 py-2.5 bg-gray-200 text-gray-700 font-semibold rounded-lg hover:bg-gray-300 transition-colors"
-          >
-            취소
-          </button>
-          <button
+            type="button"
             onClick={onConfirm}
             className="flex-1 px-4 py-2.5 bg-yellow-600 text-white font-semibold rounded-lg hover:bg-yellow-700 transition-colors"
           >
-            로그아웃 후 로그인
+            예
+          </button>
+          <button
+            type="button"
+            onClick={onCancel}
+            className="flex-1 px-4 py-2.5 bg-gray-200 text-gray-700 font-semibold rounded-lg hover:bg-gray-300 transition-colors"
+          >
+            아니요
           </button>
         </div>
       </div>

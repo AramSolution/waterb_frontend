@@ -14,7 +14,10 @@ import {
   isOtherActCategory,
   SEWAGE_CATEGORY,
 } from "@/features/adminWeb/support/lib/sewageCategoryTypeOptions";
-import { buildSupportFeePayerRegisterRequest } from "../lib/buildSupportFeePayerRegisterRequest";
+import {
+  buildSupportFeePayerRegisterRequest,
+  sumLineWaterVol,
+} from "../lib/buildSupportFeePayerRegisterRequest";
 import type { DetailCodeItem } from "@/entities/adminWeb/code/api/cmmCodeApi";
 import { CmmCodeService } from "@/entities/adminWeb/code/api/cmmCodeApi";
 import {
@@ -72,6 +75,8 @@ export interface FeePayerSewageApiBridge {
 
 export interface UseFeePayerSewageVolumeEstimateOptions {
   onStatusChangeBlocked?: (message: string) => void;
+  /** 계산 요청 시 서버로 보낼 상세(I/U/D)가 없을 때(변경 없음) — API 호출 없이 UI만 */
+  onCalculateNoChanges?: () => void;
 }
 
 /** `<input type="date">`용 로컬 당일 `YYYY-MM-DD` */
@@ -104,6 +109,19 @@ function formatDecimalPlain(n: number): string {
     maximumFractionDigits: 10,
     useGrouping: false,
   });
+}
+
+/** 허가사항변경 제외: 하위 행 `sewageQty` 합 → 상단 `sewageVolume` 반영 */
+function applyLineSumToSewageVolume(en: SewageEstimateEntry): SewageEstimateEntry {
+  if (en.category === SEWAGE_CATEGORY.PERMIT_CHANGE) return en;
+  const sum = sumLineWaterVol(en.lines);
+  const hasLineQty = en.lines.some((L) => {
+    const raw = String(L.sewageQty ?? "").replace(/,/g, "").trim();
+    return raw !== "" && Number.isFinite(Number(raw));
+  });
+  const sewageVolume =
+    !hasLineQty && sum === 0 ? "" : formatDecimalPlain(sum);
+  return { ...en, sewageVolume };
 }
 
 function digitsOnly(raw: string): string {
@@ -257,7 +275,9 @@ function normalizeEntry(e: SewageEstimateEntry): SewageEstimateEntry {
     detailSeq: e.detailSeq,
     lines: e.lines.map(normalizeDetailLine),
   };
-  return ensureEntryCategoryTypeCoherent(merged);
+  return applyLineSumToSewageVolume(
+    ensureEntryCategoryTypeCoherent(merged),
+  );
 }
 
 function initialEntriesOrDefault(
@@ -342,7 +362,10 @@ export function useFeePayerSewageVolumeEstimate(
       prev.map((e) => {
         if (e.id !== entryId) return e;
         if (isEntryPaid(e)) return e;
-        return { ...e, lines: [...e.lines, createDetailLine()] };
+        return applyLineSumToSewageVolume({
+          ...e,
+          lines: [...e.lines, createDetailLine()],
+        });
       }),
     );
   }, []);
@@ -375,7 +398,10 @@ export function useFeePayerSewageVolumeEstimate(
         if (e.lines.length > 1) {
           return prev.map((x) =>
             x.id === entryId
-              ? { ...x, lines: x.lines.filter((l) => l.id !== lineId) }
+              ? applyLineSumToSewageVolume({
+                  ...x,
+                  lines: x.lines.filter((l) => l.id !== lineId),
+                })
               : x,
           );
         }
@@ -409,12 +435,12 @@ export function useFeePayerSewageVolumeEstimate(
           setEntries((prev) =>
             prev.map((en) => {
               if (en.id !== entryId) return en;
-              return {
+              return applyLineSumToSewageVolume({
                 ...en,
                 lines: en.lines.map((L) =>
                   L.id === lineId ? withSewageQty({ ...L, selected: checked }) : L,
                 ),
-              };
+              });
             }),
           );
           return;
@@ -433,7 +459,7 @@ export function useFeePayerSewageVolumeEstimate(
           setEntries((prev) =>
             prev.map((en) => {
               if (en.id !== entryId) return en;
-              return {
+              return applyLineSumToSewageVolume({
                 ...en,
                 lines: en.lines.map((L) =>
                   L.id === lineId
@@ -445,7 +471,7 @@ export function useFeePayerSewageVolumeEstimate(
                       })
                     : L,
                 ),
-              };
+              });
             }),
           );
           return;
@@ -453,14 +479,14 @@ export function useFeePayerSewageVolumeEstimate(
         setEntries((prev) =>
           prev.map((en) => {
             if (en.id !== entryId) return en;
-            return {
+            return applyLineSumToSewageVolume({
               ...en,
               lines: en.lines.map((L) =>
                 L.id === lineId
-                    ? withSewageQty({ ...L, [key]: nextValue })
+                  ? withSewageQty({ ...L, [key]: nextValue })
                   : L,
               ),
-            };
+            });
           }),
         );
         return;
@@ -475,14 +501,24 @@ export function useFeePayerSewageVolumeEstimate(
 
       if (key === "category") {
         const nextType = firstSewageTypeForCategory(value);
+        const reqPrefix = `${entryId}:`;
+        Array.from(unitPriceRequestedRef.current).forEach((rk) => {
+          if (rk.startsWith(reqPrefix)) {
+            unitPriceRequestedRef.current.delete(rk);
+          }
+        });
         setEntries((prev) =>
           prev.map((row) =>
             row.id === entryId
-              ? { ...row, category: value, type: nextType }
+              ? applyLineSumToSewageVolume({
+                  ...row,
+                  category: value,
+                  type: nextType,
+                  unitPrice: "",
+                })
               : row,
           ),
         );
-        fetchAndApplyUnitPrice(entryId, value);
         return;
       }
 
@@ -521,7 +557,7 @@ export function useFeePayerSewageVolumeEstimate(
         ),
       );
     },
-    [fetchAndApplyUnitPrice, options],
+    [options],
   );
 
   const handleCalculateEntry = useCallback(
@@ -581,6 +617,17 @@ export function useFeePayerSewageVolumeEstimate(
         return;
       }
 
+      if (body.details.length === 0) {
+        if (options?.onCalculateNoChanges) {
+          options.onCalculateNoChanges();
+        } else {
+          window.alert(
+            "변경된 내용이 없습니다. 수정 후 다시 계산해 주세요.",
+          );
+        }
+        return;
+      }
+
       setCalcBusyEntryId(entryId);
       try {
         const res = await postFeePayerCalculate(body);
@@ -596,7 +643,7 @@ export function useFeePayerSewageVolumeEstimate(
         setEntries((prev) =>
           prev.map((en) => {
             if (en.id !== entryId) return en;
-            return {
+            const merged = {
               ...en,
               detailSeq: Number.isFinite(seq) ? seq : en.detailSeq,
               causerCharge: Number.isFinite(wc)
@@ -609,6 +656,7 @@ export function useFeePayerSewageVolumeEstimate(
                 ? formatDecimalPlain(ws)
                 : en.sewageVolume,
             };
+            return applyLineSumToSewageVolume(merged);
           }),
         );
 
@@ -630,7 +678,7 @@ export function useFeePayerSewageVolumeEstimate(
                       ? Number(calcs[i].seq2)
                       : line.calcSeq2,
                 }));
-                return { ...en, lines: nextLines };
+                return applyLineSumToSewageVolume({ ...en, lines: nextLines });
               }),
             );
           } catch {
@@ -647,7 +695,7 @@ export function useFeePayerSewageVolumeEstimate(
         setCalcBusyEntryId(null);
       }
     },
-    [apiBridge, initialEntries],
+    [apiBridge, initialEntries, options],
   );
 
   const applyUsageFromLookup = useCallback(
@@ -686,7 +734,7 @@ export function useFeePayerSewageVolumeEstimate(
       setEntries((prev) =>
         prev.map((e) => {
           if (e.id !== entryId) return e;
-          return {
+          return applyLineSumToSewageVolume({
             ...e,
             lines: e.lines.map((L) => {
               if (L.id !== lineId) return L;
@@ -702,7 +750,7 @@ export function useFeePayerSewageVolumeEstimate(
               };
               return withSewageQty(next);
             }),
-          };
+          });
         }),
       );
     },

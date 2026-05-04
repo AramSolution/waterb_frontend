@@ -2,8 +2,11 @@
 
 import React from "react";
 import { useRouter } from "next/navigation";
-import { Pagination } from "@/shared/ui/adminWeb";
-import { ConfirmDialog } from "@/shared/ui/adminWeb";
+import {
+  AdminExcelDownloadButton,
+  ConfirmDialog,
+  Pagination,
+} from "@/shared/ui/adminWeb";
 import { useProgramList } from "../model";
 import "@/shared/styles/admin/mobile-table.css";
 import "@/shared/styles/admin/resizable-table.css";
@@ -165,13 +168,10 @@ export const ProgramListPageView: React.FC = () => {
             >
               {showFilters ? "🔽" : "🔼"} 필터
             </button>
-            <button
-              className="px-3 py-1 text-[13px] bg-green-600 text-white rounded hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            <AdminExcelDownloadButton
               onClick={handleExcelDownload}
-              disabled={loading}
-            >
-              {loading ? "⏳ 다운로드 중..." : "📊 엑셀"}
-            </button>
+              loading={loading}
+            />
           </div>
         </div>
         <div className="p-0">
@@ -577,7 +577,6 @@ export const ProgramListPageView: React.FC = () => {
         title="프로그램 삭제"
         message={`해당 프로그램을 삭제하시겠습니까?`}
         confirmText={deleteLoading ? "처리 중..." : "삭제"}
-        cancelText="닫기"
         type="danger"
         onConfirm={handleDeleteConfirm}
         onCancel={handleDeleteCancel}

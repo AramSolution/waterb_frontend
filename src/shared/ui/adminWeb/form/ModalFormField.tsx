@@ -59,8 +59,8 @@ export const ModalFormField: React.FC<ModalFormFieldProps> = ({
           className="w-full md:w-1/4 flex items-center m-0 register-form-label bg-gray-100"
           style={labelStyle}
         >
+          {required && <span className="text-red-600 mr-1">*</span>}
           {label}
-          {required && <span className="text-red-600 ml-1">*</span>}
         </label>
         <div
           className="register-form-mobile-field w-full md:w-3/4 flex items-center"

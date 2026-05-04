@@ -379,7 +379,6 @@ export const BannerDetailForm: React.FC<BannerDetailFormProps> = ({
         message={deletePicMessage}
         type="danger"
         confirmText="삭제"
-        cancelText="닫기"
         onConfirm={confirmDeletePic}
         onCancel={cancelDeletePic}
       />

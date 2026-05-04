@@ -107,7 +107,6 @@ export default function MenuOrderPage() {
         title="저장 완료"
         message="메뉴 순서가 성공적으로 저장되었습니다."
         confirmText="확인"
-        cancelText="닫기"
         type="success"
         onConfirm={handleDialogClose}
         onCancel={handleDialogClose}

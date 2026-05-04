@@ -40,6 +40,7 @@ export const FeePayerBasicRegisterForm: React.FC<
     setFeePayerItemId,
     getBasicInfoBody,
     persistBuildStateRef,
+    persistRegisterFailMessageRef,
     handleInputChange,
     noopInputChange,
     handleAddressSearch,
@@ -220,6 +221,7 @@ export const FeePayerBasicRegisterForm: React.FC<
           feePayerApi={feePayerApi}
           persistRequestBuilderRef={persistRequestBuilderRef}
           persistBuildStateRef={persistBuildStateRef}
+          persistRegisterFailMessageRef={persistRegisterFailMessageRef}
         />
 
         <div className="flex justify-end mt-4 gap-2">
@@ -249,7 +251,6 @@ export const FeePayerBasicRegisterForm: React.FC<
         message={infoDialogMessage}
         type={infoDialogType}
         confirmText="확인"
-        cancelText="닫기"
         onConfirm={handleInfoDialogClose}
         onCancel={handleInfoDialogClose}
       />

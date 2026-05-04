@@ -733,7 +733,6 @@ export const ArticleDetailForm: React.FC<ArticleDetailFormProps> = ({
         title="확인"
         message="파일을 삭제하시겠습니까?"
         confirmText="삭제"
-        cancelText="닫기"
         type="danger"
         onConfirm={() => {
           if (pendingDeleteFile) {
@@ -752,7 +751,6 @@ export const ArticleDetailForm: React.FC<ArticleDetailFormProps> = ({
         title={messageDialogTitle}
         message={messageDialogMessage}
         confirmText="확인"
-        cancelText="닫기"
         type={messageDialogType}
         onConfirm={handleMessageDialogClose}
         onCancel={handleMessageDialogClose}

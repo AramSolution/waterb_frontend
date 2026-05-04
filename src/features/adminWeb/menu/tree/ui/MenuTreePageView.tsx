@@ -617,7 +617,6 @@ export const MenuTreePageView: React.FC = () => {
         title="메뉴 삭제"
         message="정말로 이 메뉴를 삭제하시겠습니까?"
         confirmText="삭제"
-        cancelText="닫기"
         onConfirm={handleDeleteConfirm}
         onCancel={handleDeleteCancel}
         type="danger"

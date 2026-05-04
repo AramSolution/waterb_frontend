@@ -26,7 +26,7 @@ export default function CodeRegisterPage() {
           <form onSubmit={handleSubmit}>
             <div className="flex flex-col sm:flex-row mb-4">
               <label className="w-full sm:w-1/6 flex items-center mb-2 sm:mb-0">
-                코드 <span className="text-red-600 ml-1">*</span>
+                <span className="text-red-600 mr-1">*</span>코드
               </label>
               <div className="w-full sm:w-5/6">
                 <input
@@ -40,7 +40,7 @@ export default function CodeRegisterPage() {
 
             <div className="flex flex-col sm:flex-row mb-4">
               <label className="w-full sm:w-1/6 flex items-center mb-2 sm:mb-0">
-                코드명 <span className="text-red-600 ml-1">*</span>
+                <span className="text-red-600 mr-1">*</span>코드명
               </label>
               <div className="w-full sm:w-5/6">
                 <input
@@ -54,7 +54,7 @@ export default function CodeRegisterPage() {
 
             <div className="flex flex-col sm:flex-row mb-4">
               <label className="w-full sm:w-1/6 flex items-center mb-2 sm:mb-0">
-                그룹 <span className="text-red-600 ml-1">*</span>
+                <span className="text-red-600 mr-1">*</span>그룹
               </label>
               <div className="w-full sm:w-5/6">
                 <select

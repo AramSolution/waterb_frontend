@@ -1109,7 +1109,6 @@ export const SupportUpdateForm: React.FC = () => {
           setFileToDelete(null);
         }}
         confirmText="삭제"
-        cancelText="닫기"
       />
 
       {/* 메시지 다이얼로그 */}
@@ -1118,7 +1117,6 @@ export const SupportUpdateForm: React.FC = () => {
         title={messageDialogTitle}
         message={messageDialogMessage}
         confirmText="확인"
-        cancelText="닫기"
         type={messageDialogType}
         onConfirm={handleMessageDialogClose}
         onCancel={handleMessageDialogClose}

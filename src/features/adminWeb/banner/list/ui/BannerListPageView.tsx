@@ -370,7 +370,6 @@ export const BannerListPageView: React.FC = () => {
         title="배너 삭제"
         message="해당 배너를 삭제하시겠습니까?"
         confirmText={deleteLoading ? "처리 중..." : "삭제"}
-        cancelText="닫기"
         type="danger"
         disabled={deleteLoading}
         onConfirm={handleDeleteConfirm}

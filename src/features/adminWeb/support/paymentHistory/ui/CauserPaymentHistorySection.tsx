@@ -9,7 +9,9 @@ import {
 } from "../model/useCauserPaymentHistorySection";
 import type { SupportFeePayerPaymentSaveRequest } from "@/entities/adminWeb/support/api/feePayerManageApi";
 import "@/shared/styles/admin/register-form.css";
-import { feePayStatusReadOnlyFieldClassName } from "@/features/adminWeb/support/lib/feePayStatusUi";
+import {
+  feePayStatusSelectClassName,
+} from "@/features/adminWeb/support/lib/feePayStatusUi";
 import { FEE_PAYER_SEWAGE_INPUT_BACKGROUND_RGBA } from "@/features/adminWeb/support/lib/feePayerSewageInputTint";
 
 /** 납부내역 — 원인자부담 납부내역 (블록 내 `추가` = 일자·금액·비고 행). */
@@ -19,11 +21,13 @@ export interface CauserPaymentHistorySectionProps {
   persistRequestBuilderRef?: React.MutableRefObject<
     (() => SupportFeePayerPaymentSaveRequest | null) | null
   >;
+  /** 저장 클릭 시 초과 납부 등 선검증 — `usePaymentHistory`에서 연결 */
+  preSaveValidateRef?: React.MutableRefObject<(() => string | null) | null>;
 }
 
 export const CauserPaymentHistorySection: React.FC<
   CauserPaymentHistorySectionProps
-> = ({ itemId, initialEntries, persistRequestBuilderRef }) => {
+> = ({ itemId, initialEntries, persistRequestBuilderRef, preSaveValidateRef }) => {
   const {
     entries,
     categoryStatusOptions,
@@ -36,9 +40,10 @@ export const CauserPaymentHistorySection: React.FC<
     initialEntries,
     itemId,
     persistRequestBuilderRef,
+    preSaveValidateRef,
   );
 
-  const { category: catOpt } = categoryStatusOptions;
+  const { category: catOpt, status: statusOpt } = categoryStatusOptions;
   const readOnlyClass = "bg-gray-100 !cursor-not-allowed";
   const sewageVolumeInputStyle: React.CSSProperties = {
     backgroundColor: FEE_PAYER_SEWAGE_INPUT_BACKGROUND_RGBA,
@@ -53,9 +58,7 @@ export const CauserPaymentHistorySection: React.FC<
       <div className="p-0 pb-6">
         {entries.map((entry, entryIndex) => {
           const isEntryPaid = entry.status === "PAID";
-          const lineReadOnly = (line: { paymentSeq2?: number }) =>
-            isEntryPaid ||
-            (line.paymentSeq2 != null && line.paymentSeq2 > 0);
+          const lineFieldsReadOnly = isEntryPaid;
           return (
           <div
             key={entry.id}
@@ -85,15 +88,16 @@ export const CauserPaymentHistorySection: React.FC<
                     forceTopBorder={entryIndex > 0}
                     mdGridSpan={4}
                   >
-                    <div className="flex w-full min-w-0 flex-1 self-stretch">
-                      <span
-                        className={feePayStatusReadOnlyFieldClassName(
-                          entry.status === "PAID",
-                        )}
-                      >
-                        {entry.status === "PAID" ? "납부" : "미납"}
-                      </span>
-                    </div>
+                    <FormSelect
+                      name="status"
+                      value={entry.status}
+                      onChange={handleSelectChange}
+                      options={statusOpt}
+                      emptyText=""
+                      data-entry-id={entry.id}
+                      disabled={isEntryPaid}
+                      selectClassName={feePayStatusSelectClassName(entry.status)}
+                    />
                   </FormField>
                   <FormField
                     label="구분"
@@ -305,9 +309,9 @@ export const CauserPaymentHistorySection: React.FC<
                                 onChange={handleLineFieldChange}
                                 data-entry-id={entry.id}
                                 data-line-id={line.id}
-                                readOnly={lineReadOnly(line)}
+                                readOnly={lineFieldsReadOnly}
                                 className={
-                                  lineReadOnly(line) ? readOnlyClass : ""
+                                  lineFieldsReadOnly ? readOnlyClass : ""
                                 }
                               />
                             </div>
@@ -335,9 +339,9 @@ export const CauserPaymentHistorySection: React.FC<
                                   inputMode="numeric"
                                   data-entry-id={entry.id}
                                   data-line-id={line.id}
-                                  readOnly={lineReadOnly(line)}
+                                  readOnly={lineFieldsReadOnly}
                                   className={`pr-8 ${
-                                    lineReadOnly(line) ? readOnlyClass : ""
+                                    lineFieldsReadOnly ? readOnlyClass : ""
                                   }`.trim()}
                                 />
                                 <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">
@@ -367,9 +371,9 @@ export const CauserPaymentHistorySection: React.FC<
                                 placeholder="비고"
                                 data-entry-id={entry.id}
                                 data-line-id={line.id}
-                                readOnly={lineReadOnly(line)}
+                                readOnly={lineFieldsReadOnly}
                                 className={
-                                  lineReadOnly(line) ? readOnlyClass : ""
+                                  lineFieldsReadOnly ? readOnlyClass : ""
                                 }
                               />
                             </div>

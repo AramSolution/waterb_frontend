@@ -19,8 +19,8 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
   isOpen,
   title = '확인',
   message,
-  confirmText = '확인',
-  cancelText = '닫기',
+  confirmText = '예',
+  cancelText = '아니요',
   onConfirm,
   onCancel,
   type = 'danger',
@@ -118,18 +118,18 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
           <div className="dialog-footer">
             <button
               type="button"
-              className="px-6 py-2 text-sm border border-gray-400 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors"
-              onClick={onCancel}
-            >
-              {cancelText}
-            </button>
-            <button
-              type="button"
               className={`px-6 py-2 text-sm border rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${getConfirmButtonClass()}`}
               onClick={onConfirm}
               disabled={disabled}
             >
               {confirmText}
+            </button>
+            <button
+              type="button"
+              className="px-6 py-2 text-sm border border-gray-400 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors"
+              onClick={onCancel}
+            >
+              {cancelText}
             </button>
           </div>
         </div>

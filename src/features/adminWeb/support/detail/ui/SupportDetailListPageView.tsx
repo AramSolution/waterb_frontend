@@ -2,8 +2,11 @@
 
 import React, { useState, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { Pagination } from "@/shared/ui/adminWeb";
-import { ConfirmDialog } from "@/shared/ui/adminWeb";
+import {
+  AdminExcelDownloadButton,
+  ConfirmDialog,
+  Pagination,
+} from "@/shared/ui/adminWeb";
 import { useSupportDetailList } from "../model";
 import { SupportApplicationService } from "@/entities/adminWeb/support/application/api/supportApplicationApi";
 import { ApiError, decodeDisplayText } from "@/shared/lib";
@@ -344,14 +347,12 @@ export const SupportDetailListPageView: React.FC = () => {
             신청목록 상세 (총 {totalElements.toLocaleString()}개)
           </h5>
           <div className="flex gap-2">
-            <button
-              className="px-3 py-1 text-[13px] bg-green-600 text-white rounded hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center gap-1"
+            <AdminExcelDownloadButton
+              className="inline-flex items-center justify-center gap-1"
               style={{ minHeight: "28px" }}
               onClick={handleExcelDownload}
-              disabled={loading}
-            >
-              {loading ? "⏳ 다운로드 중..." : "📊 엑셀"}
-            </button>
+              loading={loading}
+            />
           </div>
         </div>
         <div className="p-0">
@@ -1132,7 +1133,6 @@ export const SupportDetailListPageView: React.FC = () => {
         title="신청목록 삭제"
         message={`해당 신청목록을 삭제하시겠습니까?`}
         confirmText={deleteLoading ? "처리 중..." : "삭제"}
-        cancelText="닫기"
         type="danger"
         onConfirm={handleDeleteConfirm}
         onCancel={handleDeleteCancel}

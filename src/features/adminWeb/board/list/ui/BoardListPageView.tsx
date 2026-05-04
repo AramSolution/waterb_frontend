@@ -2,8 +2,11 @@
 
 import React from "react";
 import { useRouter } from "next/navigation";
-import { Pagination } from "@/shared/ui/adminWeb";
-import { ConfirmDialog } from "@/shared/ui/adminWeb";
+import {
+  AdminExcelDownloadButton,
+  ConfirmDialog,
+  Pagination,
+} from "@/shared/ui/adminWeb";
 import { useBoardList } from "../model";
 import "@/shared/styles/admin/mobile-table.css";
 import "@/shared/styles/admin/resizable-table.css";
@@ -163,13 +166,10 @@ export const BoardListPageView: React.FC = () => {
             게시판 목록 (총 {totalElements.toLocaleString()}개)
           </h5>
           <div className="flex gap-2">
-            <button
-              className="px-3 py-1 text-[13px] bg-green-600 text-white rounded hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            <AdminExcelDownloadButton
               onClick={handleExcelDownload}
-              disabled={loading}
-            >
-              {loading ? "⏳ 다운로드 중..." : "📊 엑셀"}
-            </button>
+              loading={loading}
+            />
           </div>
         </div>
         <div className="p-0">
@@ -613,7 +613,6 @@ export const BoardListPageView: React.FC = () => {
         title="게시판 삭제"
         message={`해당 게시판을 삭제하시겠습니까?`}
         confirmText={deleteLoading ? "처리 중..." : "삭제"}
-        cancelText="닫기"
         type="danger"
         onConfirm={handleDeleteConfirm}
         onCancel={handleDeleteCancel}

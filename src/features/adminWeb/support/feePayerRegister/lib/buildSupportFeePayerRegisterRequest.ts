@@ -1,6 +1,7 @@
 import {
   mapCategoryToType1,
   mapSewageTypeValueToType2,
+  SEWAGE_CATEGORY,
 } from "@/features/adminWeb/support/lib/sewageCategoryTypeOptions";
 import type {
   SewageDetailLine,
@@ -37,6 +38,33 @@ export function sumLineWaterVol(lines: SewageDetailLine[]): number {
     if (n !== undefined && Number.isFinite(n)) s += n;
   }
   return s;
+}
+
+/**
+ * 저장 전: 허가사항변경 제외 통지일 블록에서 상단 `sewageVolume`(waterSum)과
+ * 하위 행 `sewageQty` 합계가 일치하는지 검사한다.
+ */
+export function validateEntriesSewageVolumeVsLines(
+  entries: readonly SewageEstimateEntry[],
+): string | null {
+  for (let i = 0; i < entries.length; i++) {
+    const entry = entries[i];
+    if (entry.category === SEWAGE_CATEGORY.PERMIT_CHANGE) continue;
+    const sum = sumLineWaterVol(entry.lines);
+    const topParsed = parseNumericInput(entry.sewageVolume);
+    const topVal =
+      topParsed !== undefined && Number.isFinite(topParsed) ? topParsed : 0;
+    const topEmpty = String(entry.sewageVolume ?? "").trim() === "";
+    const hasLineQty = entry.lines.some((L) => {
+      const q = parseNumericInput(L.sewageQty);
+      return q !== undefined && Number.isFinite(q);
+    });
+    if (!hasLineQty && topEmpty && sum === 0) continue;
+    if (Math.abs(sum - topVal) > 1e-5) {
+      return `통지일 블록 ${i + 1}: 상단 오수량과 하위 행 오수량 합계가 일치하지 않습니다. (합계 ${sum.toLocaleString("ko-KR", { maximumFractionDigits: 10 })})`;
+    }
+  }
+  return null;
 }
 
 type CalcComparable = {

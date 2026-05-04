@@ -389,6 +389,33 @@ import '@/shared/styles/admin/search-form.css'; // ✅ Required for search forms
 
 ---
 
+## ⚠️ CRITICAL: ConfirmDialog (및 2버튼 모달) — 왼쪽 `예` · 오른쪽 `아니요`
+
+**Applies to:** `ConfirmDialog` (`@/shared/ui/adminWeb/ConfirmDialog.tsx`), `DuplicateLoginDialog`, and any admin modal with **two** footer actions (확인/취소형).
+
+**MUST:**
+
+- ✅ **Button order (left → right):** first = **확인(긍정) 동작** (`onConfirm`) — 강조(Primary/Danger/Success) 스타일, second = **취소·거절** (`onCancel`) — 회색 스타일.
+- ✅ **Default labels:** `confirmText` 기본값 **`예`**, `cancelText` 기본값 **`아니요`** (구현: `ConfirmDialog`).
+- ✅ **Override `confirmText`** when the action is not a generic yes: e.g. `확인` (알림 닫기), `삭제`, `탈퇴`, `처리 중...` — still on the **left**; right stays **`아니요`** unless a product-specific string is required.
+- ✅ **Do not** use `닫기` as the right label for new/updated code; use **`아니요`** (or default by omitting `cancelText`).
+
+**MUST NOT:**
+
+- ❌ **NEVER** place the cancel/dismiss button on the **left** and the primary action on the **right** (old `닫기`+`확인` order in `ConfirmDialog` — removed).
+
+**Reference implementation:**
+
+- `src/shared/ui/adminWeb/ConfirmDialog.tsx` — footer: `[ confirm (강조) ] [ cancel (회색) ]`, defaults `예` / `아니요`.
+- `src/shared/ui/adminWeb/DuplicateLoginDialog.tsx` — `예` (기존 세션 종료 후 로그인) / `아니요`.
+
+**Checklist (new or refactored admin 다이얼로그):**
+
+- [ ] Two-button dialog: **left** = `onConfirm` (예 또는 `confirmText` override), **right** = `onCancel` (아니요).
+- [ ] Rely on default `cancelText` when the right label is **아니요** (no `닫기`).
+
+---
+
 ## 🎨 Custom CSS Usage (Admin Web)
 
 ### Custom CSS Rules
@@ -880,6 +907,29 @@ Implementing or changing a list/detail table?
   </button>
 </div>
 ```
+
+---
+
+### ⚠️ CRITICAL: Excel download button (목록/상세 엑셀 다운로드)
+
+**MUST NOT** reuse the **등록** button style (`bg-green-600` / `text-white`) for Excel export. Green is reserved for **✏️ 등록** in the search action row.
+
+**MUST** use **`AdminExcelDownloadButton`** from `@/shared/ui/adminWeb`:
+
+```tsx
+import { AdminExcelDownloadButton } from "@/shared/ui/adminWeb";
+
+<AdminExcelDownloadButton onClick={handleExcelDownload} loading={loading} />
+```
+
+**Required look:**
+
+- **Background:** `#FFFFFF` (`bg-white`)
+- **Border:** `#D1D5DB` (`border border-gray-300` — Tailwind default `gray-300` matches this hex)
+- **Text:** dark gray for contrast (`text-gray-800`), **hover:** `hover:bg-gray-50`
+- **Size:** `px-3 py-1 text-[13px] rounded` (compact toolbar button, same spirit as previous small Excel button)
+
+**Optional props:** `idleLabel`, `loadingLabel`, `className`, `style`, `disabled` (in addition to loading-driven disable).
 
 ---
 
@@ -1748,6 +1798,7 @@ Register form row uses FormField + register-form.css?
 - ✅ **`구분` 변경 시** 기존 `유형`이 새 옵션 집합에 없으면 **`type` 초기화** (`""`) — 잘못된 조합 방지.
 - ✅ **레이아웃:** `상태`, `구분`, `유형`, `통지일` 네 필드는 **하나의** `flex flex-wrap` 행에 두고, 각 `FormField`에 **`mdGridSpan={4}`** (`src/shared/ui/adminWeb/form/FormField.tsx`)를 지정한다 — **md 이상에서 한 줄**(칸당 `md:w-1/4`), 모바일은 줄바꿈.
 - ✅ **섹션 헤더·통지일 블록 추가:** `FeePayerSewageVolumeEstimateSection` 상단은 **제목만**(`오수량 발생량 산정`) 둔다. **통지일 블록(엔트리) 전체 추가**(`handleAddEntry`)는 **각 엔트리 카드 하단**에 둔다 — **가로 구분선(`border-t`, 예 `#dee2e6`) 가운데**에 **`absolute` + `left-1/2` + `-translate-x-1/2` + `-translate-y-1/2`** 로 **원형 `+`가 선에 반쯝 걸치게**(흰 **`border-2 border-white`**, `shadow-md`). 상세 격자(층수·면적·**용도**·…) **아래쪽**에 오도록 카드 **맨 아래**에 배치한다. **`aria-label` / `title`**: “통지일 블록 추가”.
+- ✅ **상세 행 삭제:** 층수·용도 상세 격자 오른쪽 **삭제**는 **즉시 제거 금지** — `ConfirmDialog`로 확인(제목 `상세 행 삭제`, 본문 `해당 상세 행을 삭제하시겠습니까?`, `type="danger"`, `confirmText="삭제"`) 후 `handleRemoveDetailLine` 호출. 취소는 **`아니요`**(기본 `cancelText`).
 - ✅ **`상태` 기본값:** 신규 통지일 블록(엔트리) 생성 시 **`UNPAID`(미납)**. `상태` `FormSelect`에는 **`placeholder` 비우기** — `--------선택하세요-----` 같은 빈 옵션 행을 두지 않는다(미납·납부만).
 - ✅ **기준단가·오수량·계산 행:** `FeePayerSewageVolumeEstimateSection`에서 **한 줄(md `flex-row`)**에 **기준단가**, **오수량**, **계산** 버튼을 둔다(원인자부담금은 이 행에 넣지 않음).
 - ✅ **그 아래 한 줄:** **원인자부담금**(`causerCharge`)과 **오수부과량**(`sewageLevyAmount`) 입력을 **나란히**(md에서 2칸, 모바일은 세로 스택). `SewageEstimateEntry`에 `sewageLevyAmount` 유지·백엔드 DTO 맞춤.

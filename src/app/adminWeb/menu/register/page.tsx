@@ -26,7 +26,7 @@ export default function MenuRegisterPage() {
           <form onSubmit={handleSubmit}>
             <div className="flex flex-wrap -mx-3 mb-3">
               <label className="w-full sm:w-2/12 px-3 py-2 flex items-center">
-                메뉴명 <span className="text-red-600 ml-1">*</span>
+                <span className="text-red-600 mr-1">*</span>메뉴명
               </label>
               <div className="w-full sm:w-10/12 px-3">
                 <input
@@ -40,7 +40,7 @@ export default function MenuRegisterPage() {
 
             <div className="flex flex-wrap -mx-3 mb-3">
               <label className="w-full sm:w-2/12 px-3 py-2 flex items-center">
-                경로 <span className="text-red-600 ml-1">*</span>
+                <span className="text-red-600 mr-1">*</span>경로
               </label>
               <div className="w-full sm:w-10/12 px-3">
                 <input
