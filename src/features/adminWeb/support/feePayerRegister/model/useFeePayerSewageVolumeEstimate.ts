@@ -75,8 +75,6 @@ export interface FeePayerSewageApiBridge {
 
 export interface UseFeePayerSewageVolumeEstimateOptions {
   onStatusChangeBlocked?: (message: string) => void;
-  /** 계산 요청 시 서버로 보낼 상세(I/U/D)가 없을 때(변경 없음) — API 호출 없이 UI만 */
-  onCalculateNoChanges?: () => void;
 }
 
 /** `<input type="date">`용 로컬 당일 `YYYY-MM-DD` */
@@ -304,13 +302,6 @@ export function useFeePayerSewageVolumeEstimate(
   entriesRef.current = entries;
   const unitPriceRequestedRef = useRef<Set<string>>(new Set());
 
-  /**
-   * 계산·저장 시 `buildSupportFeePayerRegisterRequest*`의 변경 감지 기준 스냅샷.
-   * 등록 페이지는 부모 `initialEntries`가 없어 첫 계산 전까지 원본 맵이 비어 —
-   * 계산 성공 후 여기에 현재 `entries`를 넣어 재계산 시 diff가 동작하도록 한다.
-   */
-  const calculateBaselineRef = useRef<SewageEstimateEntry[] | null>(null);
-
   /** 저장 시 `details[].rowStatus=D` 로 보낼 ARTITED.SEQ (통지일 블록 삭제) */
   const removedDetailSeqsRef = useRef<number[]>([]);
   /** 저장 시 `calculations[].rowStatus=D` — 기존 `seq`·`seq2` 필요 */
@@ -318,9 +309,7 @@ export function useFeePayerSewageVolumeEstimate(
 
   useEffect(() => {
     if (initialEntries === undefined) return;
-    const normalized = initialEntriesOrDefault(initialEntries);
-    setEntries(normalized);
-    calculateBaselineRef.current = structuredClone(normalized);
+    setEntries(initialEntriesOrDefault(initialEntries));
     removedDetailSeqsRef.current = [];
     removedCalcsRef.current = [];
     unitPriceRequestedRef.current.clear();
@@ -612,31 +601,16 @@ export function useFeePayerSewageVolumeEstimate(
       }
 
       const snapshot = entriesRef.current;
-      const baselineForDiff =
-        calculateBaselineRef.current ??
-        (initialEntries && initialEntries.length > 0 ? initialEntries : null);
       const body = buildSupportFeePayerRegisterRequest({
         basicInfo,
         itemId: bridge.feePayerItemId,
         entries: snapshot,
-        initialEntries: baselineForDiff ?? [],
         removedDetailSeqs: removedDetailSeqsRef.current,
         removedCalcs: removedCalcsRef.current,
         calculateTargetEntryId: entryId,
       });
       if (!body) {
         window.alert("구분·유형·통지일 등 필수 항목을 확인해 주세요.");
-        return;
-      }
-
-      if (body.details.length === 0) {
-        if (options?.onCalculateNoChanges) {
-          options.onCalculateNoChanges();
-        } else {
-          window.alert(
-            "변경된 내용이 없습니다. 수정 후 다시 계산해 주세요.",
-          );
-        }
         return;
       }
 
@@ -696,7 +670,6 @@ export function useFeePayerSewageVolumeEstimate(
         }
 
         setEntries(mergedRows);
-        calculateBaselineRef.current = structuredClone(mergedRows);
       } catch (err) {
         const msg =
           err instanceof ApiError
@@ -707,7 +680,7 @@ export function useFeePayerSewageVolumeEstimate(
         setCalcBusyEntryId(null);
       }
     },
-    [apiBridge, initialEntries, options],
+    [apiBridge, options],
   );
 
   const applyUsageFromLookup = useCallback(
@@ -774,7 +747,6 @@ export function useFeePayerSewageVolumeEstimate(
     calcBusyEntryId,
     removedDetailSeqsRef,
     removedCalcsRef,
-    calculateBaselineRef,
     handleAddEntry,
     handleAddDetailLine,
     handleRemoveEntry,

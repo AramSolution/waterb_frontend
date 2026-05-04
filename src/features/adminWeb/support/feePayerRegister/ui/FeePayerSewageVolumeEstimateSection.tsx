@@ -77,8 +77,6 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
   const [usageLookupOpen, setUsageLookupOpen] = useState(false);
   const [showStatusRuleDialog, setShowStatusRuleDialog] = useState(false);
   const [statusRuleDialogMessage, setStatusRuleDialogMessage] = useState("");
-  const [showCalculateNoChangeDialog, setShowCalculateNoChangeDialog] =
-    useState(false);
   const [usageLookupTarget, setUsageLookupTarget] = useState<{
     entryId: string;
     lineId: string;
@@ -94,7 +92,6 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
     calcBusyEntryId,
     removedDetailSeqsRef,
     removedCalcsRef,
-    calculateBaselineRef,
     handleAddEntry,
     handleAddDetailLine,
     handleRemoveDetailLine,
@@ -106,7 +103,6 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
       setStatusRuleDialogMessage(message);
       setShowStatusRuleDialog(true);
     },
-    onCalculateNoChanges: () => setShowCalculateNoChangeDialog(true),
   });
   const renderWonInput = (props: React.ComponentProps<typeof FormInput>) => (
     <div className="relative w-full">
@@ -157,14 +153,10 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
         }
         return null;
       }
-      const persistInitial =
-        calculateBaselineRef.current ??
-        (initialEntries && initialEntries.length > 0 ? initialEntries : []);
       const body = buildSupportFeePayerRegisterRequestForPersist({
         basicInfo,
         itemId,
         entries,
-        initialEntries: persistInitial,
         removedDetailSeqs: removedDetailSeqsRef.current,
         removedCalcs: removedCalcsRef.current,
       });
@@ -187,8 +179,6 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
     persistRegisterFailMessageRef,
     removedDetailSeqsRef,
     removedCalcsRef,
-    initialEntries,
-    calculateBaselineRef,
   ]);
 
   const statusOptions = useMemo(
@@ -906,16 +896,6 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
         confirmText="확인"
         onConfirm={() => setShowStatusRuleDialog(false)}
         onCancel={() => setShowStatusRuleDialog(false)}
-      />
-
-      <ConfirmDialog
-        isOpen={showCalculateNoChangeDialog}
-        title="알림"
-        message="변경된 내용이 없습니다. 수정 후 다시 계산해 주세요."
-        type="primary"
-        confirmText="확인"
-        onConfirm={() => setShowCalculateNoChangeDialog(false)}
-        onCancel={() => setShowCalculateNoChangeDialog(false)}
       />
 
       <ConfirmDialog
