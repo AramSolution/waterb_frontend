@@ -121,7 +121,7 @@ export function useCauserPaymentHistorySection(
   /** 상세 로드 시점의 `detailSeq`별 납부 상태 — 저장 시 `paySta`만 바뀐 경우 본문에 포함 */
   const initialStatusByDetailSeqRef = useRef<Map<number, string>>(new Map());
   /**
-   * 조회 직후 각 납부 행(SEQ2)의 일자·금액·비고 — 서버는 U 미지원이므로 변경분은 저장 시 D+I로 치환.
+   * 조회 직후 각 납부 행(SEQ2)의 일자·금액·비고 — 변경 시 저장 본문에는 `rowStatus: U`로 전송.
    */
   const initialPaymentLineSnapshotRef = useRef<
     Map<string, { date: string; pay: number; desc: string }>
@@ -318,15 +318,13 @@ export function useCauserPaymentHistorySection(
             ) {
               continue;
             }
-            replacedExisting.push(
-              { rowStatus: "D", seq2: line.paymentSeq2 },
-              {
-                rowStatus: "I",
-                payDay: line.lineDate || undefined,
-                pay: curPay > 0 ? curPay : 0,
-                payDesc: curDesc || undefined,
-              },
-            );
+            replacedExisting.push({
+              rowStatus: "U",
+              seq2: line.paymentSeq2,
+              payDay: line.lineDate || undefined,
+              pay: curPay > 0 ? curPay : 0,
+              payDesc: curDesc || undefined,
+            });
           }
           const inserted = entry.lines
             .filter(
