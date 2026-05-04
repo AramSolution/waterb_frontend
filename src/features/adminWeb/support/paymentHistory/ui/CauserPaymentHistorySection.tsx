@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { ConfirmDialog } from "@/shared/ui/adminWeb";
 import { FormField, FormInput, FormSelect } from "@/shared/ui/adminWeb/form";
 import { getSewageTypeOptionsForCategory } from "@/features/adminWeb/support/lib/sewageCategoryTypeOptions";
 import {
@@ -23,11 +24,19 @@ export interface CauserPaymentHistorySectionProps {
   >;
   /** 저장 클릭 시 초과 납부 등 선검증 — `usePaymentHistory`에서 연결 */
   preSaveValidateRef?: React.MutableRefObject<(() => string | null) | null>;
+  /** 납부 행 삭제 API 성공 후 상세 재조회 */
+  onReloadDetail?: () => void | Promise<void>;
 }
 
 export const CauserPaymentHistorySection: React.FC<
   CauserPaymentHistorySectionProps
-> = ({ itemId, initialEntries, persistRequestBuilderRef, preSaveValidateRef }) => {
+> = ({
+  itemId,
+  initialEntries,
+  persistRequestBuilderRef,
+  preSaveValidateRef,
+  onReloadDetail,
+}) => {
   const {
     entries,
     categoryStatusOptions,
@@ -35,12 +44,22 @@ export const CauserPaymentHistorySection: React.FC<
     handleFieldChange,
     handleLineFieldChange,
     handleAddLine,
-    handleRemoveLine,
+    requestLineDelete,
+    showLineDeleteConfirm,
+    lineDeleteSubmitting,
+    handleLineDeleteConfirm,
+    handleLineDeleteCancel,
+    showLineDeleteSuccess,
+    handleLineDeleteSuccessClose,
+    showLineDeleteError,
+    lineDeleteErrorMessage,
+    handleLineDeleteErrorClose,
   } = useCauserPaymentHistorySection(
     initialEntries,
     itemId,
     persistRequestBuilderRef,
     preSaveValidateRef,
+    onReloadDetail,
   );
 
   const { category: catOpt, status: statusOpt } = categoryStatusOptions;
@@ -383,7 +402,9 @@ export const CauserPaymentHistorySection: React.FC<
                           <button
                             type="button"
                             className="inline-flex min-h-10 min-w-[72px] items-center justify-center rounded-full border border-gray-400 bg-white px-4 py-1.5 text-base text-gray-800 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
-                            onClick={() => handleRemoveLine(entry.id, line.id)}
+                            onClick={() =>
+                              requestLineDelete(entry.id, line.id)
+                            }
                             disabled={
                               entry.lines.length <= 1 || isEntryPaid
                             }
@@ -408,6 +429,45 @@ export const CauserPaymentHistorySection: React.FC<
         );
         })}
       </div>
+
+      <ConfirmDialog
+        isOpen={showLineDeleteConfirm}
+        title="납부내역 삭제"
+        message="선택한 납부 행을 삭제하시겠습니까?"
+        type="danger"
+        useDeleteHeader
+        confirmText={lineDeleteSubmitting ? "처리 중..." : "예"}
+        disabled={lineDeleteSubmitting}
+        onConfirm={handleLineDeleteConfirm}
+        onCancel={handleLineDeleteCancel}
+      />
+
+      <ConfirmDialog
+        isOpen={showLineDeleteSuccess}
+        title="삭제 완료"
+        message="정상적으로 삭제되었습니다."
+        type="success"
+        preferCheckHeader
+        confirmText="확인"
+        singleAction
+        onConfirm={handleLineDeleteSuccessClose}
+        onCancel={handleLineDeleteSuccessClose}
+      />
+
+      <ConfirmDialog
+        isOpen={showLineDeleteError}
+        title="삭제 실패"
+        message={
+          lineDeleteErrorMessage.trim() ||
+          "납부내역 삭제 중 오류가 발생했습니다."
+        }
+        type="danger"
+        preferCheckHeader
+        confirmText="확인"
+        singleAction
+        onConfirm={handleLineDeleteErrorClose}
+        onCancel={handleLineDeleteErrorClose}
+      />
     </div>
   );
 };

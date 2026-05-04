@@ -926,6 +926,7 @@ export const ArticleListPageView: React.FC = () => {
         message={messageDialogMessage}
         type={messageDialogType}
         confirmText="확인"
+        singleAction
         onConfirm={handleMessageDialogClose}
         onCancel={handleMessageDialogClose}
       />

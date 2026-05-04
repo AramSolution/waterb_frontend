@@ -398,7 +398,9 @@ import '@/shared/styles/admin/search-form.css'; // ✅ Required for search forms
 - ✅ **Button order (left → right):** first = **확인(긍정) 동작** (`onConfirm`) — 강조(Primary/Danger/Success) 스타일, second = **취소·거절** (`onCancel`) — 회색 스타일.
 - ✅ **Default labels:** `confirmText` 기본값 **`예`**, `cancelText` 기본값 **`아니요`** (구현: `ConfirmDialog`).
 - ✅ **Override `confirmText`** when the action is not a generic yes: e.g. `확인` (알림 닫기), `삭제`, `탈퇴`, `처리 중...` — still on the **left**; right stays **`아니요`** unless a product-specific string is required.
-- ✅ **Do not** use `닫기` as the right label for new/updated code; use **`아니요`** (or default by omitting `cancelText`).
+- ✅ **결과 알림형 — 확인만:** 정보 안내·저장/삭제 결과만 알리고 선택지가 없을 때는 **`singleAction`** — 확인 한 개만 (`ConfirmDialog`). 예: **삭제 완료** (`정상적으로 삭제되었습니다.` 등, `SupportListPageView` 삭제 성공 다이얼로그; 게시글 삭제 결과·메뉴 트리·공통코드 메시지 다이얼로그); 납부내역 변경 없음 (`PaymentHistoryPageView`); 원인자부담금 저장 변경 없음 (`FeePayerBasicRegisterForm`, `infoDialogSingleAction`).
+- ✅ **결과 알림형 — 확인 + 닫기:** 레거시나 예외로 두 버튼을 유지할 때만 오른쪽 **`닫기`** (`cancelText="닫기"`, `아니요` 부적절). 신규는 가능하면 **`singleAction`**으로 통일.
+- ✅ **그 외** 확인·취소형에서는 **`아니요`**를 쓰고, 결과 알림에는 기본적으로 `singleAction` 또는 위 예외의 `닫기`를 쓴다.
 
 **MUST NOT:**
 
@@ -406,13 +408,13 @@ import '@/shared/styles/admin/search-form.css'; // ✅ Required for search forms
 
 **Reference implementation:**
 
-- `src/shared/ui/adminWeb/ConfirmDialog.tsx` — footer: `[ confirm (강조) ] [ cancel (회색) ]`, defaults `예` / `아니요`.
+- `src/shared/ui/adminWeb/ConfirmDialog.tsx` — footer: `[ confirm (강조) ] [ cancel (회색) ]`, defaults `예` / `아니요`; `singleAction` 시 확인만, 오버레이 클릭 = `onConfirm`.
 - `src/shared/ui/adminWeb/DuplicateLoginDialog.tsx` — `예` (기존 세션 종료 후 로그인) / `아니요`.
 
 **Checklist (new or refactored admin 다이얼로그):**
 
-- [ ] Two-button dialog: **left** = `onConfirm` (예 또는 `confirmText` override), **right** = `onCancel` (아니요).
-- [ ] Rely on default `cancelText` when the right label is **아니요** (no `닫기`).
+- [ ] 결과 알림(삭제 완료·실패·오류 안내 등): 우선 **`singleAction`** (확인만).
+- [ ] 예/아니요 확인형: **left** = `onConfirm`, **right** = `onCancel` — 기본 **아니요** (또는 필요 시 `cancelText` 명시).
 
 ---
 
@@ -1807,6 +1809,7 @@ Register form row uses FormField + register-form.css?
 - ✅ **행 그룹 구분선:** **1행**(기준단가·오수량·계산)과 **2행**(원인자부담금·오수부과량) 사이에는 **`feePayerPriceGridRow2`** 로 **아주 옅은 배경**(`bg-gray-50/50` 등)을 두고, **가로 구분(예 `#d1d5db`)은 데이터 열(두 `feePayerPricePair`)에만** 둔다 — **`shadow-[inset_0_1px_0_0_#d1d5db]`** 등으로 상단만 그려도 된다(모바일은 첫 쌍만, md는 둘째 쌍에 `md:shadow-[inset_0_1px_0_0_#d1d5db]`). **`feePayerPriceGridRow2` 루트에 전체 폭 `border-t`를 두지 않는다** — **계산 버튼 열·맞춤 스페이서 아래로 가로선이 이어지지 않게** 한다.
 - ✅ **원인자부담 기본 등록 폼 (`FeePayerBasicRegisterForm`):** **`저장` / `닫기`** 버튼은 **`FeePayerSewageVolumeEstimateSection`(오수량 발생량 산정) 블록 바로 아래**에 둔다(기본정보 카드만 위에 두고, 그 다음 오수량 섹션 → 액션 버튼). 오수량 섹션을 **`basicInfoSaved` 등으로 `pointer-events-none` 비활성화하지 않는다** — 하위 블록은 항상 조작 가능(요구 시에만 로딩 `disabled` 등).
 - ✅ **상세 행 「오수량」(체크박스 옆):** 값은 **산식·API `waterVol` 등으로 채워 표시**하고, **`readOnly`** 로 직접 수정 불가. 배경은 **오수량 입력과 동일** `rgba(255, 224, 147, 0.1)`(`feePayerSewageInputTint.ts`). `initialEntries` 정규화 시 클라 산식이 빈 문자열이면 **서버에서 내려온 줄 `sewageQty`(`waterVol`)를 지우지 않는다**(`useFeePayerSewageVolumeEstimate`의 `normalizeDetailLine`).
+- ✅ **납부내역 납부 행 삭제 (`CauserPaymentHistorySection`, `PaymentHistoryPageView`):** 행 **`삭제`** 클릭 → `ConfirmDialog` **「선택한 납부 행을 삭제하시겠습니까?」**(예/아니요, `useDeleteHeader`). 서버에 존재하는 납부 행(`paymentSeq2`·통지일 블록 `detailSeq`/`seq` 매칭)이면 **`postFeePayerPaymentSave`** 로 해당 행만 `payments[].rowStatus: "D"` **즉시 삭제** 후 `onReloadDetail`로 **`getFeePayerPaymentDetail` 재조회**. 아직 저장 전인 신규 행만 있으면 **API 없이** 로컬에서 제거. 성공 시 **삭제 완료** `singleAction`·`정상적으로 삭제되었습니다.`, 실패 시 **삭제 실패** `singleAction`.
 
 **Single source of truth:** `getSewageTypeOptionsForCategory` in `src/features/adminWeb/support/lib/sewageCategoryTypeOptions.ts` (두 화면에서 동일 함수 사용).
 

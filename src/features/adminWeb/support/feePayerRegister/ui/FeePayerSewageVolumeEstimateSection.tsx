@@ -446,13 +446,6 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                                 isPermitChangeCategory ||
                                 rowReadOnly
                               }
-                              title={
-                                entryPaid
-                                  ? "납부 처리된 블록은 수정·계산할 수 없습니다."
-                                  : isPermitChangeCategory
-                                    ? "허가사항변경은 계산 없이 금액·오수량 등을 직접 입력합니다."
-                                    : "서버 계산(선저장 후 f_cost)"
-                              }
                             >
                               {calcBusyEntryId === entry.id ? "계산 중…" : "계산"}
                             </button>

@@ -22,6 +22,10 @@ interface ConfirmDialogProps {
    * 삭제 확인 모달: 상단을 delete.png로 표시(check.png와 동일 크기). `type="danger"`일 때만 적용.
    */
   useDeleteHeader?: boolean;
+  /**
+   * true면 확인 버튼만 표시(알림 전용). 오버레이 클릭 시 `onConfirm`과 동일하게 닫힘.
+   */
+  singleAction?: boolean;
 }
 
 export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
@@ -36,6 +40,7 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
   disabled = false,
   preferCheckHeader = false,
   useDeleteHeader = false,
+  singleAction = false,
 }) => {
   if (!isOpen) return null;
 
@@ -84,9 +89,17 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
     }
   };
 
+  const handleOverlayClick = (): void => {
+    if (singleAction) {
+      onConfirm();
+    } else {
+      onCancel();
+    }
+  };
+
   return (
     <>
-      <div className="dialog-overlay" onClick={onCancel}></div>
+      <div className="dialog-overlay" onClick={handleOverlayClick}></div>
       <div className="dialog-container">
         <div className="dialog-content">
           <div className="dialog-icon">
@@ -111,13 +124,15 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
             >
               {confirmText}
             </button>
-            <button
-              type="button"
-              className="px-6 py-2 text-sm border border-gray-400 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors"
-              onClick={onCancel}
-            >
-              {cancelText}
-            </button>
+            {!singleAction ? (
+              <button
+                type="button"
+                className="px-6 py-2 text-sm border border-gray-400 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors"
+                onClick={onCancel}
+              >
+                {cancelText}
+              </button>
+            ) : null}
           </div>
         </div>
       </div>

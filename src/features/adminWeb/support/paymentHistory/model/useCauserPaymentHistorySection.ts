@@ -6,10 +6,12 @@ import {
   type ChangeEvent,
   type MutableRefObject,
 } from "react";
-import type {
-  SupportFeePayerPaymentSaveItemRequest,
-  SupportFeePayerPaymentSaveRequest,
+import {
+  postFeePayerPaymentSave,
+  type SupportFeePayerPaymentSaveItemRequest,
+  type SupportFeePayerPaymentSaveRequest,
 } from "@/entities/adminWeb/support/api/feePayerManageApi";
+import { ApiError } from "@/shared/lib/apiClient";
 
 export type CauserPayLine = {
   id: string;
@@ -107,10 +109,20 @@ export function useCauserPaymentHistorySection(
     (() => SupportFeePayerPaymentSaveRequest | null) | null
   >,
   preSaveValidateRef?: MutableRefObject<(() => string | null) | null>,
+  onReloadDetail?: () => void | Promise<void>,
 ) {
   const [entries, setEntries] = useState<CauserPaymentEntry[]>(() => [
     ...normalizeEntries(initialEntries),
   ]);
+  const [showLineDeleteConfirm, setShowLineDeleteConfirm] = useState(false);
+  const [pendingLineDelete, setPendingLineDelete] = useState<{
+    entryId: string;
+    lineId: string;
+  } | null>(null);
+  const [lineDeleteSubmitting, setLineDeleteSubmitting] = useState(false);
+  const [showLineDeleteSuccess, setShowLineDeleteSuccess] = useState(false);
+  const [showLineDeleteError, setShowLineDeleteError] = useState(false);
+  const [lineDeleteErrorMessage, setLineDeleteErrorMessage] = useState("");
 
   useEffect(() => {
     if (initialEntries === undefined) return;
@@ -230,7 +242,7 @@ export function useCauserPaymentHistorySection(
     );
   }, []);
 
-  const handleRemoveLine = useCallback(
+  const applyLocalLineRemoval = useCallback(
     (entryId: string, lineId: string) => {
       setEntries((prev) =>
         prev.map((en) => {
@@ -258,6 +270,108 @@ export function useCauserPaymentHistorySection(
     },
     [],
   );
+
+  const requestLineDelete = useCallback((entryId: string, lineId: string) => {
+    setPendingLineDelete({ entryId, lineId });
+    setShowLineDeleteConfirm(true);
+  }, []);
+
+  const handleLineDeleteCancel = useCallback(() => {
+    setShowLineDeleteConfirm(false);
+    setPendingLineDelete(null);
+    setLineDeleteSubmitting(false);
+  }, []);
+
+  const handleLineDeleteConfirm = useCallback(async () => {
+    if (!pendingLineDelete) return;
+    const { entryId, lineId } = pendingLineDelete;
+    const entry = entries.find((e) => e.id === entryId);
+    const victim = entry?.lines.find((l) => l.id === lineId);
+    if (!entry || !victim) {
+      handleLineDeleteCancel();
+      return;
+    }
+    if (isEntryPaidStatus(entry) || entry.lines.length <= 1) {
+      handleLineDeleteCancel();
+      return;
+    }
+
+    const id = (itemId ?? "").trim();
+    const hasServerRow =
+      entry.detailSeq != null &&
+      entry.detailSeq > 0 &&
+      victim.paymentSeq2 != null &&
+      victim.paymentSeq2 > 0;
+
+    if (!hasServerRow) {
+      applyLocalLineRemoval(entryId, lineId);
+      handleLineDeleteCancel();
+      return;
+    }
+
+    if (!id) {
+      setLineDeleteErrorMessage("ITEM_ID가 없습니다.");
+      handleLineDeleteCancel();
+      setShowLineDeleteError(true);
+      return;
+    }
+
+    setLineDeleteSubmitting(true);
+    try {
+      await postFeePayerPaymentSave({
+        itemId: id,
+        details: [
+          {
+            seq: entry.detailSeq as number,
+            payments: [
+              { rowStatus: "D", seq2: victim.paymentSeq2 as number },
+            ],
+          },
+        ],
+      });
+      handleLineDeleteCancel();
+      if (onReloadDetail) {
+        await onReloadDetail();
+      } else {
+        setEntries((prev) =>
+          prev.map((en) => {
+            if (en.id !== entryId) return en;
+            return syncEntryPaidAmountFromLines({
+              ...en,
+              lines: en.lines.filter((L) => L.id !== lineId),
+            });
+          }),
+        );
+      }
+      setShowLineDeleteSuccess(true);
+    } catch (e) {
+      const msg =
+        e instanceof ApiError
+          ? String(e.message || "").trim()
+          : "납부내역 삭제 중 오류가 발생했습니다.";
+      setLineDeleteErrorMessage(msg || "납부내역 삭제 중 오류가 발생했습니다.");
+      handleLineDeleteCancel();
+      setShowLineDeleteError(true);
+    } finally {
+      setLineDeleteSubmitting(false);
+    }
+  }, [
+    pendingLineDelete,
+    entries,
+    itemId,
+    onReloadDetail,
+    applyLocalLineRemoval,
+    handleLineDeleteCancel,
+  ]);
+
+  const handleLineDeleteSuccessClose = useCallback(() => {
+    setShowLineDeleteSuccess(false);
+  }, []);
+
+  const handleLineDeleteErrorClose = useCallback(() => {
+    setShowLineDeleteError(false);
+    setLineDeleteErrorMessage("");
+  }, []);
 
   useEffect(() => {
     if (!preSaveValidateRef) return;
@@ -380,7 +494,16 @@ export function useCauserPaymentHistorySection(
     handleFieldChange,
     handleLineFieldChange,
     handleAddLine,
-    handleRemoveLine,
+    requestLineDelete,
+    showLineDeleteConfirm,
+    lineDeleteSubmitting,
+    handleLineDeleteConfirm,
+    handleLineDeleteCancel,
+    showLineDeleteSuccess,
+    handleLineDeleteSuccessClose,
+    showLineDeleteError,
+    lineDeleteErrorMessage,
+    handleLineDeleteErrorClose,
     removedPaymentsRef,
   };
 }

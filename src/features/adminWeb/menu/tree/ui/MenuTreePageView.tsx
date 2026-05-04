@@ -606,6 +606,7 @@ export const MenuTreePageView: React.FC = () => {
         title={messageDialogTitle}
         message={messageDialogMessage}
         confirmText="확인"
+        singleAction
         onConfirm={handleMessageDialogClose}
         onCancel={handleMessageDialogClose}
         type={messageDialogType}

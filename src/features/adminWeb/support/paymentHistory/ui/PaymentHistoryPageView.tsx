@@ -31,6 +31,7 @@ export const PaymentHistoryPageView: React.FC = () => {
     showSaveDialog,
     saveDialogVariant,
     saveDialogMessage,
+    reloadPaymentDetail,
     handleBack,
     handleSave,
     handleSaveDialogClose,
@@ -170,6 +171,7 @@ export const PaymentHistoryPageView: React.FC = () => {
           initialEntries={detailEntries}
           persistRequestBuilderRef={persistRequestBuilderRef}
           preSaveValidateRef={preSaveValidateRef}
+          onReloadDetail={reloadPaymentDetail}
         />
       ) : null}
 
@@ -203,6 +205,7 @@ export const PaymentHistoryPageView: React.FC = () => {
         type={saveDialogVariant}
         preferCheckHeader
         confirmText="확인"
+        singleAction
         onConfirm={handleSaveDialogClose}
         onCancel={handleSaveDialogClose}
       />

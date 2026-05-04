@@ -182,6 +182,7 @@ export function usePaymentHistory() {
     showSaveDialog,
     saveDialogVariant,
     saveDialogMessage,
+    reloadPaymentDetail: loadPaymentDetail,
     handleBack,
     handleSave,
     handleSaveDialogClose,

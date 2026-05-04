@@ -3321,6 +3321,7 @@ export const CmmCodeManagePageView: React.FC = () => {
         onConfirm={handleMessageDialogClose}
         onCancel={handleMessageDialogClose}
         confirmText="확인"
+        singleAction
       />
 
       {/* 삭제 확인 다이얼로그 */}

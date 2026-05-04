@@ -76,6 +76,8 @@ export function useFeePayerBasicRegister(
   const [infoDialogType, setInfoDialogType] = useState<
     "success" | "danger" | "primary"
   >("primary");
+  /** 변경 없음 등 알림 전용 — 확인 버튼만 (`ConfirmDialog` `singleAction`) */
+  const [infoDialogSingleAction, setInfoDialogSingleAction] = useState(false);
   /** 계산·등록 API 선저장 후 서버 ITEM_ID */
   const [feePayerItemId, setFeePayerItemId] = useState<string | undefined>(
     undefined,
@@ -265,6 +267,7 @@ export function useFeePayerBasicRegister(
           setInfoDialogTitle("알림");
           setInfoDialogMessage("변경된 내용이 없습니다.");
           setInfoDialogType("primary");
+          setInfoDialogSingleAction(true);
           setShowInfoDialog(true);
         } else {
           window.alert(
@@ -287,6 +290,7 @@ export function useFeePayerBasicRegister(
               : "정상적으로 등록되었습니다."),
         );
         setInfoDialogType("success");
+        setInfoDialogSingleAction(false);
         setShowInfoDialog(true);
       } catch (err) {
         const msg =
@@ -296,6 +300,7 @@ export function useFeePayerBasicRegister(
         setInfoDialogTitle("오류");
         setInfoDialogMessage(msg || "저장 중 오류가 발생했습니다.");
         setInfoDialogType("danger");
+        setInfoDialogSingleAction(false);
         setShowInfoDialog(true);
       } finally {
         setLoading(false);
@@ -328,6 +333,7 @@ export function useFeePayerBasicRegister(
     infoDialogTitle,
     infoDialogMessage,
     infoDialogType,
+    infoDialogSingleAction,
     seedInvalid,
     detailLoading,
     detailErrorMessage,

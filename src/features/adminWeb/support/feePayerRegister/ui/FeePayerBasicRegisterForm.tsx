@@ -32,6 +32,7 @@ export const FeePayerBasicRegisterForm: React.FC<
     infoDialogTitle,
     infoDialogMessage,
     infoDialogType,
+    infoDialogSingleAction,
     seedInvalid,
     detailLoading,
     detailErrorMessage,
@@ -253,6 +254,7 @@ export const FeePayerBasicRegisterForm: React.FC<
         preferCheckHeader
         confirmText="확인"
         cancelText="닫기"
+        singleAction={infoDialogSingleAction}
         onConfirm={handleInfoDialogClose}
         onCancel={handleInfoDialogClose}
       />
