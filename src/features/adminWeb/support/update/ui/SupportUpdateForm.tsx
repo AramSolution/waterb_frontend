@@ -1079,6 +1079,7 @@ export const SupportUpdateForm: React.FC = () => {
             : "해당 첨부파일을 삭제하시겠습니까?"
         }
         type="danger"
+        useDeleteHeader
         onConfirm={async () => {
           if (!fileToDelete) {
             setShowDeleteConfirmDialog(false);
@@ -1118,6 +1119,7 @@ export const SupportUpdateForm: React.FC = () => {
         message={messageDialogMessage}
         confirmText="확인"
         type={messageDialogType}
+        preferCheckHeader
         onConfirm={handleMessageDialogClose}
         onCancel={handleMessageDialogClose}
       />

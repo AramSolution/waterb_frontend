@@ -835,6 +835,7 @@ export const MemberListPageView: React.FC = () => {
         message={`해당 회원을 탈퇴 처리하시겠습니까?`}
         confirmText={deleteLoading ? '처리 중...' : '탈퇴'}
         type="danger"
+        useDeleteHeader
         onConfirm={handleDeleteConfirm}
         onCancel={handleDeleteCancel}
       />

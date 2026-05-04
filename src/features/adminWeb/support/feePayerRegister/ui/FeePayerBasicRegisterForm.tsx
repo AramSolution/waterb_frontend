@@ -250,7 +250,9 @@ export const FeePayerBasicRegisterForm: React.FC<
         title={infoDialogTitle}
         message={infoDialogMessage}
         type={infoDialogType}
+        preferCheckHeader
         confirmText="확인"
+        cancelText="닫기"
         onConfirm={handleInfoDialogClose}
         onCancel={handleInfoDialogClose}
       />

@@ -23,6 +23,12 @@
   vertical-align: middle;
 }
 
+.dialog-icon img {
+  display: inline-block;
+  max-width: none;
+  vertical-align: middle;
+}
+
 .dialog-header {
   @apply mb-4;
 }

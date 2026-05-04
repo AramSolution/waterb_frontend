@@ -620,6 +620,7 @@ export const MenuTreePageView: React.FC = () => {
         onConfirm={handleDeleteConfirm}
         onCancel={handleDeleteCancel}
         type="danger"
+        useDeleteHeader
       />
     </>
   );

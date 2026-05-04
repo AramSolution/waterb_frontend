@@ -913,6 +913,7 @@ export const ArticleListPageView: React.FC = () => {
         title="게시글 삭제"
         message="정말로 이 게시글을 삭제하시겠습니까?"
         type="danger"
+        useDeleteHeader
         confirmText={deleteLoading ? "삭제 중..." : "삭제"}
         onConfirm={handleDeleteConfirm}
         onCancel={handleDeleteCancel}

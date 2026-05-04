@@ -930,6 +930,7 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
         title="상세 행 삭제"
         message="해당 상세 행을 삭제하시겠습니까?"
         type="danger"
+        useDeleteHeader
         confirmText="삭제"
         onConfirm={() => {
           if (!pendingDeleteLine) return;

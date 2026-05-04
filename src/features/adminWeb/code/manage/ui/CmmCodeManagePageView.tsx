@@ -3335,6 +3335,7 @@ export const CmmCodeManagePageView: React.FC = () => {
             : '코드를 삭제하시겠습니까?'
         }
         type="danger"
+        useDeleteHeader
         onConfirm={handleDeleteCmmCode}
         onCancel={handleCloseDeleteConfirm}
         confirmText={deleteLoading ? '삭제 중...' : '삭제'}
@@ -3352,6 +3353,7 @@ export const CmmCodeManagePageView: React.FC = () => {
             : '소분류코드를 삭제하시겠습니까?'
         }
         type="danger"
+        useDeleteHeader
         onConfirm={handleDeleteCmmDetailCode}
         onCancel={handleCloseDetailDeleteConfirm}
         confirmText={detailDeleteLoading ? '삭제 중...' : '삭제'}

@@ -270,6 +270,7 @@ export const PurposeManagePageView: React.FC = () => {
         message="선택한 건축물 용도를 삭제하시겠습니까? 저장된 건은 서버에서 비활성(삭제) 처리되며 목록에서 제외됩니다."
         confirmText={deleteLoading ? "처리 중…" : "삭제"}
         type="danger"
+        useDeleteHeader
         disabled={deleteLoading}
         onConfirm={confirmDeleteRow}
         onCancel={cancelDeleteRow}

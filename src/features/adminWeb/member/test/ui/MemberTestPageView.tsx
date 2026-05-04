@@ -835,6 +835,7 @@ export const MemberTestPageView: React.FC = () => {
         message={`정말로 해당 회원을 삭제하시겠습니까?`}
         confirmText="삭제"
         type="danger"
+        useDeleteHeader
         onConfirm={handleDeleteConfirm}
         onCancel={handleDeleteCancel}
       />

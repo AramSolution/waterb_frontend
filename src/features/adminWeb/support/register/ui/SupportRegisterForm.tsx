@@ -795,6 +795,7 @@ export const SupportRegisterForm: React.FC = () => {
         message={messageDialogMessage}
         confirmText="확인"
         type={messageDialogType}
+        preferCheckHeader
         onConfirm={handleMessageDialogClose}
         onCancel={handleMessageDialogClose}
       />

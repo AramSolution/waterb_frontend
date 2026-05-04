@@ -1134,6 +1134,7 @@ export const SupportDetailListPageView: React.FC = () => {
         message={`해당 신청목록을 삭제하시겠습니까?`}
         confirmText={deleteLoading ? "처리 중..." : "삭제"}
         type="danger"
+        useDeleteHeader
         onConfirm={handleDeleteConfirm}
         onCancel={handleDeleteCancel}
       />

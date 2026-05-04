@@ -97,11 +97,10 @@ export const SupportListPageView: React.FC = () => {
   } = useSupportList();
 
   const deleteDialogTitle = selectedDeleteTarget
-    ? `${selectedDeleteTarget.applicantNm} 부과액 : ${selectedDeleteTarget.levyAmtLabel} 삭제`
+    ? `${selectedDeleteTarget.applicantNm} 부과액 : ${selectedDeleteTarget.levyAmtLabel}`
     : "삭제 대상을 확인할 수 없습니다.";
 
-  const deleteDialogMessage =
-    "이 작업은 되돌릴 수 없습니다. 계속하시겠습니까 ?";
+  const deleteDialogMessage = "삭제하시겠습니까?";
 
   // 상세(읽기 전용) — 등록 화면과 동일 격자
   const handleDetailClick = (businessId: string) => {
@@ -784,6 +783,7 @@ export const SupportListPageView: React.FC = () => {
         message={deleteDialogMessage}
         confirmText={deleteLoading ? "처리 중..." : "예"}
         type="danger"
+        useDeleteHeader
         onConfirm={handleDeleteConfirm}
         onCancel={handleDeleteCancel}
       />
@@ -808,6 +808,7 @@ export const SupportListPageView: React.FC = () => {
             ? "primary"
             : deleteFailDialogType
         }
+        preferCheckHeader
         onConfirm={handleDeleteFailDialogClose}
         onCancel={handleDeleteFailDialogClose}
       />

@@ -734,6 +734,7 @@ export const ArticleDetailForm: React.FC<ArticleDetailFormProps> = ({
         message="파일을 삭제하시겠습니까?"
         confirmText="삭제"
         type="danger"
+        useDeleteHeader
         onConfirm={() => {
           if (pendingDeleteFile) {
             handleDeleteFile(pendingDeleteFile.fileId, pendingDeleteFile.seq);

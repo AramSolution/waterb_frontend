@@ -13,6 +13,15 @@ interface ConfirmDialogProps {
   onCancel: () => void;
   type?: 'danger' | 'success' | 'primary';
   disabled?: boolean;
+  /**
+   * 결과 알림 등에서 `type="danger"`(오류)여도 상단을 check.png로 통일할 때 사용.
+   * `preferCheckHeader`가 우선합니다.
+   */
+  preferCheckHeader?: boolean;
+  /**
+   * 삭제 확인 모달: 상단을 delete.png로 표시(check.png와 동일 크기). `type="danger"`일 때만 적용.
+   */
+  useDeleteHeader?: boolean;
 }
 
 export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
@@ -25,71 +34,43 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
   onCancel,
   type = 'danger',
   disabled = false,
+  preferCheckHeader = false,
+  useDeleteHeader = false,
 }) => {
   if (!isOpen) return null;
 
-  const getIconByType = () => {
-    switch (type) {
-      case 'danger':
-        return '⚠️';
-      case 'primary':
-        return (
-          <svg
-            width="48"
-            height="48"
-            viewBox="0 0 48 48"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <rect
-              x="2"
-              y="2"
-              width="44"
-              height="44"
-              fill="#0d6efd"
-              stroke="#0d6efd"
-              strokeWidth="2"
-            />
-            <path
-              d="M14 24 L20 30 L34 16"
-              stroke="white"
-              strokeWidth="3"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        );
-      case 'success':
-        return (
-          <svg
-            width="48"
-            height="48"
-            viewBox="0 0 48 48"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <rect
-              x="2"
-              y="2"
-              width="44"
-              height="44"
-              fill="#0d6efd"
-              stroke="#000000"
-              strokeWidth="2"
-            />
-            <path
-              d="M14 24 L20 30 L34 16"
-              stroke="white"
-              strokeWidth="3"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        );
-      default:
-        return '⚠️';
-    }
-  };
+  const useCheckImage =
+    type === 'primary' ||
+    type === 'success' ||
+    preferCheckHeader === true;
+
+  const useDeleteImage =
+    type === 'danger' && useDeleteHeader === true && preferCheckHeader !== true;
+
+  const sharedHeaderImgClass =
+    'block h-10 w-10 max-w-none object-contain';
+
+  const checkIcon = (
+    <img
+      src="/images/adminWeb/check.png"
+      alt=""
+      width={48}
+      height={48}
+      className={sharedHeaderImgClass}
+      aria-hidden
+    />
+  );
+
+  const deleteIcon = (
+    <img
+      src="/images/adminWeb/delete.png"
+      alt=""
+      width={48}
+      height={48}
+      className={sharedHeaderImgClass}
+      aria-hidden
+    />
+  );
 
   const getConfirmButtonClass = () => {
     switch (type) {
@@ -108,7 +89,13 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
       <div className="dialog-overlay" onClick={onCancel}></div>
       <div className="dialog-container">
         <div className="dialog-content">
-          <div className="dialog-icon">{getIconByType()}</div>
+          <div className="dialog-icon">
+            {useCheckImage
+              ? checkIcon
+              : useDeleteImage
+                ? deleteIcon
+                : '⚠️'}
+          </div>
           <div className="dialog-header">
             <h5 className="dialog-title">{title}</h5>
           </div>

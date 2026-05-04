@@ -262,11 +262,10 @@ export function useFeePayerBasicRegister(
           );
           persistRegisterFailMessageRef.current = null;
         } else if (persistBuildStateRef.current === "no_changes") {
-          setInfoDialogTitle("저장 완료");
-          setInfoDialogMessage("저장되었습니다.");
-          setInfoDialogType("success");
+          setInfoDialogTitle("알림");
+          setInfoDialogMessage("변경된 내용이 없습니다.");
+          setInfoDialogType("primary");
           setShowInfoDialog(true);
-          return;
         } else {
           window.alert(
             "구분·유형·통지일 등 오수량 산정 필수 항목을 확인해 주세요.",
