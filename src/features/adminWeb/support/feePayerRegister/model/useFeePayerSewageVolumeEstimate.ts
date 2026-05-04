@@ -304,6 +304,13 @@ export function useFeePayerSewageVolumeEstimate(
   entriesRef.current = entries;
   const unitPriceRequestedRef = useRef<Set<string>>(new Set());
 
+  /**
+   * 계산·저장 시 `buildSupportFeePayerRegisterRequest*`의 변경 감지 기준 스냅샷.
+   * 등록 페이지는 부모 `initialEntries`가 없어 첫 계산 전까지 원본 맵이 비어 —
+   * 계산 성공 후 여기에 현재 `entries`를 넣어 재계산 시 diff가 동작하도록 한다.
+   */
+  const calculateBaselineRef = useRef<SewageEstimateEntry[] | null>(null);
+
   /** 저장 시 `details[].rowStatus=D` 로 보낼 ARTITED.SEQ (통지일 블록 삭제) */
   const removedDetailSeqsRef = useRef<number[]>([]);
   /** 저장 시 `calculations[].rowStatus=D` — 기존 `seq`·`seq2` 필요 */
@@ -311,7 +318,9 @@ export function useFeePayerSewageVolumeEstimate(
 
   useEffect(() => {
     if (initialEntries === undefined) return;
-    setEntries(initialEntriesOrDefault(initialEntries));
+    const normalized = initialEntriesOrDefault(initialEntries);
+    setEntries(normalized);
+    calculateBaselineRef.current = structuredClone(normalized);
     removedDetailSeqsRef.current = [];
     removedCalcsRef.current = [];
     unitPriceRequestedRef.current.clear();
@@ -603,11 +612,14 @@ export function useFeePayerSewageVolumeEstimate(
       }
 
       const snapshot = entriesRef.current;
+      const baselineForDiff =
+        calculateBaselineRef.current ??
+        (initialEntries && initialEntries.length > 0 ? initialEntries : null);
       const body = buildSupportFeePayerRegisterRequest({
         basicInfo,
         itemId: bridge.feePayerItemId,
         entries: snapshot,
-        initialEntries,
+        initialEntries: baselineForDiff ?? [],
         removedDetailSeqs: removedDetailSeqsRef.current,
         removedCalcs: removedCalcsRef.current,
         calculateTargetEntryId: entryId,
@@ -640,25 +652,24 @@ export function useFeePayerSewageVolumeEstimate(
         const wv = res.waterVal != null ? Number(res.waterVal) : NaN;
         const ws = res.waterSum != null ? Number(res.waterSum) : NaN;
 
-        setEntries((prev) =>
-          prev.map((en) => {
-            if (en.id !== entryId) return en;
-            const merged = {
-              ...en,
-              detailSeq: Number.isFinite(seq) ? seq : en.detailSeq,
-              causerCharge: Number.isFinite(wc)
-                ? formatIntKo(Math.round(wc))
-                : en.causerCharge,
-              sewageLevyAmount: Number.isFinite(wv)
-                ? formatDecimalPlain(wv)
-                : en.sewageLevyAmount,
-              sewageVolume: Number.isFinite(ws)
-                ? formatDecimalPlain(ws)
-                : en.sewageVolume,
-            };
-            return applyLineSumToSewageVolume(merged);
-          }),
-        );
+        const prev = entriesRef.current;
+        let mergedRows = prev.map((en) => {
+          if (en.id !== entryId) return en;
+          const mergedRow = {
+            ...en,
+            detailSeq: Number.isFinite(seq) ? seq : en.detailSeq,
+            causerCharge: Number.isFinite(wc)
+              ? formatIntKo(Math.round(wc))
+              : en.causerCharge,
+            sewageLevyAmount: Number.isFinite(wv)
+              ? formatDecimalPlain(wv)
+              : en.sewageLevyAmount,
+            sewageVolume: Number.isFinite(ws)
+              ? formatDecimalPlain(ws)
+              : en.sewageVolume,
+          };
+          return applyLineSumToSewageVolume(mergedRow);
+        });
 
         if (wid && Number.isFinite(seq)) {
           try {
@@ -668,23 +679,24 @@ export function useFeePayerSewageVolumeEstimate(
             const calcs = [...(block?.calculations ?? [])].sort(
               (a, b) => Number(a.seq2 ?? 0) - Number(b.seq2 ?? 0),
             );
-            setEntries((prev) =>
-              prev.map((en) => {
-                if (en.id !== entryId) return en;
-                const nextLines = en.lines.map((line, i) => ({
-                  ...line,
-                  calcSeq2:
-                    calcs[i]?.seq2 != null
-                      ? Number(calcs[i].seq2)
-                      : line.calcSeq2,
-                }));
-                return applyLineSumToSewageVolume({ ...en, lines: nextLines });
-              }),
-            );
+            mergedRows = mergedRows.map((en) => {
+              if (en.id !== entryId) return en;
+              const nextLines = en.lines.map((line, i) => ({
+                ...line,
+                calcSeq2:
+                  calcs[i]?.seq2 != null
+                    ? Number(calcs[i].seq2)
+                    : line.calcSeq2,
+              }));
+              return applyLineSumToSewageVolume({ ...en, lines: nextLines });
+            });
           } catch {
             /* seq2 동기화 실패해도 금액 반영은 유지 */
           }
         }
+
+        setEntries(mergedRows);
+        calculateBaselineRef.current = structuredClone(mergedRows);
       } catch (err) {
         const msg =
           err instanceof ApiError
@@ -762,6 +774,7 @@ export function useFeePayerSewageVolumeEstimate(
     calcBusyEntryId,
     removedDetailSeqsRef,
     removedCalcsRef,
+    calculateBaselineRef,
     handleAddEntry,
     handleAddDetailLine,
     handleRemoveEntry,

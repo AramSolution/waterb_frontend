@@ -94,6 +94,7 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
     calcBusyEntryId,
     removedDetailSeqsRef,
     removedCalcsRef,
+    calculateBaselineRef,
     handleAddEntry,
     handleAddDetailLine,
     handleRemoveDetailLine,
@@ -156,11 +157,14 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
         }
         return null;
       }
+      const persistInitial =
+        calculateBaselineRef.current ??
+        (initialEntries && initialEntries.length > 0 ? initialEntries : []);
       const body = buildSupportFeePayerRegisterRequestForPersist({
         basicInfo,
         itemId,
         entries,
-        initialEntries,
+        initialEntries: persistInitial,
         removedDetailSeqs: removedDetailSeqsRef.current,
         removedCalcs: removedCalcsRef.current,
       });
@@ -184,6 +188,7 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
     removedDetailSeqsRef,
     removedCalcsRef,
     initialEntries,
+    calculateBaselineRef,
   ]);
 
   const statusOptions = useMemo(
