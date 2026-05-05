@@ -7,10 +7,10 @@ services:
       # NEXT_PUBLIC_* 는 빌드 타임에 번들에 포함되므로 args로 전달
       # nginx가 /water/ 경로를 백엔드로 중계 — API_BASE는 호스트만(api.ts가 /water 붙임)
       args:
-        NEXT_PUBLIC_API_BASE_URL: https://dev.uaram.co.kr
+        NEXT_PUBLIC_API_BASE_URL: https://test3.uaram.co.kr:3443
         NEXT_PUBLIC_PAGE_SIZE: 15
         # Next가 /water를 직접 받을 때(직접 3000 접속 등) dev 백엔드로 프록시 — Dockerfile ARG/ENV, next.config.js와 동기화
-        WATER_REWRITE_DESTINATION: https://dev.uaram.co.kr:8443/water
+        WATER_REWRITE_DESTINATION: https://test3.uaram.co.kr:9443/water
     restart: unless-stopped
     expose:
       - "3000"
@@ -24,7 +24,7 @@ services:
     container_name: waterb_nginx
     restart: unless-stopped
     ports:
-      - "443:443"
+      - "3443:3443"
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./nginx/ssl:/etc/nginx/ssl:ro

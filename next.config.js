@@ -13,7 +13,7 @@ const turbopackRoot = path.join(__dirname);
  */
 function resolveBackendWaterBaseUrl() {
   const raw = process.env.NEXT_PUBLIC_API_BASE_URL;
-  const fallbackHost = "https://dev.uaram.co.kr";
+  const fallbackHost = "https://test3.uaram.co.kr";
   if (!raw || String(raw).trim() === "" || raw === "undefined") {
     return `${fallbackHost.replace(/\/$/, "")}/water`;
   }
@@ -35,7 +35,6 @@ const nextConfig = {
   allowedDevOrigins: [
     "dev.uaram.co.kr",
     "test3.uaram.co.kr",
-    "ieum.gunsan.go.kr",
     "localhost",
     "127.0.0.1",
   ],
