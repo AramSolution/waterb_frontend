@@ -781,7 +781,7 @@ export const SupportListPageView: React.FC = () => {
         isOpen={showDeleteDialog}
         title={deleteDialogTitle}
         message={deleteDialogMessage}
-        confirmText={deleteLoading ? "처리 중..." : "예"}
+        confirmText={deleteLoading ? "처리 중..." : "확인"}
         type="danger"
         useDeleteHeader
         onConfirm={handleDeleteConfirm}
@@ -804,7 +804,8 @@ export const SupportListPageView: React.FC = () => {
         title="삭제 실패"
         message={deleteFailMessage || "오수 원인자부담금 삭제에 실패했습니다."}
         confirmText="확인"
-        cancelText="닫기"
+        cancelText="취소"
+        variant={deleteFailDialogType === "warning" ? "alert" : "error"}
         type={
           deleteFailDialogType === "warning"
             ? "primary"

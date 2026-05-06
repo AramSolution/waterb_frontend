@@ -3,7 +3,7 @@
 import React from "react";
 import { ConfirmDialog } from "@/shared/ui/adminWeb";
 import { FormField, FormInput, FormSelect } from "@/shared/ui/adminWeb/form";
-import { getSewageTypeOptionsForCategory } from "@/features/adminWeb/support/lib/sewageCategoryTypeOptions";
+import { getSewageTypeOptions } from "@/features/adminWeb/support/lib/sewageCategoryTypeOptions";
 import {
   useCauserPaymentHistorySection,
   type CauserPaymentEntry,
@@ -139,7 +139,7 @@ export const CauserPaymentHistorySection: React.FC<
                       name="type"
                       value={entry.type}
                       onChange={handleSelectChange}
-                      options={getSewageTypeOptionsForCategory(entry.category)}
+                      options={getSewageTypeOptions()}
                       emptyText=""
                       data-entry-id={entry.id}
                       disabled
@@ -436,7 +436,7 @@ export const CauserPaymentHistorySection: React.FC<
         message="선택한 납부 행을 삭제하시겠습니까?"
         type="danger"
         useDeleteHeader
-        confirmText={lineDeleteSubmitting ? "처리 중..." : "예"}
+        confirmText={lineDeleteSubmitting ? "처리 중..." : "확인"}
         disabled={lineDeleteSubmitting}
         onConfirm={handleLineDeleteConfirm}
         onCancel={handleLineDeleteCancel}

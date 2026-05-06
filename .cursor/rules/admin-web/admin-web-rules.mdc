@@ -389,32 +389,69 @@ import '@/shared/styles/admin/search-form.css'; // ✅ Required for search forms
 
 ---
 
-## ⚠️ CRITICAL: ConfirmDialog (및 2버튼 모달) — 왼쪽 `예` · 오른쪽 `아니요`
+## ⚠️ CRITICAL: ConfirmDialog 시안 고정 규격 (아이콘/폰트/간격/버튼)
 
-**Applies to:** `ConfirmDialog` (`@/shared/ui/adminWeb/ConfirmDialog.tsx`), `DuplicateLoginDialog`, and any admin modal with **two** footer actions (확인/취소형).
+**Applies to:** `ConfirmDialog` (`@/shared/ui/adminWeb/ConfirmDialog.tsx`) 및 admin web의 모든 공통 메시지/확인 다이얼로그.
 
-**MUST:**
+### 1) 버튼 레이아웃 규칙 (고정)
 
-- ✅ **Button order (left → right):** first = **확인(긍정) 동작** (`onConfirm`) — 강조(Primary/Danger/Success) 스타일, second = **취소·거절** (`onCancel`) — 회색 스타일.
-- ✅ **Default labels:** `confirmText` 기본값 **`예`**, `cancelText` 기본값 **`아니요`** (구현: `ConfirmDialog`).
-- ✅ **Override `confirmText`** when the action is not a generic yes: e.g. `확인` (알림 닫기), `삭제`, `탈퇴`, `처리 중...` — still on the **left**; right stays **`아니요`** unless a product-specific string is required.
-- ✅ **결과 알림형 — 확인만:** 정보 안내·저장/삭제 결과만 알리고 선택지가 없을 때는 **`singleAction`** — 확인 한 개만 (`ConfirmDialog`). 예: **삭제 완료** (`정상적으로 삭제되었습니다.` 등, `SupportListPageView` 삭제 성공 다이얼로그; 게시글 삭제 결과·메뉴 트리·공통코드 메시지 다이얼로그); 납부내역 변경 없음 (`PaymentHistoryPageView`); 원인자부담금 저장 변경 없음 (`FeePayerBasicRegisterForm`, `infoDialogSingleAction`).
-- ✅ **결과 알림형 — 확인 + 닫기:** 레거시나 예외로 두 버튼을 유지할 때만 오른쪽 **`닫기`** (`cancelText="닫기"`, `아니요` 부적절). 신규는 가능하면 **`singleAction`**으로 통일.
-- ✅ **그 외** 확인·취소형에서는 **`아니요`**를 쓰고, 결과 알림에는 기본적으로 `singleAction` 또는 위 예외의 `닫기`를 쓴다.
+- ✅ **기본 원칙:** **삭제 모달을 제외한 모든 다이얼로그는 `확인` 1개만 사용**한다 (`singleAction`).
+- ✅ **삭제 모달만 2버튼:** **왼쪽 `확인`** (`onConfirm`) / **오른쪽 `취소`** (`onCancel`) 고정.
+- ✅ 2버튼(삭제 모달) 라벨은 `확인`, `취소`로 사용한다.
+- ✅ 버튼 간 좌우 간격은 시안 기준으로 유지하고, 버튼 높이/너비/폰트는 모든 타입에서 동일하게 유지한다.
 
-**MUST NOT:**
+### 2) 타입별 아이콘/카피 규칙 (고정)
 
-- ❌ **NEVER** place the cancel/dismiss button on the **left** and the primary action on the **right** (old `닫기`+`확인` order in `ConfirmDialog` — removed).
+- ✅ **알림 (alert)**
+  - 아이콘: `public/images/adminWeb/icon/icon_point.png`
+  - 제목: `알림`
+  - 본문: 상황별 가변
+  - 버튼: `확인` (basic)
+- ✅ **컨펌 (confirm)**
+  - 아이콘: `public/images/adminWeb/icon/icon_que.png`
+  - 제목: 상황별 가변 (예: `삭제하시겠습니까?`)
+  - 본문: 상황별 가변
+  - 버튼: `확인`, `취소` (confirm)
+- ✅ **완료/성공 (success)**
+  - 아이콘: `public/images/adminWeb/icon/icon_check.png`
+  - 제목: `등록 완료` 또는 `수정 완료`
+  - 본문:
+    - `insert`: `등록 되었습니다.`
+    - `update`: `수정 되었습니다.`
+    - `delete`: `삭제 되었습니다.`
+  - 버튼: `확인` (basic)
+- ✅ **오류/실패 (error)**
+  - 아이콘: `public/images/adminWeb/icon/icon_del.png`
+  - 제목: `오류`
+  - 본문: `에러가 발생 하였습니다.`
+  - 버튼: `확인` (basic)
 
-**Reference implementation:**
+### 3) 시안 수치 규칙 (픽셀/타이포)
 
-- `src/shared/ui/adminWeb/ConfirmDialog.tsx` — footer: `[ confirm (강조) ] [ cancel (회색) ]`, defaults `예` / `아니요`; `singleAction` 시 확인만, 오버레이 클릭 = `onConfirm`.
-- `src/shared/ui/adminWeb/DuplicateLoginDialog.tsx` — `예` (기존 세션 종료 후 로그인) / `아니요`.
+- ✅ 아이콘 이미지는 클래스 값을 **`block h-10 w-10 max-w-none object-contain`** 으로 고정한다.
+- ✅ 아이콘 ↔ 제목 간격: **`16px`**.
+- ✅ 제목 타이포: **`font-size: 16px`**, **`font-weight: bold`**.
+- ✅ 제목(또는 본문 마지막 줄) ↔ 버튼 영역 간격: **`24px`**.
+- ✅ 컨펌처럼 보조 본문(서브 텍스트)이 있는 경우:
+  - 제목 ↔ 서브 텍스트: **`4px`**
+  - 서브 텍스트 ↔ 버튼 영역: **`24px`**
+- ✅ 버튼 텍스트: **`font-size: 12px`**, **`font-weight: 500`**.
+- ✅ 취소 버튼 텍스트 컬러: **`#616161`** (시안 기준).
+
+### 4) MUST NOT
+
+- ❌ `예/아니요`를 기본 라벨로 신규 적용하지 않는다.
+- ❌ 2버튼에서 `확인`을 왼쪽, `취소`를 오른쪽에 두지 않는다.
+- ❌ 타입별 아이콘을 이모지(`⚠️`, `?`, `!`, `X`)로 대체하지 않는다.
+- ❌ 시안의 고정 수치(32/16/24, 16px title, 12px button)를 임의로 변경하지 않는다.
 
 **Checklist (new or refactored admin 다이얼로그):**
 
-- [ ] 결과 알림(삭제 완료·실패·오류 안내 등): 우선 **`singleAction`** (확인만).
-- [ ] 예/아니요 확인형: **left** = `onConfirm`, **right** = `onCancel` — 기본 **아니요** (또는 필요 시 `cancelText` 명시).
+- [ ] 다이얼로그 타입이 `alert/confirm/success/error` 중 하나로 명확히 매핑되었다.
+- [ ] 아이콘 파일이 시안 지정 경로(`icon_point`, `icon_que`, `icon_check`, `icon_del`)를 사용한다.
+- [ ] 삭제 모달이 아닌 경우 `확인` 1버튼(`singleAction`)이다.
+- [ ] 삭제 모달인 경우 `확인(좌)/취소(우)` 2버튼이다.
+- [ ] 아이콘/제목/본문/버튼 간격 및 폰트 수치가 시안 값(32/16/24, 16px, 12px)에 맞다.
 
 ---
 
@@ -812,6 +849,7 @@ Check these files for correct status badge implementation:
 - **오수 원인자부담금 관리 목록 (동일 `SupportListPageView`, 별도 API):** `POST /api/admin/support/fee-payer/list` — `SupportFeePayerManageController#list`. 요청 JSON `SupportFeePayerListRequest`: `reqDateFrom`, `reqDateTo`(통지일 `yyyy-MM-dd`), `userNm`, `address`(ZIP·지번·주소·상세 통합 검색); **body 생략 시 전체**. 응답 `SupportFeePayerListResponse`: `data[]`에 `itemId`, `seq`, `paySta`, `reqDate`, `userNm`, `zip`·`adresLot`·`adres`·`detailAdres`, `waterSum`·`waterCost`·`waterVal`·`waterPay`, `payDay`, `pay`(납부 ARTITEP 최신 1건; **없으면 `payDay=null`, `pay=0`**). 클라이언트: `@/entities/adminWeb/support/api/feePayerManageApi.ts` (`postFeePayerList`, `mapFeePayerListItemToSupport`, `buildSupportFeePayerListBody`, `isFeePayerListRowPaid`). **상태 배지 판정은 `paySta`만 사용하고 `pay/payAmt` 보조 판정은 사용하지 않는다.** 목록은 **클라이언트 페이징**(전량 수신 후 `pageSize` 슬라이스). **목 mock:** 환경변수 `NEXT_PUBLIC_FEE_PAYER_LIST_MOCK=true` 일 때만 `feeListMockData` 사용.
 - **오수 원인자부담금 목록 표시 규칙:** **부과액 컬럼·엑셀**은 **`waterCost`(DB `WATER_COST`)만** 사용 — `waterVal`로 대체 표시하지 않는다. **납부액 컬럼·엑셀**은 **`waterPay`(DB `WATER_PAY`)**를 기준으로 표시한다. **주소 컬럼·엑셀**은 표시용으로 **`zip` 제외** — `formatFeePayerAddressLine`에서 `adresLot`·`adres`·`detailAdres`만 이어 붙인다(검색 `address`는 백엔드 ZIP 포함 통합 검색 유지).
 - **오수 원인자부담금 목록 삭제:** 리스트 삭제 버튼은 `DELETE /api/admin/support/fee-payer/delete` (`itemId`, `seq`)와 연동한다. 백엔드 미납 제한 예외 메시지(예: `완납 건은 삭제하실 수 없습니다.`)는 그대로 사용자에게 표시한다. 삭제 확인 `ConfirmDialog` 제목은 **`{신청인명} 부과액 : {부과액 표시}`** (끝에 **`삭제`** 문구 없음), 본문은 **`삭제하시겠습니까?`** (`SupportListPageView`의 `deleteDialogTitle` / `deleteDialogMessage`).
+- **오수 원인자부담금 목록 삭제 예외(완납 건):** `납부완료 건은 삭제하실 수 없습니다.` 안내 다이얼로그는 **오류(X) 아이콘이 아니라 알림(!) 아이콘**을 사용한다. 즉 `ConfirmDialog`는 `variant="alert"`(= `icon_point.png`)로 표시한다.
 - **Study list (스터디사업 목록):**  
   `src/features/adminWeb/support/study/list/ui/StudyListPageView.tsx`  
   → Same as above.
@@ -1783,24 +1821,33 @@ Register form row uses FormField + register-form.css?
 | `suppressBottomBorder` / `forceTopBorder` / empty `label` branch | `src/shared/ui/adminWeb/form/FormField.tsx` |
 | Half row + empty half-cell + address `fullWidth` row | `src/features/adminWeb/support/feePayerRegister/ui/FeePayerBasicRegisterForm.tsx` |
 | Two-column first row (both real fields) | `src/features/adminWeb/program/register/ui/ProgramRegisterForm.tsx` |
-| 구분·유형 연동 (원인자부담 오수량/납부내역) | `src/features/adminWeb/support/lib/sewageCategoryTypeOptions.ts`, `FeePayerSewageVolumeEstimateSection.tsx`, `CauserPaymentHistorySection.tsx`, `FormField` `mdGridSpan` |
+| 구분·유형 고정 코드 (원인자부담 오수량/납부내역) | `src/features/adminWeb/support/lib/sewageCategoryTypeOptions.ts`, `FeePayerSewageVolumeEstimateSection.tsx`, `CauserPaymentHistorySection.tsx`, `FormField` `mdGridSpan` |
 | 용도조회 트리·오수량 산정 모드 | `useUsageLookupModal.ts`, `entities/.../cmmCodeApi` (`building-use-codes`), `sewageVolumeCalc.ts`, `useFeePayerSewageVolumeEstimate.ts` |
 
 ---
 
-## ⚠️ CRITICAL: Support — 원인자부담 「구분」 ↔ 「유형」 옵션 연동
+## ⚠️ CRITICAL: Support — 원인자부담 「구분」·「유형」 고정 코드
 
-**오수량 발생량 산정** (`FeePayerSewageVolumeEstimateSection`) 및 **원인자부담 납부내역** (`CauserPaymentHistorySection`)에서 **`구분` (category)** 선택에 따라 **`유형` (type)** `FormSelect` 옵션을 **달리한다.**
+**오수량 발생량 산정** (`FeePayerSewageVolumeEstimateSection`) 및 **원인자부담 납부내역** (`CauserPaymentHistorySection`)에서 **`구분`(category)** 과 **`유형`(type)** 은 각각 **고정 목록**이다. **`구분`을 바꿔도 `유형` 옵션 집합은 바뀌지 않는다.**
 
 ### MUST
 
-- ✅ **`구분` = 개별건축물 (`INDIVIDUAL`)** → **`유형` 3개:** 신축, 증축, 변경 (각각 고유 `value`; 하나로 합친 라벨 금지).
-- ✅ **`구분` = 타행위 (`OTHER_ACT`)** → **`유형` 2개:** 신축, 개축 (개별건축물의 증축·변경과 혼동되지 않게 `value` 분리).
-- ✅ **`구분` = 허가사항변경 (`PERMIT_CHANGE`)** → **`유형` 1개:** 개축만.
-- ✅ **`구분` 변경 시** 기존 `유형`이 새 옵션 집합에 없으면 **`type` 초기화** (`""`) — 잘못된 조합 방지.
+- ✅ **`구분`(고정 2종, API `TYPE_1`):** `01` **개발건축물**(화면 라벨; 내부 상수는 기존 `INDIVIDUAL` 등 코드베이스 명명 유지 가능), `02` **타행위** (`OTHER_ACT`).
+- ✅ **`유형`(고정 6종, API `TYPE_2`):** `01` 신축, `02` 증축, `03` 용도변경, `04` 증축 및 용도변경, `05` 허가사항변경, `06` 개축 — 각각 고유 `value`; 라벨을 한 줄로 합친 가짜 옵션 금지.
+- ✅ **`유형` = 허가사항변경 (`TYPE_2` `05`, 내부 `value`는 모듈 상수로 단일화):**
+  - **계산** 버튼·원인자부담금 **서버 계산 API** 호출을 하지 않는다(클라 로컬 계산만 막거나 동일하게 미실행).
+  - **상단 오수량**은 직접 편집 가능(포커스 시 원문 표시 등 기존 「허가」 UX와 동일한 제품 의도).
+  - **기준단가** 입력란은 **`readOnly`** — 사용자가 수정하지 못하게 한다(상세 조회·저장값 표시).
+  - 저장 전 **통지일 블록** 검증에서 **상단 오수량 vs 하위 행 오수량 합계 일치** 검사는 **이 유형만 제외**(기존 「구분 = 허가사항변경」 제외와 동일).
+- ✅ **`유형` 변경(허가사항변경 → 비허가)** 시, 허가 전용 수동 입력 잔존을 막기 위해 **상단 오수량(`sewageVolume`)·오수부과량(`sewageLevyAmount`)·원인자부담금(`causerCharge`)을 즉시 초기화(`0`)** 한다.
+- ✅ 상세 행 **면적(`area`)·방수(`roomCount`)·세대수(`householdCount`)** 의 유지/초기화 기준은 **`유형`이 아니라 `용도`(산정 모드)** 이다. `getSewageCalcModeForLine` 판정 결과가 바뀌면:
+  - `default`(면적식): `area` 유지, `roomCount`·`householdCount` 초기화
+  - `standalone`(방수식): `roomCount` 유지, `area`·`householdCount` 초기화
+  - `multi`(방수+세대수식): `roomCount`·`householdCount` 유지, `area` 초기화
+- ✅ **`구분` 변경 시** 기존 `유형`이 여전히 유효한 코드이면 유지하고, 정규화 로직이 있다면 **불일치 시에만** `type` 초기화 — 단, **고정 6종**이므로 구분과 무관하게 같은 집합을 쓴다.
 - ✅ **레이아웃:** `상태`, `구분`, `유형`, `통지일` 네 필드는 **하나의** `flex flex-wrap` 행에 두고, 각 `FormField`에 **`mdGridSpan={4}`** (`src/shared/ui/adminWeb/form/FormField.tsx`)를 지정한다 — **md 이상에서 한 줄**(칸당 `md:w-1/4`), 모바일은 줄바꿈.
 - ✅ **섹션 헤더·통지일 블록 추가:** `FeePayerSewageVolumeEstimateSection` 상단은 **제목만**(`오수량 발생량 산정`) 둔다. **통지일 블록(엔트리) 전체 추가**(`handleAddEntry`)는 **각 엔트리 카드 하단**에 둔다 — **가로 구분선(`border-t`, 예 `#dee2e6`) 가운데**에 **`absolute` + `left-1/2` + `-translate-x-1/2` + `-translate-y-1/2`** 로 **원형 `+`가 선에 반쯝 걸치게**(흰 **`border-2 border-white`**, `shadow-md`). 상세 격자(층수·면적·**용도**·…) **아래쪽**에 오도록 카드 **맨 아래**에 배치한다. **`aria-label` / `title`**: “통지일 블록 추가”.
-- ✅ **상세 행 삭제:** 층수·용도 상세 격자 오른쪽 **삭제**는 **즉시 제거 금지** — `ConfirmDialog`로 확인(제목 `상세 행 삭제`, 본문 `해당 상세 행을 삭제하시겠습니까?`, `type="danger"`, `confirmText="삭제"`) 후 `handleRemoveDetailLine` 호출. 취소는 **`아니요`**(기본 `cancelText`).
+- ✅ **상세 행 삭제:** 층수·용도 상세 격자 오른쪽 **삭제**는 **즉시 제거 금지** — `ConfirmDialog`로 확인(제목 `상세 행 삭제`, 본문 `해당 상세 행을 삭제하시겠습니까?`, `type="danger"`) 후 `handleRemoveDetailLine` 호출. 버튼은 **`확인`, `취소`**(2버튼 규격)로 맞춘다.
 - ✅ **`상태` 기본값:** 신규 통지일 블록(엔트리) 생성 시 **`UNPAID`(미납)**. `상태` `FormSelect`에는 **`placeholder` 비우기** — `--------선택하세요-----` 같은 빈 옵션 행을 두지 않는다(미납·납부만).
 - ✅ **기준단가·오수량·계산 행:** `FeePayerSewageVolumeEstimateSection`에서 **한 줄(md `flex-row`)**에 **기준단가**, **오수량**, **계산** 버튼을 둔다(원인자부담금은 이 행에 넣지 않음).
 - ✅ **그 아래 한 줄:** **원인자부담금**(`causerCharge`)과 **오수부과량**(`sewageLevyAmount`) 입력을 **나란히**(md에서 2칸, 모바일은 세로 스택). `SewageEstimateEntry`에 `sewageLevyAmount` 유지·백엔드 DTO 맞춤.
@@ -1809,15 +1856,15 @@ Register form row uses FormField + register-form.css?
 - ✅ **행 그룹 구분선:** **1행**(기준단가·오수량·계산)과 **2행**(원인자부담금·오수부과량) 사이에는 **`feePayerPriceGridRow2`** 로 **아주 옅은 배경**(`bg-gray-50/50` 등)을 두고, **가로 구분(예 `#d1d5db`)은 데이터 열(두 `feePayerPricePair`)에만** 둔다 — **`shadow-[inset_0_1px_0_0_#d1d5db]`** 등으로 상단만 그려도 된다(모바일은 첫 쌍만, md는 둘째 쌍에 `md:shadow-[inset_0_1px_0_0_#d1d5db]`). **`feePayerPriceGridRow2` 루트에 전체 폭 `border-t`를 두지 않는다** — **계산 버튼 열·맞춤 스페이서 아래로 가로선이 이어지지 않게** 한다.
 - ✅ **원인자부담 기본 등록 폼 (`FeePayerBasicRegisterForm`):** **`저장` / `닫기`** 버튼은 **`FeePayerSewageVolumeEstimateSection`(오수량 발생량 산정) 블록 바로 아래**에 둔다(기본정보 카드만 위에 두고, 그 다음 오수량 섹션 → 액션 버튼). 오수량 섹션을 **`basicInfoSaved` 등으로 `pointer-events-none` 비활성화하지 않는다** — 하위 블록은 항상 조작 가능(요구 시에만 로딩 `disabled` 등).
 - ✅ **상세 행 「오수량」(체크박스 옆):** 값은 **산식·API `waterVol` 등으로 채워 표시**하고, **`readOnly`** 로 직접 수정 불가. 배경은 **오수량 입력과 동일** `rgba(255, 224, 147, 0.1)`(`feePayerSewageInputTint.ts`). `initialEntries` 정규화 시 클라 산식이 빈 문자열이면 **서버에서 내려온 줄 `sewageQty`(`waterVol`)를 지우지 않는다**(`useFeePayerSewageVolumeEstimate`의 `normalizeDetailLine`).
-- ✅ **납부내역 납부 행 삭제 (`CauserPaymentHistorySection`, `PaymentHistoryPageView`):** 행 **`삭제`** 클릭 → `ConfirmDialog` **「선택한 납부 행을 삭제하시겠습니까?」**(예/아니요, `useDeleteHeader`). 서버에 존재하는 납부 행(`paymentSeq2`·통지일 블록 `detailSeq`/`seq` 매칭)이면 **`postFeePayerPaymentSave`** 로 해당 행만 `payments[].rowStatus: "D"` **즉시 삭제** 후 `onReloadDetail`로 **`getFeePayerPaymentDetail` 재조회**. 아직 저장 전인 신규 행만 있으면 **API 없이** 로컬에서 제거. 성공 시 **삭제 완료** `singleAction`·`정상적으로 삭제되었습니다.`, 실패 시 **삭제 실패** `singleAction`.
+- ✅ **납부내역 납부 행 삭제 (`CauserPaymentHistorySection`, `PaymentHistoryPageView`):** 행 **`삭제`** 클릭 → `ConfirmDialog` **「선택한 납부 행을 삭제하시겠습니까?」**(`확인`, `취소`, `useDeleteHeader`). 서버에 존재하는 납부 행(`paymentSeq2`·통지일 블록 `detailSeq`/`seq` 매칭)이면 **`postFeePayerPaymentSave`** 로 해당 행만 `payments[].rowStatus: "D"` **즉시 삭제** 후 `onReloadDetail`로 **`getFeePayerPaymentDetail` 재조회**. 아직 저장 전인 신규 행만 있으면 **API 없이** 로컬에서 제거. 성공 시 **삭제 완료** `singleAction`·`정상적으로 삭제되었습니다.`, 실패 시 **삭제 실패** `singleAction`.
 
-**Single source of truth:** `getSewageTypeOptionsForCategory` in `src/features/adminWeb/support/lib/sewageCategoryTypeOptions.ts` (두 화면에서 동일 함수 사용).
+**Single source of truth:** `src/features/adminWeb/support/lib/sewageCategoryTypeOptions.ts` — **고정 `구분` 옵션**, **고정 `유형` 옵션**, `TYPE_1`/`TYPE_2` 매핑·`유형 === 허가사항변경` 판별 헬퍼(두 화면·훅에서 동일 사용).
 
 ### MUST NOT
 
-- ❌ **`유형`**에 개별·타행위·허가를 **한 줄로 묶은** 과거형 옵션만 두고 `구분`과 무관하게 선택하게 하기.
-- ❌ **`타행위`**인데 **신축·개축 외**(증축·변경 등 개별건축물 전용 유형)를 노출하기.
-- ❌ **`타행위`의 신축**과 **`개별건축물`의 신축**을 **동일 `value`**로 취급하기 — 구분별로 코드가 달라야 함.
+- ❌ **`구분`에 따라 `유형` `FormSelect` 옵션을 바꾸는** 과거 패턴(개별 3개·타행위 2개·허가 1개 등)을 되살리기.
+- ❌ **`유형` = 허가사항변경** 인데 **기준단가**를 편집 가능하게 두기 — 해당 유형은 **읽기 전용**.
+- ❌ **`TYPE_2` 코드표**(01~06)와 다른 임의 문자열을 저장 payload에 실어 보내기 — 백엔드 `ARTITED` 코드표와 반드시 일치.
 
 ### Reference
 
@@ -1833,9 +1880,9 @@ Register form row uses FormField + register-form.css?
 
 ### MUST
 
-- ✅ **방수·세대수·1일오수 식(`multi`)과 세대수 입력 UI**는 **`용도명`·`midCategoryLabel` 등에 「다중주택」 문구가 있을 때만** 적용한다. **공동주택(`0102` 등)** 만으로는 **다중주택 식에 넣지 않는다** — 공동은 **면적·1일오수 식(`default`)** 이다.
-- ✅ **`0101` 접두(WAT002 단독주택)** → **단독 식**(방수·1일오수). **`0102`(공동주택)** → **면적 식**(코드만으로 세대수 식 금지). 코드 체계 변경 시 백엔드/코드표와 함께 `sewageVolumeCalc.ts`만 수정한다.
-- ✅ **`gubun2`가 비었거나 아직 줄에 없을 때** **용도명 `buildingUse`**에 **`단독주택`**이 포함되면 단독 식으로 **보조 판별**한다. **「다중주택」** 은 위 `multi` 규칙과 동일하게 취급한다. **동일 헬퍼** 우선순위: **다중주택 문구 → `0101` 등 코드 → 용도명 `단독주택` → 라벨 보조**.
+- ✅ **방수·세대수·1일오수 식(`multi`)과 세대수 입력 UI**는 **건축물 ID `BUL_0000000000000004`(다세대주택 1건)** 일 때만 적용한다. **문자열 「다중주택」·「다세대주택」만으로는 `multi`로 두지 않는다.** **`0102` 접두(WAT002 공동 계열)** 만으로는 **세대수 식에 넣지 않는다** — 일반 공동은 **면적·1일오수 식(`default`)** 이다.
+- ✅ **`gubun2`(WAT002 소분류)가 문자열로 정확히 `0101`** 일 때만 **단독 식**(방수·1일오수, `standalone`). **`010101` 등 접두 일치(`0101*`)로 두지 않는다** — 새 소분류 코드가 생기면 **`sewageVolumeCalc.ts`의 허용 목록·정확 비교**를 백엔드 코드표와 함께 맞춘다. **농업인 주택 등 용도명만으로 산정 모드를 바꾸지 않는다**(별도 농업인 분기 없음).
+- ✅ **`gubun2`가 비었거나 아직 줄에 없을 때** **용도명 `buildingUse`**에 **`단독주택`**이 포함되면 단독 식으로 **보조 판별**한다. **동일 헬퍼** 우선순위: **`BUL_…0004`(multi) → `gubun2 === "0101"` → 용도명 `단독주택` → `0102` 접두면 default → 라벨 보조**.
 - ✅ 용도조회에서 armbuild 목록 행을 만들 때, 선택된 분류의 **`gubun1`/`gubun2`를 상세 줄 상태에 전달**해 오수량 산정 분기에 쓴다(`UsageLookupDisplayRow` → `applyUsageFromLookup` 등). UI에서 “산정 모드”를 판별할 때도 **그 헬퍼**를 쓴다.
 - ✅ **원인자부담금 계산·저장 API** `details[].calculations[].buildId`에는 **건축물(ARMBUILD) ID**(예: `BUL_…`)만 넣고, **WAT002 소분류(`gubun2`)는 `buildId` 슬롯에 넣지 않는다.** 프론트에서는 `SewageDetailLine.armbuildBuildId`(API `buildId`)와 `buildingUseSubCode`(산정 분기용 `gubun2`)를 **분리**한다. 상세 조회로 줄을 채울 때 서버가 `buildId`에 BUL만 주는 경우 등은 `useFeePayerBasicDetail`의 매핑·알려진 BUL→WAT002 보조를 따른다.
 - ✅ 용도명은 armbuild **`buildNm`**을 상세 줄 **`usage`**(용도 인풋)에 반영한다. API JSON 키가 `build_nm`·`BUILD_NM` 등으로 올 수 있으므로 목록 매핑 시 **`readArmbuildListItemBuildNm`**(및 ID용 **`readArmbuildListItemBuildId`**, `armbuildApi`)로 정규화한다.
@@ -1843,7 +1890,9 @@ Register form row uses FormField + register-form.css?
 
 ### MUST NOT
 
-- ❌ **공동주택(`0102`)·공동 문구**를 **다중주택**과 동일하게 취급해 **세대수·방수 식(`multi`)** 을 적용하기.
+- ❌ **공동주택(`0102`)·공동 문구** 또는 **「다중주택」 용도명**만으로 **세대수·방수 식(`multi`)** 을 적용하기(`multi`는 **`BUL_0000000000000004`** 한 건만).
+- ❌ **`gubun2` 접두 `0101*`(예: `010101`)를 `0101`과 동일**하게 단독 식(`standalone`)으로 취급하기 — **정확히 `0101`** 인 경우만 코드 기반 단독 식(새 코드는 허용 목록·백엔드와 맞출 것).
+- ❌ **농업인 주택·「농업인」 용도명**만으로 **면적 식 고정** 등 **별도 분기**를 두기(산정은 **ID·`gubun2` 정확 일치** 우선).
 - ❌ **단독/다중** 구분을 **`midCategoryLabel` 문자열 매칭만**으로 결정해, API가 대분류 이름만 내려줄 때 **항상 면적(default) 모드**로 떨어지는 실수를 하기.
 
 ### Reference
@@ -2250,7 +2299,9 @@ selectedFiles.forEach((item) => fd.append('articleFiles', item.file));
 **Save success (`insertArtappm` / `updateArtappm` 등):**
 
 - ✅ **제목:** `mode === "detail"`(수정)이면 **`수정 완료`**, 신규 등록이면 **`등록 완료`**. 상세 모드인데 **`저장 완료`만 고정**하지 않는다 (톤이 지원사업 사업 수정·§6과 어긋남).
-- ✅ **본문:** `response.message` 우선, 없으면 예: `정상적으로 수정되었습니다.` / `정상적으로 등록되었습니다.` (사업명·유형 장문 금지 — §6과 동일 원칙).
+- ✅ **상세(수정) 저장 성공 다이얼로그:** 버튼은 **확인 1개만**(`singleAction`) 사용한다. **`확인/닫기` 2버튼 금지**.
+- ✅ **상세(수정) 저장 성공 문구:** 본문에 `정상적으로 수정되었습니다.` 같은 문구를 넣지 않고, **제목 `수정 완료`만 표시**한다(본문은 빈 값 또는 미노출).
+- ✅ **신규 등록 저장 성공 문구:** 제목 `등록 완료`, 본문은 제품 요구가 있을 때만 최소 문구로 표시한다.
 - ✅ **`response.result === "00"`** 일 때만 성공 다이얼로그.
 - ✅ **성공 다이얼로그 확인 후 내비게이션 (이 제품 기본):**
   - **`mode === "detail"`(신청 건 수정):** 사용자가 확인을 누르면 **편집 화면에 머무르지 않고** 해당 사업의 **신청목록 상세**(예: 공공형 진로진학 경로 `/adminWeb/support/careerConsulting/detail?businessId=…&businessNm=…`)로 **이동**한다. 닫기·취소와 동일 목적지를 쓰는 것이 일관적이다.
@@ -2285,7 +2336,8 @@ selectedFiles.forEach((item) => fd.append('articleFiles', item.file));
 - [ ] **Limit (if applicable):** Remaining count = feature’s max − existing − selected; new selections are capped to remaining.
 - [ ] **Detail/edit per-file delete:** After deleting an existing attachment, the user stays on the same page; success message close does not trigger list navigation unless the product rule is “save success only → list”.
 - [ ] **Support register/update MessageDialog:** Title is short; success body defaults to `정상적으로 등록되었습니다.` / `정상적으로 수정되었습니다.` style without repeating the business type name; `response.result === "00"` before success.
-- [ ] **Application register/detail save dialog:** Detail mode uses `수정 완료` + `정상적으로 수정되었습니다.` (or `response.message`), not only `저장 완료` / `저장되었습니다.`; register mode uses `등록 완료` tone (see §7).
+- [ ] **Application detail save dialog:** Detail mode uses `singleAction`(확인 1개) + 제목 `수정 완료`만 표시(본문 `정상적으로 수정되었습니다.` 미사용).
+- [ ] **Application register save dialog:** Register mode uses 제목 `등록 완료` tone (필요 시에만 본문 최소화).
 - [ ] **Application save success confirm:** After OK on success dialog, navigate to **사업별 신청목록 상세** (same as cancel from that screen), not staying on the edit form unless explicitly documented as an exception.
 - [ ] **Application attachment delete:** Confirm dialog before delete API; **delete success dialog** (`삭제 완료` / `정상적으로 삭제되었습니다.`); no list navigation on delete success.
 - [ ] **Mentor list row delete:** After API or local-only remove, show `삭제 완료` / `정상적으로 삭제되었습니다.` success dialog (see §7 Mentor list).

@@ -1,56 +1,45 @@
 /**
  * 오수량(m³/일 등) 산정 모드.
- * - **다중주택**: 방수·**세대수**·1일오수 식 + UI에서 세대수 입력 (`multi`)
- * - **단독주택**(WAT002 `0101` 또는 용도명): 방수·1일오수 식 (`standalone`)
- * - **공동주택(`0102`) 등 그 외**: 면적·1일오수 식 (`default`) — 공동 ≠ 다중주택 식
+ * - **다세대주택**: 건축물 ID `BUL_0000000000000004`만 — 방수·**세대수**·1일오수 식 (`multi`)
+ * - **방수·1일오수 식(`standalone`)**: WAT002 `gubun2`가 **정확히 `0101`** 일 때만(접두 `0101xx` 아님)
+ * - **그 외**: 면적·1일오수 식(`default`) — 용도명(농업인 등)·라벨은 **보조**만, 별도 농업인 분기 없음
  */
+
+/** 다세대주택 전용 ARMBUILD 건축물 ID(운영 코드표 1건) — `multi` 분기 */
+export const SEWAGE_DASAEDAE_BUILD_ID = "BUL_0000000000000004" as const;
+
 export type SewageCalcMode = "standalone" | "multi" | "default";
 
 function compact(s: string): string {
   return (s || "").replace(/\s+/g, "");
 }
 
-/** 용도명·분류 라벨에 「다중주택」이 포함되는지 — 세대수·방수 식은 이 경우에만 적용 */
-export function lineTextIndicatesMultiFamilyHouse(line: {
-  buildingUse?: string;
-  midCategoryLabel?: string;
-}): boolean {
-  const t = `${compact(line.buildingUse ?? "")}${compact(line.midCategoryLabel ?? "")}`;
-  return t.includes("다중주택");
+function isDasaedaeBuildId(armbuildBuildId?: string): boolean {
+  return String(armbuildBuildId ?? "").trim() === SEWAGE_DASAEDAE_BUILD_ID;
 }
 
-/** 용도명·분류 라벨에 「농업인주택」이 포함되는지 — 면적 식(default) 예외 */
-export function lineTextIndicatesAgriculturalHouse(line: {
-  buildingUse?: string;
-  midCategoryLabel?: string;
-}): boolean {
-  const t = `${compact(line.buildingUse ?? "")}${compact(line.midCategoryLabel ?? "")}`;
-  return t.includes("농업인주택") || t.includes("농업인");
-}
-
-/** WAT002: `0101*`만 단독 식. `0102`(공동주택)는 코드만으로는 multi 아님 */
+/** WAT002: **`0101` 정확 일치**만 단독 식. `0102` 접두는 면적 식 쪽으로 보냄 */
 export function getSewageCalcModeFromBuildingUseSubCode(
   subCode: string,
 ): SewageCalcMode {
   const c = (subCode || "").trim();
   if (!c) return "default";
-  if (c.startsWith("0101")) return "standalone";
+  if (c === "0101") return "standalone";
   return "default";
 }
 
-/** 단일 헬퍼: 다중주택 문구 → multi, 이후 `0101`·용도명 단독·라벨 보조 */
+/** 단일 헬퍼: `BUL_…0004` → multi, **`gubun2 === "0101"`** → standalone, 나머지 문자열 보조 */
 export function getSewageCalcModeForLine(line: {
   buildingUseSubCode?: string;
   buildingUse?: string;
   midCategoryLabel?: string;
+  /** 용도조회·상세 `buildId`(ARMBUILD) — 다세대주택 1건 구분 */
+  armbuildBuildId?: string;
 }): SewageCalcMode {
-  // 농업인 주택은 방수식이 아니라 면적식으로 본다.
-  if (lineTextIndicatesAgriculturalHouse(line)) return "default";
-
-  if (lineTextIndicatesMultiFamilyHouse(line)) return "multi";
+  if (isDasaedaeBuildId(line.armbuildBuildId)) return "multi";
 
   const sub = (line.buildingUseSubCode ?? "").trim();
-  if (sub.startsWith("0101")) return "standalone";
+  if (sub === "0101") return "standalone";
 
   const u = compact(line.buildingUse ?? "");
   if (u.includes("단독주택")) return "standalone";
@@ -81,6 +70,8 @@ export interface SewageQtyLineInput {
   buildingUse: string;
   /** 분류 트리 상위 라벨 등 */
   midCategoryLabel: string;
+  /** ARMBUILD `buildId` — 다세대주택(`BUL_…0004`) 시 multi */
+  armbuildBuildId?: string;
   area: string;
   dailySewage: string;
   roomCount: string;
@@ -95,8 +86,8 @@ export interface SewageQtyLineInput {
 
 /**
  * 행 단위 오수량(표시값) 계산
- * - 다중주택: (2.7+(방수-2)*0.5)*1일오수*세대수/1,000
- * - 단독주택: (2+(방수-2)*0.5)*1일오수/1,000
+ * - 다세대주택(`BUL_…0004`): (2.7+(방수-2)*0.5)*1일오수*세대수/1,000
+ * - 단독·0101 등: (2+(방수-2)*0.5)*1일오수/1,000
  * - 기본: 면적*1일오수/1,000
  * - 위 식 결과 끝에 (1일오수 옆 체크 시 ×0, 미체크 ×1) 적용
  */
@@ -105,6 +96,7 @@ export function computeLineSewageQty(line: SewageQtyLineInput): string {
     buildingUseSubCode: line.buildingUseSubCode,
     buildingUse: line.buildingUse,
     midCategoryLabel: line.midCategoryLabel,
+    armbuildBuildId: line.armbuildBuildId,
   });
   const daily = parseMetric(line.dailySewage);
   if (!Number.isFinite(daily)) return "";

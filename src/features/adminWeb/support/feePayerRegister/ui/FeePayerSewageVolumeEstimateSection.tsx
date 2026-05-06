@@ -9,8 +9,9 @@ import React, {
 import { ConfirmDialog } from "@/shared/ui/adminWeb";
 import { FormField, FormInput, FormSelect } from "@/shared/ui/adminWeb/form";
 import {
-  getSewageTypeOptionsForCategory,
-  SEWAGE_CATEGORY,
+  getSewageCategoryOptions,
+  getSewageTypeOptions,
+  isSewagePermitChangeType,
 } from "@/features/adminWeb/support/lib/sewageCategoryTypeOptions";
 import { getSewageCalcModeForLine } from "@/features/adminWeb/support/lib/sewageVolumeCalc";
 import {
@@ -31,6 +32,7 @@ import {
   feePayStatusSelectClassName,
 } from "@/features/adminWeb/support/lib/feePayStatusUi";
 import { FEE_PAYER_SEWAGE_INPUT_BACKGROUND_RGBA } from "@/features/adminWeb/support/lib/feePayerSewageInputTint";
+import { formatSewageVolumeDisplayTwoDecimals } from "@/features/adminWeb/support/lib/formatSewageVolumeDisplay";
 
 const readOnlyInputClass = "bg-gray-100 !cursor-not-allowed";
 
@@ -88,6 +90,9 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
     lineId: string;
   } | null>(null);
   const [lineDeleteSubmitting, setLineDeleteSubmitting] = useState(false);
+  /** 유형이 허가사항변경일 때만 상단 오수량 직접 편집 — 포커스 중에만 원문 소수 전체 표시 */
+  const [sewageVolumeFocusedEntryId, setSewageVolumeFocusedEntryId] =
+    useState<string | null>(null);
 
   const {
     entries,
@@ -190,14 +195,7 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
     ],
     [],
   );
-  const categoryOptions = useMemo(
-    () => [
-      { value: "INDIVIDUAL", label: "개별건축물" },
-      { value: "OTHER_ACT", label: "타행위" },
-      { value: "PERMIT_CHANGE", label: "허가사항변경" },
-    ],
-    [],
-  );
+  const categoryOptions = useMemo(() => getSewageCategoryOptions(), []);
   const floorOptions = useMemo(
     () =>
       Array.from({ length: 10 }, (_, i) => ({
@@ -239,6 +237,7 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                   buildingUseSubCode: row.gubun2,
                   buildingUse: row.buildingUse,
                   midCategoryLabel: row.midCategoryLabel,
+                  armbuildBuildId: row.armbuildBuildId,
                 }),
               });
             }
@@ -259,10 +258,14 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
 
       <div className="p-0 pb-6">
         {entries.map((entry, entryIndex) => {
-          const isPermitChangeCategory =
-            entry.category === SEWAGE_CATEGORY.PERMIT_CHANGE;
+          const isPermitChangeType = isSewagePermitChangeType(entry.type);
           const entryPaid = entry.status === "PAID";
           const rowReadOnly = readOnly || entryPaid;
+          const canEditSewageVol = isPermitChangeType && !rowReadOnly;
+          const sewageVolumeShown =
+            canEditSewageVol && sewageVolumeFocusedEntryId === entry.id
+              ? entry.sewageVolume
+              : formatSewageVolumeDisplayTwoDecimals(entry.sewageVolume);
           return (
           <div
             key={entry.id}
@@ -338,7 +341,7 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                       name="type"
                       value={entry.type}
                       onChange={handleEntryFieldChange}
-                      options={getSewageTypeOptionsForCategory(entry.category)}
+                      options={getSewageTypeOptions()}
                       emptyText=""
                       data-entry-id={entry.id}
                       disabled={rowReadOnly}
@@ -385,12 +388,8 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                                   value={entry.unitPrice}
                                   onChange={handleEntryFieldChange}
                                   placeholder="예: 12,000"
-                                  readOnly={rowReadOnly || !isPermitChangeCategory}
-                                  className={`pr-8 ${
-                                    rowReadOnly || !isPermitChangeCategory
-                                      ? readOnlyInputClass
-                                      : ""
-                                  }`.trim()}
+                                  readOnly
+                                  className={`pr-8 ${readOnlyInputClass}`.trim()}
                                   data-entry-id={entry.id}
                                 />
                                 <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">
@@ -409,12 +408,24 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                               <FormInput
                                 type="text"
                                 name="sewageVolume"
-                                value={entry.sewageVolume}
+                                value={sewageVolumeShown}
                                 onChange={handleEntryFieldChange}
+                                onFocus={() => {
+                                  if (canEditSewageVol) {
+                                    setSewageVolumeFocusedEntryId(entry.id);
+                                  }
+                                }}
+                                onBlur={() => {
+                                  if (canEditSewageVol) {
+                                    setSewageVolumeFocusedEntryId((cur) =>
+                                      cur === entry.id ? null : cur,
+                                    );
+                                  }
+                                }}
                                 placeholder="예: 9.8"
-                                readOnly={rowReadOnly || !isPermitChangeCategory}
+                                readOnly={rowReadOnly || !isPermitChangeType}
                                 className={`pr-8 text-right placeholder:text-left ${
-                                  rowReadOnly || !isPermitChangeCategory
+                                  rowReadOnly || !isPermitChangeType
                                     ? readOnlyInputClass
                                     : ""
                                 }`.trim()}
@@ -435,7 +446,7 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                               onClick={() => void handleCalculateEntry(entry.id)}
                               disabled={
                                 calcBusyEntryId === entry.id ||
-                                isPermitChangeCategory ||
+                                isPermitChangeType ||
                                 rowReadOnly
                               }
                             >
@@ -545,6 +556,7 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                     buildingUseSubCode: line.buildingUseSubCode,
                     buildingUse: line.usage,
                     midCategoryLabel: line.midCategoryLabel,
+                    armbuildBuildId: line.armbuildBuildId,
                   });
                   const canEditArea =
                     !rowReadOnly && lineCalcMode === "default";
@@ -711,7 +723,9 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                               <FormInput
                                 type="text"
                                 name="sewageQty"
-                                value={line.sewageQty ?? ""}
+                                value={formatSewageVolumeDisplayTwoDecimals(
+                                  line.sewageQty ?? "",
+                                )}
                                 placeholder="오수량"
                                 title="분류 중분류(단독주택·공동주택 등)·면적·방·세대·1일오수에 따라 자동 산출"
                                 readOnly

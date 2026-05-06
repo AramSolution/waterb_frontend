@@ -1,7 +1,7 @@
 import {
+  isSewagePermitChangeType,
   mapCategoryToType1,
   mapSewageTypeValueToType2,
-  SEWAGE_CATEGORY,
 } from "@/features/adminWeb/support/lib/sewageCategoryTypeOptions";
 import type {
   SewageDetailLine,
@@ -41,7 +41,7 @@ export function sumLineWaterVol(lines: SewageDetailLine[]): number {
 }
 
 /**
- * 저장 전: 허가사항변경 제외 통지일 블록에서 상단 `sewageVolume`(waterSum)과
+ * 저장 전: 유형 허가사항변경 제외 통지일 블록에서 상단 `sewageVolume`(waterSum)과
  * 하위 행 `sewageQty` 합계가 일치하는지 검사한다.
  */
 export function validateEntriesSewageVolumeVsLines(
@@ -49,7 +49,7 @@ export function validateEntriesSewageVolumeVsLines(
 ): string | null {
   for (let i = 0; i < entries.length; i++) {
     const entry = entries[i];
-    if (entry.category === SEWAGE_CATEGORY.PERMIT_CHANGE) continue;
+    if (isSewagePermitChangeType(entry.type)) continue;
     const sum = sumLineWaterVol(entry.lines);
     const topParsed = parseNumericInput(entry.sewageVolume);
     const topVal =

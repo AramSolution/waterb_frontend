@@ -279,7 +279,7 @@ export const FeePayerBasicRegisterForm: React.FC<
         type={infoDialogType}
         preferCheckHeader
         confirmText="확인"
-        cancelText="닫기"
+        cancelText="취소"
         singleAction={infoDialogSingleAction}
         onConfirm={handleInfoDialogClose}
         onCancel={handleInfoDialogClose}

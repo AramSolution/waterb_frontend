@@ -13,7 +13,8 @@
 }
 
 .dialog-icon {
-  @apply text-5xl mb-4 flex items-center justify-center;
+  @apply flex items-center justify-center;
+  margin-bottom: 16px;
 }
 
 .dialog-icon svg {
@@ -30,29 +31,55 @@
 }
 
 .dialog-header {
-  @apply mb-4;
+  margin-bottom: 4px;
+}
+
+.dialog-header-no-message {
+  margin-bottom: 24px;
 }
 
 .dialog-title {
-  @apply text-xl font-semibold text-gray-800 m-0;
+  @apply text-gray-800 m-0;
+  font-size: 16px;
+  font-weight: bold;
+  line-height: 1.4;
 }
 
 .dialog-body {
-  @apply mb-6;
+  margin-bottom: 24px;
 }
 
 .dialog-message {
-  @apply text-sm text-gray-500 m-0 leading-relaxed;
-  font-size: 13px;
+  @apply m-0 leading-relaxed;
+  font-size: 12px;
+  font-weight: 500;
+  color: #616161;
+}
+
+.dialog-message + .dialog-sub-message {
+  margin-top: 4px;
 }
 
 .dialog-footer {
-  @apply flex gap-3 justify-center;
+  @apply flex justify-center;
+  gap: 8px;
 }
 
-.dialog-footer button {
-  @apply min-w-[100px] text-sm px-6 py-2;
+.dialog-confirm-button {
+  @apply border rounded transition-colors;
+  min-width: 100px;
+  padding: 8px 24px;
   font-size: 13px;
+  font-weight: 500;
+}
+
+.dialog-cancel-button {
+  @apply border rounded transition-colors border-gray-300 bg-white hover:bg-gray-100;
+  min-width: 100px;
+  padding: 8px 24px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #616161;
 }
 
 @keyframes fadeIn {
@@ -100,14 +127,15 @@
   }
 
   .dialog-title {
-    @apply text-lg;
+    font-size: 16px;
   }
 
   .dialog-footer {
     @apply flex-col;
   }
 
-  .dialog-footer button {
+  .dialog-confirm-button,
+  .dialog-cancel-button {
     @apply w-full;
   }
 

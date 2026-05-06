@@ -291,13 +291,12 @@ export function useFeePayerBasicRegister(
         const isUpdate = Boolean(seedProId?.trim() || body.itemId?.trim());
         setInfoDialogTitle(isUpdate ? "수정 완료" : "등록 완료");
         setInfoDialogMessage(
-          String(res.message ?? "").trim() ||
-            (isUpdate
-              ? "정상적으로 수정되었습니다."
-              : "정상적으로 등록되었습니다."),
+          isUpdate
+            ? ""
+            : String(res.message ?? "").trim() || "정상적으로 등록되었습니다.",
         );
         setInfoDialogType("success");
-        setInfoDialogSingleAction(false);
+        setInfoDialogSingleAction(true);
         setShowInfoDialog(true);
       } catch (err) {
         const msg =

@@ -10,8 +10,10 @@ import {
   getSewageCalcModeForLine,
 } from "@/features/adminWeb/support/lib/sewageVolumeCalc";
 import {
-  getSewageTypeOptionsForCategory,
+  getSewageTypeOptions,
   isOtherActCategory,
+  isSewagePermitChangeType,
+  normalizeSewageCategory,
   SEWAGE_CATEGORY,
 } from "@/features/adminWeb/support/lib/sewageCategoryTypeOptions";
 import {
@@ -135,12 +137,12 @@ interface ApplyLineSumToSewageVolumeOptions {
   resetDerivedChargesOnVolumeChange?: boolean;
 }
 
-/** 허가사항변경 제외: 하위 행 `sewageQty` 합 → 상단 `sewageVolume` 반영 */
+/** 유형 허가사항변경 제외: 하위 행 `sewageQty` 합 → 상단 `sewageVolume` 반영 */
 function applyLineSumToSewageVolume(
   en: SewageEstimateEntry,
   options?: ApplyLineSumToSewageVolumeOptions,
 ): SewageEstimateEntry {
-  if (en.category === SEWAGE_CATEGORY.PERMIT_CHANGE) return en;
+  if (isSewagePermitChangeType(en.type)) return en;
   const resetCharges = options?.resetDerivedChargesOnVolumeChange !== false;
   const sum = sumLineWaterVol(en.lines);
   const hasLineQty = en.lines.some((L) => {
@@ -221,6 +223,7 @@ function withSewageQty(line: SewageDetailLine): SewageDetailLine {
       buildingUseSubCode: line.buildingUseSubCode,
       buildingUse: line.usage,
       midCategoryLabel: line.midCategoryLabel,
+      armbuildBuildId: line.armbuildBuildId,
       area: line.area,
       dailySewage: line.dailySewage,
       roomCount: line.roomCount,
@@ -230,8 +233,24 @@ function withSewageQty(line: SewageDetailLine): SewageDetailLine {
   };
 }
 
-function firstSewageTypeForCategory(category: string): string {
-  const opts = getSewageTypeOptionsForCategory(category);
+function normalizeLineInputsByCalcMode(line: SewageDetailLine): SewageDetailLine {
+  const mode = getSewageCalcModeForLine({
+    buildingUseSubCode: line.buildingUseSubCode,
+    buildingUse: line.usage,
+    midCategoryLabel: line.midCategoryLabel,
+    armbuildBuildId: line.armbuildBuildId,
+  });
+  if (mode === "multi") {
+    return { ...line, area: "" };
+  }
+  if (mode === "standalone") {
+    return { ...line, area: "", householdCount: "" };
+  }
+  return { ...line, roomCount: "", householdCount: "" };
+}
+
+function firstSewageTypeValue(): string {
+  const opts = getSewageTypeOptions();
   return opts[0]?.value ?? "";
 }
 
@@ -239,11 +258,8 @@ function firstSewageTypeForCategory(category: string): string {
 function ensureEntryCategoryTypeCoherent(
   e: SewageEstimateEntry,
 ): SewageEstimateEntry {
-  let category = (e.category || "").trim();
-  if (!category || getSewageTypeOptionsForCategory(category).length === 0) {
-    category = SEWAGE_CATEGORY.INDIVIDUAL;
-  }
-  const opts = getSewageTypeOptionsForCategory(category);
+  const category = normalizeSewageCategory(e.category);
+  const opts = getSewageTypeOptions();
   const first = opts[0]?.value ?? "";
   const typeValid = opts.some((o) => o.value === e.type);
   const type = typeValid ? e.type : first;
@@ -273,7 +289,7 @@ function isEntryPaid(entry: SewageEstimateEntry): boolean {
 
 function createEntry(): SewageEstimateEntry {
   const category = SEWAGE_CATEGORY.INDIVIDUAL;
-  const type = firstSewageTypeForCategory(category);
+  const type = firstSewageTypeValue();
   return {
     id: crypto.randomUUID(),
     status: "UNPAID",
@@ -373,36 +389,39 @@ export function useFeePayerSewageVolumeEstimate(
     unitPriceRequestedRef.current.clear();
   }, [initialEntries]);
 
-  const fetchAndApplyUnitPrice = useCallback((entryId: string, category: string) => {
-    const cat = category.trim();
-    if (!cat || cat === SEWAGE_CATEGORY.PERMIT_CHANGE) return;
-    const requestKey = `${entryId}:${cat}`;
-    if (unitPriceRequestedRef.current.has(requestKey)) return;
-    unitPriceRequestedRef.current.add(requestKey);
-    void (async () => {
-      try {
-        const rows = await CmmCodeService.getBuildingUseCodeUnitPrice(
-          isOtherActCategory(cat),
-        );
-        const n = parseBaseCostFromWat003(rows);
-        if (n == null) return;
-        setEntries((prev) =>
-          prev.map((row) =>
-            row.id === entryId && String(row.unitPrice ?? "").trim() === ""
-              ? { ...row, unitPrice: formatIntKo(n) }
-              : row,
-          ),
-        );
-      } catch {
-        /* 기준단가 조회 실패 시 수동 입력 대기 */
-      }
-    })();
-  }, []);
+  const fetchAndApplyUnitPrice = useCallback(
+    (entryId: string, category: string, typeValue: string) => {
+      const cat = category.trim();
+      if (!cat || isSewagePermitChangeType(typeValue)) return;
+      const requestKey = `${entryId}:${cat}`;
+      if (unitPriceRequestedRef.current.has(requestKey)) return;
+      unitPriceRequestedRef.current.add(requestKey);
+      void (async () => {
+        try {
+          const rows = await CmmCodeService.getBuildingUseCodeUnitPrice(
+            isOtherActCategory(normalizeSewageCategory(cat)),
+          );
+          const n = parseBaseCostFromWat003(rows);
+          if (n == null) return;
+          setEntries((prev) =>
+            prev.map((row) =>
+              row.id === entryId && String(row.unitPrice ?? "").trim() === ""
+                ? { ...row, unitPrice: formatIntKo(n) }
+                : row,
+            ),
+          );
+        } catch {
+          /* 기준단가 조회 실패 시 수동 입력 대기 */
+        }
+      })();
+    },
+    [],
+  );
 
   useEffect(() => {
     for (const row of entries) {
       if (String(row.unitPrice ?? "").trim() !== "") continue;
-      fetchAndApplyUnitPrice(row.id, row.category);
+      fetchAndApplyUnitPrice(row.id, row.category, row.type);
     }
   }, [entries, fetchAndApplyUnitPrice]);
 
@@ -531,12 +550,14 @@ export function useFeePayerSewageVolumeEstimate(
                 ...en,
                 lines: en.lines.map((L) =>
                   L.id === lineId
-                    ? withSewageQty({
-                        ...L,
-                        usage: value,
-                        buildingUseSubCode: "",
-                        armbuildBuildId: undefined,
-                      })
+                    ? withSewageQty(
+                        normalizeLineInputsByCalcMode({
+                          ...L,
+                          usage: value,
+                          buildingUseSubCode: "",
+                          armbuildBuildId: undefined,
+                        }),
+                      )
                     : L,
                 ),
               });
@@ -568,7 +589,12 @@ export function useFeePayerSewageVolumeEstimate(
       if (hostEntry && isEntryPaid(hostEntry) && key !== "status") return;
 
       if (key === "category") {
-        const nextType = firstSewageTypeForCategory(value);
+        const nextCategory = normalizeSewageCategory(value);
+        const opts = getSewageTypeOptions();
+        const first = opts[0]?.value ?? "";
+        const curType = String(hostEntry?.type ?? "").trim();
+        const typeValid = opts.some((o) => o.value === curType);
+        const nextType = typeValid ? curType : first;
         const reqPrefix = `${entryId}:`;
         Array.from(unitPriceRequestedRef.current).forEach((rk) => {
           if (rk.startsWith(reqPrefix)) {
@@ -580,7 +606,7 @@ export function useFeePayerSewageVolumeEstimate(
             row.id === entryId
               ? applyLineSumToSewageVolume({
                   ...row,
-                  category: value,
+                  category: nextCategory,
                   type: nextType,
                   unitPrice: "",
                 })
@@ -619,6 +645,29 @@ export function useFeePayerSewageVolumeEstimate(
         return;
       }
 
+      if (key === "type") {
+        const prevType = String(hostEntry?.type ?? "").trim();
+        const wasPermit = isSewagePermitChangeType(prevType);
+        const nextType = String(nextValue ?? "").trim();
+        const nowPermit = isSewagePermitChangeType(nextType);
+        setEntries((prev) =>
+          prev.map((row) => {
+            if (row.id !== entryId) return row;
+            if (wasPermit && !nowPermit) {
+              return {
+                ...row,
+                type: nextType,
+                sewageVolume: "0",
+                sewageLevyAmount: "0",
+                causerCharge: "0",
+              };
+            }
+            return { ...row, type: nextType };
+          }),
+        );
+        return;
+      }
+
       if (key === "sewageVolume") {
         setEntries((prev) =>
           prev.map((row) => {
@@ -649,7 +698,7 @@ export function useFeePayerSewageVolumeEstimate(
       if (targetEntry && isEntryPaid(targetEntry)) {
         return;
       }
-      if (targetEntry?.category === SEWAGE_CATEGORY.PERMIT_CHANGE) {
+      if (targetEntry && isSewagePermitChangeType(targetEntry.type)) {
         return;
       }
 
@@ -798,6 +847,7 @@ export function useFeePayerSewageVolumeEstimate(
             buildingUseSubCode: g2,
             buildingUse: picked.buildingUse,
             midCategoryLabel: midTrim,
+            armbuildBuildId: bul || undefined,
           }),
           buildingUse: picked.buildingUse,
           dailySewage: picked.dailySewage,
@@ -823,7 +873,7 @@ export function useFeePayerSewageVolumeEstimate(
                   ? { dailySewage: picked.dailySewage.trim() }
                   : {}),
               };
-              return withSewageQty(next);
+              return withSewageQty(normalizeLineInputsByCalcMode(next));
             }),
           });
         }),

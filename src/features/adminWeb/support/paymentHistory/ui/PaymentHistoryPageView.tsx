@@ -29,6 +29,7 @@ export const PaymentHistoryPageView: React.FC = () => {
     preSaveValidateRef,
     loading,
     showSaveDialog,
+    saveDialogTitle,
     saveDialogVariant,
     saveDialogMessage,
     reloadPaymentDetail,
@@ -200,8 +201,12 @@ export const PaymentHistoryPageView: React.FC = () => {
 
       <ConfirmDialog
         isOpen={showSaveDialog}
-        title="알림"
-        message={saveDialogMessage || "처리 결과를 확인해주세요."}
+        title={saveDialogTitle}
+        message={
+          saveDialogTitle === "수정 완료"
+            ? ""
+            : saveDialogMessage || "처리 결과를 확인해주세요."
+        }
         type={saveDialogVariant}
         preferCheckHeader
         confirmText="확인"

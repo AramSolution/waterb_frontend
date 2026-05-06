@@ -4,7 +4,6 @@ import {
   getFeePayerPaymentDetail,
   postFeePayerPaymentSave,
   type SupportFeePayerPaymentSaveRequest,
-  type SupportFeePayerPaymentSaveResponse,
   type SupportFeePayerPaymentDetailDto,
   type SupportFeePayerPaymentHistoryDto,
 } from "@/entities/adminWeb/support/api/feePayerManageApi";
@@ -50,6 +49,7 @@ export function usePaymentHistory() {
   const [detailEntries, setDetailEntries] = useState<CauserPaymentEntry[]>([]);
   const [loading, setLoading] = useState(false);
   const [showSaveDialog, setShowSaveDialog] = useState(false);
+  const [saveDialogTitle, setSaveDialogTitle] = useState("알림");
   const [saveDialogMessage, setSaveDialogMessage] = useState("");
   const persistRequestBuilderRef = useRef<
     (() => SupportFeePayerPaymentSaveRequest | null) | null
@@ -57,7 +57,7 @@ export function usePaymentHistory() {
   const preSaveValidateRef: MutableRefObject<(() => string | null) | null> =
     useRef(null);
   const [saveDialogVariant, setSaveDialogVariant] = useState<
-    "primary" | "danger"
+    "primary" | "danger" | "success"
   >("primary");
 
   const loadPaymentDetail = useCallback(async () => {
@@ -126,6 +126,7 @@ export function usePaymentHistory() {
     if (!found) return;
     const validationMessage = preSaveValidateRef.current?.() ?? null;
     if (validationMessage) {
+      setSaveDialogTitle("오류");
       setSaveDialogVariant("danger");
       setSaveDialogMessage(validationMessage);
       setShowSaveDialog(true);
@@ -133,6 +134,7 @@ export function usePaymentHistory() {
     }
     const body = persistRequestBuilderRef.current?.();
     if (!body) {
+      setSaveDialogTitle("알림");
       setSaveDialogVariant("primary");
       setSaveDialogMessage("등록/삭제할 납부내역 변경사항이 없습니다.");
       setShowSaveDialog(true);
@@ -141,11 +143,13 @@ export function usePaymentHistory() {
     setLoading(true);
     try {
       const res = await postFeePayerPaymentSave(body);
-      setSaveDialogVariant("primary");
-      setSaveDialogMessage(buildPaymentSaveMessage(res));
+      setSaveDialogTitle("수정 완료");
+      setSaveDialogVariant("success");
+      setSaveDialogMessage("");
       await loadPaymentDetail();
       setShowSaveDialog(true);
     } catch (e) {
+      setSaveDialogTitle("오류");
       setSaveDialogVariant("danger");
       setSaveDialogMessage(
         e instanceof ApiError
@@ -160,6 +164,7 @@ export function usePaymentHistory() {
 
   const handleSaveDialogClose = useCallback(() => {
     setShowSaveDialog(false);
+    setSaveDialogTitle("알림");
     setSaveDialogVariant("primary");
   }, []);
 
@@ -180,6 +185,7 @@ export function usePaymentHistory() {
     preSaveValidateRef,
     loading,
     showSaveDialog,
+    saveDialogTitle,
     saveDialogVariant,
     saveDialogMessage,
     reloadPaymentDetail: loadPaymentDetail,
@@ -237,7 +243,7 @@ function mapPaymentDetailToEntry(
   const type2 = String(d.type2 ?? "").trim();
   const category = mapType1ToCategory(type1) || SEWAGE_CATEGORY.INDIVIDUAL;
   const type =
-    mapType2ToSewageTypeValue(type1, type2) || SEWAGE_TYPE_VALUE.INDIVIDUAL_NEW;
+    mapType2ToSewageTypeValue(type1, type2) || SEWAGE_TYPE_VALUE.T01_NEW;
   const payStaRaw = String(d.paySta ?? "").trim();
   const status =
     payStaRaw === "02" ||
@@ -281,12 +287,6 @@ function mapPaymentDetailToEntry(
       Number.isFinite(waterPay) && waterPay !== 0 ? formatIntKo(waterPay) : "",
     lines,
   };
-}
-
-function buildPaymentSaveMessage(
-  res: SupportFeePayerPaymentSaveResponse,
-): string {
-  return String(res.message ?? "").trim() || "납부내역이 저장되었습니다.";
 }
 
 function getTodayYmd(): string {

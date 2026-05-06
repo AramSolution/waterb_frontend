@@ -172,7 +172,7 @@ export function useCauserPaymentHistorySection(
         prev.map((en) => {
           if (en.id !== entryId) return en;
           if (key === "category") {
-            return { ...en, category: value, type: "" };
+            return { ...en, category: value };
           }
           return { ...en, [key]: value };
         }),
@@ -475,9 +475,8 @@ export function useCauserPaymentHistorySection(
     entries,
     categoryStatusOptions: {
       category: [
-        { value: "INDIVIDUAL", label: "개별건축물" },
+        { value: "INDIVIDUAL", label: "개발건축물" },
         { value: "OTHER_ACT", label: "타행위" },
-        { value: "PERMIT_CHANGE", label: "허가사항변경" },
       ],
       status: [
         { value: "UNPAID", label: "미납" },

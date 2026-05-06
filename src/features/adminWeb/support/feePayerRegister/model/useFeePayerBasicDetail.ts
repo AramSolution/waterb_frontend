@@ -93,7 +93,7 @@ export function buildSewageEstimateEntriesFromFeeRow(
       id: `entry-${bid}`,
       status: isFeePayerListRowPaid(row) ? "PAID" : "UNPAID",
       category: SEWAGE_CATEGORY.INDIVIDUAL,
-      type: SEWAGE_TYPE_VALUE.INDIVIDUAL_NEW,
+      type: SEWAGE_TYPE_VALUE.T01_NEW,
       notifyDate: notifyDate || "2026-01-01",
       unitPrice: "12,000",
       sewageVolume: "10",
@@ -152,6 +152,8 @@ function numOrZero(v: unknown): number {
 const KNOWN_ARMBUILD_BUILD_ID_TO_WAT002: Readonly<Record<string, string>> = {
   BUL_0000000000000001: "0101",
   BUL_0000000000000003: "0102",
+  /** 다세대주택(오수량 산정 multi 전용 건축물 1건) */
+  BUL_0000000000000004: "0102",
 };
 
 function splitDetailCalculationBuildId(raw: unknown): {
@@ -274,7 +276,7 @@ export function mapFeePayerDetailDtoToInitialForm(
     const type2 = String(block.type2 ?? "").trim();
     const category = mapType1ToCategory(type1) || SEWAGE_CATEGORY.INDIVIDUAL;
     const type =
-      mapType2ToSewageTypeValue(type1, type2) || SEWAGE_TYPE_VALUE.INDIVIDUAL_NEW;
+      mapType2ToSewageTypeValue(type1, type2) || SEWAGE_TYPE_VALUE.T01_NEW;
 
     const baseCostN = numOrZero(block.baseCost);
     const unitPrice =
