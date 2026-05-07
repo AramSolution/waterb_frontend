@@ -317,7 +317,7 @@ export function useArticleList() {
       if (response.result === '00') {
         // 삭제 성공
         setMessageDialogTitle('삭제 완료');
-        setMessageDialogMessage('게시글이 정상적으로 삭제되었습니다.');
+        setMessageDialogMessage('삭제 되었습니다.');
         setMessageDialogType('success');
         setShowMessageDialog(true);
         setShowDeleteDialog(false);

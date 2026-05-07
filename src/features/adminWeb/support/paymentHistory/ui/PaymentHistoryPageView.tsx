@@ -7,8 +7,6 @@ import { usePaymentHistory } from "../model/usePaymentHistory";
 import { CauserPaymentHistorySection } from "./CauserPaymentHistorySection";
 import "@/shared/styles/admin/register-form.css";
 
-const readOnlyClass = "bg-gray-100 !cursor-not-allowed";
-
 /**
  * 납부내역 — 기본정보(성명·주소)는 **등록 화면과 동일 격자**, 읽기 전용(회색).
  * 데이터는 목록 `proId`(`businessId`) 기준(백엔드·상세 API 연동 시 대체).
@@ -76,7 +74,6 @@ export const PaymentHistoryPageView: React.FC = () => {
                     value={applicantNm}
                     onChange={noopChange}
                     readOnly
-                    className={readOnlyClass}
                     placeholder="성명"
                     autoComplete="off"
                   />
@@ -88,7 +85,6 @@ export const PaymentHistoryPageView: React.FC = () => {
                     value={telNo}
                     onChange={noopChange}
                     readOnly
-                    className={readOnlyClass}
                     placeholder="전화번호"
                     autoComplete="off"
                   />
@@ -105,7 +101,6 @@ export const PaymentHistoryPageView: React.FC = () => {
                         onChange={noopChange}
                         readOnly
                         placeholder="우편번호"
-                        className={readOnlyClass}
                         autoComplete="off"
                       />
                     </div>
@@ -118,7 +113,6 @@ export const PaymentHistoryPageView: React.FC = () => {
                           onChange={noopChange}
                           readOnly
                           placeholder="주소"
-                          className={readOnlyClass}
                           autoComplete="off"
                         />
                       </div>
@@ -153,7 +147,6 @@ export const PaymentHistoryPageView: React.FC = () => {
                         onChange={noopChange}
                         readOnly
                         placeholder="상세주소"
-                        className={readOnlyClass}
                         maxLength={200}
                         autoComplete="off"
                       />
@@ -202,11 +195,7 @@ export const PaymentHistoryPageView: React.FC = () => {
       <ConfirmDialog
         isOpen={showSaveDialog}
         title={saveDialogTitle}
-        message={
-          saveDialogTitle === "수정 완료"
-            ? ""
-            : saveDialogMessage || "처리 결과를 확인해주세요."
-        }
+        message={saveDialogMessage || "처리 결과를 확인해주세요."}
         type={saveDialogVariant}
         preferCheckHeader
         confirmText="확인"

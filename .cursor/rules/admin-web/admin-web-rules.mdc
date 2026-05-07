@@ -1856,7 +1856,7 @@ Register form row uses FormField + register-form.css?
 - ✅ **행 그룹 구분선:** **1행**(기준단가·오수량·계산)과 **2행**(원인자부담금·오수부과량) 사이에는 **`feePayerPriceGridRow2`** 로 **아주 옅은 배경**(`bg-gray-50/50` 등)을 두고, **가로 구분(예 `#d1d5db`)은 데이터 열(두 `feePayerPricePair`)에만** 둔다 — **`shadow-[inset_0_1px_0_0_#d1d5db]`** 등으로 상단만 그려도 된다(모바일은 첫 쌍만, md는 둘째 쌍에 `md:shadow-[inset_0_1px_0_0_#d1d5db]`). **`feePayerPriceGridRow2` 루트에 전체 폭 `border-t`를 두지 않는다** — **계산 버튼 열·맞춤 스페이서 아래로 가로선이 이어지지 않게** 한다.
 - ✅ **원인자부담 기본 등록 폼 (`FeePayerBasicRegisterForm`):** **`저장` / `닫기`** 버튼은 **`FeePayerSewageVolumeEstimateSection`(오수량 발생량 산정) 블록 바로 아래**에 둔다(기본정보 카드만 위에 두고, 그 다음 오수량 섹션 → 액션 버튼). 오수량 섹션을 **`basicInfoSaved` 등으로 `pointer-events-none` 비활성화하지 않는다** — 하위 블록은 항상 조작 가능(요구 시에만 로딩 `disabled` 등).
 - ✅ **상세 행 「오수량」(체크박스 옆):** 값은 **산식·API `waterVol` 등으로 채워 표시**하고, **`readOnly`** 로 직접 수정 불가. 배경은 **오수량 입력과 동일** `rgba(255, 224, 147, 0.1)`(`feePayerSewageInputTint.ts`). `initialEntries` 정규화 시 클라 산식이 빈 문자열이면 **서버에서 내려온 줄 `sewageQty`(`waterVol`)를 지우지 않는다**(`useFeePayerSewageVolumeEstimate`의 `normalizeDetailLine`).
-- ✅ **납부내역 납부 행 삭제 (`CauserPaymentHistorySection`, `PaymentHistoryPageView`):** 행 **`삭제`** 클릭 → `ConfirmDialog` **「선택한 납부 행을 삭제하시겠습니까?」**(`확인`, `취소`, `useDeleteHeader`). 서버에 존재하는 납부 행(`paymentSeq2`·통지일 블록 `detailSeq`/`seq` 매칭)이면 **`postFeePayerPaymentSave`** 로 해당 행만 `payments[].rowStatus: "D"` **즉시 삭제** 후 `onReloadDetail`로 **`getFeePayerPaymentDetail` 재조회**. 아직 저장 전인 신규 행만 있으면 **API 없이** 로컬에서 제거. 성공 시 **삭제 완료** `singleAction`·`정상적으로 삭제되었습니다.`, 실패 시 **삭제 실패** `singleAction`.
+- ✅ **납부내역 납부 행 삭제 (`CauserPaymentHistorySection`, `PaymentHistoryPageView`):** 행 **`삭제`** 클릭 → `ConfirmDialog` **「선택한 납부 행을 삭제하시겠습니까?」**(`확인`, `취소`, `useDeleteHeader`). 서버에 존재하는 납부 행(`paymentSeq2`·통지일 블록 `detailSeq`/`seq` 매칭)이면 **`postFeePayerPaymentSave`** 로 해당 행만 `payments[].rowStatus: "D"` **즉시 삭제** 후 `onReloadDetail`로 **`getFeePayerPaymentDetail` 재조회**. 아직 저장 전인 신규 행만 있으면 **API 없이** 로컬에서 제거. 성공 시 **삭제 완료** `singleAction`·`삭제 되었습니다.`, 실패 시 **삭제 실패** `singleAction`.
 
 **Single source of truth:** `src/features/adminWeb/support/lib/sewageCategoryTypeOptions.ts` — **고정 `구분` 옵션**, **고정 `유형` 옵션**, `TYPE_1`/`TYPE_2` 매핑·`유형 === 허가사항변경` 판별 헬퍼(두 화면·훅에서 동일 사용).
 
@@ -2271,7 +2271,7 @@ selectedFiles.forEach((item) => fd.append('articleFiles', item.file));
 **MUST:**
 
 - ✅ **제목:** 동작에 맞게 짧게 — `등록 완료`, `수정 완료`, `삭제 완료`, `등록 실패`, `수정 실패` 등. 사업 유형 전체 이름을 제목에 넣지 않는다.
-- ✅ **본문(성공) 기본값:** 서비스·사업명을 반복하지 않는다. 예: `정상적으로 등록되었습니다.`, `정상적으로 수정되었습니다.`  
+- ✅ **본문(성공) 기본값(공통 시안):** `insert` → `등록 되었습니다.`, `update` → `수정 되었습니다.`, 삭제 성공 제목 `삭제 완료` 시 본문 → `삭제 되었습니다.`  
   백엔드가 `response.message`를 주면 **그 값을 우선** 표시하고, 없을 때만 위 기본 문구를 쓴다.
 - ✅ **저장 API 응답 처리:** `updateSupport` / `registerSupport` 등은 **`response.result === "00"`일 때만** 성공 다이얼로그를 띄운다. 그 외 코드는 실패 다이얼로그로 처리한다.
 - ✅ **본문(실패) 기본값:** 사업명 장문 없이 짧게 — 예: `등록 중 오류가 발생했습니다.`, `수정 중 오류가 발생했습니다.`  
@@ -2299,9 +2299,8 @@ selectedFiles.forEach((item) => fd.append('articleFiles', item.file));
 **Save success (`insertArtappm` / `updateArtappm` 등):**
 
 - ✅ **제목:** `mode === "detail"`(수정)이면 **`수정 완료`**, 신규 등록이면 **`등록 완료`**. 상세 모드인데 **`저장 완료`만 고정**하지 않는다 (톤이 지원사업 사업 수정·§6과 어긋남).
-- ✅ **상세(수정) 저장 성공 다이얼로그:** 버튼은 **확인 1개만**(`singleAction`) 사용한다. **`확인/닫기` 2버튼 금지**.
-- ✅ **상세(수정) 저장 성공 문구:** 본문에 `정상적으로 수정되었습니다.` 같은 문구를 넣지 않고, **제목 `수정 완료`만 표시**한다(본문은 빈 값 또는 미노출).
-- ✅ **신규 등록 저장 성공 문구:** 제목 `등록 완료`, 본문은 제품 요구가 있을 때만 최소 문구로 표시한다.
+- ✅ **저장 성공 다이얼로그:** 버튼은 **확인 1개만**(`singleAction`) 사용한다. **`확인/닫기` 2버튼 금지**.
+- ✅ **저장 성공 문구:** 제목은 수정이면 **`수정 완료`**, 신규면 **`등록 완료`**. 본문은 **`수정 되었습니다.`** / **`등록 되었습니다.`** (위 공통 시안과 동일). API가 `response.message`를 주면 그 값을 우선한다.
 - ✅ **`response.result === "00"`** 일 때만 성공 다이얼로그.
 - ✅ **성공 다이얼로그 확인 후 내비게이션 (이 제품 기본):**
   - **`mode === "detail"`(신청 건 수정):** 사용자가 확인을 누르면 **편집 화면에 머무르지 않고** 해당 사업의 **신청목록 상세**(예: 공공형 진로진학 경로 `/adminWeb/support/careerConsulting/detail?businessId=…&businessNm=…`)로 **이동**한다. 닫기·취소와 동일 목적지를 쓰는 것이 일관적이다.
@@ -2312,14 +2311,14 @@ selectedFiles.forEach((item) => fd.append('articleFiles', item.file));
 
 - ✅ **`deleteArtappmFile` 호출 전** 사용자에게 **확인 다이얼로그**를 띄운다 (예: 제목 `첨부파일 삭제`, 본문 `선택한 첨부파일을 삭제하시겠습니까?`, 확인 시에만 API). 삭제 아이콘 클릭 → **즉시 API 호출 금지**.
 - ✅ **§5와 동일:** 성공 후 **목록으로 이동하지 않는다**; 같은 상세 페이지에서 기존 파일 목록만 갱신.
-- ✅ **삭제 API 성공 후** 사용자에게 **성공 안내 다이얼로그**를 띄운다 — 제목 `삭제 완료`, 본문 `정상적으로 삭제되었습니다.` (§6·멘토목록·공공형 진로진학 신청과 동일 톤). 확인 시에만 닫고 **라우터 이동 없음**.
+- ✅ **삭제 API 성공 후** 사용자에게 **성공 안내 다이얼로그**를 띄운다 — 제목 `삭제 완료`, 본문 `삭제 되었습니다.` 확인 시에만 닫고 **라우터 이동 없음**.
 - ❌ 첨부 삭제 성공만으로 **신청 목록·상세 이탈** 네비게이션을 걸지 않는다.
 - ✅ **같은 컴포넌트에서** 저장 성공과 첨부 삭제 성공이 **동일한** `MessageDialog` 닫기 핸들러를 쓰는 경우, `messageDialogNavigateToListRef` 등으로 **저장 성공일 때만** `router.push`(신청목록)를 실행한다. 삭제 성공 닫기는 이동 없음 (예: `DreamExplorationApplicationRegisterForm.tsx`).
 - ✅ **서로 다른** `ConfirmDialog`로 저장 완료·삭제 완료를 띄우는 경우에도, 저장 완료 닫기에서만 `router.push` 하도록 **`useRef`**(예: `saveSuccessNavigateToDetailRef`)를 쓰고, 첨부 삭제 API 성공 직후 **`setShowSaveSuccessDialog(false)`** 및 `ref = false`로 저장 다이얼로그·이동 의도를 정리한다 (예: `useGlobalCultureTourApplicationRegister.ts`).
 
 **Mentor list row delete (e.g. 공공형 진로진학 멘토목록):**
 
-- ✅ **서버 삭제 API 성공**(`result === "00"`) 또는 **아직 저장되지 않은 행만 로컬에서 제거**한 뒤, **`삭제 완료` / `정상적으로 삭제되었습니다.`** 확인 다이얼로그를 띄운다. 삭제 확인(위험) 다이얼로그만 닫고 끝내지 않는다.
+- ✅ **서버 삭제 API 성공**(`result === "00"`) 또는 **아직 저장되지 않은 행만 로컬에서 제거**한 뒤, **`삭제 완료` / `삭제 되었습니다.`** 확인 다이얼로그를 띄운다. 삭제 확인(위험) 다이얼로그만 닫고 끝내지 않는다.
 - ✅ 목록 화면은 그대로이므로 **삭제 성공 후 별도 라우터 이동은 하지 않는다** (신청 첨부 삭제와 동일하게 현재 화면 유지).
 
 **Reference:** `src/features/adminWeb/support/study/application/register/model/useStudyApplicationRegister.ts`, `src/features/adminWeb/support/careerConsulting/application/register/model/useCareerConsultingApplicationRegister.ts`, `src/features/adminWeb/support/regionalCareerActivity/application/register/model/useRegionalCareerActivityApplicationRegister.ts`, `src/features/adminWeb/support/globalCultureTour/application/register/model/useGlobalCultureTourApplicationRegister.ts`, `src/features/adminWeb/support/dreamExploration/application/register/ui/DreamExplorationApplicationRegisterForm.tsx`, `src/features/adminWeb/support/careerConsulting/mentors/model/useCareerConsultingMentorList.ts`
@@ -2335,12 +2334,11 @@ selectedFiles.forEach((item) => fd.append('articleFiles', item.file));
 - [ ] **After update:** On success, refetch then clear the pending/selected list so the UI does not show duplicates.
 - [ ] **Limit (if applicable):** Remaining count = feature’s max − existing − selected; new selections are capped to remaining.
 - [ ] **Detail/edit per-file delete:** After deleting an existing attachment, the user stays on the same page; success message close does not trigger list navigation unless the product rule is “save success only → list”.
-- [ ] **Support register/update MessageDialog:** Title is short; success body defaults to `정상적으로 등록되었습니다.` / `정상적으로 수정되었습니다.` style without repeating the business type name; `response.result === "00"` before success.
-- [ ] **Application detail save dialog:** Detail mode uses `singleAction`(확인 1개) + 제목 `수정 완료`만 표시(본문 `정상적으로 수정되었습니다.` 미사용).
-- [ ] **Application register save dialog:** Register mode uses 제목 `등록 완료` tone (필요 시에만 본문 최소화).
+- [ ] **Support register/update MessageDialog:** Success title `등록 완료`/`수정 완료`; body `등록 되었습니다.`/`수정 되었습니다.` (or `response.message`); `response.result === "00"` before success.
+- [ ] **Application save dialog:** `singleAction`(확인 1개); 제목 `수정 완료`/`등록 완료` + 본문 `수정 되었습니다.`/`등록 되었습니다.` (or `response.message`).
 - [ ] **Application save success confirm:** After OK on success dialog, navigate to **사업별 신청목록 상세** (same as cancel from that screen), not staying on the edit form unless explicitly documented as an exception.
-- [ ] **Application attachment delete:** Confirm dialog before delete API; **delete success dialog** (`삭제 완료` / `정상적으로 삭제되었습니다.`); no list navigation on delete success.
-- [ ] **Mentor list row delete:** After API or local-only remove, show `삭제 완료` / `정상적으로 삭제되었습니다.` success dialog (see §7 Mentor list).
+- [ ] **Application attachment delete:** Confirm dialog before delete API; **delete success dialog** (`삭제 완료` / `삭제 되었습니다.`); no list navigation on delete success.
+- [ ] **Mentor list row delete:** After API or local-only remove, show `삭제 완료` / `삭제 되었습니다.` success dialog (see §7 Mentor list).
 
 ---
 

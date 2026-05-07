@@ -247,7 +247,7 @@ export function useBoardRegister() {
       if (response.result === "00") {
         setMessageDialogTitle("등록 완료");
         setMessageDialogMessage(
-          response.message || "정상적으로 등록되었습니다.",
+          String(response.message ?? "").trim() || "등록 되었습니다.",
         );
         setMessageDialogType("success");
         setShowMessageDialog(true);

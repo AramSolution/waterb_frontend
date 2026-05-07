@@ -40,7 +40,7 @@ export const FormTextarea: React.FC<FormTextareaProps> = ({
         name={name}
         className={`w-full border rounded-none px-3 py-2 ${
           hasError ? "border-red-500" : ""
-        } ${readOnly ? "bg-gray-50" : ""}`}
+        } ${readOnly ? "bg-gray-100 !cursor-not-allowed" : ""}`}
         placeholder={placeholder}
         style={{
           border: hasError ? "1px solid #dc3545" : "1px solid #e0e0e0",

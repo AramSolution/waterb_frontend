@@ -226,7 +226,7 @@ export function useProgramDetail(progrmFileNm: string) {
       if (response.resultCode === '00') {
         setMessageDialogTitle('수정 완료');
         setMessageDialogMessage(
-          response.resultMessage || '정상적으로 수정되었습니다.',
+          String(response.resultMessage ?? '').trim() || '수정 되었습니다.',
         );
         setMessageDialogType('success');
         setShowMessageDialog(true);

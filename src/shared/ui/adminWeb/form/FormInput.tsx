@@ -35,7 +35,7 @@ export const FormInput: React.FC<FormInputProps> = ({
         name={name}
         className={`w-full border rounded-none px-3 py-2 ${
           hasError ? "border-red-500" : ""
-        } ${readOnly ? "bg-gray-50" : ""} ${
+        } ${readOnly ? "bg-gray-100 !cursor-not-allowed" : ""} ${
           isNumberType ? "appearance-none" : ""
         } ${className}`}
         placeholder={placeholder}

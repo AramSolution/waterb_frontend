@@ -791,7 +791,7 @@ export const SupportListPageView: React.FC = () => {
       <ConfirmDialog
         isOpen={showDeleteSuccessDialog}
         title="삭제 완료"
-        message={deleteSuccessMessage || "정상적으로 삭제되었습니다."}
+        message={deleteSuccessMessage || "삭제 되었습니다."}
         confirmText="확인"
         type="success"
         singleAction

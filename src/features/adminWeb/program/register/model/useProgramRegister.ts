@@ -139,7 +139,7 @@ export function useProgramRegister() {
       if (response.resultCode === '00') {
         setMessageDialogTitle('등록 완료');
         setMessageDialogMessage(
-          response.resultMessage || '정상적으로 등록되었습니다.',
+          String(response.resultMessage ?? '').trim() || '등록 되었습니다.',
         );
         setMessageDialogType('success');
         setShowMessageDialog(true);

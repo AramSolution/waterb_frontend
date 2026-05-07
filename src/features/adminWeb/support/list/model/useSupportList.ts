@@ -385,7 +385,7 @@ export function useSupportList() {
       if (response.result === "00") {
         await fetchSupportsRef.current();
         setShowDeleteDialog(false);
-        setDeleteSuccessMessage("정상적으로 삭제되었습니다.");
+        setDeleteSuccessMessage("삭제 되었습니다.");
         setShowDeleteSuccessDialog(true);
         setSelectedDeleteTarget(null);
       } else {

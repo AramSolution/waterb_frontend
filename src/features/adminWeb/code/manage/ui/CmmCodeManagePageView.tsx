@@ -751,7 +751,7 @@ export const CmmCodeManagePageView: React.FC = () => {
         // 성공
         setMessageDialogTitle('등록 완료');
         setMessageDialogMessage(
-          response.message || '정상적으로 등록되었습니다.',
+          String(response.message ?? '').trim() || '등록 되었습니다.',
         );
         setMessageDialogType('success');
         setShowMessageDialog(true);
@@ -1006,7 +1006,7 @@ export const CmmCodeManagePageView: React.FC = () => {
         // 성공
         setMessageDialogTitle('수정 완료');
         setMessageDialogMessage(
-          response.message || '정상적으로 수정되었습니다.',
+          String(response.message ?? '').trim() || '수정 되었습니다.',
         );
         setMessageDialogType('success');
         setShowMessageDialog(true);
@@ -1574,7 +1574,7 @@ export const CmmCodeManagePageView: React.FC = () => {
         // 성공
         setMessageDialogTitle('수정 완료');
         setMessageDialogMessage(
-          response.message || '정상적으로 수정되었습니다.',
+          String(response.message ?? '').trim() || '수정 되었습니다.',
         );
         setMessageDialogType('success');
         setShowMessageDialog(true);
@@ -1704,7 +1704,7 @@ export const CmmCodeManagePageView: React.FC = () => {
         // 성공
         setMessageDialogTitle('등록 완료');
         setMessageDialogMessage(
-          response.message || '정상적으로 등록되었습니다.',
+          String(response.message ?? '').trim() || '등록 되었습니다.',
         );
         setMessageDialogType('success');
         setShowMessageDialog(true);
@@ -1819,7 +1819,7 @@ export const CmmCodeManagePageView: React.FC = () => {
         // 성공
         setMessageDialogTitle('삭제 완료');
         setMessageDialogMessage(
-          response.message || '정상적으로 삭제되었습니다.',
+          String(response.message ?? '').trim() || '삭제 되었습니다.',
         );
         setMessageDialogType('success');
         setShowMessageDialog(true);
@@ -1928,7 +1928,7 @@ export const CmmCodeManagePageView: React.FC = () => {
         // 성공
         setMessageDialogTitle('삭제 완료');
         setMessageDialogMessage(
-          response.message || '정상적으로 삭제되었습니다.',
+          String(response.message ?? '').trim() || '삭제 되었습니다.',
         );
         setMessageDialogType('success');
         setShowMessageDialog(true);

@@ -449,7 +449,7 @@ export function useSupportRegister() {
       if (response.result === '00') {
         setMessageDialogTitle('등록 완료');
         setMessageDialogMessage(
-          response.message || '지원사업이 성공적으로 등록되었습니다.',
+          String(response.message ?? '').trim() || '등록 되었습니다.',
         );
         setMessageDialogType('success');
         setShowMessageDialog(true);

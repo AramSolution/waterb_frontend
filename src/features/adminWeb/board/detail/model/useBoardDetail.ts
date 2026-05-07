@@ -332,7 +332,7 @@ export function useBoardDetail(bbsid: string) {
       if (response.result === "00") {
         setMessageDialogTitle("수정 완료");
         setMessageDialogMessage(
-          response.message || "정상적으로 수정되었습니다.",
+          String(response.message ?? "").trim() || "수정 되었습니다.",
         );
         setMessageDialogType("success");
         setShowMessageDialog(true);

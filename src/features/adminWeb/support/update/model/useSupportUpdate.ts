@@ -727,7 +727,7 @@ export function useSupportUpdate() {
       if (response.result === "00") {
         setMessageDialogTitle("수정 완료");
         setMessageDialogMessage(
-          response.message || "지원사업이 성공적으로 수정되었습니다.",
+          String(response.message ?? "").trim() || "수정 되었습니다.",
         );
         setMessageDialogNavigateToList(true);
         setMessageDialogType("success");

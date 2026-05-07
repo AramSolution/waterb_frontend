@@ -386,7 +386,7 @@ export function usePurposeManage() {
       });
       setShowDeleteConfirmDialog(false);
       setPendingDelete(null);
-      showDialog("삭제 완료", "정상적으로 삭제되었습니다.", "success");
+      showDialog("삭제 완료", "삭제 되었습니다.", "success");
     } catch (e) {
       setShowDeleteConfirmDialog(false);
       setPendingDelete(null);

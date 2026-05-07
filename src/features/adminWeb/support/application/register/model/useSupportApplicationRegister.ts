@@ -1275,10 +1275,8 @@ export function useSupportApplicationRegister(
       if (response.result === "00") {
         // 성공
         const successMessage =
-          response.message ||
-          (mode === "detail"
-            ? "신청이 수정되었습니다."
-            : "신청이 등록되었습니다.");
+          String(response.message ?? "").trim() ||
+          (mode === "detail" ? "수정 되었습니다." : "등록 되었습니다.");
 
         setMessageDialogTitle(mode === "detail" ? "수정 완료" : "등록 완료");
         setMessageDialogMessage(successMessage);

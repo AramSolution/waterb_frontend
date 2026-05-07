@@ -63,7 +63,6 @@ export const CauserPaymentHistorySection: React.FC<
   );
 
   const { category: catOpt, status: statusOpt } = categoryStatusOptions;
-  const readOnlyClass = "bg-gray-100 !cursor-not-allowed";
   const sewageVolumeInputStyle: React.CSSProperties = {
     backgroundColor: FEE_PAYER_SEWAGE_INPUT_BACKGROUND_RGBA,
   };
@@ -153,7 +152,6 @@ export const CauserPaymentHistorySection: React.FC<
                       onChange={handleFieldChange}
                       data-entry-id={entry.id}
                       readOnly
-                      className={readOnlyClass}
                     />
                   </FormField>
                 </div>
@@ -185,7 +183,7 @@ export const CauserPaymentHistorySection: React.FC<
                                 placeholder="오수부과량"
                                 data-entry-id={entry.id}
                                 readOnly
-                                className={`${readOnlyClass} pr-8 text-right placeholder:text-left`}
+                                className="pr-8 text-right placeholder:text-left"
                               />
                               <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">
                                 t
@@ -207,7 +205,7 @@ export const CauserPaymentHistorySection: React.FC<
                                 placeholder="예: 9.8"
                                 data-entry-id={entry.id}
                                 readOnly
-                                className={`${readOnlyClass} pr-8 text-right placeholder:text-left`}
+                                className="pr-8 text-right placeholder:text-left"
                                 style={sewageVolumeInputStyle}
                               />
                               <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">
@@ -232,7 +230,7 @@ export const CauserPaymentHistorySection: React.FC<
                                 placeholder="예: 300,000"
                                 data-entry-id={entry.id}
                                 readOnly
-                                className={`pr-8 ${readOnlyClass}`}
+                                className="pr-8"
                               />
                               <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">
                                 원
@@ -254,7 +252,7 @@ export const CauserPaymentHistorySection: React.FC<
                                 placeholder="납부액"
                                 data-entry-id={entry.id}
                                 readOnly
-                                className={`${readOnlyClass} pr-8 text-right placeholder:text-left`}
+                                className="pr-8 text-right placeholder:text-left"
                               />
                               <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">
                                 원
@@ -329,9 +327,6 @@ export const CauserPaymentHistorySection: React.FC<
                                 data-entry-id={entry.id}
                                 data-line-id={line.id}
                                 readOnly={lineFieldsReadOnly}
-                                className={
-                                  lineFieldsReadOnly ? readOnlyClass : ""
-                                }
                               />
                             </div>
                           </div>
@@ -359,9 +354,7 @@ export const CauserPaymentHistorySection: React.FC<
                                   data-entry-id={entry.id}
                                   data-line-id={line.id}
                                   readOnly={lineFieldsReadOnly}
-                                  className={`pr-8 ${
-                                    lineFieldsReadOnly ? readOnlyClass : ""
-                                  }`.trim()}
+                                  className="pr-8"
                                 />
                                 <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">
                                   원
@@ -391,9 +384,6 @@ export const CauserPaymentHistorySection: React.FC<
                                 data-entry-id={entry.id}
                                 data-line-id={line.id}
                                 readOnly={lineFieldsReadOnly}
-                                className={
-                                  lineFieldsReadOnly ? readOnlyClass : ""
-                                }
                               />
                             </div>
                           </div>
@@ -445,7 +435,7 @@ export const CauserPaymentHistorySection: React.FC<
       <ConfirmDialog
         isOpen={showLineDeleteSuccess}
         title="삭제 완료"
-        message="정상적으로 삭제되었습니다."
+        message="삭제 되었습니다."
         type="success"
         preferCheckHeader
         confirmText="확인"

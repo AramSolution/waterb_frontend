@@ -291,9 +291,7 @@ export function useFeePayerBasicRegister(
         const isUpdate = Boolean(seedProId?.trim() || body.itemId?.trim());
         setInfoDialogTitle(isUpdate ? "수정 완료" : "등록 완료");
         setInfoDialogMessage(
-          isUpdate
-            ? ""
-            : String(res.message ?? "").trim() || "정상적으로 등록되었습니다.",
+          isUpdate ? "수정 되었습니다." : "등록 되었습니다.",
         );
         setInfoDialogType("success");
         setInfoDialogSingleAction(true);
@@ -306,7 +304,7 @@ export function useFeePayerBasicRegister(
         setInfoDialogTitle("오류");
         setInfoDialogMessage(msg || "저장 중 오류가 발생했습니다.");
         setInfoDialogType("danger");
-        setInfoDialogSingleAction(false);
+        setInfoDialogSingleAction(true);
         setShowInfoDialog(true);
       } finally {
         setLoading(false);

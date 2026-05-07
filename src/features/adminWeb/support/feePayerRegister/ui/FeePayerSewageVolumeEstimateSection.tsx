@@ -34,8 +34,6 @@ import {
 import { FEE_PAYER_SEWAGE_INPUT_BACKGROUND_RGBA } from "@/features/adminWeb/support/lib/feePayerSewageInputTint";
 import { formatSewageVolumeDisplayTwoDecimals } from "@/features/adminWeb/support/lib/formatSewageVolumeDisplay";
 
-const readOnlyInputClass = "bg-gray-100 !cursor-not-allowed";
-
 const sewageVolumeInputStyle: React.CSSProperties = {
   backgroundColor: FEE_PAYER_SEWAGE_INPUT_BACKGROUND_RGBA,
 };
@@ -355,7 +353,6 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                       onChange={handleEntryFieldChange}
                       data-entry-id={entry.id}
                       readOnly={rowReadOnly}
-                      className={rowReadOnly ? readOnlyInputClass : undefined}
                     />
                   </FormField>
                 </div>
@@ -389,7 +386,7 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                                   onChange={handleEntryFieldChange}
                                   placeholder="예: 12,000"
                                   readOnly
-                                  className={`pr-8 ${readOnlyInputClass}`.trim()}
+                                  className="pr-8"
                                   data-entry-id={entry.id}
                                 />
                                 <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">
@@ -424,11 +421,7 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                                 }}
                                 placeholder="예: 9.8"
                                 readOnly={rowReadOnly || !isPermitChangeType}
-                                className={`pr-8 text-right placeholder:text-left ${
-                                  rowReadOnly || !isPermitChangeType
-                                    ? readOnlyInputClass
-                                    : ""
-                                }`.trim()}
+                                className="pr-8 text-right placeholder:text-left"
                                 style={sewageVolumeInputStyle}
                                 data-entry-id={entry.id}
                               />
@@ -479,9 +472,7 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                                   placeholder="예: 300,000"
                                   data-entry-id={entry.id}
                                   readOnly={rowReadOnly}
-                                  className={`pr-8 ${
-                                    rowReadOnly ? readOnlyInputClass : ""
-                                  }`.trim()}
+                                  className="pr-8"
                                 />
                                 <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">
                                   원
@@ -503,10 +494,8 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                                 onChange={handleEntryFieldChange}
                                 placeholder="오수부과량"
                                 data-entry-id={entry.id}
-                                readOnly={rowReadOnly}
-                                className={`pr-8 text-right placeholder:text-left ${
-                                  rowReadOnly ? readOnlyInputClass : ""
-                                }`.trim()}
+                                  readOnly={rowReadOnly}
+                                  className="pr-8 text-right placeholder:text-left"
                               />
                               <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">
                                 t
@@ -692,7 +681,7 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                                 onChange={handleEntryFieldChange}
                                 placeholder="1일 오수발생량"
                                 readOnly
-                                className="bg-gray-100 pr-8 text-right placeholder:text-left"
+                                className="pr-8 text-right placeholder:text-left"
                                 data-entry-id={entry.id}
                                 data-line-id={line.id}
                               />
@@ -729,7 +718,7 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                                 placeholder="오수량"
                                 title="분류 중분류(단독주택·공동주택 등)·면적·방·세대·1일오수에 따라 자동 산출"
                                 readOnly
-                                className={`${readOnlyInputClass} pr-8 text-right placeholder:text-left`}
+                                className="pr-8 text-right placeholder:text-left"
                                 style={sewageVolumeInputStyle}
                                 data-entry-id={entry.id}
                                 data-line-id={line.id}
@@ -786,9 +775,7 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                                 data-entry-id={entry.id}
                                 data-line-id={line.id}
                                 readOnly={!canEditArea}
-                                className={`pr-12 text-right placeholder:text-left ${
-                                  !canEditArea ? readOnlyInputClass : ""
-                                }`.trim()}
+                                className="pr-12 text-right placeholder:text-left"
                               />
                               <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">
                                 m2
@@ -815,9 +802,7 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                                 data-entry-id={entry.id}
                                 data-line-id={line.id}
                                 readOnly={!canEditRoomCount}
-                                className={`pr-12 text-right placeholder:text-left ${
-                                  !canEditRoomCount ? readOnlyInputClass : ""
-                                }`.trim()}
+                                className="pr-12 text-right placeholder:text-left"
                               />
                               <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">
                                 개
@@ -848,11 +833,7 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                                 data-entry-id={entry.id}
                                 data-line-id={line.id}
                                 readOnly={!canEditHouseholdCount}
-                                className={`pr-14 ${
-                                  !canEditHouseholdCount
-                                    ? `${readOnlyInputClass} text-right placeholder:text-left`
-                                    : "text-right placeholder:text-left"
-                                }`.trim()}
+                                className="pr-14 text-right placeholder:text-left"
                               />
                               <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">
                                 세대

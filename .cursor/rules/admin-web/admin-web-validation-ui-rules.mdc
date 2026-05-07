@@ -1512,7 +1512,7 @@ const siteOptions: SelectOption[] = siteList.map((site) => ({
 
 - ✅ Automatic error border styling (`#dc3545` when error exists)
 - ✅ Built-in error message display
-- ✅ Read-only styling (`bg-gray-50`)
+- ✅ Read-only styling (`bg-gray-100`, `FormInput`/`FormTextarea`의 `readOnly` 기본값)
 - ✅ Supports all standard input types
 
 ---

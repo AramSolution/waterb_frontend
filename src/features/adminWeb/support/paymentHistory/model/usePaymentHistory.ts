@@ -145,7 +145,7 @@ export function usePaymentHistory() {
       const res = await postFeePayerPaymentSave(body);
       setSaveDialogTitle("수정 완료");
       setSaveDialogVariant("success");
-      setSaveDialogMessage("");
+      setSaveDialogMessage("수정 되었습니다.");
       await loadPaymentDetail();
       setShowSaveDialog(true);
     } catch (e) {
