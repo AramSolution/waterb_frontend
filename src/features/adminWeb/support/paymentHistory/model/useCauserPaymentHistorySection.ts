@@ -119,6 +119,8 @@ export function useCauserPaymentHistorySection(
     entryId: string;
     lineId: string;
   } | null>(null);
+  const [lineDeleteConfirmAmountLabel, setLineDeleteConfirmAmountLabel] =
+    useState("0");
   const [lineDeleteSubmitting, setLineDeleteSubmitting] = useState(false);
   const [showLineDeleteSuccess, setShowLineDeleteSuccess] = useState(false);
   const [showLineDeleteError, setShowLineDeleteError] = useState(false);
@@ -271,14 +273,23 @@ export function useCauserPaymentHistorySection(
     [],
   );
 
-  const requestLineDelete = useCallback((entryId: string, lineId: string) => {
-    setPendingLineDelete({ entryId, lineId });
-    setShowLineDeleteConfirm(true);
-  }, []);
+  const requestLineDelete = useCallback(
+    (entryId: string, lineId: string) => {
+      const entry = entries.find((en) => en.id === entryId);
+      const line = entry?.lines.find((l) => l.id === lineId);
+      const amountText = String(line?.amount ?? "").trim();
+      const amountLabel = amountText !== "" ? amountText : "0";
+      setLineDeleteConfirmAmountLabel(amountLabel);
+      setPendingLineDelete({ entryId, lineId });
+      setShowLineDeleteConfirm(true);
+    },
+    [entries],
+  );
 
   const handleLineDeleteCancel = useCallback(() => {
     setShowLineDeleteConfirm(false);
     setPendingLineDelete(null);
+    setLineDeleteConfirmAmountLabel("0");
     setLineDeleteSubmitting(false);
   }, []);
 
@@ -489,6 +500,7 @@ export function useCauserPaymentHistorySection(
     handleAddLine,
     requestLineDelete,
     showLineDeleteConfirm,
+    lineDeleteConfirmAmountLabel,
     lineDeleteSubmitting,
     handleLineDeleteConfirm,
     handleLineDeleteCancel,

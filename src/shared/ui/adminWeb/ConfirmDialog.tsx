@@ -7,6 +7,7 @@ interface ConfirmDialogProps {
   isOpen: boolean;
   title?: string;
   message: string;
+  subMessage?: string;
   confirmText?: string;
   cancelText?: string;
   onConfirm: () => void;
@@ -33,6 +34,7 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
   isOpen,
   title = '확인',
   message,
+  subMessage = '',
   confirmText = '확인',
   cancelText = '취소',
   onConfirm,
@@ -58,6 +60,7 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
 
   const dialogVariant = resolveVariant();
   const hasMessage = message.trim().length > 0;
+  const hasSubMessage = subMessage.trim().length > 0;
   const sharedHeaderImgClass = 'block h-10 w-10 max-w-none object-contain';
 
   const iconSrcByVariant: Record<
@@ -103,6 +106,9 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
           {hasMessage ? (
             <div className="dialog-body">
               <p className="dialog-message">{message}</p>
+              {hasSubMessage ? (
+                <p className="dialog-message dialog-sub-message">{subMessage}</p>
+              ) : null}
             </div>
           ) : null}
           <div className="dialog-footer">

@@ -86,8 +86,11 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
   const [pendingDeleteLine, setPendingDeleteLine] = useState<{
     entryId: string;
     lineId: string;
+    sewageQtyLabel: string;
   } | null>(null);
   const [lineDeleteSubmitting, setLineDeleteSubmitting] = useState(false);
+  const [showLineDeleteSuccessDialog, setShowLineDeleteSuccessDialog] =
+    useState(false);
   /** 유형이 허가사항변경일 때만 상단 오수량 직접 편집 — 포커스 중에만 원문 소수 전체 표시 */
   const [sewageVolumeFocusedEntryId, setSewageVolumeFocusedEntryId] =
     useState<string | null>(null);
@@ -737,6 +740,10 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                                   setPendingDeleteLine({
                                     entryId: entry.id,
                                     lineId: line.id,
+                                    sewageQtyLabel:
+                                      formatSewageVolumeDisplayTwoDecimals(
+                                        line.sewageQty ?? "",
+                                      ) || "0",
                                   })
                                 }
                                 disabled={
@@ -887,9 +894,9 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
 
       <ConfirmDialog
         isOpen={showStatusRuleDialog}
-        title="알림"
+        title="오류"
         message={statusRuleDialogMessage}
-        type="primary"
+        type="danger"
         confirmText="확인"
         onConfirm={() => setShowStatusRuleDialog(false)}
         onCancel={() => setShowStatusRuleDialog(false)}
@@ -897,11 +904,11 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
 
       <ConfirmDialog
         isOpen={pendingDeleteLine !== null}
-        title="상세 행 삭제"
-        message="해당 상세 행을 삭제하시겠습니까?"
+        title="삭제하시겠습니까?"
+        message={`오수발생량: ${pendingDeleteLine?.sewageQtyLabel ?? "0"} t`}
         type="danger"
         useDeleteHeader
-        confirmText="삭제"
+        confirmText="확인"
         disabled={lineDeleteSubmitting}
         onConfirm={() => {
           if (!pendingDeleteLine || lineDeleteSubmitting) return;
@@ -932,6 +939,7 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                 skipPersistTracking: useApi,
               });
               setPendingDeleteLine(null);
+              setShowLineDeleteSuccessDialog(true);
             } catch (err) {
               const msg =
                 err instanceof ApiError
@@ -948,6 +956,17 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
             setPendingDeleteLine(null);
           }
         }}
+      />
+
+      <ConfirmDialog
+        isOpen={showLineDeleteSuccessDialog}
+        title="삭제 완료"
+        message="삭제 되었습니다."
+        type="success"
+        confirmText="확인"
+        singleAction
+        onConfirm={() => setShowLineDeleteSuccessDialog(false)}
+        onCancel={() => setShowLineDeleteSuccessDialog(false)}
       />
     </div>
   );

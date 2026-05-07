@@ -46,6 +46,7 @@ export const CauserPaymentHistorySection: React.FC<
     handleAddLine,
     requestLineDelete,
     showLineDeleteConfirm,
+    lineDeleteConfirmAmountLabel,
     lineDeleteSubmitting,
     handleLineDeleteConfirm,
     handleLineDeleteCancel,
@@ -422,8 +423,8 @@ export const CauserPaymentHistorySection: React.FC<
 
       <ConfirmDialog
         isOpen={showLineDeleteConfirm}
-        title="납부내역 삭제"
-        message="선택한 납부 행을 삭제하시겠습니까?"
+        title="삭제하시겠습니까?"
+        message={`금액: ${lineDeleteConfirmAmountLabel}원`}
         type="danger"
         useDeleteHeader
         confirmText={lineDeleteSubmitting ? "처리 중..." : "확인"}
