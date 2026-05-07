@@ -197,7 +197,6 @@ export const PaymentHistoryPageView: React.FC = () => {
         title={saveDialogTitle}
         message={saveDialogMessage || "처리 결과를 확인해주세요."}
         type={saveDialogVariant}
-        preferCheckHeader
         confirmText="확인"
         singleAction
         onConfirm={handleSaveDialogClose}

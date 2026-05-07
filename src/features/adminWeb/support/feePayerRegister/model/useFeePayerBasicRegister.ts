@@ -82,6 +82,8 @@ export function useFeePayerBasicRegister(
   const [feePayerItemId, setFeePayerItemId] = useState<string | undefined>(
     undefined,
   );
+  /** 신규 등록 저장 성공 `ConfirmDialog` 확인 시 목록으로 이동 — 클로저 대신 ref */
+  const navigateToListAfterInfoCloseRef = useRef(false);
 
   const [detailPhase, setDetailPhase] = useState<
     "idle" | "loading" | "ready" | "failed"
@@ -281,17 +283,11 @@ export function useFeePayerBasicRegister(
         const res = await postFeePayerRegister(body);
         const wid = String(res.itemId ?? "").trim();
         if (wid) setFeePayerItemId(wid);
-        const isRegisterOnly = !seedProId?.trim();
-        if (isRegisterOnly && wid) {
-          router.replace(
-            `/adminWeb/support/list/basic-detail?proId=${encodeURIComponent(wid)}`,
-          );
-          return;
-        }
-        const isUpdate = Boolean(seedProId?.trim() || body.itemId?.trim());
-        setInfoDialogTitle(isUpdate ? "수정 완료" : "등록 완료");
+        const seededEdit = Boolean(seedProId?.trim());
+        navigateToListAfterInfoCloseRef.current = !seededEdit;
+        setInfoDialogTitle(seededEdit ? "수정 완료" : "등록 완료");
         setInfoDialogMessage(
-          isUpdate ? "수정 되었습니다." : "등록 되었습니다.",
+          seededEdit ? "수정 되었습니다." : "등록 되었습니다.",
         );
         setInfoDialogType("success");
         setInfoDialogSingleAction(true);
@@ -319,7 +315,11 @@ export function useFeePayerBasicRegister(
 
   const handleInfoDialogClose = useCallback(() => {
     setShowInfoDialog(false);
-  }, []);
+    if (navigateToListAfterInfoCloseRef.current) {
+      navigateToListAfterInfoCloseRef.current = false;
+      router.push("/adminWeb/support/list");
+    }
+  }, [router]);
 
   return {
     applicantNm,

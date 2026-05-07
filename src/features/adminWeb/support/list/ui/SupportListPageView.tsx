@@ -96,12 +96,12 @@ export const SupportListPageView: React.FC = () => {
     setAddr,
   } = useSupportList();
 
-  const deleteDialogTitle = selectedDeleteTarget
-    ? `${selectedDeleteTarget.applicantNm} 부과액 : ${selectedDeleteTarget.levyAmtLabel}`
-    : "삭제 대상을 확인할 수 없습니다.";
+  const deleteDialogTitle = "삭제하시겠습니까?";
 
-  const deleteDialogMessage = "삭제하시겠습니까?";
-
+  const deleteDialogMessage = selectedDeleteTarget
+  ? `${selectedDeleteTarget.applicantNm} 부과액 : ${selectedDeleteTarget.levyAmtLabel}`
+  : "삭제 대상을 확인할 수 없습니다.";
+  
   // 상세(읽기 전용) — 등록 화면과 동일 격자
   const handleDetailClick = (businessId: string) => {
     const id = businessId.trim();

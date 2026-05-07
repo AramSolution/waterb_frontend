@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useMemo, useRef } from "react";
-import { useRouter } from "next/navigation";
 import { ConfirmDialog } from "@/shared/ui/adminWeb";
 import { FormField, FormInput } from "@/shared/ui/adminWeb/form";
 import {
@@ -20,7 +19,6 @@ export interface FeePayerBasicRegisterFormProps {
 export const FeePayerBasicRegisterForm: React.FC<
   FeePayerBasicRegisterFormProps
 > = ({ seedProId = null }) => {
-  const router = useRouter();
   const persistRequestBuilderRef = useRef<
     (() => SupportFeePayerRegisterRequest | null) | null
   >(null);
@@ -61,14 +59,6 @@ export const FeePayerBasicRegisterForm: React.FC<
       feePayerItemId: feePayerItemId ?? seedProId?.trim() ?? undefined,
       onFeePayerItemId: (id: string) => {
         setFeePayerItemId(id);
-        if (!seedProId?.trim()) {
-          const w = String(id ?? "").trim();
-          if (w) {
-            router.replace(
-              `/adminWeb/support/list/basic-detail?proId=${encodeURIComponent(w)}`,
-            );
-          }
-        }
       },
       deleteCalculationRow: async (params: {
         itemId: string;
@@ -82,7 +72,7 @@ export const FeePayerBasicRegisterForm: React.FC<
         });
       },
     }),
-    [getBasicInfoBody, feePayerItemId, seedProId, setFeePayerItemId, router],
+    [getBasicInfoBody, feePayerItemId, seedProId, setFeePayerItemId],
   );
 
   if (seedInvalid) {
