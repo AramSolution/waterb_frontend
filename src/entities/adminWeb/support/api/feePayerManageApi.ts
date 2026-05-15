@@ -229,6 +229,8 @@ export interface SupportFeePayerListRequest {
   reqDateTo?: string;
   userNm?: string;
   address?: string;
+  /** `01` 미납, `02` 완납. 생략 또는 `00`이면 전체 */
+  paySta?: string;
 }
 
 /** 목록 1건 — `SupportFeePayerListItemResponse` */
@@ -253,6 +255,24 @@ export interface SupportFeePayerListItemDto {
 export interface SupportFeePayerListResponse {
   result?: string;
   message?: string;
+  data?: SupportFeePayerListItemDto[];
+}
+
+/** `SupportFeePayerManageController` — POST `/unpaid-list` 요청 본문 */
+export interface SupportFeePayerUnpaidListRequest {
+  baseMonth: string;
+  startIndex?: number;
+  lengthPage?: number;
+  start?: number;
+  length?: number;
+}
+
+/** 오수 원인자부담금 미납 목록 API 응답 (서버 페이징) */
+export interface SupportFeePayerUnpaidListResponse {
+  result?: string;
+  message?: string;
+  recordsFiltered?: number;
+  recordsTotal?: number;
   data?: SupportFeePayerListItemDto[];
 }
 
@@ -327,16 +347,19 @@ export function buildSupportFeePayerListBody(input: {
   reqDateTo?: string;
   userNm?: string;
   address?: string;
+  paySta?: string;
 }): SupportFeePayerListRequest {
   const body: SupportFeePayerListRequest = {};
   const from = (input.reqDateFrom ?? "").trim();
   const to = (input.reqDateTo ?? "").trim();
   const nm = (input.userNm ?? "").trim();
   const addr = (input.address ?? "").trim();
+  const sta = (input.paySta ?? "").trim();
   if (from) body.reqDateFrom = from;
   if (to) body.reqDateTo = to;
   if (nm) body.userNm = nm;
   if (addr) body.address = addr;
+  if (sta === "01" || sta === "02") body.paySta = sta;
   return body;
 }
 
@@ -562,6 +585,31 @@ export async function deleteFeePayerPayment(
     throw new ApiError(
       0,
       "오수 원인자부담금 납부내역 삭제 요청 중 오류가 발생했습니다.",
+    );
+  }
+}
+
+export async function postFeePayerUnpaidList(
+  body: SupportFeePayerUnpaidListRequest,
+): Promise<SupportFeePayerUnpaidListResponse> {
+  try {
+    const res = await apiClient.post<SupportFeePayerUnpaidListResponse>(
+      API_ENDPOINTS.SUPPORT.FEE_PAYER_UNPAID_LIST,
+      body,
+    );
+    if (res?.result && res.result !== "00") {
+      throw new ApiError(
+        0,
+        res.message?.trim() || "미납 목록 조회에 실패했습니다.",
+        res,
+      );
+    }
+    return res ?? { data: [] };
+  } catch (e) {
+    if (e instanceof ApiError) throw e;
+    throw new ApiError(
+      0,
+      "미납 목록을 불러오는 중 오류가 발생했습니다.",
     );
   }
 }

@@ -94,6 +94,8 @@ export const SupportListPageView: React.FC = () => {
     setApplicantNm,
     addr,
     setAddr,
+    paySta,
+    setPaySta,
   } = useSupportList();
 
   const deleteDialogTitle = "삭제하시겠습니까?";
@@ -139,7 +141,7 @@ export const SupportListPageView: React.FC = () => {
         </button>
       </div>
 
-      {/* 통지일·성명·주소 조회 (백엔드 연동 전 화면 전용) */}
+      {/* 통지일·상태·성명·주소 조회 */}
       <div
         className={`bg-white mb-3 rounded-lg shadow search-form-container ${
           showSearchForm ? "show" : ""
@@ -152,7 +154,7 @@ export const SupportListPageView: React.FC = () => {
               if (e.key === "Enter") handleSearch();
             }}
           >
-            {/* 1행: 통지일 | 성명 */}
+            {/* 1행: 통지일 | 상태 */}
             <div className="w-full md:w-1/2">
               <div
                 className="flex flex-col border-b md:flex-row items-stretch md:border-r border-gray-300"
@@ -194,6 +196,29 @@ export const SupportListPageView: React.FC = () => {
                 style={{ minHeight: "45px" }}
               >
                 <label className="w-full md:w-1/4 bg-gray-100 flex items-center m-0 px-3 py-2 search-form-label border-b md:border-b-0 border-r border-gray-300">
+                  상태
+                </label>
+                <div className="w-full md:w-3/4 flex items-center p-2">
+                  <select
+                    name="paySta"
+                    value={paySta}
+                    onChange={(e) => setPaySta(e.target.value)}
+                    className="w-full border border-gray-300 px-3 py-2 rounded-none focus:outline-none focus:ring-2 focus:ring-blue-500 text-[13px]"
+                  >
+                    <option value="">전체</option>
+                    <option value="01">미납</option>
+                    <option value="02">납부</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            {/* 2행: 성명 | 주소 */}
+            <div className="w-full md:w-1/2">
+              <div
+                className="flex flex-col md:flex-row items-stretch md:border-r border-gray-300"
+                style={{ minHeight: "45px" }}
+              >
+                <label className="w-full md:w-1/4 bg-gray-100 flex items-center m-0 px-3 py-2 search-form-label border-b md:border-b-0 border-r border-gray-300">
                   성명
                 </label>
                 <div className="w-full md:w-3/4 flex items-center p-2">
@@ -212,16 +237,15 @@ export const SupportListPageView: React.FC = () => {
                 </div>
               </div>
             </div>
-            {/* 2행: 주소 (라벨 너비 = 1행 통지일·성명과 동일: 전체의 12.5% = 절반×1/4) */}
-            <div className="w-full">
+            <div className="w-full md:w-1/2">
               <div
                 className="flex flex-col md:flex-row items-stretch border-gray-300"
                 style={{ minHeight: "45px" }}
               >
-                <label className="w-full md:w-[12.5%] shrink-0 bg-gray-100 flex items-center m-0 px-3 py-2 search-form-label border-b md:border-b-0 border-r border-gray-300">
+                <label className="w-full md:w-1/4 bg-gray-100 flex items-center m-0 px-3 py-2 search-form-label border-b md:border-b-0 border-r border-gray-300">
                   주소
                 </label>
-                <div className="w-full md:flex-1 min-w-0 flex items-center p-2">
+                <div className="w-full md:w-3/4 flex items-center p-2">
                   <input
                     type="text"
                     name="addr"

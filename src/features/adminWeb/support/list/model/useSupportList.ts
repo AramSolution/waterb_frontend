@@ -9,6 +9,7 @@ import {
   postFeePayerExcelList,
   mapFeePayerListItemToSupport,
   buildSupportFeePayerListBody,
+  isFeePayerListRowPaid,
 } from "@/entities/adminWeb/support/api";
 import { downloadFeePayerListExcel } from "@/entities/adminWeb/support/lib";
 import { ApiError, TokenUtils } from "@/shared/lib";
@@ -25,6 +26,7 @@ function filterFeeMockRows(
   notifyTo?: string,
   applicantNm?: string,
   addr?: string,
+  paySta?: string,
 ): Support[] {
   let out = [...rows];
   if (notifyFrom) {
@@ -57,6 +59,12 @@ function filterFeeMockRows(
       return a.includes(q);
     });
   }
+  const sta = (paySta ?? "").trim();
+  if (sta === "01") {
+    out = out.filter((r) => !isFeePayerListRowPaid(r));
+  } else if (sta === "02") {
+    out = out.filter((r) => isFeePayerListRowPaid(r));
+  }
   return out;
 }
 
@@ -70,6 +78,7 @@ export function useSupportList() {
   const urlPage = searchParams?.get("page") ?? null;
   const urlApplicantNm = searchParams?.get("applicantNm") ?? null;
   const urlAddr = searchParams?.get("addr") ?? null;
+  const urlPaySta = searchParams?.get("paySta") ?? null;
 
   const [loading, setLoading] = useState(true);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
@@ -126,11 +135,13 @@ export function useSupportList() {
     urlApplicantNm ?? "",
   );
   const [addr, setAddr] = useState<string>(urlAddr ?? "");
+  const [paySta, setPaySta] = useState<string>(urlPaySta ?? "");
 
   const startDateRef = useRef(startDate);
   const endDateRef = useRef(endDate);
   const applicantNmRef = useRef(applicantNm);
   const addrRef = useRef(addr);
+  const payStaRef = useRef(paySta);
   const currentPageRef = useRef(currentPage);
   const isSearchingRef = useRef(false); // 조회 버튼 클릭 중인지 추적
   const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null); // 중복 호출 방지용
@@ -150,6 +161,10 @@ export function useSupportList() {
   useEffect(() => {
     addrRef.current = addr;
   }, [addr]);
+
+  useEffect(() => {
+    payStaRef.current = paySta;
+  }, [paySta]);
 
   useEffect(() => {
     currentPageRef.current = currentPage;
@@ -187,7 +202,10 @@ export function useSupportList() {
     if (urlAddr !== null) {
       setAddr(urlAddr);
     }
-  }, [urlStartDate, urlEndDate, urlPage, urlApplicantNm, urlAddr]);
+    if (urlPaySta !== null) {
+      setPaySta(urlPaySta);
+    }
+  }, [urlStartDate, urlEndDate, urlPage, urlApplicantNm, urlAddr, urlPaySta]);
 
   // 지원사업 목록 조회 (서버 사이드 페이징)
   const fetchSupports = useCallback(async () => {
@@ -228,6 +246,8 @@ export function useSupportList() {
           : undefined;
       const address =
         addrRef.current.trim() !== "" ? addrRef.current.trim() : undefined;
+      const payStaFilter =
+        payStaRef.current.trim() !== "" ? payStaRef.current.trim() : undefined;
 
       if (USE_FEE_LIST_MOCK_DATA) {
         const filtered = filterFeeMockRows(
@@ -236,6 +256,7 @@ export function useSupportList() {
           notifyTo,
           nm,
           address,
+          payStaFilter,
         );
         const total = filtered.length;
         const pageSlice = filtered.slice(
@@ -253,6 +274,7 @@ export function useSupportList() {
         reqDateTo: notifyTo,
         userNm: nm,
         address,
+        paySta: payStaFilter,
       });
       const feeRes = await postFeePayerList(feeBody);
       const feeRaw = Array.isArray(feeRes.data) ? feeRes.data : [];
@@ -302,6 +324,7 @@ export function useSupportList() {
     endDateRef.current = endDate;
     applicantNmRef.current = applicantNm;
     addrRef.current = addr;
+    payStaRef.current = paySta;
     fetchSupports();
   }, []);
 
@@ -472,17 +495,18 @@ export function useSupportList() {
       console.log("🔍 handleSearch 호출");
       console.log(
         "📅 조회 전:",
-        `통지일 ${startDate}~${endDate}, 성명=${applicantNm}, 주소=${addr}`,
+        `통지일 ${startDate}~${endDate}, 상태=${paySta}, 성명=${applicantNm}, 주소=${addr}`,
       );
 
       startDateRef.current = startDate;
       endDateRef.current = endDate;
       applicantNmRef.current = applicantNm;
       addrRef.current = addr;
+      payStaRef.current = paySta;
       currentPageRef.current = 1;
       console.log(
         "📅 ref 동기화 후:",
-        `통지일 ${startDateRef.current}~${endDateRef.current}, 성명=${applicantNmRef.current}, 주소=${addrRef.current}, page=${currentPageRef.current}`,
+        `통지일 ${startDateRef.current}~${endDateRef.current}, 상태=${payStaRef.current}, 성명=${applicantNmRef.current}, 주소=${addrRef.current}, page=${currentPageRef.current}`,
       );
 
       // 조회 중 플래그 설정 (useEffect 중복 호출 방지)
@@ -573,6 +597,7 @@ export function useSupportList() {
       const nm =
         applicantNm.trim() !== "" ? applicantNm.trim() : undefined;
       const address = addr.trim() !== "" ? addr.trim() : undefined;
+      const payStaFilter = paySta.trim() !== "" ? paySta.trim() : undefined;
 
       let supportList: Support[] = [];
 
@@ -583,6 +608,7 @@ export function useSupportList() {
           notifyTo,
           nm,
           address,
+          payStaFilter,
         );
       } else {
         const feeBody = buildSupportFeePayerListBody({
@@ -590,6 +616,7 @@ export function useSupportList() {
           reqDateTo: notifyTo,
           userNm: nm,
           address,
+          paySta: payStaFilter,
         });
         const feeRes = await postFeePayerExcelList(feeBody);
         supportList = (Array.isArray(feeRes.data) ? feeRes.data : []).map(
@@ -672,5 +699,7 @@ export function useSupportList() {
     setApplicantNm,
     addr,
     setAddr,
+    paySta,
+    setPaySta,
   };
 }

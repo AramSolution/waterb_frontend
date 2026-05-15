@@ -133,6 +133,8 @@ export const API_ENDPOINTS = {
       `/api/admin/artappm/${encodeURIComponent(proId)}/mentor-applications/${encodeURIComponent(reqId)}`,
     /** 오수 원인자부담금 관리 목록 — POST JSON, body 생략 가능(전체) */
     FEE_PAYER_LIST: "/api/admin/support/fee-payer/list",
+    /** 오수 원인자부담금 미납 목록(대시보드 등) — POST JSON { baseMonth, startIndex, lengthPage } */
+    FEE_PAYER_UNPAID_LIST: "/api/admin/support/fee-payer/unpaid-list",
     /** 오수 원인자부담금 관리 목록 엑셀 — POST JSON, body 생략 가능(전체) */
     FEE_PAYER_EXCEL_LIST: "/api/admin/support/fee-payer/excel-list",
     /** 오수 원인자부담금 등록·수정·삭제 저장 — POST JSON `SupportFeePayerRegisterRequest` */
@@ -231,5 +233,8 @@ export const API_ENDPOINTS = {
     ) =>
       `${API_ENDPOINTS.FRANCHISE.detailPath(eduEsntlId, eduGb)}/subjects/${encodeURIComponent(String(seq))}`,
     DELETE: "/api/admin/franchise/delete",
+  },
+  DASHBOARD: {
+    PAYMENT_MOM: "/api/admin/dashboard/payment-mom",
   },
 };
