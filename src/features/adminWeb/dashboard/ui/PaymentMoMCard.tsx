@@ -105,35 +105,35 @@ export const PaymentMoMCard: React.FC<PaymentMoMCardProps> = ({
               className={styles.iconColor}
             />
           </div>
-          <h6 className="text-base font-semibold text-gray-900 mb-0">
+          <h6 className="text-[1.2rem] font-semibold text-gray-900 mb-0">
             {title}
           </h6>
         </div>
 
         <div className="flex border-b border-gray-200 pb-4 mb-3">
           <div className="flex-1 border-r border-gray-200 pr-4">
-            <p className="text-xs text-gray-500 mb-1">
+            <p className="text-[0.95rem] text-gray-500 mb-1">
               당월 ({baseMonth})
             </p>
             <p
-              className={`text-xl font-bold mb-0 ${styles.currentValue}`}
+              className={`text-[1.325rem] font-bold mb-0 ${styles.currentValue}`}
             >
               {formatValue(currentValue, valueType)}{" "}
-              <span className="text-sm font-semibold">{unit}</span>
+              <span className="text-[1.075rem] font-semibold">{unit}</span>
             </p>
           </div>
           <div className="flex-1 pl-4">
-            <p className="text-xs text-gray-500 mb-1">
+            <p className="text-[0.95rem] text-gray-500 mb-1">
               전월 ({compareMonth})
             </p>
-            <p className="text-lg font-bold text-gray-900 mb-0">
+            <p className="text-[1.325rem] font-bold text-gray-900 mb-0">
               {formatValue(previousValue, valueType)}{" "}
-              <span className="text-sm font-semibold">{unit}</span>
+              <span className="text-[1.075rem] font-semibold">{unit}</span>
             </p>
           </div>
         </div>
 
-        <div className="flex items-center justify-between text-sm">
+        <div className="flex items-center justify-between text-[1.075rem]">
           <span className="text-gray-500">전월 대비</span>
           {changeLabel}
         </div>
