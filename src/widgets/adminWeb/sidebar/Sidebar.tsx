@@ -45,18 +45,18 @@ const menuItems: MenuItem[] = [
     ],
   },
   // 대분류 카테고리: 통계자료 (주석)
-  {
-    id: 'statistics',
-    label: '통계자료',
-    icon: 'BarChart3',
-    submenu: [
-      {
-        id: 'statistics-sample',
-        label: '샘플통계',
-        path: '/adminWeb/statistics/sample',
-      },
-    ],
-  },
+  // {
+  //   id: 'statistics',
+  //   label: '통계자료',
+  //   icon: 'BarChart3',
+  //   submenu: [
+  //     {
+  //       id: 'statistics-sample',
+  //       label: '샘플통계',
+  //       path: '/adminWeb/statistics/sample',
+  //     },
+  //   ],
+  // },
   {
     id: 'member',
     label: '회원관리',
