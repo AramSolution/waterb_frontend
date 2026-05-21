@@ -358,7 +358,8 @@ export const CmmCodeManagePageView: React.FC = () => {
     const codeIdNm = item.codeIdNm || '';
     setDetailCodeId(codeId);
     setDetailCodeNm(codeIdNm);
-    setSelectedCmmCode(item); // 선택된 대분류코드 정보 저장
+    setSelectedCmmCode(item);
+    setDetailCurrentPage(1);
   };
 
   // 소분류코드 조회 버튼 핸들러
@@ -514,43 +515,31 @@ export const CmmCodeManagePageView: React.FC = () => {
     }
   };
 
-  // detailCodeId가 변경되면 조회 조건만 리셋 (실제 조회는 page effect에서 1회 수행)
+  // 소분류코드: 대분류 선택·페이지 변경 시 API 1회만 호출
   useEffect(() => {
-    if (detailCodeId) {
-      console.log('🔄 detailCodeId 변경됨, 자동 조회 시작:', detailCodeId);
-      setDetailCurrentPage(1);
-      setDetailIsInitialLoad(false);
-    } else {
+    if (!detailCodeId) {
       setDetailCodeList([]);
       setDetailTotalElements(0);
       setDetailTotalPages(0);
       setDetailIsInitialLoad(true);
+      return;
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [detailCodeId]);
 
-  // 소분류코드 페이지 변경/대분류코드 변경 시 API 재호출 (단일 트리거)
-  useEffect(() => {
-    if (detailCodeId) {
-      fetchDetailCodeList();
-    }
-  }, [detailCurrentPage, fetchDetailCodeList, detailCodeId]);
+    fetchDetailCodeListRef.current();
+  }, [detailCodeId, detailCurrentPage]);
 
-  // 소분류코드 필터 변경 시 Debounce 800ms 적용하여 첫 페이지로 이동하고 API 호출
+  // 소분류코드 필터 변경 시 Debounce 800ms (필터만 dependency)
   useEffect(() => {
     if (!detailCodeId) return;
 
     const timer = setTimeout(() => {
-      // 필터 변경 시 첫 페이지로 이동하고 API 호출
-      // 페이지가 바뀌면 page effect에서 1회 호출되므로 직접 호출하지 않음
       if (detailCurrentPage !== 1) {
         setDetailCurrentPage(1);
         return;
       }
 
-      // 현재 페이지가 1이면 즉시 1회 호출
       fetchDetailCodeListRef.current();
-    }, 800); // 800ms Debounce
+    }, 800);
 
     return () => clearTimeout(timer);
   }, [
@@ -558,9 +547,7 @@ export const CmmCodeManagePageView: React.FC = () => {
     detailFilters.codeNm,
     detailFilters.orderBy,
     detailFilters.useAt,
-    detailCodeId,
-    detailCurrentPage,
-  ]); // fetchDetailCodeList를 dependency에서 제거
+  ]);
 
   // 소분류코드 필터 초기화 핸들러
   const handleClearDetailFilters = () => {
@@ -2628,7 +2615,7 @@ export const CmmCodeManagePageView: React.FC = () => {
               </div>
             </div>
             <div className="p-0">
-              {detailLoading ? (
+              {detailLoading && detailIsInitialLoad ? (
                 <div className="overflow-x-auto hidden md:block">
                   <table
                     className="w-full mb-0"
