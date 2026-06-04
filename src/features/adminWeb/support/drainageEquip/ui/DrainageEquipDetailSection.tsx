@@ -18,7 +18,10 @@ import {
   type DrainageEquipApiBridge,
   type DrainageEquipDetailEntry,
 } from "../model/useDrainageEquipDetailSection";
-import { DrainageEquipPaidDateField } from "./drainageEquipDetailFieldUi";
+import {
+  DrainageEquipPaidDateField,
+  DrainageEquipReqDateField,
+} from "./drainageEquipDetailFieldUi";
 
 export interface DrainageEquipDetailSectionProps {
   readOnly?: boolean;
@@ -187,22 +190,16 @@ export const DrainageEquipDetailSection: React.FC<
               </div>
 
               <div className="flex flex-wrap">
-                <FormField
+                <DrainageEquipReqDateField
                   label="등록일"
-                  required
+                  value={entry.reqDate}
+                  entryId={entry.id}
+                  readOnly={readOnly}
                   isFirstInRow
                   forceTopBorder
                   suppressBottomBorder
-                >
-                  <FormInput
-                    type="date"
-                    name="reqDate"
-                    value={entry.reqDate}
-                    onChange={handleEntryFieldChange}
-                    data-entry-id={entry.id}
-                    readOnly={readOnly}
-                  />
-                </FormField>
+                  onChange={handleEntryFieldChange}
+                />
                 <DrainageEquipPaidDateField
                   label="착공일"
                   name="startDate"

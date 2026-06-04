@@ -19,15 +19,3 @@ export function getDrainageTodayYmd(): string {
   return `${y}-${m}-${day}`;
 }
 
-/** 납부 시 착공·준공예정·준공일 기본값: 저장된 날짜 → 없으면 등록일 */
-export function defaultPaidDetailDates(
-  reqDate: string,
-  dates: { startDate: string; planDate: string; compDate: string },
-): { startDate: string; planDate: string; compDate: string } {
-  const base = normalizeDrainageYmd(reqDate) || getDrainageTodayYmd();
-  return {
-    startDate: normalizeDrainageYmd(dates.startDate) || base,
-    planDate: normalizeDrainageYmd(dates.planDate) || base,
-    compDate: normalizeDrainageYmd(dates.compDate) || base,
-  };
-}

@@ -6,10 +6,7 @@ import {
   type ChangeEvent,
 } from "react";
 import type { SupportDrainageEquipBasicInfoRequest } from "@/entities/adminWeb/support/api/drainageEquipManageApi";
-import {
-  defaultPaidDetailDates,
-  getDrainageTodayYmd,
-} from "../lib/drainageEquipDates";
+import { getDrainageTodayYmd } from "../lib/drainageEquipDates";
 
 export type DrainageEquipDetailEntry = {
   id: string;
@@ -144,19 +141,17 @@ export function useDrainageEquipDetailSection(
             );
           }
 
-          return prev.map((r) => {
-            if (r.id !== entryId) return r;
-            const paidDates = defaultPaidDetailDates(r.reqDate, {
-              startDate: r.startDate,
-              planDate: r.planDate,
-              compDate: r.compDate,
-            });
-            return {
-              ...r,
-              status: "PAID",
-              ...paidDates,
-            };
-          });
+          return prev.map((r) =>
+            r.id === entryId
+              ? {
+                  ...r,
+                  status: "PAID",
+                  startDate: "",
+                  planDate: "",
+                  compDate: "",
+                }
+              : r,
+          );
         });
         return;
       }

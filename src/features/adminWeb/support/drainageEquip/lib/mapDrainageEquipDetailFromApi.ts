@@ -4,10 +4,7 @@ import {
   numericOnly,
 } from "@/shared/lib/inputValidation";
 import type { DrainageEquipDetailEntry } from "../model/useDrainageEquipDetailSection";
-import {
-  defaultPaidDetailDates,
-  normalizeDrainageYmd,
-} from "./drainageEquipDates";
+import { normalizeDrainageYmd } from "./drainageEquipDates";
 
 export interface DrainageEquipBasicFormFromApi {
   itemId: string;
@@ -66,23 +63,17 @@ export function mapDrainageEquipDetailDtoToEntries(
         : undefined;
     const status = mapPayStaToStatus(row.paySta);
     const reqDate = normalizeDrainageYmd(row.reqDate);
-    const paidDates =
-      status === "PAID"
-        ? defaultPaidDetailDates(reqDate, {
-            startDate: String(row.startDate ?? ""),
-            planDate: String(row.planDate ?? ""),
-            compDate: String(row.compDate ?? ""),
-          })
-        : { startDate: "", planDate: "", compDate: "" };
-
     return {
       id: crypto.randomUUID(),
       status,
       reqDate,
       equipCost: formatAmountInput(row.equipCost),
-      startDate: paidDates.startDate,
-      planDate: paidDates.planDate,
-      compDate: paidDates.compDate,
+      startDate:
+        status === "PAID" ? normalizeDrainageYmd(row.startDate) : "",
+      planDate:
+        status === "PAID" ? normalizeDrainageYmd(row.planDate) : "",
+      compDate:
+        status === "PAID" ? normalizeDrainageYmd(row.compDate) : "",
       agency: String(row.agency ?? "").trim(),
       detailSeq: seq,
     };
