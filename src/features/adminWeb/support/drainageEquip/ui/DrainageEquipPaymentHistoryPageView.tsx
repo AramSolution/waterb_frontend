@@ -8,7 +8,7 @@ import { DrainageEquipPaymentHistorySection } from "./DrainageEquipPaymentHistor
 import "@/shared/styles/admin/register-form.css";
 
 /**
- * 배수설비 대장 납부내역 — 오수 원인자부담금 납부내역과 동일 구조(기본정보 읽기 전용 + 납부내역 편집).
+ * 배수설비 관리 납부내역 — 오수 원인자부담금 납부내역과 동일 구조(기본정보 읽기 전용 + 납부내역 편집).
  */
 export const DrainageEquipPaymentHistoryPageView: React.FC = () => {
   const {
@@ -42,7 +42,7 @@ export const DrainageEquipPaymentHistoryPageView: React.FC = () => {
         <h1 className="page-title">납부내역</h1>
         <nav className="breadcrumb">
           <span>홈</span> &gt; <span>업무관리</span> &gt;{" "}
-          <span>배수설비 대장</span> &gt; <span>납부내역</span>
+          <span>배수설비 관리</span> &gt; <span>납부내역</span>
         </nav>
       </div>
 

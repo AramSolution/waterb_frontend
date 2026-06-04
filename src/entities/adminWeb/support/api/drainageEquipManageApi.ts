@@ -47,7 +47,7 @@ export interface SupportDrainageEquipListResponse {
   data?: SupportDrainageEquipListItemDto[];
 }
 
-/** 배수설비 대장 목록 엑셀 API 응답 */
+/** 배수설비 관리 목록 엑셀 API 응답 */
 export interface SupportDrainageEquipExcelListResponse {
   result?: string;
   message?: string;
@@ -327,7 +327,7 @@ export async function postDrainageEquipList(
     if (res?.result && res.result !== "00") {
       throw new ApiError(
         0,
-        res.message?.trim() || "배수설비 대장 목록 조회에 실패했습니다.",
+        res.message?.trim() || "배수설비 관리 목록 조회에 실패했습니다.",
         res,
       );
     }
@@ -336,13 +336,13 @@ export async function postDrainageEquipList(
     if (e instanceof ApiError) throw e;
     throw new ApiError(
       0,
-      "배수설비 대장 목록을 불러오는 중 오류가 발생했습니다.",
+      "배수설비 관리 목록을 불러오는 중 오류가 발생했습니다.",
     );
   }
 }
 
 /**
- * 배수설비 대장 목록 엑셀
+ * 배수설비 관리 목록 엑셀
  * POST `/api/admin/support/drainage-equip/excel-list`
  */
 export async function postDrainageEquipExcelList(
@@ -356,7 +356,7 @@ export async function postDrainageEquipExcelList(
     if (res?.result && res.result !== "00") {
       throw new ApiError(
         0,
-        res.message?.trim() || "배수설비 대장 엑셀 목록 조회에 실패했습니다.",
+        res.message?.trim() || "배수설비 관리 엑셀 목록 조회에 실패했습니다.",
         res,
       );
     }
@@ -365,7 +365,7 @@ export async function postDrainageEquipExcelList(
     if (e instanceof ApiError) throw e;
     throw new ApiError(
       0,
-      "배수설비 대장 엑셀 목록을 불러오는 중 오류가 발생했습니다.",
+      "배수설비 관리 엑셀 목록을 불러오는 중 오류가 발생했습니다.",
     );
   }
 }

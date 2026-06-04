@@ -514,11 +514,11 @@ export async function downloadFeePayerListExcel(
 }
 
 /**
- * 배수설비 대장 목록 엑셀 (목록 화면과 동일한 표시 컬럼)
+ * 배수설비 관리 목록 엑셀 (목록 화면과 동일한 표시 컬럼)
  */
 export async function downloadDrainageEquipListExcel(
   rows: DrainageEquipListRow[],
-  fileName: string = "배수설비대장목록",
+  fileName: string = "배수설비관리목록",
 ): Promise<void> {
   const headers = [
     "번호",
@@ -549,7 +549,7 @@ export async function downloadDrainageEquipListExcel(
       fmtNum(row.payAmt),
     ];
   });
-  await downloadAdminListExcelFile("배수설비 대장", fileName, {
+  await downloadAdminListExcelFile("배수설비 관리", fileName, {
     title: fileName,
     headers,
     dataRows,

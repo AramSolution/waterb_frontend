@@ -39,7 +39,7 @@ const menuItems: MenuItem[] = [
       },
       {
         id: 'support-drainage-equip',
-        label: '배수설비 대장',
+        label: '배수설비 관리',
         path: '/adminWeb/support/drainage-equip',
       },
       {

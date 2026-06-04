@@ -153,9 +153,9 @@ export const API_ENDPOINTS = {
     FEE_PAYER_PAYMENT_DELETE: "/api/admin/support/fee-payer/payment/delete",
     /** 오수 원인자부담금 목록 삭제 — DELETE JSON { itemId, seq } */
     FEE_PAYER_DELETE: "/api/admin/support/fee-payer/delete",
-    /** 배수설비 대장 목록 — POST JSON */
+    /** 배수설비 관리 목록 — POST JSON */
     DRAINAGE_EQUIP_LIST: "/api/admin/support/drainage-equip/list",
-    /** 배수설비 대장 목록 엑셀 — POST JSON */
+    /** 배수설비 관리 목록 엑셀 — POST JSON */
     DRAINAGE_EQUIP_EXCEL_LIST: "/api/admin/support/drainage-equip/excel-list",
     /** 배수설비 상세 — GET itemId */
     DRAINAGE_EQUIP_DETAIL: (itemId: string) =>

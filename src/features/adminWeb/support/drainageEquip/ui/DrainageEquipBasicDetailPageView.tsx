@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { DrainageEquipBasicRegisterForm } from "./DrainageEquipBasicRegisterForm";
 
 /**
- * 배수설비 대장 상세 — 등록 화면과 동일 폼·API(`GET /{itemId}/detail`, 저장은 register POST).
+ * 배수설비 관리 상세 — 등록 화면과 동일 폼·API(`GET /{itemId}/detail`, 저장은 register POST).
  */
 export const DrainageEquipBasicDetailPageView: React.FC = () => {
   const searchParams = useSearchParams();
@@ -15,10 +15,10 @@ export const DrainageEquipBasicDetailPageView: React.FC = () => {
   return (
     <>
       <div className="page-header">
-        <h1 className="page-title">배수설비 대장 상세</h1>
+        <h1 className="page-title">배수설비 관리 상세</h1>
         <nav className="breadcrumb">
           <span>홈</span> &gt; <span>업무관리</span> &gt;{" "}
-          <span>배수설비 대장</span> &gt; <span>기본정보 상세</span>
+          <span>배수설비 관리</span> &gt; <span>기본정보 상세</span>
         </nav>
       </div>
 

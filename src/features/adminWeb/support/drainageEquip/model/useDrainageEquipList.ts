@@ -156,7 +156,7 @@ export function useDrainageEquipList() {
         Number(res.recordsTotal) || Number(res.recordsFiltered) || 0;
       setTotalElements(total);
     } catch (err) {
-      console.error("배수설비 대장 목록 조회 실패:", err);
+      console.error("배수설비 관리 목록 조회 실패:", err);
       setRows([]);
       setTotalElements(0);
       if (err instanceof ApiError) {
@@ -169,7 +169,7 @@ export function useDrainageEquipList() {
           setError(err.message);
         }
       } else {
-        setError("배수설비 대장 목록을 불러오는 중 오류가 발생했습니다.");
+        setError("배수설비 관리 목록을 불러오는 중 오류가 발생했습니다.");
       }
     } finally {
       setLoading(false);
@@ -373,9 +373,9 @@ export function useDrainageEquipList() {
         return;
       }
 
-      await downloadDrainageEquipListExcel(excelRows, "배수설비대장목록");
+      await downloadDrainageEquipListExcel(excelRows, "배수설비관리목록");
     } catch (err) {
-      console.error("배수설비 대장 엑셀 다운로드 실패:", err);
+      console.error("배수설비 관리 엑셀 다운로드 실패:", err);
       if (err instanceof ApiError) {
         if (err.status === 401) {
           showExcelFail("인증에 실패했습니다. 다시 로그인해주세요.");
