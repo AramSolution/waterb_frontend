@@ -38,6 +38,11 @@ const menuItems: MenuItem[] = [
         path: '/adminWeb/support/list',
       },
       {
+        id: 'support-drainage-equip',
+        label: '배수설비 대장',
+        path: '/adminWeb/support/drainage-equip',
+      },
+      {
         id: 'support-purpose',
         label: '용도관리',
         path: '/adminWeb/support/purpose',

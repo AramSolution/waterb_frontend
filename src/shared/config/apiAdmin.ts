@@ -153,6 +153,25 @@ export const API_ENDPOINTS = {
     FEE_PAYER_PAYMENT_DELETE: "/api/admin/support/fee-payer/payment/delete",
     /** 오수 원인자부담금 목록 삭제 — DELETE JSON { itemId, seq } */
     FEE_PAYER_DELETE: "/api/admin/support/fee-payer/delete",
+    /** 배수설비 대장 목록 — POST JSON */
+    DRAINAGE_EQUIP_LIST: "/api/admin/support/drainage-equip/list",
+    /** 배수설비 대장 목록 엑셀 — POST JSON */
+    DRAINAGE_EQUIP_EXCEL_LIST: "/api/admin/support/drainage-equip/excel-list",
+    /** 배수설비 상세 — GET itemId */
+    DRAINAGE_EQUIP_DETAIL: (itemId: string) =>
+      `/api/admin/support/drainage-equip/${encodeURIComponent(itemId)}/detail`,
+    /** 배수설비 납부 상세 — GET itemId */
+    DRAINAGE_EQUIP_PAYMENT_DETAIL: (itemId: string) =>
+      `/api/admin/support/drainage-equip/${encodeURIComponent(itemId)}/payment-detail`,
+    /** 배수설비 납부내역 저장 — POST */
+    DRAINAGE_EQUIP_PAYMENT_SAVE: "/api/admin/support/drainage-equip/payment",
+    /** 배수설비 납부내역 1건 삭제 — DELETE */
+    DRAINAGE_EQUIP_PAYMENT_DELETE:
+      "/api/admin/support/drainage-equip/payment/delete",
+    /** 배수설비 목록 삭제 — DELETE JSON { itemId, seq } */
+    DRAINAGE_EQUIP_DELETE: "/api/admin/support/drainage-equip/delete",
+    /** 배수설비 등록·수정 — POST */
+    DRAINAGE_EQUIP_REGISTER: "/api/admin/support/drainage-equip",
   },
   /** 공부의 명수(ARTPROM proGb 08) — adminWeb ArtappsManageController */
   ARTAPPS: {
