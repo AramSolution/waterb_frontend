@@ -43,6 +43,7 @@ export const FeePayerBasicRegisterForm: React.FC<
     feePayerItemId,
     setFeePayerItemId,
     getBasicInfoBody,
+    refreshFeePayerDetailFromApi,
     persistBuildStateRef,
     persistRegisterFailMessageRef,
     handleInputChange,
@@ -71,8 +72,17 @@ export const FeePayerBasicRegisterForm: React.FC<
           seq2: params.seq2,
         });
       },
+      refreshFeePayerDetail: seedProId?.trim()
+        ? refreshFeePayerDetailFromApi
+        : undefined,
     }),
-    [getBasicInfoBody, feePayerItemId, seedProId, setFeePayerItemId],
+    [
+      getBasicInfoBody,
+      feePayerItemId,
+      seedProId,
+      setFeePayerItemId,
+      refreshFeePayerDetailFromApi,
+    ],
   );
 
   if (seedInvalid) {
@@ -133,7 +143,6 @@ export const FeePayerBasicRegisterForm: React.FC<
                   value={applicantNm}
                   onChange={handleInputChange}
                   error={errors.applicantNm}
-                  placeholder="성명을 입력하세요"
                   maxLength={100}
                   autoComplete="name"
                 />
@@ -150,7 +159,6 @@ export const FeePayerBasicRegisterForm: React.FC<
                   value={telNo}
                   onChange={handleInputChange}
                   error={errors.telNo}
-                  placeholder="전화번호를 입력하세요"
                   maxLength={13}
                   autoComplete="tel"
                 />
@@ -221,7 +229,6 @@ export const FeePayerBasicRegisterForm: React.FC<
                       name="detailAdres"
                       value={detailAdres}
                       onChange={handleInputChange}
-                      placeholder="상세주소"
                       maxLength={200}
                       error={errors.detailAdres}
                     />

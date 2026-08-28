@@ -179,7 +179,7 @@ export function UsageLookupModal({
                         건축물 용도
                       </th>
                       <th className="sticky top-0 z-[1] border border-gray-200 bg-gray-100 px-2 py-2 text-left text-[13px] font-semibold text-gray-800">
-                        1일 오수발생량
+                        1일 오수발생량(t)
                       </th>
                       <th className="sticky top-0 z-[1] border border-gray-200 bg-gray-100 px-2 py-2 text-left text-[13px] font-semibold text-gray-800">
                         비고

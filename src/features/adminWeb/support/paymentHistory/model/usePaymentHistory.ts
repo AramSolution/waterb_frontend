@@ -13,6 +13,7 @@ import {
   SEWAGE_CATEGORY,
   SEWAGE_TYPE_VALUE,
 } from "@/features/adminWeb/support/lib/sewageCategoryTypeOptions";
+import { formatPaymentAmountFromNumber } from "../lib/paymentHistoryNumericFormat";
 import { decodeDisplayText } from "@/shared/lib";
 import { formatPhoneWithHyphen, numericOnly } from "@/shared/lib/inputValidation";
 import type { CauserPaymentEntry } from "./useCauserPaymentHistorySection";
@@ -229,8 +230,7 @@ function mapPaymentLine(
     id: crypto.randomUUID(),
     paymentSeq2: seq2N > 0 ? seq2N : undefined,
     lineDate: payDay,
-    amount:
-      Number.isFinite(pay) && pay !== 0 ? formatIntKo(pay) : "",
+    amount: formatPaymentAmountFromNumber(Number.isFinite(pay) ? pay : 0),
     remarks: decodeDisplayText(String(p.payDesc ?? "").trim()),
   };
 }
@@ -263,7 +263,12 @@ function mapPaymentDetailToEntry(
     (a, b) => numOrZero(a.seq2) - numOrZero(b.seq2),
   );
   const lines = linesRaw.length > 0 ? linesRaw.map(mapPaymentLine) : [
-    { id: crypto.randomUUID(), lineDate: "", amount: "", remarks: "" },
+    {
+      id: crypto.randomUUID(),
+      lineDate: getTodayYmd(),
+      amount: "0",
+      remarks: "",
+    },
   ];
 
   return {
@@ -273,18 +278,11 @@ function mapPaymentDetailToEntry(
     status,
     type,
     notifyDate: normalizeYmd(d.reqDate),
-    unitPrice:
-      Number.isFinite(baseCost) && baseCost !== 0 ? formatIntKo(baseCost) : "",
-    sewageVolume:
-      Number.isFinite(waterSum) && waterSum !== 0 ? formatMetricKo(waterSum) : "",
-    causerCharge:
-      Number.isFinite(waterCost) && waterCost !== 0
-        ? formatIntKo(waterCost)
-        : "",
-    sewageLevyAmount:
-      Number.isFinite(waterVal) && waterVal !== 0 ? formatMetricKo(waterVal) : "",
-    paidAmount:
-      Number.isFinite(waterPay) && waterPay !== 0 ? formatIntKo(waterPay) : "",
+    unitPrice: formatIntKo(numOrZero(baseCost)),
+    sewageVolume: formatMetricKo(numOrZero(waterSum)),
+    causerCharge: formatIntKo(numOrZero(waterCost)),
+    sewageLevyAmount: formatMetricKo(numOrZero(waterVal)),
+    paidAmount: formatPaymentAmountFromNumber(numOrZero(waterPay)),
     lines,
   };
 }

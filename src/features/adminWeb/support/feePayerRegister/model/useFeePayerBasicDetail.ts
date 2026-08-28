@@ -21,6 +21,14 @@ import type {
   SewageDetailLine,
   SewageEstimateEntry,
 } from "./useFeePayerSewageVolumeEstimate";
+import {
+  formatDecimalWithCommaFromNumber,
+  formatEntryNumericDisplay,
+  formatIntKo,
+  formatLineNumericDisplay,
+  formatLoadedDecimalField,
+  formatLoadedIntegerField,
+} from "../lib/feePayerNumericFormat";
 
 /** `addr` 한 덩어리 → 등록·상세·납부내역과 동일 3필드(선행 5자리 우편번호가 있을 때만 분리) */
 function splitAddrForReadonly(addr: string): {
@@ -118,18 +126,6 @@ export function buildSewageEstimateEntriesFromFeeRow(
   ];
 }
 
-function formatIntKo(n: number): string {
-  return Math.round(n).toLocaleString("ko-KR");
-}
-
-function formatDecimalPlain(n: number): string {
-  if (!Number.isFinite(n)) return "";
-  return n.toLocaleString("en-US", {
-    maximumFractionDigits: 10,
-    useGrouping: false,
-  });
-}
-
 function normalizeReqDateYmd(raw: string | null | undefined): string {
   const t = String(raw ?? "").trim();
   if (!t) return "";
@@ -196,7 +192,7 @@ function mapCalculationDtoToLine(
     splitDetailCalculationBuildId(c.buildId);
   const usage = readCalculationUsageName(c);
   const costYn = String(c.costYn ?? "").trim().toUpperCase();
-  return {
+  return formatLineNumericDisplay({
     id: crypto.randomUUID(),
     floor: Number.isFinite(floorN) && floorN > 0 ? String(Math.trunc(floorN)) : "1",
     usage,
@@ -205,24 +201,24 @@ function mapCalculationDtoToLine(
     midCategoryLabel: "",
     area:
       c.buildSize != null && String(c.buildSize).trim() !== ""
-        ? String(c.buildSize).replace(/,/g, "").trim()
+        ? formatLoadedDecimalField(c.buildSize)
         : "",
     dailySewage:
       c.dayVal != null && String(c.dayVal).trim() !== ""
-        ? String(c.dayVal).replace(/,/g, "").trim()
+        ? formatLoadedDecimalField(c.dayVal)
         : "",
     roomCount:
       c.roomCnt != null && String(c.roomCnt).trim() !== ""
-        ? String(c.roomCnt).trim()
+        ? formatLoadedIntegerField(c.roomCnt)
         : "",
     householdCount:
       c.homeCnt != null && String(c.homeCnt).trim() !== ""
-        ? String(c.homeCnt).trim()
+        ? formatLoadedIntegerField(c.homeCnt)
         : "",
     sewageQty: waterStr,
     selected: costYn === "Y",
     calcSeq2: Number.isFinite(seq2) && seq2 > 0 ? seq2 : undefined,
-  };
+  });
 }
 
 export interface FeePayerDetailMappedInitial {
@@ -289,12 +285,12 @@ export function mapFeePayerDetailDtoToInitialForm(
 
     const wv = block.waterVal != null ? Number(block.waterVal) : NaN;
     const sewageLevyAmount = Number.isFinite(wv)
-      ? formatDecimalPlain(wv)
+      ? formatDecimalWithCommaFromNumber(wv)
       : "0";
 
     const ws = block.waterSum != null ? Number(block.waterSum) : NaN;
     const sewageVolume = Number.isFinite(ws)
-      ? formatDecimalPlain(ws)
+      ? formatDecimalWithCommaFromNumber(ws)
       : "0";
 
     const calcs = [...(block.calculations ?? [])].sort(
@@ -319,7 +315,7 @@ export function mapFeePayerDetailDtoToInitialForm(
             },
           ];
 
-    return {
+    return formatEntryNumericDisplay({
       id: crypto.randomUUID(),
       status,
       category,
@@ -331,7 +327,7 @@ export function mapFeePayerDetailDtoToInitialForm(
       sewageLevyAmount,
       lines,
       detailSeq: Number.isFinite(seq) && seq > 0 ? seq : undefined,
-    };
+    });
   });
 
   return {

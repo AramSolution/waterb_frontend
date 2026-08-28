@@ -21,6 +21,7 @@ import {
   getFeePayerDetail,
   postFeePayerRegister,
   type SupportFeePayerBasicInfoRequest,
+  type SupportFeePayerDetailDataDto,
   type SupportFeePayerRegisterRequest,
 } from "@/entities/adminWeb/support/api/feePayerManageApi";
 import { ApiError } from "@/shared/lib/apiClient";
@@ -103,6 +104,43 @@ export function useFeePayerBasicRegister(
     return feePayerDetailEntries;
   }, [seedProId, detailPhase, feePayerDetailEntries]);
 
+  const applyFeePayerDetailSnapshot = useCallback(
+    (raw: SupportFeePayerDetailDataDto, fallbackItemId: string) => {
+      const mapped = mapFeePayerDetailDtoToInitialForm(raw);
+      const b = mapped.basic;
+      setApplicantNm(b.applicantNm);
+      const telDigits = numericOnly(b.telNo).slice(0, 11);
+      setTelNo(telDigits ? formatPhoneWithHyphen(telDigits) : "");
+      setZipCode(b.zipCode);
+      setAdres(b.adres);
+      setDetailAdres(b.detailAdres);
+      setErrors({});
+      setFeePayerDetailEntries(
+        mapped.entries.length > 0 ? mapped.entries : undefined,
+      );
+      setFeePayerItemId(mapped.itemId || fallbackItemId);
+    },
+    [],
+  );
+
+  /** 상세 편집(`seedProId`) — 저장·삭제 후 서버 스냅샷 재조회 */
+  const refreshFeePayerDetailFromApi = useCallback(
+    async (overrideItemId?: string): Promise<boolean> => {
+      if (!seedProId?.trim()) return false;
+      const id = (overrideItemId ?? feePayerItemId ?? seedProId).trim();
+      if (!id) return false;
+      try {
+        const env = await getFeePayerDetail(id);
+        if (!env.data) return false;
+        applyFeePayerDetailSnapshot(env.data, id);
+        return true;
+      } catch {
+        return false;
+      }
+    },
+    [seedProId, feePayerItemId, applyFeePayerDetailSnapshot],
+  );
+
   useEffect(() => {
     const id = seedProId?.trim();
     if (!id) {
@@ -126,20 +164,7 @@ export function useFeePayerBasicRegister(
           setDetailErrorMessage("상세 데이터가 없습니다.");
           return;
         }
-        const mapped = mapFeePayerDetailDtoToInitialForm(raw);
-        const b = mapped.basic;
-        setApplicantNm(b.applicantNm);
-        const telDigits = numericOnly(b.telNo).slice(0, 11);
-        setTelNo(telDigits ? formatPhoneWithHyphen(telDigits) : "");
-        setZipCode(b.zipCode);
-        setAdres(b.adres);
-        setDetailAdres(b.detailAdres);
-        setErrors({});
-        setFeePayerDetailEntries(
-          mapped.entries.length > 0 ? mapped.entries : undefined,
-        );
-        const wid = mapped.itemId || id;
-        setFeePayerItemId(wid);
+        applyFeePayerDetailSnapshot(raw, id);
         setDetailPhase("ready");
       } catch (err) {
         if (cancelled) return;
@@ -155,7 +180,7 @@ export function useFeePayerBasicRegister(
     return () => {
       cancelled = true;
     };
-  }, [seedProId]);
+  }, [seedProId, applyFeePayerDetailSnapshot]);
 
   const clearAddressErrors = useCallback(() => {
     setErrors((prev) => ({
@@ -284,6 +309,9 @@ export function useFeePayerBasicRegister(
         const wid = String(res.itemId ?? "").trim();
         if (wid) setFeePayerItemId(wid);
         const seededEdit = Boolean(seedProId?.trim());
+        if (seededEdit) {
+          await refreshFeePayerDetailFromApi(wid || seedProId!.trim());
+        }
         navigateToListAfterInfoCloseRef.current = !seededEdit;
         setInfoDialogTitle(seededEdit ? "수정 완료" : "등록 완료");
         setInfoDialogMessage(
@@ -306,7 +334,7 @@ export function useFeePayerBasicRegister(
         setLoading(false);
       }
     },
-    [validate, persistRef, seedProId, router],
+    [validate, persistRef, seedProId, refreshFeePayerDetailFromApi],
   );
 
   const handleCancel = useCallback(() => {
@@ -341,6 +369,7 @@ export function useFeePayerBasicRegister(
     feePayerItemId,
     setFeePayerItemId,
     getBasicInfoBody,
+    refreshFeePayerDetailFromApi,
     persistBuildStateRef,
     persistRegisterFailMessageRef,
     handleInputChange,

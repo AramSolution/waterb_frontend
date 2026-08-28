@@ -20,6 +20,14 @@ import {
   buildSupportFeePayerRegisterRequest,
   sumLineWaterVol,
 } from "../lib/buildSupportFeePayerRegisterRequest";
+import {
+  formatDecimalWithCommaFromNumber,
+  formatEntryNumericDisplay,
+  formatIntKo,
+  formatLineNumericDisplay,
+  formatLoadedDecimalField,
+  sanitizeNumericField,
+} from "../lib/feePayerNumericFormat";
 import type { DetailCodeItem } from "@/entities/adminWeb/code/api/cmmCodeApi";
 import { CmmCodeService } from "@/entities/adminWeb/code/api/cmmCodeApi";
 import {
@@ -79,6 +87,8 @@ export interface FeePayerSewageApiBridge {
     seq: number;
     seq2: number;
   }) => Promise<void>;
+  /** 상세 편집 — 저장·삭제 후 서버 스냅샷 재조회 */
+  refreshFeePayerDetail?: (itemId?: string) => Promise<boolean>;
 }
 
 export interface UseFeePayerSewageVolumeEstimateOptions {
@@ -102,19 +112,6 @@ function parseBaseCostFromWat003(items: DetailCodeItem[]): number | undefined {
   if (!digits) return undefined;
   const n = parseInt(digits, 10);
   return Number.isFinite(n) ? n : undefined;
-}
-
-function formatIntKo(n: number): string {
-  return n.toLocaleString("ko-KR");
-}
-
-/** 천 단위 콤마 없이 소수 표시(오수량·오수부과량·면적 등) */
-function formatDecimalPlain(n: number): string {
-  if (!Number.isFinite(n)) return "";
-  return n.toLocaleString("en-US", {
-    maximumFractionDigits: 10,
-    useGrouping: false,
-  });
 }
 
 /** 상단 오수량 문자열을 숫자로 같게 보정 비교(표시·합산 반올림 차이 흡수) */
@@ -150,7 +147,7 @@ function applyLineSumToSewageVolume(
     return raw !== "" && Number.isFinite(Number(raw));
   });
   const nextSewageVolume =
-    !hasLineQty && sum === 0 ? "0" : formatDecimalPlain(sum);
+    !hasLineQty && sum === 0 ? "0" : formatDecimalWithCommaFromNumber(sum);
   const volumeChanged = !volumesNumericallyEqual(
     en.sewageVolume,
     nextSewageVolume,
@@ -164,56 +161,6 @@ function applyLineSumToSewageVolume(
     };
   }
   return next;
-}
-
-function digitsOnly(raw: string): string {
-  return String(raw ?? "").replace(/\D/g, "");
-}
-
-function formatDigitsWithComma(raw: string): string {
-  const d = digitsOnly(raw);
-  if (!d) return "";
-  return Number(d).toLocaleString("ko-KR");
-}
-
-/** 소수 입력 가능 필드: 콤마 제거, 숫자·소수점만(점은 최대 1개) */
-function sanitizeDecimalNumericInput(raw: string): string {
-  const noComma = String(raw ?? "").replace(/,/g, "");
-  let out = "";
-  let dotSeen = false;
-  for (const ch of noComma) {
-    if (ch >= "0" && ch <= "9") {
-      out += ch;
-    } else if (ch === "." && !dotSeen) {
-      dotSeen = true;
-      out += ".";
-    }
-  }
-  return out;
-}
-
-const INTEGER_COMMA_ENTRY_FIELDS = new Set(["unitPrice", "causerCharge"]);
-const DECIMAL_NO_COMMA_ENTRY_FIELDS = new Set([
-  "sewageVolume",
-  "sewageLevyAmount",
-]);
-const DECIMAL_NO_COMMA_LINE_FIELDS = new Set([
-  "area",
-  "roomCount",
-  "householdCount",
-]);
-
-function sanitizeNumericField(name: string, value: string): string {
-  if (INTEGER_COMMA_ENTRY_FIELDS.has(name)) {
-    return formatDigitsWithComma(value);
-  }
-  if (
-    DECIMAL_NO_COMMA_ENTRY_FIELDS.has(name) ||
-    DECIMAL_NO_COMMA_LINE_FIELDS.has(name)
-  ) {
-    return sanitizeDecimalNumericInput(value);
-  }
-  return value;
 }
 
 function withSewageQty(line: SewageDetailLine): SewageDetailLine {
@@ -241,12 +188,20 @@ function normalizeLineInputsByCalcMode(line: SewageDetailLine): SewageDetailLine
     armbuildBuildId: line.armbuildBuildId,
   });
   if (mode === "multi") {
-    return { ...line, area: "" };
+    return formatLineNumericDisplay({ ...line, area: "0" });
   }
   if (mode === "standalone") {
-    return { ...line, area: "", householdCount: "" };
+    return formatLineNumericDisplay({
+      ...line,
+      area: "0",
+      householdCount: "0",
+    });
   }
-  return { ...line, roomCount: "", householdCount: "" };
+  return formatLineNumericDisplay({
+    ...line,
+    roomCount: "0",
+    householdCount: "0",
+  });
 }
 
 function firstSewageTypeValue(): string {
@@ -268,19 +223,21 @@ function ensureEntryCategoryTypeCoherent(
 }
 
 function createDetailLine(): SewageDetailLine {
-  return withSewageQty({
-    id: crypto.randomUUID(),
-    floor: "1",
-    usage: "",
-    buildingUseSubCode: "",
-    midCategoryLabel: "",
-    area: "",
-    dailySewage: "",
-    roomCount: "",
-    householdCount: "",
-    sewageQty: "",
-    selected: false,
-  });
+  return formatLineNumericDisplay(
+    withSewageQty({
+      id: crypto.randomUUID(),
+      floor: "1",
+      usage: "",
+      buildingUseSubCode: "",
+      midCategoryLabel: "",
+      area: "",
+      dailySewage: "",
+      roomCount: "",
+      householdCount: "",
+      sewageQty: "",
+      selected: false,
+    }),
+  );
 }
 
 function isEntryPaid(entry: SewageEstimateEntry): boolean {
@@ -320,9 +277,12 @@ function normalizeDetailLine(l: SewageDetailLine): SewageDetailLine {
   const nextQty = String(recalculated.sewageQty ?? "").trim();
   // 상세 API `waterVol` 등은 줄 단위로만 오고, 클라 산식 입력이 부족하면 `computeLineSewageQty`가 ""가 되어 값이 지워짐 → 서버에서 온 수치는 유지
   if (nextQty === "" && preservedQty !== "") {
-    return { ...recalculated, sewageQty: preservedQty };
+    return formatLineNumericDisplay({
+      ...recalculated,
+      sewageQty: preservedQty,
+    });
   }
-  return recalculated;
+  return formatLineNumericDisplay(recalculated);
 }
 
 /** 표시용: 미입력·빈 문자열은 0으로 본다. */
@@ -345,10 +305,12 @@ function normalizeEntry(e: SewageEstimateEntry): SewageEstimateEntry {
     detailSeq: e.detailSeq,
     lines: e.lines.map(normalizeDetailLine),
   };
-  return withEmptyAmountFieldsAsZero(
-    applyLineSumToSewageVolume(ensureEntryCategoryTypeCoherent(merged), {
-      resetDerivedChargesOnVolumeChange: false,
-    }),
+  return formatEntryNumericDisplay(
+    withEmptyAmountFieldsAsZero(
+      applyLineSumToSewageVolume(ensureEntryCategoryTypeCoherent(merged), {
+        resetDerivedChargesOnVolumeChange: false,
+      }),
+    ),
   );
 }
 
@@ -428,7 +390,7 @@ export function useFeePayerSewageVolumeEstimate(
   const handleAddEntry = useCallback(() => {
     setEntries((prev) => {
       if (!prev.every((e) => e.status === "PAID")) return prev;
-      return [...prev, createEntry()];
+      return [...prev, formatEntryNumericDisplay(createEntry())];
     });
   }, []);
 
@@ -770,10 +732,10 @@ export function useFeePayerSewageVolumeEstimate(
               ? formatIntKo(Math.round(wc))
               : String(en.causerCharge ?? "").trim() || "0",
             sewageLevyAmount: Number.isFinite(wv)
-              ? formatDecimalPlain(wv)
+              ? formatDecimalWithCommaFromNumber(wv)
               : String(en.sewageLevyAmount ?? "").trim() || "0",
             sewageVolume: Number.isFinite(ws)
-              ? formatDecimalPlain(ws)
+              ? formatDecimalWithCommaFromNumber(ws)
               : String(en.sewageVolume ?? "").trim() || "0",
           };
           return applyLineSumToSewageVolume(mergedRow, {
@@ -870,7 +832,9 @@ export function useFeePayerSewageVolumeEstimate(
                 midCategoryLabel: midTrim,
                 armbuildBuildId: bul || undefined,
                 ...(picked.dailySewage.trim()
-                  ? { dailySewage: picked.dailySewage.trim() }
+                  ? {
+                      dailySewage: formatLoadedDecimalField(picked.dailySewage),
+                    }
                   : {}),
               };
               return withSewageQty(normalizeLineInputsByCalcMode(next));

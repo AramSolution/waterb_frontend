@@ -13,6 +13,11 @@
   @apply text-base;
 }
 
+/* 오수량 산정 상세행: 용도·1일오수발생량·방수·세대수 라벨 */
+.fee-payer-register-scope label.feePayerDetailFieldLabel.register-form-label {
+  padding-right: 1rem !important;
+}
+
 /* 오수량 산정 상세행(층수·용도·면적 등): 좁은 열에서 두 글자 줄바꿈 시 —
    .register-form-label 기본 justify-end/pr-4 와 충돌하지 않도록 데스크톱만 균형 정렬 */
 @media (min-width: 768px) {
@@ -71,9 +76,15 @@ input[type='number'] {
   }
 }
 
-/* 오수량 산정 기준단가·오수량·원인자부담금·오수부과량: 값 입력 오른쪽 정렬 */
-.feePayerPriceGrid .feePayerPricePair .register-form-mobile-field input:not([type='checkbox']):not([type='radio']) {
+/* 오수량 산정 기준단가·오수량·원인자부담금·오수부과량·상태 등 feePayerPricePair 그리드 */
+.feePayerPriceGrid .feePayerPricePair .register-form-mobile-field input:not([type='checkbox']):not([type='radio']):not([type='date']),
+.feePayerMetaGrid .feePayerPricePair .register-form-mobile-field input:not([type='checkbox']):not([type='radio']):not([type='date']) {
   text-align: right;
+}
+
+.feePayerPriceGrid .feePayerPricePair .register-form-mobile-field input[type='date'],
+.feePayerMetaGrid .feePayerPricePair .register-form-mobile-field input[type='date'] {
+  text-align: center;
 }
 
 /* 가맹 학원 등록: 데스크톱에서 모든 행 높이 45px 통일 */
@@ -83,7 +94,8 @@ input[type='number'] {
   }
 
   /* 원인자부담 오수량 산정: 기준단가·오수량 / 원인자부담금·오수부과량 열 맞춤 + 연한 구분선 */
-  .feePayerPriceGrid .feePayerPricePair .register-form-label {
+  .feePayerPriceGrid .feePayerPricePair .register-form-label,
+  .feePayerMetaGrid .feePayerPricePair .register-form-label {
     justify-content: flex-end;
     padding-left: 0.5rem;
     padding-right: 1rem;
@@ -92,13 +104,14 @@ input[type='number'] {
     max-width: 8.5rem;
   }
 
-  .feePayerPriceGrid .feePayerPricePair .register-form-mobile-field {
+  .feePayerPriceGrid .feePayerPricePair .register-form-mobile-field,
+  .feePayerMetaGrid .feePayerPricePair .register-form-mobile-field {
     border: none !important;
     border-top: none !important;
   }
 
-  /* 1행 기준단가·오수량: 라벨 열은 행 높이만큼 회색으로 채우고, 열 하단에 가로 구분선(옆 필드와 높이 맞춤 — flex-start 금지로 하얀 빈칸 방지) */
-  .feePayerPriceGrid > div:first-child > .feePayerPricePair:nth-child(-n + 2) .register-form-label {
+  /* 1행 기준단가·오수량만: 라벨 열 하단 가로 구분선 (상태·구분·유형·통지일 feePayerMetaGrid 제외) */
+  .feePayerPriceGrid:not(.feePayerMetaGrid) > div:first-child > .feePayerPricePair:nth-child(-n + 2) .register-form-label {
     align-self: stretch !important;
     border-bottom: 1px solid #e5e7eb !important;
     border-top: none !important;
@@ -107,18 +120,29 @@ input[type='number'] {
 }
 
 @media (max-width: 767px) {
-  .feePayerPriceGrid .feePayerPricePair .register-form-label {
+  .feePayerPriceGrid .feePayerPricePair .register-form-label,
+  .feePayerMetaGrid .feePayerPricePair .register-form-label {
     border-color: #e5e7eb !important;
     justify-content: flex-end !important;
     padding-right: 1rem !important;
   }
 
-  .feePayerPriceGrid .feePayerPricePair .register-form-mobile-field {
+  .feePayerPriceGrid .feePayerPricePair .register-form-mobile-field,
+  .feePayerMetaGrid .feePayerPricePair .register-form-mobile-field {
     border-color: #e5e7eb !important;
   }
 
-  /* 1행 기준단가·오수량: 라벨 글 아래 한 줄(공통 mobile label의 border-bottom:none 예외) */
-  .feePayerPriceGrid > div:first-child > .feePayerPricePair:nth-child(-n + 2) .register-form-label {
+  /* 1행 기준단가·오수량만 (feePayerMetaGrid 제외) */
+  .feePayerPriceGrid:not(.feePayerMetaGrid) > div:first-child > .feePayerPricePair:nth-child(-n + 2) .register-form-label {
     border-bottom: 1px solid #e5e7eb !important;
   }
+}
+
+/* 납부내역 — 일자·금액·비고 행 라벨 */
+.feePayerPaymentLineGrid .register-form-label {
+  justify-content: flex-end;
+  padding-left: 0.5rem;
+  padding-right: 1rem;
+  padding-top: 5px;
+  padding-bottom: 5px;
 }

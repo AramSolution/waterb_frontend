@@ -12,6 +12,11 @@ import {
   type SupportFeePayerPaymentSaveRequest,
 } from "@/entities/adminWeb/support/api/feePayerManageApi";
 import { ApiError } from "@/shared/lib/apiClient";
+import {
+  formatPaymentAmountFromNumber,
+  formatPaymentAmountInput,
+  parsePaymentAmount,
+} from "../lib/paymentHistoryNumericFormat";
 
 export type CauserPayLine = {
   id: string;
@@ -40,7 +45,7 @@ function createLine(): CauserPayLine {
   return {
     id: crypto.randomUUID(),
     lineDate: getTodayYmd(),
-    amount: "",
+    amount: "0",
     remarks: "",
   };
 }
@@ -68,17 +73,25 @@ function isEntryPaidStatus(entry: CauserPaymentEntry): boolean {
 /** 라인 금액 합으로 납부금액 표시만 갱신. `paySta`/상세 연동 `status`는 저장·서버 값만 따른다(입력 중 자동 미납↔납부 전환 없음). */
 function syncEntryPaidAmountFromLines(entry: CauserPaymentEntry): CauserPaymentEntry {
   const paidTotal = entry.lines.reduce(
-    (sum, line) => sum + parseAmount(line.amount),
+    (sum, line) => sum + parsePaymentAmount(line.amount),
     0,
   );
-  const nextPaidAmount =
-    paidTotal > 0 ? formatAmountInput(String(paidTotal)) : "";
+  const nextPaidAmount = formatPaymentAmountFromNumber(paidTotal);
   if (entry.paidAmount === nextPaidAmount) {
     return entry;
   }
   return {
     ...entry,
     paidAmount: nextPaidAmount,
+  };
+}
+
+function normalizePayLine(line: CauserPayLine): CauserPayLine {
+  return {
+    ...line,
+    id: line.id || crypto.randomUUID(),
+    lineDate: line.lineDate || getTodayYmd(),
+    amount: formatPaymentAmountInput(line.amount),
   };
 }
 
@@ -92,11 +105,7 @@ function normalizeEntries(
       id: entry.id || crypto.randomUUID(),
       lines:
         entry.lines && entry.lines.length > 0
-          ? entry.lines.map((line) => ({
-              ...line,
-              id: line.id || crypto.randomUUID(),
-              lineDate: line.lineDate || getTodayYmd(),
-            }))
+          ? entry.lines.map(normalizePayLine)
           : [createLine()],
     }),
   );
@@ -153,7 +162,7 @@ export function useCauserPaymentHistorySection(
           if (L.paymentSeq2 != null && L.paymentSeq2 > 0) {
             snap.set(paymentLineSnapshotKey(en.detailSeq, L.paymentSeq2), {
               date: normalizeYmd(L.lineDate),
-              pay: parseAmount(L.amount),
+              pay: parsePaymentAmount(L.amount),
               desc: String(L.remarks ?? "").trim(),
             });
           }
@@ -170,6 +179,7 @@ export function useCauserPaymentHistorySection(
       const entryId = e.target.dataset.entryId;
       if (!entryId) return;
       const key = name as "category" | "status" | "type";
+      if (key === "status") return;
       setEntries((prev) =>
         prev.map((en) => {
           if (en.id !== entryId) return en;
@@ -218,7 +228,7 @@ export function useCauserPaymentHistorySection(
               if (L.id !== lineId) return L;
               if (name === "lineDate") return { ...L, lineDate: value };
               if (name === "amount") {
-                return { ...L, amount: formatAmountInput(value) };
+                return { ...L, amount: formatPaymentAmountInput(value) };
               }
               if (name === "remarks") return { ...L, remarks: value };
               return L;
@@ -383,9 +393,9 @@ export function useCauserPaymentHistorySection(
     preSaveValidateRef.current = () => {
       for (const entry of entries) {
         if (entry.detailSeq == null || entry.detailSeq <= 0) continue;
-        const charge = parseAmount(entry.causerCharge);
+        const charge = parsePaymentAmount(entry.causerCharge);
         const paidTotal = entry.lines.reduce(
-          (sum, line) => sum + parseAmount(line.amount),
+          (sum, line) => sum + parsePaymentAmount(line.amount),
           0,
         );
         if (charge > 0 && paidTotal > charge) {
@@ -428,7 +438,7 @@ export function useCauserPaymentHistorySection(
             const prev = initialPaymentLineSnapshotRef.current.get(key);
             if (!prev) continue;
             const curDate = normalizeYmd(line.lineDate);
-            const curPay = parseAmount(line.amount);
+            const curPay = parsePaymentAmount(line.amount);
             const curDesc = String(line.remarks ?? "").trim();
             if (
               curDate === prev.date &&
@@ -452,7 +462,7 @@ export function useCauserPaymentHistorySection(
                 isMeaningfulNewPaymentLine(line),
             )
             .map((line) => {
-              const pay = parseAmount(line.amount);
+              const pay = parsePaymentAmount(line.amount);
               return {
                 rowStatus: "I",
                 payDay: line.lineDate || undefined,
@@ -513,20 +523,8 @@ export function useCauserPaymentHistorySection(
   };
 }
 
-function parseAmount(raw: string): number {
-  const n = Number(String(raw ?? "").replace(/[^\d.-]/g, "").trim());
-  if (!Number.isFinite(n)) return 0;
-  return Math.max(0, Math.trunc(n));
-}
-
-function formatAmountInput(raw: string): string {
-  const digits = String(raw ?? "").replace(/\D/g, "");
-  if (!digits) return "";
-  return Number(digits).toLocaleString("ko-KR");
-}
-
 function isMeaningfulNewPaymentLine(line: CauserPayLine): boolean {
-  const pay = parseAmount(line.amount);
+  const pay = parsePaymentAmount(line.amount);
   if (pay > 0) return true;
   if (String(line.remarks ?? "").trim() !== "") return true;
   return false;

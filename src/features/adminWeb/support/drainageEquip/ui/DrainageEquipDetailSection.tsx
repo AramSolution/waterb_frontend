@@ -25,6 +25,8 @@ import {
 
 export interface DrainageEquipDetailSectionProps {
   readOnly?: boolean;
+  /** 상세 편집 등 — 상태(미납/납부)만 변경 불가 */
+  statusReadOnly?: boolean;
   initialEntries?: DrainageEquipDetailEntry[];
   drainageEquipApi?: DrainageEquipApiBridge | null;
   persistRequestBuilderRef?: MutableRefObject<
@@ -37,11 +39,13 @@ export const DrainageEquipDetailSection: React.FC<
   DrainageEquipDetailSectionProps
 > = ({
   readOnly = false,
+  statusReadOnly = false,
   initialEntries,
   drainageEquipApi = null,
   persistRequestBuilderRef,
   persistBuildStateRef,
 }) => {
+  const statusFieldReadOnly = readOnly || statusReadOnly;
   const [showStatusRuleDialog, setShowStatusRuleDialog] = useState(false);
   const [statusRuleDialogMessage, setStatusRuleDialogMessage] = useState("");
 
@@ -51,6 +55,7 @@ export const DrainageEquipDetailSection: React.FC<
     handleAddEntry,
     handleEntryFieldChange,
   } = useDrainageEquipDetailSection(initialEntries, {
+    statusReadOnly: statusFieldReadOnly,
     onStatusChangeBlocked: (message) => {
       setStatusRuleDialogMessage(message);
       setShowStatusRuleDialog(true);
@@ -142,7 +147,7 @@ export const DrainageEquipDetailSection: React.FC<
                   forceTopBorder={blockContinues}
                   suppressBottomBorder
                 >
-                  {readOnly ? (
+                  {statusFieldReadOnly ? (
                     <div className="flex w-full min-w-0 flex-1 self-stretch">
                       <span
                         className={feePayStatusReadOnlyFieldClassName(paid)}

@@ -2,9 +2,9 @@
 
 import React from "react";
 import { ConfirmDialog } from "@/shared/ui/adminWeb";
-import { FormField, FormInput, FormSelect } from "@/shared/ui/adminWeb/form";
+import { FormField, FormInput } from "@/shared/ui/adminWeb/form";
 import {
-  feePayStatusSelectClassName,
+  feePayStatusReadOnlyFieldClassName,
 } from "@/features/adminWeb/support/lib/feePayStatusUi";
 import type { SupportDrainageEquipPaymentSaveRequest } from "@/entities/adminWeb/support/api/drainageEquipManageApi";
 import { useDrainageEquipPaymentHistorySection } from "../model/useDrainageEquipPaymentHistorySection";
@@ -32,8 +32,6 @@ export const DrainageEquipPaymentHistorySection: React.FC<
 }) => {
   const {
     entries,
-    statusOptions,
-    handleStatusChange,
     handleLineFieldChange,
     handleAddLine,
     requestLineDelete,
@@ -103,18 +101,15 @@ export const DrainageEquipPaymentHistorySection: React.FC<
                       forceTopBorder={entryIndex > 0}
                       suppressBottomBorder
                     >
-                      <FormSelect
-                        name="status"
-                        value={entry.status}
-                        onChange={handleStatusChange}
-                        options={statusOptions}
-                        emptyText=""
-                        data-entry-id={entry.id}
-                        disabled={isEntryPaid}
-                        selectClassName={feePayStatusSelectClassName(
-                          entry.status,
-                        )}
-                      />
+                      <div className="flex w-full min-w-0 flex-1 self-stretch">
+                        <span
+                          className={feePayStatusReadOnlyFieldClassName(
+                            isEntryPaid,
+                          )}
+                        >
+                          {isEntryPaid ? "납부" : "미납"}
+                        </span>
+                      </div>
                     </FormField>
                     <FormField
                       label="등록일"
@@ -166,9 +161,8 @@ export const DrainageEquipPaymentHistorySection: React.FC<
                           value={entry.equipPay}
                           onChange={() => {}}
                           readOnly
-                          placeholder="납부금액"
                           data-entry-id={entry.id}
-                          className="pr-8 text-right placeholder:text-left"
+                          className="pr-8 text-right"
                         />
                         <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">
                           원
@@ -260,12 +254,11 @@ export const DrainageEquipPaymentHistorySection: React.FC<
                                     name="amount"
                                     value={line.amount}
                                     onChange={handleLineFieldChange}
-                                    placeholder="금액"
                                     inputMode="numeric"
                                     data-entry-id={entry.id}
                                     data-line-id={line.id}
                                     readOnly={lineFieldsReadOnly}
-                                    className="pr-8 text-right placeholder:text-left"
+                                    className="pr-8 text-right"
                                   />
                                   <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">
                                     원
@@ -291,7 +284,6 @@ export const DrainageEquipPaymentHistorySection: React.FC<
                                   name="remarks"
                                   value={line.remarks}
                                   onChange={handleLineFieldChange}
-                                  placeholder="비고"
                                   data-entry-id={entry.id}
                                   data-line-id={line.id}
                                   readOnly={lineFieldsReadOnly}

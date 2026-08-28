@@ -73,7 +73,6 @@ export const DrainageEquipPaymentHistoryPageView: React.FC = () => {
                     value={userNm}
                     onChange={noopChange}
                     readOnly
-                    placeholder="성명"
                     autoComplete="off"
                   />
                 </FormField>
@@ -84,7 +83,6 @@ export const DrainageEquipPaymentHistoryPageView: React.FC = () => {
                     value={telNo}
                     onChange={noopChange}
                     readOnly
-                    placeholder="전화번호"
                     autoComplete="off"
                   />
                 </FormField>
@@ -145,7 +143,6 @@ export const DrainageEquipPaymentHistoryPageView: React.FC = () => {
                         value={detailAdres}
                         onChange={noopChange}
                         readOnly
-                        placeholder="상세주소"
                         maxLength={200}
                         autoComplete="off"
                       />

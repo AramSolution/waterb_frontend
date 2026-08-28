@@ -157,7 +157,7 @@ export const PurposeManagePageView: React.FC = () => {
                       <span className="text-red-600 mr-1">*</span>건축물 용도
                     </div>
                     <div className="min-w-0 whitespace-nowrap">
-                      <span className="text-red-600 mr-1">*</span>1일 오수발생량
+                      <span className="text-red-600 mr-1">*</span>1일 오수발생량(t)
                     </div>
                     <div>비고</div>
                     <div className="text-center w-[72px]"> </div>

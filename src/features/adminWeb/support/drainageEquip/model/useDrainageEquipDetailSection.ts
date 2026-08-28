@@ -28,6 +28,8 @@ export interface DrainageEquipApiBridge {
 
 export interface UseDrainageEquipDetailSectionOptions {
   onStatusChangeBlocked?: (message: string) => void;
+  /** true면 상태(미납/납부) 변경 핸들러 무시 */
+  statusReadOnly?: boolean;
 }
 
 function sanitizeEquipCostInput(raw: string): string {
@@ -107,6 +109,7 @@ export function useDrainageEquipDetailSection(
       if (key === "id" || key === "detailSeq") return;
 
       if (key === "status") {
+        if (options?.statusReadOnly) return;
         setEntries((prev) => {
           const targetIndex = prev.findIndex((row) => row.id === entryId);
           if (targetIndex < 0) return prev;

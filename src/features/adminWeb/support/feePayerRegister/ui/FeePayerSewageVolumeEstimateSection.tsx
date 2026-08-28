@@ -114,7 +114,10 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
   });
   const renderWonInput = (props: React.ComponentProps<typeof FormInput>) => (
     <div className="relative w-full">
-      <FormInput {...props} className={`pr-8 ${props.className ?? ""}`.trim()} />
+      <FormInput
+        {...props}
+        className={`pr-8 text-right ${props.className ?? ""}`.trim()}
+      />
       <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">
         원
       </span>
@@ -288,77 +291,106 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                   {entryIndex + 1}
                 </div>
 
-                {/* 상태·구분·유형·통지일: md 한 줄(4칸), 모바일은 flex-wrap */}
-                <div className="flex flex-wrap">
-                  <FormField
-                    label="상태"
-                    isFirstRow={entryIndex === 0}
-                    isFirstInRow
-                    forceTopBorder={entryIndex > 0}
-                    mdGridSpan={4}
-                  >
-                    {readOnly ? (
-                      <div className="flex w-full min-w-0 flex-1 self-stretch">
-                        <span
-                          className={feePayStatusReadOnlyFieldClassName(
-                            entry.status === "PAID",
-                          )}
-                        >
-                          {entry.status === "PAID" ? "납부" : "미납"}
-                        </span>
+                {/* 상태·구분·유형·통지일 — 기준단가 블록과 동일 FormField + feePayerPricePair 그리드 */}
+                <FormField
+                  label=" "
+                  fullWidth
+                  fieldOnlyFullWidth
+                  forceTopBorder={entryIndex > 0}
+                  alignFieldStart
+                >
+                  <div className="w-full">
+                    <span className="sr-only">상태, 구분, 유형, 통지일</span>
+                    <div className="feePayerPriceGrid feePayerMetaGrid w-full overflow-hidden rounded-none border border-[#e5e7eb] bg-white">
+                      <div className="flex w-full flex-col md:flex-row md:items-stretch">
+                        <div className="feePayerPricePair flex min-h-[45px] w-full min-w-0 flex-1 flex-col border-b border-[#e5e7eb] md:flex-row md:border-b-0 md:border-r md:border-[#e5e7eb]">
+                          <label className="m-0 flex min-h-[40px] shrink-0 items-center bg-gray-100 px-2 py-1.5 font-bold text-gray-800 register-form-label md:w-[34%] md:max-w-[8.5rem] md:py-2">
+                            상태
+                          </label>
+                          <div className="register-form-mobile-field flex min-h-[40px] flex-1 items-center border-t border-[#e5e7eb] p-[5px] md:min-h-[45px] md:border-t-0">
+                            <div className="w-full min-w-0">
+                              {readOnly ? (
+                                <span
+                                  className={feePayStatusReadOnlyFieldClassName(
+                                    entry.status === "PAID",
+                                  )}
+                                >
+                                  {entry.status === "PAID" ? "납부" : "미납"}
+                                </span>
+                              ) : (
+                                <FormSelect
+                                  name="status"
+                                  value={entry.status}
+                                  onChange={handleEntryFieldChange}
+                                  options={statusOptions}
+                                  data-entry-id={entry.id}
+                                  disabled={readOnly}
+                                  selectClassName={feePayStatusSelectClassName(
+                                    entry.status,
+                                  )}
+                                />
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="feePayerPricePair flex min-h-[45px] w-full min-w-0 flex-1 flex-col border-b border-[#e5e7eb] md:flex-row md:border-b-0 md:border-r md:border-[#e5e7eb]">
+                          <label className="m-0 flex min-h-[40px] shrink-0 items-center bg-gray-100 px-2 py-1.5 font-bold text-gray-800 register-form-label md:w-[34%] md:max-w-[8.5rem] md:py-2">
+                            구분
+                          </label>
+                          <div className="register-form-mobile-field flex min-h-[40px] flex-1 items-center border-t border-[#e5e7eb] p-[5px] md:min-h-[45px] md:border-t-0">
+                            <div className="w-full min-w-0">
+                              <FormSelect
+                                name="category"
+                                value={entry.category}
+                                onChange={handleEntryFieldChange}
+                                options={categoryOptions}
+                                emptyText=""
+                                data-entry-id={entry.id}
+                                disabled={rowReadOnly}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                        <div className="feePayerPricePair flex min-h-[45px] w-full min-w-0 flex-1 flex-col border-b border-[#e5e7eb] md:flex-row md:border-b-0 md:border-r md:border-[#e5e7eb]">
+                          <label className="m-0 flex min-h-[40px] shrink-0 items-center bg-gray-100 px-2 py-1.5 font-bold text-gray-800 register-form-label md:w-[34%] md:max-w-[8.5rem] md:py-2">
+                            유형
+                          </label>
+                          <div className="register-form-mobile-field flex min-h-[40px] flex-1 items-center border-t border-[#e5e7eb] p-[5px] md:min-h-[45px] md:border-t-0">
+                            <div className="w-full min-w-0">
+                              <FormSelect
+                                name="type"
+                                value={entry.type}
+                                onChange={handleEntryFieldChange}
+                                options={getSewageTypeOptions()}
+                                emptyText=""
+                                data-entry-id={entry.id}
+                                disabled={rowReadOnly}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                        <div className="feePayerPricePair flex min-h-[45px] w-full min-w-0 flex-1 flex-col md:flex-row">
+                          <label className="m-0 flex min-h-[40px] shrink-0 items-center bg-gray-100 px-2 py-1.5 font-bold text-gray-800 register-form-label md:w-[34%] md:max-w-[8.5rem] md:py-2">
+                            통지일
+                          </label>
+                          <div className="register-form-mobile-field flex min-h-[40px] flex-1 items-center border-t border-[#e5e7eb] p-[5px] md:min-h-[45px] md:border-t-0">
+                            <div className="w-full min-w-0">
+                              <FormInput
+                                type="date"
+                                name="notifyDate"
+                                value={entry.notifyDate}
+                                onChange={handleEntryFieldChange}
+                                data-entry-id={entry.id}
+                                readOnly={rowReadOnly}
+                                className="text-center"
+                              />
+                            </div>
+                          </div>
+                        </div>
                       </div>
-                    ) : (
-                      <FormSelect
-                        name="status"
-                        value={entry.status}
-                        onChange={handleEntryFieldChange}
-                        options={statusOptions}
-                        data-entry-id={entry.id}
-                        disabled={readOnly}
-                        selectClassName={feePayStatusSelectClassName(
-                          entry.status,
-                        )}
-                      />
-                    )}
-                  </FormField>
-                  <FormField
-                    label="구분"
-                    isFirstInRow
-                    forceTopBorder={entryIndex > 0}
-                    mdGridSpan={4}
-                  >
-                    <FormSelect
-                      name="category"
-                      value={entry.category}
-                      onChange={handleEntryFieldChange}
-                      options={categoryOptions}
-                      emptyText=""
-                      data-entry-id={entry.id}
-                      disabled={rowReadOnly}
-                    />
-                  </FormField>
-                  <FormField label="유형" isFirstInRow mdGridSpan={4}>
-                    <FormSelect
-                      name="type"
-                      value={entry.type}
-                      onChange={handleEntryFieldChange}
-                      options={getSewageTypeOptions()}
-                      emptyText=""
-                      data-entry-id={entry.id}
-                      disabled={rowReadOnly}
-                    />
-                  </FormField>
-                  <FormField label="통지일" isFirstInRow mdGridSpan={4}>
-                    <FormInput
-                      type="date"
-                      name="notifyDate"
-                      value={entry.notifyDate}
-                      onChange={handleEntryFieldChange}
-                      data-entry-id={entry.id}
-                      readOnly={rowReadOnly}
-                    />
-                  </FormField>
-                </div>
+                    </div>
+                  </div>
+                </FormField>
 
                 {/* 1행: 기준단가·오수량·계산 / 2행: 원인자부담금·오수부과량 */}
                 <FormField
@@ -387,9 +419,8 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                                   name="unitPrice"
                                   value={entry.unitPrice}
                                   onChange={handleEntryFieldChange}
-                                  placeholder="예: 12,000"
                                   readOnly
-                                  className="pr-8"
+                                  className="pr-8 text-right"
                                   data-entry-id={entry.id}
                                 />
                                 <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">
@@ -422,7 +453,6 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                                     );
                                   }
                                 }}
-                                placeholder="예: 9.8"
                                 readOnly={rowReadOnly || !isPermitChangeType}
                                 className="pr-8 text-right placeholder:text-left"
                                 style={sewageVolumeInputStyle}
@@ -472,10 +502,9 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                                   name="causerCharge"
                                   value={entry.causerCharge}
                                   onChange={handleEntryFieldChange}
-                                  placeholder="예: 300,000"
                                   data-entry-id={entry.id}
                                   readOnly={rowReadOnly}
-                                  className="pr-8"
+                                  className="pr-8 text-right"
                                 />
                                 <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">
                                   원
@@ -495,7 +524,6 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                                 name="sewageLevyAmount"
                                 value={entry.sewageLevyAmount}
                                 onChange={handleEntryFieldChange}
-                                placeholder="오수부과량"
                                 data-entry-id={entry.id}
                                   readOnly={rowReadOnly}
                                   className="pr-8 text-right placeholder:text-left"
@@ -600,7 +628,7 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                         </div>
                         <div className="flex min-w-0 w-full flex-col border-t border-[#dee2e6] md:-ml-px md:flex-[1.9] md:flex-row md:items-stretch md:border-t-0">
                           <label
-                            className="m-0 flex w-full shrink-0 items-center whitespace-nowrap bg-gray-100 text-base register-form-label md:w-1/4"
+                            className="feePayerDetailFieldLabel m-0 flex w-full shrink-0 items-center whitespace-nowrap bg-gray-100 text-base register-form-label md:w-1/4"
                             style={{
                               border: "1px solid #dee2e6",
                               padding: "5px",
@@ -620,7 +648,6 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                                   onChange={handleEntryFieldChange}
                                   readOnly
                                   className="bg-gray-100"
-                                  placeholder="용도 조회로 선택"
                                   title="용도는 조회 모달로만 지정됩니다. 돋보기를 눌러주세요."
                                   data-entry-id={entry.id}
                                   data-line-id={line.id}
@@ -665,7 +692,7 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                         </div>
                         <div className="flex min-w-0 w-full flex-col border-t border-[#dee2e6] md:-ml-px md:min-w-[15.5rem] md:flex-[1.65] md:flex-row md:items-stretch md:border-t-0">
                           <label
-                            className="m-0 flex w-full shrink-0 items-center whitespace-nowrap bg-gray-100 text-base register-form-label md:w-[42%]"
+                            className="feePayerDetailFieldLabel m-0 flex w-full shrink-0 items-center whitespace-nowrap bg-gray-100 text-base register-form-label md:w-[42%]"
                             style={{
                               border: "1px solid #dee2e6",
                               padding: "5px",
@@ -682,7 +709,6 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                                 name="dailySewage"
                                 value={line.dailySewage}
                                 onChange={handleEntryFieldChange}
-                                placeholder="1일 오수발생량"
                                 readOnly
                                 className="pr-8 text-right placeholder:text-left"
                                 data-entry-id={entry.id}
@@ -718,7 +744,6 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                                 value={formatSewageVolumeDisplayTwoDecimals(
                                   line.sewageQty ?? "",
                                 )}
-                                placeholder="오수량"
                                 title="분류 중분류(단독주택·공동주택 등)·면적·방·세대·1일오수에 따라 자동 산출"
                                 readOnly
                                 className="pr-8 text-right placeholder:text-left"
@@ -778,22 +803,25 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                                 name="area"
                                 value={line.area}
                                 onChange={handleEntryFieldChange}
-                                placeholder="면적"
                                 data-entry-id={entry.id}
                                 data-line-id={line.id}
                                 readOnly={!canEditArea}
                                 className="pr-12 text-right placeholder:text-left"
                               />
                               <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">
-                                m2
+                              m²
                               </span>
                             </div>
                           </div>
                         </div>
                         <div className="flex min-w-0 w-full flex-col border-t border-[#e5e7eb] md:-ml-px md:flex-[1.9] md:flex-row md:items-stretch">
                           <label
-                            className="m-0 flex w-full shrink-0 items-center bg-gray-100 register-form-label md:w-1/4"
-                            style={{ border: "1px solid #dee2e6", borderTop: "none" }}
+                            className="feePayerDetailFieldLabel m-0 flex w-full shrink-0 items-center bg-gray-100 register-form-label md:w-1/4"
+                            style={{
+                              border: "1px solid #dee2e6",
+                              borderTop: "none",
+                              paddingRight: "5px",
+                            }}
                           >
                             방수
                           </label>
@@ -804,8 +832,7 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                                 name="roomCount"
                                 value={line.roomCount ?? ""}
                                 onChange={handleEntryFieldChange}
-                                placeholder="방"
-                                inputMode="decimal"
+                                inputMode="numeric"
                                 data-entry-id={entry.id}
                                 data-line-id={line.id}
                                 readOnly={!canEditRoomCount}
@@ -819,7 +846,7 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                         </div>
                         <div className="flex min-w-0 w-full flex-col border-t border-[#e5e7eb] md:-ml-px md:min-w-[15.5rem] md:flex-[1.65] md:flex-row md:items-stretch">
                           <label
-                            className="m-0 flex w-full shrink-0 items-center whitespace-nowrap bg-gray-100 text-base register-form-label md:w-[42%]"
+                            className="feePayerDetailFieldLabel m-0 flex w-full shrink-0 items-center whitespace-nowrap bg-gray-100 text-base register-form-label md:w-[42%]"
                             style={{
                               border: "1px solid #dee2e6",
                               borderTop: "none",
@@ -835,7 +862,6 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                                 name="householdCount"
                                 value={line.householdCount ?? ""}
                                 onChange={handleEntryFieldChange}
-                                placeholder="세대"
                                 inputMode="numeric"
                                 data-entry-id={entry.id}
                                 data-line-id={line.id}
@@ -934,10 +960,17 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
             try {
               if (useApi) {
                 await del({ itemId, seq, seq2 });
+                const refreshed =
+                  (await feePayerApi?.refreshFeePayerDetail?.(itemId)) ??
+                  false;
+                if (!refreshed) {
+                  handleRemoveDetailLine(entryId, lineId, {
+                    skipPersistTracking: true,
+                  });
+                }
+              } else {
+                handleRemoveDetailLine(entryId, lineId);
               }
-              handleRemoveDetailLine(entryId, lineId, {
-                skipPersistTracking: useApi,
-              });
               setPendingDeleteLine(null);
               setShowLineDeleteSuccessDialog(true);
             } catch (err) {

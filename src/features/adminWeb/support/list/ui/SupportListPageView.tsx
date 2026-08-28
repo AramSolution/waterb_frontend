@@ -171,7 +171,6 @@ export const SupportListPageView: React.FC = () => {
                       onChange={(e) => {
                         setStartDate(e.target.value);
                       }}
-                      placeholder="시작일"
                       maxDate={endDate ? new Date(endDate) : undefined}
                     />
                   </div>
@@ -183,7 +182,6 @@ export const SupportListPageView: React.FC = () => {
                       onChange={(e) => {
                         setEndDate(e.target.value);
                       }}
-                      placeholder="종료일"
                       minDate={startDate ? new Date(startDate) : undefined}
                     />
                   </div>
@@ -230,7 +228,6 @@ export const SupportListPageView: React.FC = () => {
                     onKeyDown={(e) => {
                       if (e.key === "Enter") handleSearch();
                     }}
-                    placeholder="성명 입력"
                     className="w-full border border-gray-300 px-3 py-2 rounded-none focus:outline-none focus:ring-2 focus:ring-blue-500 text-[13px]"
                     autoComplete="off"
                   />
@@ -254,7 +251,6 @@ export const SupportListPageView: React.FC = () => {
                     onKeyDown={(e) => {
                       if (e.key === "Enter") handleSearch();
                     }}
-                    placeholder="주소 입력"
                     className="w-full border border-gray-300 px-3 py-2 rounded-none focus:outline-none focus:ring-2 focus:ring-blue-500 text-[13px]"
                     autoComplete="off"
                   />

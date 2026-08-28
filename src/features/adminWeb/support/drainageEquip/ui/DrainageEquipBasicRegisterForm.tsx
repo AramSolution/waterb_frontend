@@ -109,7 +109,6 @@ export const DrainageEquipBasicRegisterForm: React.FC<
                   value={userNm}
                   onChange={handleInputChange}
                   error={errors.userNm}
-                  placeholder="성명을 입력하세요"
                   maxLength={100}
                   autoComplete="name"
                 />
@@ -126,7 +125,6 @@ export const DrainageEquipBasicRegisterForm: React.FC<
                   value={telNo}
                   onChange={handleInputChange}
                   error={errors.telNo}
-                  placeholder="전화번호를 입력하세요"
                   maxLength={13}
                   autoComplete="tel"
                 />
@@ -196,7 +194,6 @@ export const DrainageEquipBasicRegisterForm: React.FC<
                       name="detailAdres"
                       value={detailAdres}
                       onChange={handleInputChange}
-                      placeholder="상세주소"
                       maxLength={200}
                       error={errors.detailAdres}
                     />
