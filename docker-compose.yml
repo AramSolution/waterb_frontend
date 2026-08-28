@@ -5,12 +5,13 @@ services:
       context: .
       dockerfile: Dockerfile
       # NEXT_PUBLIC_* 는 빌드 타임에 번들에 포함되므로 args로 전달
-      # nginx가 /water/ 경로를 백엔드로 중계 — API_BASE는 호스트만(api.ts가 /water 붙임)
+      # Cloudflare Tunnel(cloudflared, water_cf_net 공유)이 www.gimjewater.kr의
+      # /water/* 를 backend(app:8080)로, 나머지는 frontend:3000으로 라우팅 — 같은 origin이라 CORS 불필요.
       args:
-        NEXT_PUBLIC_API_BASE_URL: https://test3.uaram.co.kr:3443
+        NEXT_PUBLIC_API_BASE_URL: https://www.gimjewater.kr
         NEXT_PUBLIC_PAGE_SIZE: 15
-        # Next가 /water를 직접 받을 때(직접 3000 접속 등) dev 백엔드로 프록시 — Dockerfile ARG/ENV, next.config.js와 동기화
-        WATER_REWRITE_DESTINATION: https://test3.uaram.co.kr:9443/water
+        # Cloudflare 터널 없이 frontend를 직접 열었을 때의 폴백 — water_cf_net으로 backend(app)에 직접 연결
+        WATER_REWRITE_DESTINATION: http://app:8080/water
     restart: unless-stopped
     expose:
       - "3000"
@@ -18,6 +19,7 @@ services:
       - NODE_ENV=production
     networks:
       - app-network
+      - water_cf_net
 
   nginx:
     image: nginx:alpine
@@ -39,3 +41,8 @@ services:
 networks:
   app-network:
     driver: bridge
+  # waterb_backend와 공유하는 외부 네트워크 — 같은 Cloudflare Tunnel의 cloudflared가
+  # 이 frontend 컨테이너에도 도달하고, frontend가 backend(app)에도 직접 도달하도록 연결.
+  # 사전에 `docker network create water_cf_net` 필요 (한 번만, backend 쪽에서 이미 생성했다면 생략).
+  water_cf_net:
+    external: true
