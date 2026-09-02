@@ -31,7 +31,14 @@ import {
   feePayStatusReadOnlyFieldClassName,
   feePayStatusSelectClassName,
 } from "@/features/adminWeb/support/lib/feePayStatusUi";
-import { FEE_PAYER_SEWAGE_INPUT_BACKGROUND_RGBA } from "@/features/adminWeb/support/lib/feePayerSewageInputTint";
+import {
+  FEE_PAYER_SEWAGE_INPUT_BACKGROUND_RGBA,
+  feePayerCalculateButtonBorderStyle,
+  feePayerCalculateColumnBackgroundStyle,
+  feePayerPriceLabelClassName,
+  feePayerPriceLabelStyle,
+  feePayerSewagePriceGridOuterBorderStyle,
+} from "@/features/adminWeb/support/lib/feePayerSewageInputTint";
 import { formatSewageVolumeDisplayTwoDecimals } from "@/features/adminWeb/support/lib/formatSewageVolumeDisplay";
 
 const sewageVolumeInputStyle: React.CSSProperties = {
@@ -422,10 +429,16 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                       기준단가, 오수량, 계산 버튼, 원인자부담금, 오수부과량
                     </span>
                     {/* md: 2+2 열 + 계산열 동일 폭 스페이서로 세로 정렬, 선은 연한 회색 */}
-                    <div className="feePayerPriceGrid w-full overflow-hidden rounded-none border border-[#e5e7eb] bg-white">
+                    <div
+                      className="feePayerPriceGrid w-full overflow-hidden rounded-none border bg-white"
+                      style={feePayerSewagePriceGridOuterBorderStyle}
+                    >
                       <div className="flex w-full flex-col md:flex-row md:items-stretch">
                         <div className="feePayerPricePair flex min-h-[45px] w-full min-w-0 flex-1 flex-col border-b border-[#e5e7eb] md:flex-row md:border-b-0 md:border-r md:border-[#e5e7eb]">
-                          <label className="m-0 flex min-h-[40px] shrink-0 items-center bg-gray-100 px-2 py-1.5 font-bold text-gray-800 register-form-label md:w-[34%] md:max-w-[8.5rem] md:py-2">
+                          <label
+                            className={feePayerPriceLabelClassName}
+                            style={feePayerPriceLabelStyle}
+                          >
                             기준단가
                           </label>
                           <div className="register-form-mobile-field flex min-h-[40px] flex-1 items-center border-t border-[#e5e7eb] p-[5px] md:min-h-[45px] md:border-t-0">
@@ -448,7 +461,10 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                           </div>
                         </div>
                         <div className="feePayerPricePair flex min-h-[45px] w-full min-w-0 flex-1 flex-col border-b border-[#e5e7eb] md:flex-row md:border-b-0 md:border-r md:border-[#e5e7eb]">
-                          <label className="m-0 flex min-h-[40px] shrink-0 items-center bg-gray-100 px-2 py-1.5 font-bold text-gray-800 register-form-label md:w-[34%] md:max-w-[8.5rem] md:py-2">
+                          <label
+                            className={feePayerPriceLabelClassName}
+                            style={feePayerPriceLabelStyle}
+                          >
                             오수량
                           </label>
                           <div className="register-form-mobile-field flex min-h-[40px] flex-1 items-center border-t border-[#e5e7eb] p-[5px] md:min-h-[45px] md:border-t-0">
@@ -481,11 +497,15 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                             </div>
                           </div>
                         </div>
-                        <div className="flex min-h-[45px] w-full shrink-0 items-center justify-center border-b border-[#e5e7eb] px-2 py-2 md:w-[104px] md:border-b-0 md:border-r-0 md:bg-gray-50/60">
+                        <div
+                          className="flex min-h-[45px] w-full shrink-0 items-center justify-center border-b border-[#e5e7eb] px-2 py-2 md:w-[104px] md:border-b-0 md:border-r-0"
+                          style={feePayerCalculateColumnBackgroundStyle}
+                        >
                           {!readOnly ? (
                             <button
                               type="button"
-                              className="inline-flex min-h-10 min-w-[80px] items-center justify-center rounded-full border border-gray-300 bg-white px-4 py-1.5 text-base text-gray-800 shadow-sm transition-colors hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                              className="inline-flex min-h-10 min-w-[80px] items-center justify-center rounded-full border bg-white px-4 py-1.5 text-base text-gray-800 shadow-sm transition-colors hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                              style={feePayerCalculateButtonBorderStyle}
                               onClick={() => void handleCalculateEntry(entry.id)}
                               disabled={
                                 calcBusyEntryId === entry.id ||
@@ -497,7 +517,8 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                             </button>
                           ) : (
                             <div
-                              className="inline-flex min-h-10 min-w-[80px] items-center justify-center rounded-full border border-gray-200 bg-gray-100 px-4 py-1.5 text-base text-gray-500"
+                              className="inline-flex min-h-10 min-w-[80px] items-center justify-center rounded-full border bg-gray-100 px-4 py-1.5 text-base text-gray-500"
+                              style={feePayerCalculateButtonBorderStyle}
                               aria-hidden
                             >
                               계산
@@ -508,7 +529,10 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                       {/* 1행↔2행 가로 구분: 데이터 열만(계산 열·스페이서 아래 선 없음) */}
                       <div className="feePayerPriceGridRow2 flex w-full flex-col bg-gray-50/50 md:flex-row md:items-stretch">
                         <div className="feePayerPricePair flex min-h-[45px] w-full min-w-0 flex-1 flex-col border-b border-[#e5e7eb] shadow-[inset_0_1px_0_0_#d1d5db] md:flex-row md:border-b-0 md:border-r md:border-[#e5e7eb]">
-                          <label className="m-0 flex min-h-[40px] shrink-0 items-center bg-gray-100 px-2 py-1.5 font-bold text-gray-800 register-form-label md:w-[34%] md:max-w-[8.5rem] md:border-0 md:py-2">
+                          <label
+                            className={`${feePayerPriceLabelClassName} md:border-0`}
+                            style={feePayerPriceLabelStyle}
+                          >
                             원인자부담금
                           </label>
                           <div className="register-form-mobile-field flex min-h-[40px] flex-1 items-center border-t border-[#e5e7eb] p-[5px] md:min-h-[45px] md:border-t-0">
@@ -531,7 +555,10 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                           </div>
                         </div>
                         <div className="feePayerPricePair flex min-h-[45px] w-full min-w-0 flex-1 flex-col md:flex-row md:border-r md:border-[#e5e7eb] md:shadow-[inset_0_1px_0_0_#d1d5db]">
-                          <label className="m-0 flex min-h-[40px] shrink-0 items-center bg-gray-100 px-2 py-1.5 font-bold text-gray-800 register-form-label md:w-[34%] md:max-w-[8.5rem] md:border-0 md:py-2">
+                          <label
+                            className={`${feePayerPriceLabelClassName} md:border-0`}
+                            style={feePayerPriceLabelStyle}
+                          >
                             오수부과량
                           </label>
                           <div className="register-form-mobile-field flex min-h-[40px] flex-1 items-center border-t border-[#e5e7eb] p-[5px] md:min-h-[45px] md:border-t-0">
@@ -552,7 +579,8 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                           </div>
                         </div>
                         <div
-                          className="hidden min-h-[45px] shrink-0 md:block md:w-[104px] md:bg-gray-50/50"
+                          className="hidden min-h-[45px] shrink-0 md:block md:w-[104px]"
+                          style={feePayerCalculateColumnBackgroundStyle}
                           aria-hidden
                         />
                       </div>

@@ -13,7 +13,12 @@ import "@/shared/styles/admin/register-form.css";
 import {
   feePayStatusReadOnlyFieldClassName,
 } from "@/features/adminWeb/support/lib/feePayStatusUi";
-import { FEE_PAYER_SEWAGE_INPUT_BACKGROUND_RGBA } from "@/features/adminWeb/support/lib/feePayerSewageInputTint";
+import {
+  FEE_PAYER_SEWAGE_INPUT_BACKGROUND_RGBA,
+  feePayerPriceLabelClassName,
+  feePayerPriceLabelStyle,
+  feePayerSewagePriceGridOuterBorderStyle,
+} from "@/features/adminWeb/support/lib/feePayerSewageInputTint";
 
 /** 납부내역 — 원인자부담 납부내역 (블록 내 `추가` = 일자·금액·비고 행). */
 export interface CauserPaymentHistorySectionProps {
@@ -197,10 +202,16 @@ export const CauserPaymentHistorySection: React.FC<
                     <span className="sr-only">
                       오수부과량, 오수량, 원인자부담금, 납부금액
                     </span>
-                    <div className="feePayerPriceGrid w-full overflow-hidden rounded-none border border-[#e5e7eb] bg-white">
+                    <div
+                      className="feePayerPriceGrid w-full overflow-hidden rounded-none border bg-white"
+                      style={feePayerSewagePriceGridOuterBorderStyle}
+                    >
                       <div className="flex w-full flex-col md:flex-row md:items-stretch">
                         <div className="feePayerPricePair flex min-h-[45px] w-full min-w-0 flex-1 flex-col border-b border-[#e5e7eb] md:flex-row md:border-b-0 md:border-r md:border-[#e5e7eb]">
-                          <label className="m-0 flex min-h-[40px] shrink-0 items-center bg-gray-100 px-2 py-1.5 font-bold text-gray-800 register-form-label md:w-[34%] md:max-w-[8.5rem] md:py-2">
+                          <label
+                            className={feePayerPriceLabelClassName}
+                            style={feePayerPriceLabelStyle}
+                          >
                             오수부과량
                           </label>
                           <div className="register-form-mobile-field flex min-h-[40px] flex-1 items-center border-t border-[#e5e7eb] p-[5px] md:min-h-[45px] md:border-t-0">
@@ -221,7 +232,10 @@ export const CauserPaymentHistorySection: React.FC<
                           </div>
                         </div>
                         <div className="feePayerPricePair flex min-h-[45px] w-full min-w-0 flex-1 flex-col border-b border-[#e5e7eb] md:flex-row md:border-b-0 md:border-[#e5e7eb]">
-                          <label className="m-0 flex min-h-[40px] shrink-0 items-center bg-gray-100 px-2 py-1.5 font-bold text-gray-800 register-form-label md:w-[34%] md:max-w-[8.5rem] md:py-2">
+                          <label
+                            className={feePayerPriceLabelClassName}
+                            style={feePayerPriceLabelStyle}
+                          >
                             오수량
                           </label>
                           <div className="register-form-mobile-field flex min-h-[40px] flex-1 items-center border-t border-[#e5e7eb] p-[5px] md:min-h-[45px] md:border-t-0">
@@ -245,7 +259,10 @@ export const CauserPaymentHistorySection: React.FC<
                       </div>
                       <div className="feePayerPriceGridRow2 flex w-full flex-col bg-gray-50/50 md:flex-row md:items-stretch">
                         <div className="feePayerPricePair flex min-h-[45px] w-full min-w-0 flex-1 flex-col border-b border-[#e5e7eb] shadow-[inset_0_1px_0_0_#d1d5db] md:flex-row md:border-b-0 md:border-r md:border-[#e5e7eb]">
-                          <label className="m-0 flex min-h-[40px] shrink-0 items-center bg-gray-100 px-2 py-1.5 font-bold text-gray-800 register-form-label md:w-[34%] md:max-w-[8.5rem] md:border-0 md:py-2">
+                          <label
+                            className={`${feePayerPriceLabelClassName} md:border-0`}
+                            style={feePayerPriceLabelStyle}
+                          >
                             원인자부담금
                           </label>
                           <div className="register-form-mobile-field flex min-h-[40px] flex-1 items-center border-t border-[#e5e7eb] p-[5px] md:min-h-[45px] md:border-t-0">
@@ -266,7 +283,10 @@ export const CauserPaymentHistorySection: React.FC<
                           </div>
                         </div>
                         <div className="feePayerPricePair flex min-h-[45px] w-full min-w-0 flex-1 flex-col md:flex-row md:shadow-[inset_0_1px_0_0_#d1d5db]">
-                          <label className="m-0 flex min-h-[40px] shrink-0 items-center bg-gray-100 px-2 py-1.5 font-bold text-gray-800 register-form-label md:w-[34%] md:max-w-[8.5rem] md:border-0 md:py-2">
+                          <label
+                            className={`${feePayerPriceLabelClassName} md:border-0`}
+                            style={feePayerPriceLabelStyle}
+                          >
                             납부금액
                           </label>
                           <div className="register-form-mobile-field flex min-h-[40px] flex-1 items-center border-t border-[#e5e7eb] p-[5px] md:min-h-[45px] md:border-t-0">
