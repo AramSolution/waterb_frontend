@@ -1,33 +1,6 @@
 import { apiClient, ApiError } from "@/shared/lib/apiClient";
 import { API_ENDPOINTS } from "@/shared/config/apiAdmin";
 
-/** GET /api/admin/artchoi 응답 항목 (ArtchoiListItemResponse) */
-export interface MemberArtchoiListItem {
-  choiSeq?: number;
-  resultGb?: string;
-  baseId?: string;
-  item1?: string;
-  item2?: string;
-  item3?: string;
-  item4?: string;
-  item5?: string;
-  item6?: string;
-  item7?: string;
-  item8?: string;
-  item9?: string;
-  item10?: string;
-  item11?: string;
-  item12?: string;
-  item13?: string;
-  item14?: string;
-  item15?: string;
-  item16?: string;
-  item17?: string;
-  item18?: string;
-  item19?: string;
-  item20?: string;
-}
-
 // 회원 정보 타입
 export interface Member {
   id: number;
@@ -436,50 +409,6 @@ export class MemberService {
         throw error;
       }
       throw new ApiError(0, "관리자 회원 수정 중 오류가 발생했습니다.");
-    }
-  }
-
-  /** GET /api/admin/artchoi — ARTCHOI 선정 결과 (서버 정렬: Y, R, N) */
-  static async getMemberSelectionList(): Promise<MemberArtchoiListItem[]> {
-    try {
-      const response = await apiClient.get<MemberArtchoiListItem[]>(
-        API_ENDPOINTS.MEMBER_SELECTION.LIST,
-      );
-      return Array.isArray(response) ? response : [];
-    } catch (error) {
-      console.error("getMemberSelectionList error:", error);
-      if (error instanceof ApiError) throw error;
-      throw new ApiError(0, "선정 결과를 불러오는 중 오류가 발생했습니다.");
-    }
-  }
-
-  /**
-   * 회원 선정 업무 실행
-   * 백엔드 API: POST /api/admin/artchoi/selection-insert
-   */
-  static async runMemberSelection(params: {
-    list: {
-      resultGb?: string;
-      baseId: string;
-      item1?: string; item2?: string; item3?: string; item4?: string;
-      item5?: string; item6?: string; item7?: string; item8?: string;
-      item9?: string; item10?: string; item11?: string; item12?: string;
-      item13?: string; item14?: string; item15?: string; item16?: string;
-      item17?: string; item18?: string; item19?: string; item20?: string;
-    }[];
-    selectCnt: number;
-    reserveCnt: number;
-  }): Promise<{ result?: string; message?: string }> {
-    try {
-      const response = await apiClient.post<{ result?: string; message?: string }>(
-        API_ENDPOINTS.MEMBER_SELECTION.RUN,
-        params,
-      );
-      return response ?? {};
-    } catch (error) {
-      console.error("runMemberSelection error:", error);
-      if (error instanceof ApiError) throw error;
-      throw new ApiError(0, "회원 선정 처리 중 오류가 발생했습니다.");
     }
   }
 

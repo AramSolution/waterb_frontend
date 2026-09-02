@@ -70,12 +70,13 @@ export const CauserPaymentHistorySection: React.FC<
 
   return (
     <div className="bg-white rounded-lg shadow mt-6 fee-payer-register-scope">
-      <div className="px-6 py-4 border-b border-gray-200 flex flex-wrap items-center gap-2">
+      <div className="px-4 py-4 border-b border-gray-200 flex flex-wrap items-center gap-2">
         <h5 className="text-lg font-semibold mb-0">원인자부담 납부내역</h5>
       </div>
 
       <div className="p-0 pb-6">
         {entries.map((entry, entryIndex) => {
+          const displayIndex = entries.length - entryIndex;
           const isEntryPaid = entry.status === "PAID";
           const lineFieldsReadOnly = isEntryPaid;
           return (
@@ -83,8 +84,8 @@ export const CauserPaymentHistorySection: React.FC<
             key={entry.id}
             className={
               entryIndex > 0
-                ? "mt-0 pt-6 border-t border-gray-200 mx-6"
-                : "mx-6 mt-0 pt-4 pb-0"
+                ? "mt-0 pt-6 px-4"
+                : "px-4 mt-0 pt-4 pb-0"
             }
           >
             <div className="flex flex-col md:flex-row md:items-stretch">
@@ -92,18 +93,18 @@ export const CauserPaymentHistorySection: React.FC<
                 className="hidden md:flex w-11 shrink-0 items-start justify-center py-3 bg-gray-200 text-gray-800 font-semibold text-sm border border-gray-200 border-b-0 md:border-b md:border-r-0"
                 aria-hidden
               >
-                {entryIndex + 1}
+                {displayIndex}
               </div>
               <div className="min-w-0 flex-1 border border-gray-200 md:border-l-0">
                 <div className="md:hidden px-3 py-2 bg-gray-100 border-b border-gray-200 text-sm font-semibold text-gray-800">
-                  {entryIndex + 1}
+                  {displayIndex}
                 </div>
 
                 <FormField
                   label=" "
                   fullWidth
                   fieldOnlyFullWidth
-                  forceTopBorder={entryIndex > 0}
+                  suppressTopBorder={entryIndex > 0}
                   alignFieldStart
                 >
                   <div className="w-full">
@@ -328,7 +329,7 @@ export const CauserPaymentHistorySection: React.FC<
                   >
                     <div className="w-full">
                       <span className="sr-only">
-                        {entryIndex + 1}번 블록 납부 이력 {lineIndex + 1} — 일자,
+                        {displayIndex}번 블록 납부 이력 {lineIndex + 1} — 일자,
                         금액, 비고
                       </span>
                       <div className="feePayerPaymentLineGrid flex w-full flex-col gap-0 md:flex-row md:flex-nowrap md:items-stretch">

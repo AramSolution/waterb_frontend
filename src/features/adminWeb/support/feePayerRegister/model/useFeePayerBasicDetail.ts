@@ -254,7 +254,7 @@ export function mapFeePayerDetailDtoToInitialForm(
   const detailAdres = String(data.detailAdres ?? "").trim();
 
   const blocks = [...(data.details ?? [])].sort(
-    (a, b) => numOrZero(a.seq) - numOrZero(b.seq),
+    (a, b) => numOrZero(b.seq) - numOrZero(a.seq),
   );
 
   const entries: SewageEstimateEntry[] = blocks.map((block) => {

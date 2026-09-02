@@ -1062,10 +1062,9 @@ if (response.result === "00") {
 
 ## 📚 Reference Implementation
 
-- **Support (artprom)**: `src/features/adminWeb/support/update/model/useSupportUpdate.ts`
-- **Support Application (artappm)**: `src/features/adminWeb/support/application/register/model/useSupportApplicationRegister.ts`
-- **File API**: `src/entities/adminWeb/support/api/supportApi.ts`
-- **Application File API**: `src/entities/adminWeb/support/application/api/supportApplicationApi.ts`
+- **오수 원인자부담금 등록:** `src/features/adminWeb/support/feePayerRegister/model/useFeePayerBasicRegister.ts`
+- **배수설비 등록:** `src/features/adminWeb/support/drainageEquip/model/useDrainageEquipBasicRegister.ts`
+- **게시판 첨부:** `src/features/adminWeb/article/register/ui/ArticleRegisterForm.tsx`
 
 ---
 

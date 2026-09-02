@@ -69,6 +69,7 @@ export const DrainageEquipPaymentHistorySection: React.FC<
 
       <div className="p-0 pb-6">
         {entries.map((entry, entryIndex) => {
+          const displayIndex = entries.length - entryIndex;
           const isEntryPaid = entry.status === "PAID";
           const lineFieldsReadOnly = isEntryPaid;
 
@@ -77,7 +78,7 @@ export const DrainageEquipPaymentHistorySection: React.FC<
               key={entry.id}
               className={
                 entryIndex > 0
-                  ? "mt-0 pt-6 border-t border-gray-200 mx-6"
+                  ? "mt-0 pt-6 mx-6"
                   : "mx-6 mt-0 pt-4 pb-0"
               }
             >
@@ -86,11 +87,11 @@ export const DrainageEquipPaymentHistorySection: React.FC<
                   className="hidden md:flex w-11 shrink-0 items-start justify-center py-3 bg-gray-200 text-gray-800 font-semibold text-sm border border-gray-200 border-b-0 md:border-b md:border-r-0"
                   aria-hidden
                 >
-                  {entryIndex + 1}
+                  {displayIndex}
                 </div>
                 <div className="min-w-0 flex-1 border border-gray-200 md:border-l-0">
                   <div className="md:hidden px-3 py-2 bg-gray-100 border-b border-gray-200 text-sm font-semibold text-gray-800">
-                    {entryIndex + 1}
+                    {displayIndex}
                   </div>
 
                   <div className="flex flex-wrap">
@@ -98,7 +99,7 @@ export const DrainageEquipPaymentHistorySection: React.FC<
                       label="상태"
                       isFirstRow={entryIndex === 0}
                       isFirstInRow
-                      forceTopBorder={entryIndex > 0}
+                      suppressTopBorder={entryIndex > 0}
                       suppressBottomBorder
                     >
                       <div className="flex w-full min-w-0 flex-1 self-stretch">
@@ -114,7 +115,7 @@ export const DrainageEquipPaymentHistorySection: React.FC<
                     <FormField
                       label="등록일"
                       isFirstInRow
-                      forceTopBorder={entryIndex > 0}
+                      suppressTopBorder={entryIndex > 0}
                       suppressBottomBorder
                     >
                       <FormInput
@@ -209,7 +210,7 @@ export const DrainageEquipPaymentHistorySection: React.FC<
                     >
                       <div className="w-full">
                         <span className="sr-only">
-                          {entryIndex + 1}번 등록분 납부 이력 {lineIndex + 1}
+                          {displayIndex}번 등록분 납부 이력 {lineIndex + 1}
                         </span>
                         <div className="flex w-full flex-col gap-0 md:flex-row md:flex-nowrap md:items-stretch">
                           <div className="flex min-w-0 w-full flex-col md:w-[17rem] md:flex-none md:flex-row md:items-stretch">

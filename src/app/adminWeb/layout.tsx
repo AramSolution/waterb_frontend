@@ -3,8 +3,11 @@ import { AuthGuard } from '@/entities/auth/ui/AuthGuard';
 import '@/shared/styles/admin/globals.css';
 
 export const metadata: Metadata = {
-  title: '관리자 시스템',
-  description: '관리자 페이지',
+  title: {
+    default: '김제시 상하수도 관리',
+    template: '%s | 김제시 상하수도 관리',
+  },
+  description: '김제시 상하수도 관리 관리자',
 };
 
 export default function AdminLayout({

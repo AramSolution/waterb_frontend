@@ -79,58 +79,6 @@ export const API_ENDPOINTS = {
     DELETE_CMM_DETAIL_CODE: "/api/cont/code/deleteCmmDetailCode.Ajax",
   },
   SUPPORT: {
-    LIST: "/api/admin/artprom/list",
-    EXCEL_LIST: "/api/admin/artprom/excel-list",
-    BASE: "/api/admin/artprom",
-    REGISTER: "/api/admin/artprom/",
-    UPDATE: "/api/admin/artprom/",
-    /** 기준년월별 상담일정(달력) GET /api/admin/artprom/{proId}/list01-options?workYm=YYYYMM */
-    LIST01_OPTIONS: (proId: string, workYm: string) =>
-      `/api/admin/artprom/${encodeURIComponent(proId)}/list01-options?workYm=${encodeURIComponent(workYm)}`,
-    /** 사업대상(PRO_TARGET) 단건 GET /api/admin/artprom/{proId}/pro-target */
-    PRO_TARGET: (proId: string) =>
-      `/api/admin/artprom/${encodeURIComponent(proId)}/pro-target`,
-    /** 사업구분(PRO_GB) 단건 GET /api/admin/artprom/{proId}/pro-gb */
-    PRO_GB: (proId: string) =>
-      `/api/admin/artprom/${encodeURIComponent(proId)}/pro-gb`,
-    /** 멘토신청관리 사업명 셀렉트 — GET (REQ_GB 멘토 Y, STTUS A, RUN_STA 02) */
-    MENTOR_APPLICATION_BUSINESSES:
-      "/api/admin/artprom/mentor-application/businesses",
-    DETAIL_LIST: "/api/admin/artappm/list",
-    DETAIL_EXCEL_LIST: "/api/admin/artappm/excel-list",
-    /** 선정관리용 신청 목록 조회 (페이징 없음) */
-    SELECTION_LIST: "/api/admin/artappm/selection-list",
-    /** 랜덤 신청자 선정 (f_choicelist) */
-    CHOICE_LIST: "/api/admin/artappm/choice-list",
-    /** 선정관리 선정여부 일괄 변경 */
-    SELECTION_UPDATE: "/api/admin/artappm/selection-update",
-    APPLICATION_REGISTER: "/api/admin/artappm/",
-    APPLICATION_DETAIL_BASE: "/api/admin/artappm",
-    /** 수강확인증 목록 엑셀 (페이징 없음, searchProId/searchProSeq/searchReqEsntlId) */
-    STUDY_CERT_EXCEL: "/api/admin/artappm/study-cert-list/excel",
-    /** 상담관리(멘토지정) ARTADVI */
-    ARTADVI_LIST: "/api/admin/artadvi/list",
-    ARTADVI_INSERT: "/api/admin/artadvi/",
-    ARTADVI_UPDATE: "/api/admin/artadvi/",
-    /** 지원사업 멘토목록(ARTAPMM) */
-    MENTOR_LIST: (proId: string) =>
-      `/api/admin/artappm/${encodeURIComponent(proId)}/mentors`,
-    MENTOR_DELETE: (reqId: string) =>
-      `/api/admin/artappm/mentors/${encodeURIComponent(reqId)}`,
-    /** 멘토 신청 등록 ARTAPMM — POST multipart: data(JSON), mentorApplicationFiles */
-    MENTOR_APPLICATION_REGISTER: (proId: string) =>
-      `/api/admin/artappm/${encodeURIComponent(proId)}/mentor-applications`,
-    /** 멘토 신청(ARTAPMM) 목록 — POST JSON: searchProId, searchUserNm, start, length */
-    MENTOR_APPLICATION_LIST: "/api/admin/artappm/mentor-application-list",
-    /** 멘토 신청 중복 여부 — GET ?reqEsntlId=&proSeq= */
-    MENTOR_APPLICATION_DUPLICATE_CHECK: (proId: string) =>
-      `/api/admin/artappm/${encodeURIComponent(proId)}/mentor-application-duplicate`,
-    /** 멘토 신청 단건 상세 — GET */
-    MENTOR_APPLICATION_DETAIL: (proId: string, reqId: string) =>
-      `/api/admin/artappm/${encodeURIComponent(proId)}/mentor-applications/${encodeURIComponent(reqId)}`,
-    /** 멘토 신청 수정 — PUT multipart (등록과 동일) */
-    MENTOR_APPLICATION_UPDATE: (proId: string, reqId: string) =>
-      `/api/admin/artappm/${encodeURIComponent(proId)}/mentor-applications/${encodeURIComponent(reqId)}`,
     /** 오수 원인자부담금 관리 목록 — POST JSON, body 생략 가능(전체) */
     FEE_PAYER_LIST: "/api/admin/support/fee-payer/list",
     /** 오수 원인자부담금 미납 목록(대시보드 등) — POST JSON { baseMonth, startIndex, lengthPage } */
@@ -173,47 +121,6 @@ export const API_ENDPOINTS = {
     /** 배수설비 등록·수정 — POST */
     DRAINAGE_EQUIP_REGISTER: "/api/admin/support/drainage-equip",
   },
-  /** 공부의 명수(ARTPROM proGb 08) — adminWeb ArtappsManageController */
-  ARTAPPS: {
-    LIST: "/api/admin/artapps/list",
-    EXCEL_LIST: "/api/admin/artapps/excel-list",
-    /** ARTAPPM INNER JOIN ARTAPPS 신청목록 */
-    APPLICATION_LIST: "/api/admin/artapps/application-list",
-    BASE: "/api/admin/artapps",
-    REGISTER: "/api/admin/artapps/",
-    UPDATE: "/api/admin/artapps/",
-    /** REQ_ID 단위 ARTAPPS·ARTAPPM 신청 1건 삭제 */
-    DELETE_APPLICATIONS_BY_REQ_ID: (reqId: string) =>
-      `/api/admin/artapps/applications/by-req-id/${encodeURIComponent(reqId)}`,
-    /** REQ_ID 단위 ARTAPPS·ARTAPPM 신청 상태 변경 */
-    UPDATE_APPLICATION_STATUS_BY_REQ_ID: (reqId: string, sttusCode: string) =>
-      `/api/admin/artapps/applications/by-req-id/${encodeURIComponent(reqId)}/status-code?sttusCode=${encodeURIComponent(sttusCode)}`,
-  },
-  NEIS: {
-    GUNSAN_SCHOOLS: "/api/neis/gunsan-schools",
-    CLASS_INFO: "/api/neis/class-info",
-  },
-  ARMUSER: {
-    BASE: "/api/admin/armuser",
-    LIST: "/api/admin/armuser/list",
-    LIST_EXCEL: "/api/admin/armuser/list/excel",
-  },
-  ADMIN_ARMCHIL: {
-    CHILDREN: "/api/admin/armchil/children",
-    CHILDREN_EXCEL: "/api/admin/armchil/children/excel",
-    /** 자녀(학생) 기준 학부모 목록: GET /api/admin/armchil/parents?cEsntlId=xxx */
-    PARENTS: "/api/admin/armchil/parents",
-  },
-  ACADEMY: {
-    LIST: "/api/admin/armuser/list",
-    DELETE: "/api/admin/armuser/delete",
-  },
-  MEMBER_SELECTION: {
-    /** 회원 선정 업무: 선정 버튼 클릭 시 호출 */
-    RUN: "/api/admin/artchoi/selection-insert",
-    /** 선정 결과 목록 (Y → R → N 정렬) */
-    LIST: "/api/admin/artchoi",
-  },
   /** 관리자 배너(ARMBANR) — BannerManageController */
   BANNER: {
     LIST: "/api/admin/banner/list",
@@ -226,32 +133,6 @@ export const API_ENDPOINTS = {
       `/api/admin/banner/${encodeURIComponent(banrCd)}/image`,
     delete: (banrCd: string) =>
       `/api/admin/banner/${encodeURIComponent(banrCd)}`,
-  },
-  FRANCHISE: {
-    // 가맹학원(희망사업 신청) 목록 / 엑셀
-    LIST: "/api/admin/artedum/list",
-    EXCEL_LIST: "/api/admin/artedum/list/excel",
-    /** 가맹학원(희망사업 신청) 등록 */
-    REGISTER: "/api/admin/artedum/",
-    /** 가맹학원 상세/수정: GET /api/admin/artedum/{eduEsntlId}/{eduGb}, PUT 동일 */
-    detailPath: (eduEsntlId: string, eduGb: string) =>
-      `/api/admin/artedum/${encodeURIComponent(eduEsntlId)}/${encodeURIComponent(eduGb)}`,
-    /** 가맹학원 첨부파일 1건 삭제: DELETE /api/admin/artedum/{eduEsntlId}/{eduGb}/files/{fileId}/{seq} */
-    deleteFilePath: (
-      eduEsntlId: string,
-      eduGb: string,
-      fileId: number | string,
-      seq: number | string,
-    ) =>
-      `${API_ENDPOINTS.FRANCHISE.detailPath(eduEsntlId, eduGb)}/files/${encodeURIComponent(String(fileId))}/${encodeURIComponent(String(seq))}`,
-    /** 가맹학원 신청과목(ARTEDUD) 1건 삭제: DELETE /api/admin/artedum/{eduEsntlId}/{eduGb}/subjects/{seq} */
-    deleteSubjectPath: (
-      eduEsntlId: string,
-      eduGb: string,
-      seq: number | string,
-    ) =>
-      `${API_ENDPOINTS.FRANCHISE.detailPath(eduEsntlId, eduGb)}/subjects/${encodeURIComponent(String(seq))}`,
-    DELETE: "/api/admin/franchise/delete",
   },
   DASHBOARD: {
     PAYMENT_MOM: "/api/admin/dashboard/payment-mom",

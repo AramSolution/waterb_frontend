@@ -1,9 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
-  SupportService,
-  Support,
-  ApplicantListResponse,
+  type Support,
   deleteFeePayerDetail,
   postFeePayerList,
   postFeePayerExcelList,
@@ -101,11 +99,6 @@ export function useSupportList() {
     "danger" | "warning" | "success"
   >("warning");
   const [showSearchForm, setShowSearchForm] = useState(false);
-  const [showApplicantDialog, setShowApplicantDialog] = useState(false);
-  const [selectedApplicantBusinessId, setSelectedApplicantBusinessId] =
-    useState<string | null>(null);
-  const [applicants, setApplicants] = useState<any[]>([]);
-  const [applicantLoading, setApplicantLoading] = useState(false);
 
   const [supports, setSupports] = useState<Support[]>([]);
   const [totalElements, setTotalElements] = useState(0);
@@ -288,7 +281,7 @@ export function useSupportList() {
       setTotalElements(feeTotal);
       setTotalPages(Math.max(1, Math.ceil(feeTotal / pageSize)));
     } catch (err) {
-      console.error("지원사업 목록 조회 실패:", err);
+      console.error("오수 원인자부담금 목록 조회 실패:", err);
 
       if (err instanceof ApiError) {
         if (err.status === 401) {
@@ -302,7 +295,7 @@ export function useSupportList() {
           setError(err.message);
         }
       } else {
-        setError("지원사업 목록을 불러오는 중 오류가 발생했습니다.");
+        setError("오수 원인자부담금 목록을 불러오는 중 오류가 발생했습니다.");
       }
     } finally {
       setLoading(false);
@@ -521,56 +514,6 @@ export function useSupportList() {
     }, 100);
   };
 
-  // 신청인 목록 조회 핸들러
-  const handleApplicantClick = async (businessId: string) => {
-    setSelectedApplicantBusinessId(businessId);
-    setShowApplicantDialog(true);
-    setApplicantLoading(true);
-
-    try {
-      // TODO: 백엔드 API 완료 후 주석 해제
-      const response = await SupportService.getApplicantList({ businessId });
-      let applicantList: any[] = [];
-
-      if (Array.isArray(response)) {
-        applicantList = response;
-      } else if (response && typeof response === "object") {
-        const responseObj = response as ApplicantListResponse;
-        if (Array.isArray(responseObj.data)) {
-          applicantList = responseObj.data;
-        } else if (Array.isArray(responseObj.Array)) {
-          applicantList = responseObj.Array;
-        }
-      }
-
-      setApplicants(applicantList);
-    } catch (err) {
-      console.error("신청인 목록 조회 실패:", err);
-      if (err instanceof ApiError) {
-        if (err.status === 401) {
-          setError("인증에 실패했습니다. 다시 로그인해주세요.");
-          setTimeout(() => {
-            window.location.href = "/adminWeb/login";
-          }, 2000);
-        } else {
-          setError(
-            err.message || "신청인 목록을 불러오는 중 오류가 발생했습니다.",
-          );
-        }
-      } else {
-        setError("신청인 목록을 불러오는 중 오류가 발생했습니다.");
-      }
-    } finally {
-      setApplicantLoading(false);
-    }
-  };
-
-  const handleApplicantDialogClose = () => {
-    setShowApplicantDialog(false);
-    setSelectedApplicantBusinessId(null);
-    setApplicants([]);
-  };
-
   // 엑셀 다운로드 핸들러
   const handleExcelDownload = async () => {
     try {
@@ -667,9 +610,6 @@ export function useSupportList() {
     deleteFailMessage,
     deleteFailDialogType,
     showSearchForm,
-    showApplicantDialog,
-    applicants,
-    applicantLoading,
     supports,
     totalElements,
     totalPages,
@@ -690,8 +630,6 @@ export function useSupportList() {
     handleDeleteFailDialogClose,
     handleSort,
     handleSearch,
-    handleApplicantClick,
-    handleApplicantDialogClose,
     handleExcelDownload,
     setStartDate,
     setEndDate,

@@ -390,7 +390,7 @@ export function useFeePayerSewageVolumeEstimate(
   const handleAddEntry = useCallback(() => {
     setEntries((prev) => {
       if (!prev.every((e) => e.status === "PAID")) return prev;
-      return [...prev, formatEntryNumericDisplay(createEntry())];
+      return [formatEntryNumericDisplay(createEntry()), ...prev];
     });
   }, []);
 
@@ -587,7 +587,7 @@ export function useFeePayerSewageVolumeEstimate(
           if (target.status === value) return prev;
           if (value === "UNPAID") {
             const hasNewerPaid = prev
-              .slice(targetIndex + 1)
+              .slice(0, targetIndex)
               .some((row) => row.status === "PAID");
             if (hasNewerPaid) {
               const message =

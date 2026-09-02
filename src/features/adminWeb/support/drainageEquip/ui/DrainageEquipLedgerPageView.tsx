@@ -436,7 +436,6 @@ export const DrainageEquipLedgerPageView: React.FC = () => {
                     onKeyDown={(e) => {
                       if (e.key === "Enter") handleSearch();
                     }}
-                    placeholder="성명 입력"
                     className="w-full border border-gray-300 px-3 py-2 rounded-none focus:outline-none focus:ring-2 focus:ring-blue-500 text-[13px]"
                     autoComplete="off"
                   />
@@ -460,7 +459,6 @@ export const DrainageEquipLedgerPageView: React.FC = () => {
                     onKeyDown={(e) => {
                       if (e.key === "Enter") handleSearch();
                     }}
-                    placeholder="주소 입력"
                     className="w-full border border-gray-300 px-3 py-2 rounded-none focus:outline-none focus:ring-2 focus:ring-blue-500 text-[13px]"
                     autoComplete="off"
                   />

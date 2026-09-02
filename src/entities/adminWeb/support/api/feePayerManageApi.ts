@@ -1,7 +1,7 @@
 import { apiClient, ApiError } from "@/shared/lib/apiClient";
 import { API_ENDPOINTS } from "@/shared/config/apiAdmin";
 import { numericOnly } from "@/shared/lib/inputValidation";
-import type { Support } from "./supportApi";
+import type { Support } from "./supportTypes";
 
 /** `SupportFeePayerBasicInfoRequest` — 등록·계산 공통 */
 export interface SupportFeePayerBasicInfoRequest {
@@ -331,7 +331,7 @@ export function mapFeePayerListItemToSupport(
         : payN !== undefined && !Number.isNaN(payN)
           ? payN
           : undefined,
-  };
+  } as Support;
 }
 
 /** 미납/납부 배지 — `paySta`만 기준(보조판정 없음) */

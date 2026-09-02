@@ -44,7 +44,7 @@ export interface FeePayerSewageVolumeEstimateSectionProps {
   /** 상세 등: 초기 엔트리 스냅샷. `readOnly`일 때 함께 넘기는 것을 권장. */
   initialEntries?: SewageEstimateEntry[];
   /**
-   * 통지일 블록 **마지막** 카드 하단 원형 `+`(엔트리 추가). 기본 true — 등록·상세 동일.
+   * 통지일 블록 추가 버튼(섹션 헤더). 기본 true — 등록·상세 동일.
    */
   showAddNoticeBlockButton?: boolean;
   /** 기본정보·ITEM_ID — 계산 API(`POST …/fee-payer/calculate`) 연동 시 전달 */
@@ -63,7 +63,7 @@ export interface FeePayerSewageVolumeEstimateSectionProps {
   persistRegisterFailMessageRef?: MutableRefObject<string | null>;
 }
 
-/** 오수량 발생량 산정 — `UsageLookupModal`은 용도 **조회** 전용. 통지일 블록 추가 `+`는 하단 경계선 위에 떠 있도록 배치(레이아웃 높이 미사용). 상세 `추가` = 층수~삭제 행만. */
+/** 오수량 발생량 산정 — `UsageLookupModal`은 용도 **조회** 전용. 통지일 블록 추가는 섹션 헤더 버튼. 상세 `추가` = 층수~삭제 행만. */
 export const FeePayerSewageVolumeEstimateSection: React.FC<
   FeePayerSewageVolumeEstimateSectionProps
 > = ({
@@ -209,7 +209,7 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
     [],
   );
 
-  /** 통지일 블록 `+`: 기존 블록이 모두 「납부」일 때만 추가 가능(미납 블록이 있으면 차단) */
+  /** 통지일 블록 추가: 기존 블록이 모두 「납부」일 때만 추가 가능(미납 블록이 있으면 차단) */
   const canAddNoticeBlock = useMemo(
     () => entries.length > 0 && entries.every((e) => e.status === "PAID"),
     [entries],
@@ -217,8 +217,24 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
 
   return (
     <div className="bg-white rounded-lg shadow mt-6">
-      <div className="border-b border-gray-200 px-6 py-4">
+      <div className="flex items-center justify-between border-b border-gray-200 px-4 py-4">
         <h5 className="text-lg font-semibold mb-0">오수량 발생량 산정</h5>
+        {!readOnly && showAddNoticeBlockButton ? (
+          <button
+            type="button"
+            className="px-3 py-2 text-base bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            style={{ minWidth: "72px" }}
+            title={
+              canAddNoticeBlock
+                ? "통지내역 추가"
+                : "기존 통지일 블록이 모두 납부 상태일 때만 추가할 수 있습니다."
+            }
+            disabled={!canAddNoticeBlock}
+            onClick={handleAddEntry}
+          >
+            통지내역 추가
+          </button>
+        ) : null}
       </div>
 
       {!readOnly ? (
@@ -262,6 +278,7 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
 
       <div className="p-0 pb-6">
         {entries.map((entry, entryIndex) => {
+          const displayIndex = entries.length - entryIndex;
           const isPermitChangeType = isSewagePermitChangeType(entry.type);
           const entryPaid = entry.status === "PAID";
           const rowReadOnly = readOnly || entryPaid;
@@ -275,8 +292,8 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
             key={entry.id}
             className={
               entryIndex > 0
-                ? "mt-0 pt-6 border-t border-gray-200 mx-6"
-                : "mx-6 mt-0 pt-4 pb-0"
+                ? "mt-0 pt-6 px-4"
+                : "px-4 mt-0 pt-4 pb-0"
             }
           >
             <div className="flex flex-col md:flex-row md:items-stretch">
@@ -284,11 +301,11 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                 className="hidden md:flex w-11 shrink-0 flex-col items-center self-stretch bg-gray-200 pt-3 font-semibold text-base text-gray-800 border border-gray-200 border-b-0 md:border-b md:border-r-0"
                 aria-hidden
               >
-                <span>{entryIndex + 1}</span>
+                <span>{displayIndex}</span>
               </div>
               <div className="flex-1 min-w-0 border border-gray-200 md:border-l-0">
                 <div className="md:hidden px-3 py-2 bg-gray-100 border-b border-gray-200 text-base font-semibold text-gray-800">
-                  {entryIndex + 1}
+                  {displayIndex}
                 </div>
 
                 {/* 상태·구분·유형·통지일 — 기준단가 블록과 동일 FormField + feePayerPricePair 그리드 */}
@@ -296,7 +313,7 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                   label=" "
                   fullWidth
                   fieldOnlyFullWidth
-                  forceTopBorder={entryIndex > 0}
+                  suppressTopBorder={entryIndex > 0}
                   alignFieldStart
                 >
                   <div className="w-full">
@@ -885,32 +902,6 @@ export const FeePayerSewageVolumeEstimateSection: React.FC<
                   </FormField>
                   );
                 })}
-
-                {/* 통지일 블록 추가 `+`: 맨 마지막 카드에만 표시 — 흐름 높이 0, 버튼은 absolute */}
-                {!readOnly &&
-                showAddNoticeBlockButton &&
-                entryIndex === entries.length - 1 ? (
-                  <div className="relative mt-3 h-0 overflow-visible border-t border-[#dee2e6]">
-                    <button
-                      type="button"
-                      className="absolute left-1/2 top-0 z-[1] flex h-12 w-12 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 border-white bg-blue-600 text-white shadow-md transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
-                      aria-label="통지일 블록 추가"
-                      title={
-                        canAddNoticeBlock
-                          ? "통지일 블록 추가"
-                          : "기존 통지일 블록이 모두 납부 상태일 때만 추가할 수 있습니다."
-                      }
-                      disabled={!canAddNoticeBlock}
-                      onClick={handleAddEntry}
-                    >
-                      <span className="block translate-y-[-0.08em] text-3xl font-light leading-none">
-                        +
-                      </span>
-                    </button>
-                  </div>
-                ) : readOnly || !showAddNoticeBlockButton ? (
-                  <div className="mt-3 border-t border-[#dee2e6]" aria-hidden />
-                ) : null}
               </div>
             </div>
           </div>

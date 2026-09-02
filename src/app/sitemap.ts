@@ -1,9 +1,12 @@
 import type { MetadataRoute } from "next";
 
-const BASE_URL = "https://ieum.gunsan.go.kr";
+const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL?.trim() || "";
 
-/** 사용자웹 제거 후: 공개 인덱싱 대상은 사이트 루트만 유지 (관리자 경로는 robots에서 제외) */
+/** 관리자 경로는 robots에서 제외 */
 export default function sitemap(): MetadataRoute.Sitemap {
+  if (!BASE_URL) {
+    return [];
+  }
   return [
     {
       url: BASE_URL,

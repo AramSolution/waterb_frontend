@@ -8,4 +8,3 @@ export * from "./downloadWaterbFile";
 export * from "./sirenPassPopup";
 export * from "./rememberLoginId";
 export * from "./decodeDisplayText";
-export * from "./careerConsultCalendarType";

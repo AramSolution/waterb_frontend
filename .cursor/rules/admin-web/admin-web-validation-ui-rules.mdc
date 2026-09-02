@@ -11,38 +11,7 @@ alwaysApply: false
 
 ---
 
-## 연계: 지원사업 등록·수정 성공/실패 `MessageDialog` 문구
-
-유효성 검사와 직접 관련은 없으나, **등록/수정 저장 후 알림 다이얼로그** 문구는 스터디사업·공공형 진로진학 컨설팅 등 **동일 톤**으로 맞춘다.
-
-- **제목:** `등록 완료` / `수정 완료` 등 짧게 (사업 유형 전체 이름 금지).
-- **본문:** 기본값은 `정상적으로 등록되었습니다.`, `정상적으로 수정되었습니다.` — **「공공형 진로진학 컨설팅 사업이 …」처럼 사업명을 본문에 반복하지 않는다.** 백엔드 `response.message`가 있으면 우선 표시.
-- **결과 코드:** `response.result === "00"`일 때만 성공 처리.
-
-상세 규칙·금지 사항·참조 파일은 `admin-web-rules.mdc`의 **Common File Attachment Patterns → §6 Support business registration/update: MessageDialog copy**를 따른다.
-
----
-
-## 연계: 지원사업 신청 등록·상세 저장 / 첨부 개별 삭제
-
-**신청(ARTAPPM) 화면**은 §6의 **사업(ARTPROM) 등록·수정**과 구분한다.
-
-- **페이지 껍데기:** 청소년 자기계발 연수지원 신청(`SupportApplicationRegisterPageView`)과 같이 **`bg-white rounded-lg shadow`** 한 덩어리 안에 폼·저장/닫기가 들어가게 맞춘다(글로벌 문화탐방·지역연계 진로체험 활동·공공형 진로진학 컨설팅 신청 상세/등록 포함, §7 Page shell).
-
-- **사업(ARTPROM) 진행상태 vs 신청(STTUS_CODE):** 스터디·공공형 진로진학 컨설팅·1:1 원어민 화상영어·지역연계 진로체험·꿈탐험·글로벌 문화탐방·청소년 자기계발 연수지원 등 **사업** RUN_STA는 신청상태와 별개이며, 관리자 **사업** 목록·검색·등록·수정·엑셀에서 **01 모집예정, 02 모집중, 04 모집마감, 99 취소**를 쓴다. 코드·라벨 단일 출처: `@/entities/adminWeb/support/lib/runStaAdmin`. 규칙 요약은 `admin-web-rules.mdc` Support list 항목.
-
-- **지역연계 진로체험 활동·공공형 진로진학 컨설팅 — 신규 신청 등록 기본 상태:** 관리자가 신청을 새로 등록할 때 **상태(신청상태) 필드 기본값은 `03`(승인)**. 구현: `useRegionalCareerActivityApplicationRegister` / `useCareerConsultingApplicationRegister` 초기 `formData.status`. 상세·수정 모드는 서버 `sttusCode` 우선(기존 건 편집 시 기본값 덮어씀).
-
-- **저장 성공(신청 등록 vs 신청 상세 수정):** 상세(수정) 모드면 제목 **`수정 완료`**, 본문 **`정상적으로 수정되었습니다.`** 또는 `response.message` 우선. 신규 등록이면 **`등록 완료`** / **`정상적으로 등록되었습니다.`** — 상세 모드에서 **`저장 완료` / `저장되었습니다.`만 고정**하면 스터디 신청·지원사업 수정 톤과 어긋난다.
-- **저장 성공 다이얼로그 확인 후:** 기본적으로 **사업별 신청목록 상세**로 이동한다(해당 화면의 닫기·취소와 같은 URL). **신청 상세 저장 후 편집 폼에 그대로 남기지 않는다**(예외는 기획·§7에 명시).
-- **기존 신청 첨부 개별 삭제:** **삭제 API 전** 확인 다이얼로그(예: `선택한 첨부파일을 삭제하시겠습니까?`)를 띄운다. **API 성공 후** 제목 **`삭제 완료`**, 본문 **`정상적으로 삭제되었습니다.`** 성공 다이얼로그를 띄운다. 삭제 성공 후에는 §5와 같이 **같은 페이지 유지**(저장 성공과 구분, 목록 이동 없음). 저장 성공과 **동일한** `MessageDialog` `onClose`를 쓰는 화면(예: 꿈탐험 `DreamExplorationApplicationRegisterForm`)은 **`messageDialogNavigateToListRef`로 저장 성공일 때만** 신청목록으로 이동한다(위 §7·상단 `useRef` 안내).
-- **상세에서 새 첨부 저장 후:** `getArtappmDetail` 등으로 **기존 파일 목록을 갱신한 뒤** `setSelectedFiles([])` / `setSelectedApplicationFiles([])` 로 **신규 선택만 비운다**. 안 비우면 재조회된 기존 행 + 선택 대기 행이 **같은 파일 두 줄**로 보인다(`admin-web-rules.mdc` §5 §3).
-
-상세·체크리스트·참조 파일은 `admin-web-rules.mdc`의 **Common File Attachment Patterns → §7 Application registration/detail**을 따른다.
-
----
-
-## 연계: 원인자부담 등록 — 구분·유형 고정 (유효성 검사 전제)
+## 연계: 오수 원인자부담 등록 — 구분·유형 고정 (유효성 검사 전제)
 
 **`구분` 미선택**이거나 **`유형`이 비어 있는** 상태에서 저장·제출 유효성을 검사할 때는, 에러 메시지는 아래 **§ CRITICAL: 유효성 검사 에러 메시지 구조**를 따른다 (필드 하단 inner wrapper).
 

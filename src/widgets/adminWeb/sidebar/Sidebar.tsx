@@ -49,19 +49,6 @@ const menuItems: MenuItem[] = [
       },
     ],
   },
-  // 대분류 카테고리: 통계자료 (주석)
-  // {
-  //   id: 'statistics',
-  //   label: '통계자료',
-  //   icon: 'BarChart3',
-  //   submenu: [
-  //     {
-  //       id: 'statistics-sample',
-  //       label: '샘플통계',
-  //       path: '/adminWeb/statistics/sample',
-  //     },
-  //   ],
-  // },
   {
     id: 'member',
     label: '회원관리',
@@ -72,68 +59,6 @@ const menuItems: MenuItem[] = [
         label: '관리자회원',
         path: '/adminWeb/member/list',
       },
-      // 관리자 카테고리: 선정업무 (사이드바 비노출 — URL 직접 입력 시 접근 가능)
-      // {
-      //   id: 'member-selection',
-      //   label: '선정업무',
-      //   path: '/adminWeb/member/selection',
-      // },
-      // 관리자 카테고리: 테스트 (주석)
-      // {
-      //   id: 'member-test',
-      //   label: '테스트',
-      //   path: '/adminWeb/member/test',
-      // },
-      // 관리자 카테고리: 권한관리 (주석)
-      // { id: "member-role", label: "권한관리", path: "/adminWeb/member/role" },
-    ],
-  },
-  // 대분류 카테고리: 코드관리 (주석)
-  // {
-  //   id: 'code',
-  //   label: '코드관리',
-  //   icon: 'Settings',
-  //   submenu: [
-  //     { id: 'code-list', label: '코드목록', path: '/adminWeb/code/list' },
-  //     {
-  //       id: 'code-register',
-  //       label: '코드등록',
-  //       path: '/adminWeb/code/register',
-  //     },
-  //     { id: 'code-group', label: '코드그룹', path: '/adminWeb/code/group' },
-  //   ],
-  // },
-  // 대분류 카테고리: 메뉴관리 (주석)
-  // {
-  //   id: 'menu',
-  //   label: '메뉴관리',
-  //   icon: 'ClipboardList',
-  //   submenu: [
-  //     { id: 'menu-list', label: '메뉴목록', path: '/adminWeb/menu/list' },
-  //     {
-  //       id: 'menu-register',
-  //       label: '메뉴등록',
-  //       path: '/adminWeb/menu/register',
-  //     },
-  //     { id: 'menu-order', label: '메뉴순서', path: '/adminWeb/menu/order' },
-  //   ],
-  // },
-  {
-    id: 'common',
-    label: '공통',
-    icon: 'FileText',
-    submenu: [
-      // 공통 카테고리: 게시판관리/배너관리 (사이드바 비노출 — URL 직접 입력 시 접근 가능)
-      // {
-      //   id: 'board-list',
-      //   label: '게시판관리',
-      //   path: '/adminWeb/board/list',
-      // },
-      // {
-      //   id: 'banner-list',
-      //   label: '배너관리',
-      //   path: '/adminWeb/banner/list',
-      // },
     ],
   },
   {
@@ -141,22 +66,6 @@ const menuItems: MenuItem[] = [
     label: '시스템',
     icon: 'Settings',
     submenu: [
-      // 시스템 카테고리: 프로그램관리/메뉴관리/메뉴생성관리 (사이드바 비노출 — URL 직접 입력 시 접근 가능)
-      // {
-      //   id: 'program-list',
-      //   label: '프로그램관리',
-      //   path: '/adminWeb/program/list',
-      // },
-      // {
-      //   id: 'menu-tree',
-      //   label: '메뉴관리',
-      //   path: '/adminWeb/menu/tree',
-      // },
-      // {
-      //   id: 'menu-make',
-      //   label: '메뉴생성관리',
-      //   path: '/adminWeb/menu/make',
-      // },
       {
         id: 'code-manage',
         label: '공통코드관리',
@@ -174,9 +83,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const pathname = usePathname();
   const [expandedMenus, setExpandedMenus] = useState<string[]>([
     'support',
-    'statistics',
     'member',
-    'common',
     'system',
   ]);
 

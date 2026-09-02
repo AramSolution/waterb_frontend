@@ -8,8 +8,14 @@ alwaysApply: false
 
 This rule defines styling and UI patterns specific to **admin web pages** (`/adminWeb/*`). Admin pages use **Tailwind CSS + Custom CSS** for styling.
 
-**Key Differences from User Web:**
+**Key scope (김제시 하수도 관리):**
 
+- ✅ **운영 메뉴:** 오수 원인자부담금, 배수설비, 용도관리, 관리자회원, 공통코드, 대시보드
+- ❌ **제거됨(레거시 ieum):** 지원사업(ARTPROM)·신청(ARTAPPM)·NEIS·GPKI·사용자웹(`apiUser.ts`) — 규칙·코드에 남아 있으면 삭제 대상
+
+**Key Differences (admin-only product):**
+
+- ✅ 이 저장소는 **관리자웹(`/adminWeb/*`)만** 유지한다 (`user-web-rules.mdc` 없음)
 - ✅ Uses Custom CSS files (imported from `@/shared/styles/admin/`)
 - ✅ Uses Custom CSS classes (e.g., `search-form-label`, `table-cell`)
 - ✅ More complex UI components with custom styling
@@ -71,7 +77,7 @@ Without `AdminLayout`:
 **MUST ALWAYS follow this process BEFORE creating or finalizing any new `app/adminWeb/**/page.tsx`:**
 
 1. **Step 1: Identify a reference route**
-   - ✅ **ALWAYS** pick an existing admin page in the same area (e.g. `support/study/application/register/page.tsx` when adding `support/careerConsulting/application/register/page.tsx`).
+   - ✅ **ALWAYS** pick an existing admin page in the same area (e.g. `support/list/page.tsx` when adding `support/drainage-equip/page.tsx`).
    - ✅ **ALWAYS** open that reference `page.tsx` and confirm it uses `AdminLayout` and `Suspense`.
 
 2. **Step 2: Implement the new route**
@@ -139,14 +145,14 @@ Creating or editing app/adminWeb/**/page.tsx?
 │  └─ YES → Is it wrapped in <AdminLayout>?
 │     ├─ NO  → ❌ ADD AdminLayout (and Suspense + LoadingFallback). Copy from reference page.
 │     └─ YES → ✅ Confirm Suspense + LoadingFallback are present; then correct.
-└─ Copy structure from: src/app/adminWeb/support/study/application/register/page.tsx
+└─ Copy structure from: src/app/adminWeb/support/list/page.tsx
 ```
 
 **Reference implementation:**
 
-- ✅ `src/app/adminWeb/support/study/application/register/page.tsx`
-- ✅ `src/app/adminWeb/support/careerConsulting/register/page.tsx`
-- ✅ `src/app/adminWeb/support/careerConsulting/schedule/page.tsx`
+- ✅ `src/app/adminWeb/support/list/page.tsx`
+- ✅ `src/app/adminWeb/support/list/register/page.tsx`
+- ✅ `src/app/adminWeb/support/drainage-equip/page.tsx`
 
 ---
 
@@ -192,15 +198,15 @@ The admin **Sidebar** (`src/widgets/adminWeb/sidebar/Sidebar.tsx`) determines th
 
 **MUST** structure admin routes so that **each distinct program/feature area has its own path prefix** under `src/app/adminWeb/**`, for example:
 
-- ✅ `/adminWeb/support/careerConsulting/detail`
-- ✅ `/adminWeb/support/careerConsulting/update`
-- ✅ `/adminWeb/support/list/detail`
+- ✅ `/adminWeb/support/list`
+- ✅ `/adminWeb/support/list/basic-detail`
+- ✅ `/adminWeb/support/drainage-equip/detail`
 
 **MUST** align **Sidebar** `menuItems[].submenu[].path` values with those **base prefixes** (see `Sidebar.tsx`) so that list, detail, register, and update routes under the same feature still match the same menu entry via `startsWith`.
 
 **MUST** when adding a new admin screen in an existing feature area:
 
-- ✅ **ALWAYS** place it under the same path segment as sibling routes (e.g. `.../careerConsulting/register`, `.../careerConsulting/detail`), not under a new generic `/adminWeb/support/update` unless it is truly shared across all programs by design.
+- ✅ **ALWAYS** place it under the same path segment as sibling routes (e.g. `.../support/list/register`, `.../support/drainage-equip/detail`), not under a new generic path unless it is truly shared by design.
 
 ---
 
@@ -842,21 +848,12 @@ Check these files for correct status badge implementation:
 
 #### 4. Reference implementations (copy from these)
 
-- **Support list (청소년 자기계발 연수지원 목록):**  
-  `src/features/adminWeb/support/list/ui/SupportListPageView.tsx`  
+- **오수 원인자부담금 관리 목록:** `src/features/adminWeb/support/list/ui/SupportListPageView.tsx`  
   → Status badge `min-w-[72px]`, 보기 `px-2 py-1 text-[12px]`, 상세/삭제 `px-3 py-1 text-[13px]`.  
-  → **사업 진행상태(RUN_STA):** 01 모집예정, 02 모집중, 04 모집마감, 99 취소 — 스터디·공공형 진로진학 컨설팅·1:1 원어민 화상영어·지역연계 진로체험·꿈탐험·글로벌 문화탐방·청소년 자기계발 연수지원 등 **동일**. 구현·라벨·배지색은 `@/entities/adminWeb/support/lib/runStaAdmin` (`getRunStaLabel`, `RUN_STA_BASE_OPTIONS`, …) 단일 참조.
-- **오수 원인자부담금 관리 목록 (동일 `SupportListPageView`, 별도 API):** `POST /api/admin/support/fee-payer/list` — `SupportFeePayerManageController#list`. 요청 JSON `SupportFeePayerListRequest`: `reqDateFrom`, `reqDateTo`(통지일 `yyyy-MM-dd`), `userNm`, `address`(ZIP·지번·주소·상세 통합 검색); **body 생략 시 전체**. 응답 `SupportFeePayerListResponse`: `data[]`에 `itemId`, `seq`, `paySta`, `reqDate`, `userNm`, `zip`·`adresLot`·`adres`·`detailAdres`, `waterSum`·`waterCost`·`waterVal`·`waterPay`, `payDay`, `pay`(납부 ARTITEP 최신 1건; **없으면 `payDay=null`, `pay=0`**). 클라이언트: `@/entities/adminWeb/support/api/feePayerManageApi.ts` (`postFeePayerList`, `mapFeePayerListItemToSupport`, `buildSupportFeePayerListBody`, `isFeePayerListRowPaid`). **상태 배지 판정은 `paySta`만 사용하고 `pay/payAmt` 보조 판정은 사용하지 않는다.** 목록은 **클라이언트 페이징**(전량 수신 후 `pageSize` 슬라이스). **목 mock:** 환경변수 `NEXT_PUBLIC_FEE_PAYER_LIST_MOCK=true` 일 때만 `feeListMockData` 사용.
+  → API: `POST /api/admin/support/fee-payer/list` — `SupportFeePayerManageController#list`. 요청 JSON `SupportFeePayerListRequest`: `reqDateFrom`, `reqDateTo`(통지일 `yyyy-MM-dd`), `userNm`, `address`(ZIP·지번·주소·상세 통합 검색); **body 생략 시 전체**. 응답 `SupportFeePayerListResponse`: `data[]`에 `itemId`, `seq`, `paySta`, `reqDate`, `userNm`, `zip`·`adresLot`·`adres`·`detailAdres`, `waterSum`·`waterCost`·`waterVal`·`waterPay`, `payDay`, `pay`. 클라이언트: `@/entities/adminWeb/support/api/feePayerManageApi.ts`. **상태 배지 판정은 `paySta`만 사용.** 목록은 **클라이언트 페이징**. mock: `NEXT_PUBLIC_FEE_PAYER_LIST_MOCK=true` 일 때만 `feeListMockData`.
 - **오수 원인자부담금 목록 표시 규칙:** **부과액 컬럼·엑셀**은 **`waterCost`(DB `WATER_COST`)만** 사용 — `waterVal`로 대체 표시하지 않는다. **납부액 컬럼·엑셀**은 **`waterPay`(DB `WATER_PAY`)**를 기준으로 표시한다. **주소 컬럼·엑셀**은 표시용으로 **`zip` 제외** — `formatFeePayerAddressLine`에서 `adresLot`·`adres`·`detailAdres`만 이어 붙인다(검색 `address`는 백엔드 ZIP 포함 통합 검색 유지).
 - **오수 원인자부담금 목록 삭제:** 리스트 삭제 버튼은 `DELETE /api/admin/support/fee-payer/delete` (`itemId`, `seq`)와 연동한다. 백엔드 미납 제한 예외 메시지(예: `완납 건은 삭제하실 수 없습니다.`)는 그대로 사용자에게 표시한다. 삭제 확인 `ConfirmDialog` 제목은 **`{신청인명} 부과액 : {부과액 표시}`** (끝에 **`삭제`** 문구 없음), 본문은 **`삭제하시겠습니까?`** (`SupportListPageView`의 `deleteDialogTitle` / `deleteDialogMessage`).
 - **오수 원인자부담금 목록 삭제 예외(완납 건):** `납부완료 건은 삭제하실 수 없습니다.` 안내 다이얼로그는 **오류(X) 아이콘이 아니라 알림(!) 아이콘**을 사용한다. 즉 `ConfirmDialog`는 `variant="alert"`(= `icon_point.png`)로 표시한다.
-- **Study list (스터디사업 목록):**  
-  `src/features/adminWeb/support/study/list/ui/StudyListPageView.tsx`  
-  → Same as above.
-- **Support detail list (신청목록 상세):**  
-  `src/features/adminWeb/support/detail/ui/SupportDetailListPageView.tsx`  
-  → Status `min-w-[72px]`, 상세/삭제 `px-3 py-1 text-[13px]` (no 보기 in same row).
-
 ---
 
 #### 5. Verification checklist (list/detail tables only)
@@ -868,7 +865,7 @@ Before shipping a list or detail list page:
 - [ ] 보기 button uses `px-2 py-1 text-[12px]` (if present).
 - [ ] 상세/삭제 buttons use `px-3 py-1 text-[13px]`.
 - [ ] Skeleton for status and action columns uses the sizes above (72px or 50px for status; 45px/60px for buttons as applicable).
-- [ ] Compared visually with SupportListPageView or SupportDetailListPageView so status and buttons look the same size.
+- [ ] Compared visually with `SupportListPageView` so status and buttons look the same size.
 
 ---
 
@@ -880,7 +877,7 @@ Implementing or changing a list/detail table?
 │  └─ YES → Use min-w-[72px] + px-2.5 py-0.5 rounded-[5px] text-[13px] font-medium for badge.
 ├─ Does it have "보기" / "상세" / "삭제" in a row?
 │  └─ YES → Use px-2 py-1 text-[12px] for 보기; px-3 py-1 text-[13px] for 상세/삭제.
-└─ Copy exact class names from SupportListPageView or SupportDetailListPageView.
+└─ Copy exact class names from SupportListPageView.
 ```
 
 ---
@@ -2265,68 +2262,30 @@ selectedFiles.forEach((item) => fd.append('articleFiles', item.file));
 
 ---
 
-#### 6. Support business registration/update: `MessageDialog` copy (지원사업 등록·수정)
+#### 6. Registration/update: `MessageDialog` copy (오수 원인자부담금·배수설비 등)
 
-**Applies to:** 지원사업 등록/수정 훅에서 저장 성공·실패 후 띄우는 `MessageDialog` (예: 스터디사업 `useSupportUpdate`, 공공형 진로진학 컨설팅 `useCareerConsultingUpdate` / `useCareerConsultingRegister`).
+**Applies to:** 관리자 등록/수정 훅에서 저장 성공·실패 후 띄우는 `ConfirmDialog` / `MessageDialog` (예: `useFeePayerBasicRegister`, `useDrainageEquipBasicRegister`, `MemberRegisterForm`).
 
 **MUST:**
 
-- ✅ **제목:** 동작에 맞게 짧게 — `등록 완료`, `수정 완료`, `삭제 완료`, `등록 실패`, `수정 실패` 등. 사업 유형 전체 이름을 제목에 넣지 않는다.
-- ✅ **본문(성공) 기본값(공통 시안):** `insert` → `등록 되었습니다.`, `update` → `수정 되었습니다.`, 삭제 성공 제목 `삭제 완료` 시 본문 → `삭제 되었습니다.`  
-  백엔드가 `response.message`를 주면 **그 값을 우선** 표시하고, 없을 때만 위 기본 문구를 쓴다.
-- ✅ **저장 API 응답 처리:** `updateSupport` / `registerSupport` 등은 **`response.result === "00"`일 때만** 성공 다이얼로그를 띄운다. 그 외 코드는 실패 다이얼로그로 처리한다.
-- ✅ **본문(실패) 기본값:** 사업명 장문 없이 짧게 — 예: `등록 중 오류가 발생했습니다.`, `수정 중 오류가 발생했습니다.`  
-  `ApiError` 등이면 `err.message` 우선.
+- ✅ **제목:** `등록 완료`, `수정 완료`, `삭제 완료` 등 짧게.
+- ✅ **본문(성공):** `정상적으로 등록되었습니다.` / `정상적으로 수정되었습니다.` — API `response.message` 우선.
+- ✅ **`response.resultCode === "00"`** (또는 프로젝트별 성공 코드)일 때만 성공 다이얼로그.
+- ✅ 성공 타입: `type="success"` (`waterb-front-rule.mdc` 참고).
 
-**MUST NOT:**
-
-- ❌ 본문에 `공공형 진로진학 컨설팅 사업이 성공적으로 수정되었습니다.`처럼 **사업 유형 이름을 길게 반복**하는 고정 문구.
-- ❌ HTTP 요청만 성공했다고 **무조건** 성공 다이얼로그 (`result` 미검증).
-
-**Reference:** `src/features/adminWeb/support/update/model/useSupportUpdate.ts`, `src/features/adminWeb/support/careerConsulting/update/model/useCareerConsultingUpdate.ts`, `src/features/adminWeb/support/careerConsulting/register/model/useCareerConsultingRegister.ts`
+**Reference:** `src/features/adminWeb/support/feePayerRegister/model/useFeePayerBasicRegister.ts`, `src/features/adminWeb/support/drainageEquip/model/useDrainageEquipBasicRegister.ts`
 
 ---
 
-#### 7. Application registration/detail (신청 등록·상세): save & per-file delete feedback
+#### 7. (삭제됨) 지원사업 신청(ARTAPPM) 등록·상세
 
-**Applies to:** 관리자 **지원사업 신청** 등록·상세 화면 (예: `useStudyApplicationRegister`, `useCareerConsultingApplicationRegister`). §6은 **사업(ARTPROM) 등록·수정**이고, 본 절은 **신청(ARTAPPM) 건** 저장·첨부 삭제 UI이다.
+레거시 ieum **지원사업 신청** 화면은 제거되었습니다. 첨부·저장 다이얼로그 패턴은 §5(공통 파일)와 §6(등록/수정 성공 메시지)을 따르고, 참조 구현은 오수 원인자부담금·배수설비 등록 폼을 사용하세요.
 
-**Page shell (신청 등록·상세 레이아웃):**
-
-- ✅ 청소년 자기계발 연수지원 `SupportApplicationRegisterPageView`처럼 **`<div className="bg-white rounded-lg shadow">`** 로 본문을 감싸고, 상단에 **`신청 정보`** 제목(`px-6 py-4 border-b`)을 둔다. 저장·닫기는 **동일 흰 카드 안**(필요 시 하단 `border-t` 푸터)에 두어 버튼 뒤가 회색만 보이지 않게 한다. 글로벌 문화탐방(`GlobalCultureTourApplicationRegisterPageView`), 지역연계 진로체험 활동(`RegionalCareerActivityApplicationRegisterPageView`), 공공형 진로진학 컨설팅(`CareerConsultingApplicationRegisterPageView` — 멘토 조회 모드면 제목 **`멘토 조회`**) + 각 폼이 이 패턴을 따른다.
-
-- ✅ **지역연계 진로체험 활동·공공형 진로진학 컨설팅 — 신규 신청 등록 기본 상태:** `useRegionalCareerActivityApplicationRegister` / `useCareerConsultingApplicationRegister`에서 **신규 등록** 시 `formData.status` 초기값 **`03`(승인)** (`STATUS_OPTIONS` 코드와 동일). 기존 신청 상세·수정은 API `sttusCode`로 채움.
-
-**Save success (`insertArtappm` / `updateArtappm` 등):**
-
-- ✅ **제목:** `mode === "detail"`(수정)이면 **`수정 완료`**, 신규 등록이면 **`등록 완료`**. 상세 모드인데 **`저장 완료`만 고정**하지 않는다 (톤이 지원사업 사업 수정·§6과 어긋남).
-- ✅ **저장 성공 다이얼로그:** 버튼은 **확인 1개만**(`singleAction`) 사용한다. **`확인/닫기` 2버튼 금지**.
-- ✅ **저장 성공 문구:** 제목은 수정이면 **`수정 완료`**, 신규면 **`등록 완료`**. 본문은 **`수정 되었습니다.`** / **`등록 되었습니다.`** (위 공통 시안과 동일). API가 `response.message`를 주면 그 값을 우선한다.
-- ✅ **`response.result === "00"`** 일 때만 성공 다이얼로그.
-- ✅ **성공 다이얼로그 확인 후 내비게이션 (이 제품 기본):**
-  - **`mode === "detail"`(신청 건 수정):** 사용자가 확인을 누르면 **편집 화면에 머무르지 않고** 해당 사업의 **신청목록 상세**(예: 공공형 진로진학 경로 `/adminWeb/support/careerConsulting/detail?businessId=…&businessNm=…`)로 **이동**한다. 닫기·취소와 동일 목적지를 쓰는 것이 일관적이다.
-  - **신규 신청 등록:** 저장 성공 확인 후에도 동일하게 **사업별 신청목록 상세**로 이동(기존 패턴 유지).
-  - ❌ 신청 상세 **저장** 성공만으로 편집 폼에 남겨 두는 것은 **의도적인 예외가 없으면 하지 않는다** (목록 갱신·업무 흐름상 혼란). 예외가 필요하면 기획·§에 명시.
-
-**Per-file delete of existing application attachment (신청 첨부 개별 삭제 API 성공 시):**
-
-- ✅ **`deleteArtappmFile` 호출 전** 사용자에게 **확인 다이얼로그**를 띄운다 (예: 제목 `첨부파일 삭제`, 본문 `선택한 첨부파일을 삭제하시겠습니까?`, 확인 시에만 API). 삭제 아이콘 클릭 → **즉시 API 호출 금지**.
-- ✅ **§5와 동일:** 성공 후 **목록으로 이동하지 않는다**; 같은 상세 페이지에서 기존 파일 목록만 갱신.
-- ✅ **삭제 API 성공 후** 사용자에게 **성공 안내 다이얼로그**를 띄운다 — 제목 `삭제 완료`, 본문 `삭제 되었습니다.` 확인 시에만 닫고 **라우터 이동 없음**.
-- ❌ 첨부 삭제 성공만으로 **신청 목록·상세 이탈** 네비게이션을 걸지 않는다.
-- ✅ **같은 컴포넌트에서** 저장 성공과 첨부 삭제 성공이 **동일한** `MessageDialog` 닫기 핸들러를 쓰는 경우, `messageDialogNavigateToListRef` 등으로 **저장 성공일 때만** `router.push`(신청목록)를 실행한다. 삭제 성공 닫기는 이동 없음 (예: `DreamExplorationApplicationRegisterForm.tsx`).
-- ✅ **서로 다른** `ConfirmDialog`로 저장 완료·삭제 완료를 띄우는 경우에도, 저장 완료 닫기에서만 `router.push` 하도록 **`useRef`**(예: `saveSuccessNavigateToDetailRef`)를 쓰고, 첨부 삭제 API 성공 직후 **`setShowSaveSuccessDialog(false)`** 및 `ref = false`로 저장 다이얼로그·이동 의도를 정리한다 (예: `useGlobalCultureTourApplicationRegister.ts`).
-
-**Mentor list row delete (e.g. 공공형 진로진학 멘토목록):**
-
-- ✅ **서버 삭제 API 성공**(`result === "00"`) 또는 **아직 저장되지 않은 행만 로컬에서 제거**한 뒤, **`삭제 완료` / `삭제 되었습니다.`** 확인 다이얼로그를 띄운다. 삭제 확인(위험) 다이얼로그만 닫고 끝내지 않는다.
-- ✅ 목록 화면은 그대로이므로 **삭제 성공 후 별도 라우터 이동은 하지 않는다** (신청 첨부 삭제와 동일하게 현재 화면 유지).
-
-**Reference:** `src/features/adminWeb/support/study/application/register/model/useStudyApplicationRegister.ts`, `src/features/adminWeb/support/careerConsulting/application/register/model/useCareerConsultingApplicationRegister.ts`, `src/features/adminWeb/support/regionalCareerActivity/application/register/model/useRegionalCareerActivityApplicationRegister.ts`, `src/features/adminWeb/support/globalCultureTour/application/register/model/useGlobalCultureTourApplicationRegister.ts`, `src/features/adminWeb/support/dreamExploration/application/register/ui/DreamExplorationApplicationRegisterForm.tsx`, `src/features/adminWeb/support/careerConsulting/mentors/model/useCareerConsultingMentorList.ts`
+**Reference (현행):** `src/features/adminWeb/support/feePayerRegister/`, `src/features/adminWeb/support/drainageEquip/`
 
 ---
 
-#### 📋 Verification checklist (common file patterns)
+#### 📋 Verification checklist (common file patterns) — §7 신청 항목 제외
 
 **Before implementing or changing file upload in an admin form:**
 
@@ -2335,15 +2294,11 @@ selectedFiles.forEach((item) => fd.append('articleFiles', item.file));
 - [ ] **After update:** On success, refetch then clear the pending/selected list so the UI does not show duplicates.
 - [ ] **Limit (if applicable):** Remaining count = feature’s max − existing − selected; new selections are capped to remaining.
 - [ ] **Detail/edit per-file delete:** After deleting an existing attachment, the user stays on the same page; success message close does not trigger list navigation unless the product rule is “save success only → list”.
-- [ ] **Support register/update MessageDialog:** Success title `등록 완료`/`수정 완료`; body `등록 되었습니다.`/`수정 되었습니다.` (or `response.message`); `response.result === "00"` before success.
-- [ ] **Application save dialog:** `singleAction`(확인 1개); 제목 `수정 완료`/`등록 완료` + 본문 `수정 되었습니다.`/`등록 되었습니다.` (or `response.message`).
-- [ ] **Application save success confirm:** After OK on success dialog, navigate to **사업별 신청목록 상세** (same as cancel from that screen), not staying on the edit form unless explicitly documented as an exception.
-- [ ] **Application attachment delete:** Confirm dialog before delete API; **delete success dialog** (`삭제 완료` / `삭제 되었습니다.`); no list navigation on delete success.
-- [ ] **Mentor list row delete:** After API or local-only remove, show `삭제 완료` / `삭제 되었습니다.` success dialog (see §7 Mentor list).
+- [ ] **Support register/update MessageDialog:** Success title `등록 완료`/`수정 완료`; `type="success"`; `resultCode === "00"` before success.
 
 ---
 
-#### 🔍 Decision tree (common file patterns)
+#### 🔍 Decision tree (common file patterns) — legacy §7 application items removed
 
 ```
 Implementing file upload in admin?
@@ -3127,74 +3082,8 @@ const {
 
 ---
 
-## 🧑‍🎓 학생 기준 로딩 규칙 (저소득층/기초·차상위 기준 정비)
+## 레거시 ieum 규칙 (삭제됨)
 
-### ⚠️ CRITICAL: 학생 기준으로 `lowIncomeYn` 결정
+다음 섹션은 **김제시 하수도 관리** 전환으로 제거되었습니다. 문서에 남아 있는 경로·용어(지원사업, RUN_STA, 꿈탐험, NEIS, GPKI, 학생 저소득층 로딩 등)는 **무시**하고, 현행 메뉴(오수 원인자부담금·배수설비·용도관리·관리자회원·공통코드) 기준으로 구현하세요.
 
-다음 지원 사업 화면에서 저소득층 관련 값은 “보호자”가 아니라 “학생”을 기준으로 판단해야 합니다.
-
-- 적용 대상:
-  - 1) `지원 > 1:1 원어민 화상영어 > 신청 등록`
-  - 2) `지원 > 스터디 사업 > 신청`
-
-#### 1) 1:1 원어민 화상영어 신청 등록
-- 보호자 선택 시: `lowIncomeYn` 설정을 제거/초기화한다.
-- 학생 선택 시: `ArmuserService.getDetail(학생 esntlId)` 호출 후, 응답의 `student.basicYn`/`student.poorYn`로 `lowIncomeYn`을 결정한다.
-- 상세 모드(로드) 시: `pEsntlId`(보호자) 기준이 아닌 `reqEsntlId`(학생)로 상세를 조회하여 `lowIncomeYn`을 설정한다.
-
-권장 구현 포인트:
-- 학생 선택 핸들러에서만 학생 기준 조회를 수행하여 영향 범위를 최소화한다.
-- 기존에 보호자 선택 시 세팅되던 값이 있다면 반드시 초기화한다.
-
-#### 2) 스터디 사업(신청)
-- 현재 신청 폼에는 저소득층 값 로딩 로직이 없음.
-- 학생 선택 핸들러에 `ArmuserService.getDetail(학생 esntlId)` 호출을 추가하고, `student.basicYn`/`student.poorYn`으로 `lowIncomeYn`(또는 별도 상태 `basicYn`/`poorYn`)을 설정한다.
-- 필요 시 UI에 저소득층 표시 영역을 추가하거나, 서버 전송 필드에 포함한다.
-
-주의/전제:
-- 백엔드 `ARMUSER(학생)` 상세 응답에 `basicYn`/`poorYn` 값이 포함되어야 한다. 학생 계정에도 해당 필드가 채워지는지 백엔드 확인이 필요하다.
-- 공통 훅을 사용하는 화면(예: 스터디 신청)이면, “학생 선택” 핸들러 내부에서만 학생 기준 조회를 붙이는 것이 안전하다.
-
-검증 체크리스트:
-- [ ] 보호자 선택 시 `lowIncomeYn`(및 관련 상태) 초기화됨
-- [ ] 학생 선택 시 `ArmuserService.getDetail(reqEsntlId)` 호출됨
-- [ ] `student.basicYn`/`student.poorYn` → `lowIncomeYn`으로 정상 매핑됨
-- [ ] 상세 모드에서 `reqEsntlId`로 상세 조회하고 값이 반영됨
-- [ ] 스터디 신청 화면에도 동일 원칙이 적용됨
-
----
-
-## 🧭 꿈틀꿈틀 우리아이 꿈탐험 전용 리스트/폼 표준
-
-본 섹션은 “꿈틀꿈틀 우리아이 꿈탐험” 화면에 한해 적용되는 UI/용어/상태코드 표준입니다.
-
-### 1) 용어 변경
-- “사업기간” → “모집기간”으로 표기한다.
-- 폼/검색영역/리스트 헤더 어디서든 동일 용어를 사용한다.
-
-### 2) 달력 아이콘(모집기간)
-- 날짜 선택 UI 옆 아이콘은 통일된 캘린더 아이콘을 사용한다.
-- 권장 클래스: `w-4 h-4 text-gray-600` (hover 시 `text-blue-600`)
-- 버튼/아이콘 컨테이너: `inline-flex items-center gap-1`
-
-### 3) 리스트 컬럼
-- “운영방식” 컬럼은 표시하지 않는다.
-- 컬럼 순서는 다른 지원 리스트와 동일 패턴 유지.
-
-### 4) “신청목록 보기” 버튼 크기
-- 버튼 클래스(목록 테이블 안): `px-2 py-1 text-[12px] text-blue-600 border border-blue-600 rounded hover:bg-blue-50 transition-colors`
-- 최소 폭이 필요한 경우 `style={{ minWidth: "60px" }}` 적용.
-- Support/Study 리스트의 보기 버튼과 동일한 크기·비율을 유지한다.
-
-### 5) 상태코드 매핑(리스트/상세/검색) — 사업 RUN_STA
-- ARTPROM **진행상태**는 지원사업 공통과 동일: **01 모집예정, 02 모집중, 04 모집마감, 99 취소** (`runStaAdmin.ts`).
-- 상태 배지는 기존 규칙의 사이즈/색상 패턴을 그대로 사용한다.
-  - 배지 공통: `inline-flex items-center justify-center min-w-[72px] px-2.5 py-0.5 rounded-[5px] text-[13px] font-medium`
-- 검색 select, 리스트·엑셀 표시는 `RUN_STA_SEARCH_OPTIONS` / `getRunStaLabel` 등과 일치할 것.
-
-검증 체크리스트:
-- [ ] 모든 화면에서 “모집기간” 용어 사용(사업기간 미사용)
-- [ ] 달력 아이콘 크기/색상 패턴 통일
-- [ ] 리스트에 “운영방식” 컬럼 없음
-- [ ] “신청목록 보기” 버튼 크기가 Support/Study와 동일
-- [ ] 사업 RUN_STA 매핑이 `runStaAdmin`과 일관(01/02/04/99)
+**현행 참조:** `SupportListPageView`, `feePayerManageApi`, `useFeePayerBasicRegister`, `useDrainageEquipBasicRegister`

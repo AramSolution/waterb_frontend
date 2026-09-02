@@ -756,7 +756,7 @@ import { LocalComponent } from "./LocalComponent";
 
 // 5. Styles (always last)
 // Note: Custom CSS imports are specific to admin pages (see admin-web-rules.mdc)
-// User pages use Tailwind CSS only (see user-web-rules.mdc)
+// Admin pages use custom CSS (see admin-web-rules.mdc)
 ```
 
 **MUST NOT:**
@@ -1632,7 +1632,7 @@ const params: SupportListParams = {
 - ❌ Ignore responsive design
 - ❌ Use arbitrary values when standard utilities exist
 
-**Note:** For admin-specific styling rules (Custom CSS usage), see `admin-web-rules.mdc`. For user-specific styling rules (Tailwind only), see `user-web-rules.mdc`.
+**Note:** For admin-specific styling rules (Custom CSS usage), see `admin-web-rules.mdc`.
 
 ### Performance Anti-Patterns
 

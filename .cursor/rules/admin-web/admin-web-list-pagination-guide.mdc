@@ -1,98 +1,54 @@
 ---
 alwaysApply: false
 ---
-# Admin Web List & Pagination Guide (꿈틀꿈틀 우리아이 꿈탐험 포함)
+# Admin Web List & Pagination Guide (김제시 하수도 관리)
 
 ## 📌 목적
 - 리스트/검색/페이징/상태/액션 버튼 UI의 일관성을 보장한다.
-- “꿈틀꿈틀 우리아이 꿈탐험” 전용 요구사항(모집기간/컬럼/상태/버튼)을 명시한다.
+- **오수 원인자부담금·배수설비** 목록에 적용되는 검색·상태·버튼 규격을 명시한다.
 
 ---
 
-## 🔎 검색 영역
-- 기간 필드 명칭: “모집기간” (사업기간 금지)
-- 기간 입력 구성:
-  - 좌측: 시작일 `FormDatePicker` + 캘린더 아이콘
-  - 구분자 “~”
-  - 우측: 종료일 `FormDatePicker` + 캘린더 아이콘
-- 아이콘 스타일:
-  - 아이콘: `w-4 h-4 text-gray-600` (hover: `text-blue-600`)
-  - 컨테이너: `inline-flex items-center gap-1`
-
-예시:
-```tsx
-<div className="inline-flex items-center gap-2">
-  <FormDatePicker name="recFromDd" ... />
-  <svg className="w-4 h-4 text-gray-600" ... />
-  <span>~</span>
-  <FormDatePicker name="recToDd" ... />
-  <svg className="w-4 h-4 text-gray-600" ... />
-</div>
-```
+## 🔎 검색 영역 (오수 원인자부담금)
+- 기간 필드: **통지일** (`reqDateFrom` / `reqDateTo`, `yyyy-MM-dd`)
+- 검색어: **성명** (`userNm`), **주소** (`address` — ZIP·지번·주소·상세 통합)
+- 조회 버튼 또는 Enter 시에만 API 호출 (명시적 검색)
 
 ---
 
-## 🧱 리스트 컬럼
-- 공통 컬럼 순서: 체크박스 → 상태 → 제목/사업명 → 기간(모집기간) → 등록일/수정일 → 액션
-- 꿈탐험 전용: “운영방식” 컬럼 제거
-
-### 오수 원인자부담금 관리 목록 (`SupportListPageView`, `POST /api/admin/support/fee-payer/list`)
-- **부과액:** API `waterCost`(DB **`WATER_COST`**)만 표시·엑셀 반영. `waterVal`은 목록 부과액 표시에 쓰지 않는다.
-- **주소 표시:** `formatFeePayerAddressLine` — **`zip` 제외**, `adresLot`·`adres`·`detailAdres`만 연결. (요청 파라미터 `address`는 서버에서 ZIP 포함 통합 검색.)
+## 🧱 오수 원인자부담금 관리 목록 (`SupportListPageView`, `POST /api/admin/support/fee-payer/list`)
+- **부과액:** API `waterCost`만 표시·엑셀 반영. `waterVal`은 목록 부과액에 쓰지 않는다.
+- **주소 표시:** `formatFeePayerAddressLine` — `zip` 제외, `adresLot`·`adres`·`detailAdres` 연결.
+- **상태 배지:** `paySta`만 사용 (`min-w-[72px]`, `text-[13px]`)
+- **페이징:** 클라이언트 페이징. mock: `NEXT_PUBLIC_FEE_PAYER_LIST_MOCK=true`
 
 ---
 
-## 🏷 상태코드 매핑 (지원사업 사업 RUN_STA)
-- **단일 출처:** `@/entities/adminWeb/support/lib/runStaAdmin` (`RUN_STA_SEARCH_OPTIONS`, `RUN_STA_BASE_OPTIONS`, `getRunStaLabel`, …)
-- **기본(목록·검색·등록·수정·엑셀):** 사용자 노출 용어와 동일하게 유지
-  - 01: 모집예정
-  - 02: 모집중
-  - 04: 모집마감
-  - 99: 취소
-- **레거시 DB값(상세에서 드물게):** 03 검토중, 05 완료, 11 반려, 12 중단 — 라벨은 `getRunStaLabel` / `LEGACY_RUN_STA_LABEL`과 일치할 것.
-- 배지 스타일(공통):
-  - `inline-flex items-center justify-center min-w-[72px] px-2.5 py-0.5 rounded-[5px] text-[13px] font-medium`
-
-상태 표시 예시(실제 구현은 `runStaAdmin`을 import):
-```ts
-import {
-  RUN_STA_SEARCH_OPTIONS,
-  getRunStaLabel,
-} from "@/entities/adminWeb/support/lib/runStaAdmin";
-// 검색 select 옵션: RUN_STA_SEARCH_OPTIONS
-// 테이블/엑셀 셀: getRunStaLabel(code)
-```
-
----
-
-## 👁 보기/상세 이동 버튼 규격
-- “신청목록 보기” 버튼(행 내):
-  - 클래스: `px-2 py-1 text-[12px] text-blue-600 border border-blue-600 rounded hover:bg-blue-50 transition-colors`
-  - 필요 시 `style={{ minWidth: '60px' }}`
-- Support/Study 리스트의 “보기/상세/삭제”와 크기 일치
+## 👁 보기/상세 버튼 규격
+- 보기: `px-2 py-1 text-[12px]`
+- 상세/삭제: `px-3 py-1 text-[13px]`
+- 참조: `SupportListPageView`
 
 ---
 
 ## 🔢 페이지네이션
 - 공통 `Pagination` 컴포넌트 사용
-- 우측 정렬, 상단/하단 한 곳만 배치(목록 하단권장)
-- 데이터 0건일 때는 페이지네이션 숨김
+- 데이터 0건일 때 페이지네이션 숨김
 
 ---
 
 ## ✅ 체크리스트
-- [ ] 기간 라벨이 “모집기간”으로 표기됨
-- [ ] 캘린더 아이콘 사이즈/색상 일치
-- [ ] “운영방식” 컬럼 제거됨(꿈탐험 전용)
-- [ ] “신청목록 보기” 버튼 크기 표준 적용
-- [ ] 상태코드 01/02/03/04/05/99 일관 적용
+- [ ] 통지일 검색 라벨·파라미터 일치
+- [ ] 상태 배지·버튼 크기가 `SupportListPageView`와 동일
+- [ ] 명시적 검색(입력마다 API 호출 없음)
 - [ ] 페이지네이션 위치/표시 규칙 준수
 
 ---
 
 ## 📚 참고
-- 버튼/상태 배지/표 스타일은 `admin-web-rules.mdc`의 공통 규칙을 따른다.
-``` -->
+- 버튼/상태 배지/표 스타일: `admin-web-rules.mdc`
+- 서버 사이드 페이지네이션 상세: 아래 **List Page Pagination & Filtering Implementation Guide**
+
 ---
 alwaysApply: false
 ---

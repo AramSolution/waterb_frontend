@@ -1,1 +1,0 @@
-export { MemberTestPageView } from "./MemberTestPageView";

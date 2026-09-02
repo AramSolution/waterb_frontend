@@ -93,7 +93,7 @@ export function useDrainageEquipDetailSection(
   const handleAddEntry = useCallback(() => {
     setEntries((prev) => {
       if (!prev.every((e) => e.status === "PAID")) return prev;
-      return [...prev, createDrainageEquipDetailEntry()];
+      return [createDrainageEquipDetailEntry(), ...prev];
     });
   }, []);
 
@@ -118,7 +118,7 @@ export function useDrainageEquipDetailSection(
 
           if (value === "UNPAID") {
             const hasNewerPaid = prev
-              .slice(targetIndex + 1)
+              .slice(0, targetIndex)
               .some((r) => r.status === "PAID");
             if (hasNewerPaid) {
               const message =

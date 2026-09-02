@@ -6,9 +6,8 @@
 2. [📖 프로젝트 개요](#-프로젝트-개요)
 3. [🔧 공통 규칙](#-공통-규칙)
 4. [👨‍💼 관리자 웹 (Admin Web)](#-관리자-웹-admin-web)
-5. [👤 사용자 웹 (User Web)](#-사용자-웹-user-web)
-6. [🔄 개발 워크플로우](#-개발-워크플로우)
-7. [🐛 트러블슈팅](#-트러블슈팅)
+5. [🔄 개발 워크플로우](#-개발-워크플로우)
+6. [🐛 트러블슈팅](#-트러블슈팅)
 
 ---
 
@@ -16,15 +15,15 @@
 
 ### Rule 사용 가이드 매트릭스
 
-| 작업 | 공통 | Admin Web | User Web |
-|------|------|-----------|----------|
-| **리스트 페이지** | FSD 구조, 라우팅 | Custom CSS, 검색폼, 상태배지, 페이지네이션 | Tailwind만, 반응형 높이 |
-| **등록/수정 폼** | FSD 구조, 라우팅 | FormField, 유효성검사 UI, 2-column 레이아웃 | Tailwind만 |
-| **상세 페이지** | Query Parameter, Suspense | 리스트-상세 상태 유지 | Tailwind만 |
-| **모달/다이얼로그** | - | Modal, ConfirmDialog, API 에러 처리 | - |
-| **Excel 다운로드** | - | exceljs, `shared/lib/exceljsAdminExcel`, 엔티티 `excelUtils` | - |
-| **스타일링** | Tailwind 기본 | Tailwind + Custom CSS | Tailwind만 |
-| **반응형** | Mobile-first | 검색폼 토글, 모바일 테이블 | Viewport 높이 (vh) |
+| 작업 | 공통 | Admin Web |
+|------|------|-----------|
+| **리스트 페이지** | FSD 구조, 라우팅 | Custom CSS, 검색폼, 상태배지, 페이지네이션 |
+| **등록/수정 폼** | FSD 구조, 라우팅 | FormField, 유효성검사 UI, 2-column 레이아웃 |
+| **상세 페이지** | Query Parameter, Suspense | 리스트-상세 상태 유지 |
+| **모달/다이얼로그** | - | Modal, ConfirmDialog, API 에러 처리 |
+| **Excel 다운로드** | - | exceljs, `shared/lib/exceljsAdminExcel`, 엔티티 `excelUtils` |
+| **스타일링** | Tailwind 기본 | Tailwind + Custom CSS |
+| **반응형** | Mobile-first | 검색폼 토글, 모바일 테이블 |
 
 ### Rule 파일 선택 Decision Tree
 
@@ -44,12 +43,7 @@
 │  │  └─ 스타일링?
 │  │     └─ admin-web-rules.mdc
 │  │
-│  └─ NO → User Web 페이지인가?
-│     ├─ YES → User Web 규칙 확인
-│     │  └─ user-web-rules.mdc
-│     │
-│     └─ NO → 공통 규칙 확인
-│        └─ waterb-front-rule.mdc
+│  └─ NO → 공통 규칙 확인 (`waterb-front-rule.mdc`)
 │
 └─ 공통 작업
    ├─ FSD 구조 확인?
@@ -60,23 +54,21 @@
       └─ admin-web-list-detail-state-persistence.mdc
 ```
 
-### Admin Web vs User Web 비교표
+### Admin Web 스타일 요약
 
-| 항목 | Admin Web | User Web |
-|------|-----------|----------|
-| **스타일링** | Tailwind + Custom CSS | Tailwind만 |
-| **CSS Import** | ✅ 필수 (`@/shared/styles/admin/*.css`) | ❌ 금지 |
-| **검색 폼** | 토글 버튼, Custom CSS 클래스 | - |
-| **테이블** | Custom CSS (mobile-table, resizable-table) | Tailwind만 |
-| **상태 배지** | 고정 크기/스타일 (`text-[13px]`, `px-2.5 py-0.5`) | - |
-| **액션 버튼** | 고정 템플릿 (등록: `✏️ 등록`, `bg-green-600`) | - |
-| **FormField** | ✅ 사용 (FormField, FormInput, FormSelect) | - |
-| **유효성 검사** | 내부 wrapper div 구조 | - |
-| **모달** | Modal, ConfirmDialog | - |
-| **페이지네이션** | 서버 사이드 (useRef, Debounce) | - |
-| **Excel 다운로드** | ✅ 지원 | ❌ |
-| **반응형 높이** | - | Viewport 기반 (`max-h-[90vh]`) |
-| **고정 높이** | - | ❌ 금지 (`h-[880px]` 등) |
+| 항목 | Admin Web |
+|------|-----------|
+| **스타일링** | Tailwind + Custom CSS |
+| **CSS Import** | ✅ 필수 (`@/shared/styles/admin/*.css`) |
+| **검색 폼** | 토글 버튼, Custom CSS 클래스 |
+| **테이블** | Custom CSS (mobile-table, resizable-table) |
+| **상태 배지** | 고정 크기/스타일 (`text-[13px]`, `px-2.5 py-0.5`) |
+| **액션 버튼** | 고정 템플릿 (등록: `✏️ 등록`, `bg-green-600`) |
+| **FormField** | ✅ 사용 (FormField, FormInput, FormSelect) |
+| **유효성 검사** | 내부 wrapper div 구조 |
+| **모달** | Modal, ConfirmDialog |
+| **페이지네이션** | 서버 사이드 (useRef, Debounce) |
+| **Excel 다운로드** | ✅ 지원 |
 
 ### 작업별 체크리스트
 
@@ -103,18 +95,13 @@
 - [ ] Suspense fallback 사용
 - [ ] 리스트로 돌아갈 때 상태 유지 (Query Parameter)
 
-#### User Web 페이지
-- [ ] Tailwind CSS만 사용 (Custom CSS 금지)
-- [ ] Viewport 기반 높이 (`max-h-[90vh]`)
-- [ ] 고정 픽셀 높이 금지 (`h-[880px]` 등)
-
 ---
 
 ## 📖 프로젝트 개요
 
 ### 프로젝트 소개
 
-**waterb_frontend**는 Next.js 14 기반의 관리자 웹 애플리케이션입니다. Feature-Sliced Design (FSD) 아키텍처를 따르며, TypeScript와 Tailwind CSS를 사용합니다.
+**waterb_frontend**는 **김제시 하수도 관리** 관리자 웹(Next.js 14)입니다. Feature-Sliced Design (FSD) 아키텍처를 따르며, TypeScript와 Tailwind CSS를 사용합니다.
 
 ### 주요 특징
 
@@ -123,7 +110,7 @@
 - **Static Export Mode**: `output: 'export'` 모드로 정적 사이트 생성
 - **FSD 아키텍처**: Feature-Sliced Design 패턴 준수
 - **Tailwind CSS**: 유틸리티 퍼스트 CSS 프레임워크
-- **이중 웹 구조**: Admin Web (`/adminWeb/*`)과 User Web (`/userWeb/*`) 분리
+- **관리자 전용**: Admin Web (`/adminWeb/*`)만 유지 (사용자 웹 없음)
 
 ### 프로젝트 구조
 
@@ -131,17 +118,14 @@
 waterb_frontend/
 ├── src/
 │   ├── app/              # Next.js App Router (라우팅 레이어)
-│   │   ├── adminWeb/     # 관리자 웹 페이지
-│   │   └── userWeb/      # 사용자 웹 페이지
-│   ├── entities/         # 비즈니스 엔티티 (재사용 가능한 도메인 로직)
-│   │   ├── adminWeb/     # 관리자 웹 엔티티 (member, board, article, etc.)
+│   │   └── adminWeb/     # 관리자 웹 페이지
+│   ├── entities/         # 비즈니스 엔티티
+│   │   ├── adminWeb/     # 관리자 웹 엔티티
 │   │   └── auth/         # 인증 엔티티
-│   ├── features/           # 기능 단위 (비즈니스 기능)
-│   │   ├── adminWeb/     # 관리자 웹 기능
-│   │   └── userWeb/      # 사용자 웹 기능
+│   ├── features/         # 기능 단위
+│   │   └── adminWeb/     # 관리자 웹 기능
 │   ├── widgets/          # 복합 UI 컴포넌트
-│   │   ├── adminWeb/     # 관리자 웹 위젯 (AdminLayout, Header, Sidebar)
-│   │   └── userWeb/      # 사용자 웹 위젯
+│   │   └── adminWeb/     # AdminLayout, Header, Sidebar
 │   └── shared/           # 공유 리소스
 │       ├── config/       # 설정
 │       ├── hooks/        # 커스텀 훅
@@ -794,57 +778,9 @@ const handleExcelDownload = async () => {
 
 ---
 
-## 👤 사용자 웹 (User Web)
+## 👤 사용자 웹 (User Web) — 미사용
 
-### 스타일링 규칙
-
-#### Tailwind CSS Only (CRITICAL)
-
-User Web 페이지는 **Tailwind CSS만** 사용합니다 (Custom CSS 없음).
-
-```typescript
-// ✅ CORRECT: User Web 페이지
-"use client";
-
-import React from "react";
-// ✅ NO CSS imports - Tailwind only
-
-export const HomePageView: React.FC = () => {
-  return (
-    <div className="w-full">
-      <div className="container mx-auto px-4">
-        <h1 className="text-2xl font-bold text-gray-900">제목</h1>
-      </div>
-    </div>
-  );
-};
-```
-
-**MUST NOT:**
-- ❌ Custom CSS 파일 import 금지
-- ❌ `@/shared/styles/admin/*.css` import 금지
-- ❌ Custom CSS 클래스 사용 금지
-
-### 반응형 높이 규칙 (CRITICAL)
-
-**절대 사용 금지:**
-- ❌ 고정 픽셀 높이: `h-[880px]`, `min-h-[900px]`
-- ❌ 데스크톱 기준 높이 설정
-
-**올바른 사용:**
-```typescript
-// ✅ CORRECT: Viewport 기반 높이
-<div className="max-h-[90vh] overflow-y-auto">
-  {/* 콘텐츠가 자연스럽게 높이 결정 */}
-</div>
-
-// ✅ CORRECT: 간격 조정으로 시각적 높이 증가
-<div className="max-h-[90vh]">
-  <div className="mb-8">  {/* 간격 증가 */}
-    <h1>제목</h1>
-  </div>
-</div>
-```
+이 저장소에는 **사용자 웹(`/userWeb`)이 없습니다.** `user-web-rules.mdc`도 삭제되었습니다. 모든 기능은 **Admin Web** 규칙만 따릅니다.
 
 ---
 
@@ -913,22 +849,6 @@ export const HomePageView: React.FC = () => {
 - [ ] Query parameter로 ID 받기 (`?id=...`)
 - [ ] Suspense fallback 사용
 - [ ] 리스트로 돌아갈 때 상태 유지
-
-#### 4. User Web 페이지 개발
-
-**Before 시작:**
-- [ ] 기존 User Web 페이지 패턴 확인
-- [ ] Tailwind CSS만 사용 확인
-
-**구현 단계:**
-1. Feature hook 생성 (`features/userWeb/{feature}/model/`)
-2. UI 컴포넌트 생성 (`features/userWeb/{feature}/ui/`)
-3. App 라우팅 페이지 생성 (`app/userWeb/{path}/page.tsx`)
-
-**체크리스트:**
-- [ ] Tailwind CSS만 사용 (Custom CSS 금지)
-- [ ] Viewport 기반 높이 (`max-h-[90vh]`)
-- [ ] 고정 픽셀 높이 금지 (`h-[880px]` 등)
 
 ---
 
@@ -1064,7 +984,6 @@ export default function DetailPage() {
 
 - **메인 규칙**: `.cursor/rules/common/waterb-front-rule.mdc`
 - **Admin Web 규칙**: `.cursor/rules/admin-web/admin-web-rules.mdc`
-- **User Web 규칙**: `.cursor/rules/user-web/user-web-rules.mdc`
 - **API 설정**: `src/shared/config/api.ts`
 - **API Client**: `src/shared/lib/apiClient.ts`
 
