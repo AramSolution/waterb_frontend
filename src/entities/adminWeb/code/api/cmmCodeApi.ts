@@ -507,7 +507,7 @@ export class CmmCodeService {
       );
       return response;
     } catch (error) {
-      console.error("대분류코드 삭제 실패:", error);
+      console.error("대분류코드 삭제 오류:", error);
       if (error instanceof ApiError) {
         throw error;
       }
@@ -602,7 +602,7 @@ export class CmmCodeService {
       );
       return response;
     } catch (error) {
-      console.error("소분류코드 삭제 실패:", error);
+      console.error("소분류코드 삭제 오류:", error);
       if (error instanceof ApiError) {
         throw error;
       }

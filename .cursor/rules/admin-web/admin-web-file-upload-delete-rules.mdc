@@ -693,7 +693,7 @@ if (response.result === "00") {
   setShowMessageDialog(true);
 } else {
   // Show failure message
-  setMessageDialogTitle("삭제 실패");
+  setMessageDialogTitle("삭제 오류");
   setMessageDialogMessage(
     response.message || "파일 삭제에 실패했습니다."
   );
@@ -814,7 +814,7 @@ const deleteExistingFile = async (file: FileItem) => {
       setShowMessageDialog(true);
     } else {
       // Show failure message
-      setMessageDialogTitle("삭제 실패");
+      setMessageDialogTitle("삭제 오류");
       setMessageDialogMessage(
         response.message || "파일 삭제에 실패했습니다."
       );
@@ -822,7 +822,7 @@ const deleteExistingFile = async (file: FileItem) => {
       setShowMessageDialog(true);
     }
   } catch (err) {
-    setMessageDialogTitle("삭제 실패");
+    setMessageDialogTitle("삭제 오류");
     setMessageDialogMessage(
       err instanceof Error
         ? err.message

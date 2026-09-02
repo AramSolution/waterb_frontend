@@ -131,7 +131,7 @@ export async function deleteArmbuild(
       `${ARMBUILD_BASE}/${id}`,
     );
   } catch (error) {
-    console.error("건축물용도 삭제 실패:", error);
+    console.error("건축물용도 삭제 오류:", error);
     if (error instanceof ApiError) throw error;
     throw new ApiError(0, "건축물용도 삭제 중 오류가 발생했습니다.");
   }

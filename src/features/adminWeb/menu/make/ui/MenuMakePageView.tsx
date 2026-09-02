@@ -159,7 +159,7 @@ export const MenuMakePageView: React.FC = () => {
         }
         setMenuTreeItems(list);
       } else {
-        setMessageDialogTitle('저장 실패');
+        setMessageDialogTitle('저장 오류');
         setMessageDialogMessage(
           response.resultMessage || '저장 중 오류가 발생했습니다.',
         );
@@ -167,7 +167,7 @@ export const MenuMakePageView: React.FC = () => {
         setShowMessageDialog(true);
       }
     } catch (err) {
-      setMessageDialogTitle('저장 실패');
+      setMessageDialogTitle('저장 오류');
       if (err instanceof ApiError) {
         if (err.status === 401) {
           setMessageDialogMessage('인증에 실패했습니다. 다시 로그인해주세요.');

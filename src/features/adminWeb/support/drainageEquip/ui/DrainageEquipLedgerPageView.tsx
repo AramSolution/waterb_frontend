@@ -634,7 +634,7 @@ export const DrainageEquipLedgerPageView: React.FC = () => {
 
       <ConfirmDialog
         isOpen={showDeleteFailDialog}
-        title="삭제 실패"
+        title="삭제 오류"
         message={deleteFailMessage || "배수설비 삭제에 실패했습니다."}
         confirmText="확인"
         cancelText="취소"

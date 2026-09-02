@@ -236,7 +236,7 @@ export function useBannerDetail(bannerId: string) {
     } else if (pendingPicDelete === "existing") {
       const id = bannerId?.trim() ?? "";
       if (!id) {
-        setMessageDialogTitle("이미지 삭제 실패");
+        setMessageDialogTitle("이미지 삭제 오류");
         setMessageDialogMessage("배너 정보가 없습니다. 다시 조회해 주세요.");
         setMessageDialogType("danger");
         setShowMessageDialog(true);
@@ -245,7 +245,7 @@ export function useBannerDetail(bannerId: string) {
       try {
         const res = await BannerService.deleteBannerImage(id);
         if (res.result && res.result !== "00") {
-          setMessageDialogTitle("이미지 삭제 실패");
+          setMessageDialogTitle("이미지 삭제 오류");
           setMessageDialogMessage(
             res.message?.trim() || "배너 이미지 삭제에 실패했습니다.",
           );
@@ -265,7 +265,7 @@ export function useBannerDetail(bannerId: string) {
           err instanceof ApiError
             ? err.message
             : "배너 이미지 삭제 중 오류가 발생했습니다.";
-        setMessageDialogTitle("이미지 삭제 실패");
+        setMessageDialogTitle("이미지 삭제 오류");
         setMessageDialogMessage(msg);
         setMessageDialogType("danger");
         setShowMessageDialog(true);
@@ -324,14 +324,14 @@ export function useBannerDetail(bannerId: string) {
       if (!validate()) return;
       const id = bannerId?.trim() ?? "";
       if (!id || !detailSource?.banrCd) {
-        setMessageDialogTitle("저장 실패");
+        setMessageDialogTitle("저장 오류");
         setMessageDialogMessage("배너 정보가 없습니다. 다시 조회해 주세요.");
         setMessageDialogType("danger");
         setShowMessageDialog(true);
         return;
       }
       if (!TokenUtils.isTokenValid()) {
-        setMessageDialogTitle("저장 실패");
+        setMessageDialogTitle("저장 오류");
         setMessageDialogMessage("로그인이 필요합니다.");
         setMessageDialogType("danger");
         setShowMessageDialog(true);
@@ -346,7 +346,7 @@ export function useBannerDetail(bannerId: string) {
         });
         const res = await BannerService.updateBanner(id, payload, photoFile);
         if (res.result && res.result !== "00") {
-          setMessageDialogTitle("저장 실패");
+          setMessageDialogTitle("저장 오류");
           setMessageDialogMessage(
             res.message?.trim() || "배너 수정에 실패했습니다.",
           );
@@ -363,7 +363,7 @@ export function useBannerDetail(bannerId: string) {
           err instanceof ApiError
             ? err.message
             : "배너 수정 중 오류가 발생했습니다.";
-        setMessageDialogTitle("저장 실패");
+        setMessageDialogTitle("저장 오류");
         setMessageDialogMessage(msg);
         setMessageDialogType("danger");
         setShowMessageDialog(true);

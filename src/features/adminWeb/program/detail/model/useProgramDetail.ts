@@ -231,7 +231,7 @@ export function useProgramDetail(progrmFileNm: string) {
         setMessageDialogType('success');
         setShowMessageDialog(true);
       } else {
-        setMessageDialogTitle('수정 실패');
+        setMessageDialogTitle('수정 오류');
         setMessageDialogMessage(
           response.resultMessage || '프로그램 수정 중 오류가 발생했습니다.',
         );

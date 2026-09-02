@@ -253,7 +253,7 @@ export function useMemberList() {
         setSelectedMemberEsntlId(null);
         // 성공 메시지는 필요시 추가
       } else {
-        // 삭제 실패
+        // 삭제 오류
         setError(response.message || "회원 탈퇴에 실패했습니다.");
         setShowDeleteDialog(false);
         setSelectedMemberEsntlId(null);

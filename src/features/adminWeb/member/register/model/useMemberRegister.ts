@@ -319,7 +319,7 @@ export function useMemberRegister() {
         setMessageDialogType('success');
         setShowMessageDialog(true);
       } else if (response.result === '50') {
-        setMessageDialogTitle('등록 실패');
+        setMessageDialogTitle('등록 오류');
         setMessageDialogMessage(
           response.message ||
             '중복되는 아이디가 있습니다. 다른 아이디를 사용하여 주십시요.',
@@ -327,7 +327,7 @@ export function useMemberRegister() {
         setMessageDialogType('danger');
         setShowMessageDialog(true);
       } else {
-        setMessageDialogTitle('등록 실패');
+        setMessageDialogTitle('등록 오류');
         setMessageDialogMessage(response.message || '에러가 발생하였습니다.');
         setMessageDialogType('danger');
         setShowMessageDialog(true);
@@ -335,13 +335,13 @@ export function useMemberRegister() {
     } catch (err) {
       console.error('회원 등록 오류:', err);
       if (err instanceof ApiError) {
-        setMessageDialogTitle('등록 실패');
+        setMessageDialogTitle('등록 오류');
         setMessageDialogMessage(
           err.message || '회원 등록 중 오류가 발생했습니다.',
         );
         setMessageDialogType('danger');
       } else {
-        setMessageDialogTitle('등록 실패');
+        setMessageDialogTitle('등록 오류');
         setMessageDialogMessage('회원 등록 중 알 수 없는 오류가 발생했습니다.');
         setMessageDialogType('danger');
       }

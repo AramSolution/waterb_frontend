@@ -467,7 +467,7 @@ export const CauserPaymentHistorySection: React.FC<
 
       <ConfirmDialog
         isOpen={showLineDeleteError}
-        title="삭제 실패"
+        title="삭제 오류"
         message={
           lineDeleteErrorMessage.trim() ||
           "납부내역 삭제 중 오류가 발생했습니다."

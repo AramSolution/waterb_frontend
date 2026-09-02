@@ -816,7 +816,7 @@ export const SupportListPageView: React.FC = () => {
 
       <ConfirmDialog
         isOpen={showDeleteFailDialog}
-        title="삭제 실패"
+        title="삭제 오류"
         message={deleteFailMessage || "오수 원인자부담금 삭제에 실패했습니다."}
         confirmText="확인"
         cancelText="취소"

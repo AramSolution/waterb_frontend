@@ -230,7 +230,7 @@ export function useMemberDetail(esntlId: string | null) {
 
   const handleUpdate = async () => {
     if (!esntlId) {
-      setMessageDialogTitle('수정 실패');
+      setMessageDialogTitle('수정 오류');
       setMessageDialogMessage('관리자 코드가 없습니다.');
       setMessageDialogType('danger');
       setShowMessageDialog(true);
@@ -297,7 +297,7 @@ export function useMemberDetail(esntlId: string | null) {
           // 재조회 실패 시 무시 (이미 성공 메시지 표시됨)
         }
       } else if (response.result === '50') {
-        setMessageDialogTitle('수정 실패');
+        setMessageDialogTitle('수정 오류');
         setMessageDialogMessage(
           response.message ||
             '중복되는 아이디가 있습니다. 다른 아이디를 사용하여 주십시요.',
@@ -305,7 +305,7 @@ export function useMemberDetail(esntlId: string | null) {
         setMessageDialogType('danger');
         setShowMessageDialog(true);
       } else {
-        setMessageDialogTitle('수정 실패');
+        setMessageDialogTitle('수정 오류');
         setMessageDialogMessage(response.message || '에러가 발생하였습니다.');
         setMessageDialogType('danger');
         setShowMessageDialog(true);
@@ -313,13 +313,13 @@ export function useMemberDetail(esntlId: string | null) {
     } catch (err) {
       console.error('회원 수정 오류:', err);
       if (err instanceof ApiError) {
-        setMessageDialogTitle('수정 실패');
+        setMessageDialogTitle('수정 오류');
         setMessageDialogMessage(
           err.message || '회원 수정 중 오류가 발생했습니다.',
         );
         setMessageDialogType('danger');
       } else {
-        setMessageDialogTitle('수정 실패');
+        setMessageDialogTitle('수정 오류');
         setMessageDialogMessage('회원 수정 중 알 수 없는 오류가 발생했습니다.');
         setMessageDialogType('danger');
       }

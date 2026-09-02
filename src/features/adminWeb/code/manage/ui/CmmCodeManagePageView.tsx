@@ -750,7 +750,7 @@ export const CmmCodeManagePageView: React.FC = () => {
         handleSearch();
       } else if (response.result === '50') {
         // 중복 에러
-        setMessageDialogTitle('등록 실패');
+        setMessageDialogTitle('등록 오류');
         setMessageDialogMessage(
           response.message ||
             '중복되는 대분류 코드가 있습니다. 다른 코드ID로 입력하세요',
@@ -759,7 +759,7 @@ export const CmmCodeManagePageView: React.FC = () => {
         setShowMessageDialog(true);
       } else {
         // 기타 에러
-        setMessageDialogTitle('등록 실패');
+        setMessageDialogTitle('등록 오류');
         setMessageDialogMessage(
           response.message ||
             response.resultMessage ||
@@ -781,7 +781,7 @@ export const CmmCodeManagePageView: React.FC = () => {
             window.location.href = '/adminWeb/login';
           }, 2000);
         } else {
-          setMessageDialogTitle('등록 실패');
+          setMessageDialogTitle('등록 오류');
           setMessageDialogMessage(
             err.message || '등록 중 오류가 발생했습니다.',
           );
@@ -789,7 +789,7 @@ export const CmmCodeManagePageView: React.FC = () => {
           setShowMessageDialog(true);
         }
       } else {
-        setMessageDialogTitle('등록 실패');
+        setMessageDialogTitle('등록 오류');
         setMessageDialogMessage('대분류코드 등록 중 오류가 발생했습니다.');
         setMessageDialogType('danger');
         setShowMessageDialog(true);
@@ -1002,7 +1002,7 @@ export const CmmCodeManagePageView: React.FC = () => {
         handleSearch();
       } else {
         // 실패
-        setMessageDialogTitle('수정 실패');
+        setMessageDialogTitle('수정 오류');
         setMessageDialogMessage(
           response.message ||
             response.resultMessage ||
@@ -1024,7 +1024,7 @@ export const CmmCodeManagePageView: React.FC = () => {
             window.location.href = '/adminWeb/login';
           }, 2000);
         } else {
-          setMessageDialogTitle('수정 실패');
+          setMessageDialogTitle('수정 오류');
           setMessageDialogMessage(
             err.message || '수정 중 오류가 발생했습니다.',
           );
@@ -1032,7 +1032,7 @@ export const CmmCodeManagePageView: React.FC = () => {
           setShowMessageDialog(true);
         }
       } else {
-        setMessageDialogTitle('수정 실패');
+        setMessageDialogTitle('수정 오류');
         setMessageDialogMessage('대분류코드 수정 중 오류가 발생했습니다.');
         setMessageDialogType('danger');
         setShowMessageDialog(true);
@@ -1575,7 +1575,7 @@ export const CmmCodeManagePageView: React.FC = () => {
         }
       } else {
         // 실패
-        setMessageDialogTitle('수정 실패');
+        setMessageDialogTitle('수정 오류');
         setMessageDialogMessage(
           response.message ||
             response.resultMessage ||
@@ -1597,7 +1597,7 @@ export const CmmCodeManagePageView: React.FC = () => {
             window.location.href = '/adminWeb/login';
           }, 2000);
         } else {
-          setMessageDialogTitle('수정 실패');
+          setMessageDialogTitle('수정 오류');
           setMessageDialogMessage(
             err.message || '수정 중 오류가 발생했습니다.',
           );
@@ -1605,7 +1605,7 @@ export const CmmCodeManagePageView: React.FC = () => {
           setShowMessageDialog(true);
         }
       } else {
-        setMessageDialogTitle('수정 실패');
+        setMessageDialogTitle('수정 오류');
         setMessageDialogMessage('소분류코드 수정 중 오류가 발생했습니다.');
         setMessageDialogType('danger');
         setShowMessageDialog(true);
@@ -1705,7 +1705,7 @@ export const CmmCodeManagePageView: React.FC = () => {
         }
       } else if (response.result === '50') {
         // 중복
-        setMessageDialogTitle('등록 실패');
+        setMessageDialogTitle('등록 오류');
         setMessageDialogMessage(
           response.message ||
             '중복되는 소분류 코드가 있습니다. 다른 코드ID로 입력하세요',
@@ -1714,7 +1714,7 @@ export const CmmCodeManagePageView: React.FC = () => {
         setShowMessageDialog(true);
       } else {
         // 실패
-        setMessageDialogTitle('등록 실패');
+        setMessageDialogTitle('등록 오류');
         setMessageDialogMessage(
           response.message ||
             response.resultMessage ||
@@ -1736,7 +1736,7 @@ export const CmmCodeManagePageView: React.FC = () => {
             window.location.href = '/adminWeb/login';
           }, 2000);
         } else {
-          setMessageDialogTitle('등록 실패');
+          setMessageDialogTitle('등록 오류');
           setMessageDialogMessage(
             err.message || '등록 중 오류가 발생했습니다.',
           );
@@ -1744,7 +1744,7 @@ export const CmmCodeManagePageView: React.FC = () => {
           setShowMessageDialog(true);
         }
       } else {
-        setMessageDialogTitle('등록 실패');
+        setMessageDialogTitle('등록 오류');
         setMessageDialogMessage('소분류코드 등록 중 오류가 발생했습니다.');
         setMessageDialogType('danger');
         setShowMessageDialog(true);
@@ -1818,7 +1818,7 @@ export const CmmCodeManagePageView: React.FC = () => {
         handleSearch();
       } else {
         // 실패
-        setMessageDialogTitle('삭제 실패');
+        setMessageDialogTitle('삭제 오류');
         setMessageDialogMessage(
           response.message ||
             response.resultMessage ||
@@ -1828,7 +1828,7 @@ export const CmmCodeManagePageView: React.FC = () => {
         setShowMessageDialog(true);
       }
     } catch (err) {
-      console.error('대분류코드 삭제 실패:', err);
+      console.error('대분류코드 삭제 오류:', err);
 
       if (err instanceof ApiError) {
         if (err.status === 401) {
@@ -1840,7 +1840,7 @@ export const CmmCodeManagePageView: React.FC = () => {
             window.location.href = '/adminWeb/login';
           }, 2000);
         } else {
-          setMessageDialogTitle('삭제 실패');
+          setMessageDialogTitle('삭제 오류');
           setMessageDialogMessage(
             err.message || '삭제 중 오류가 발생했습니다.',
           );
@@ -1848,7 +1848,7 @@ export const CmmCodeManagePageView: React.FC = () => {
           setShowMessageDialog(true);
         }
       } else {
-        setMessageDialogTitle('삭제 실패');
+        setMessageDialogTitle('삭제 오류');
         setMessageDialogMessage('대분류코드 삭제 중 오류가 발생했습니다.');
         setMessageDialogType('danger');
         setShowMessageDialog(true);
@@ -1927,7 +1927,7 @@ export const CmmCodeManagePageView: React.FC = () => {
         fetchDetailCodeListRef.current();
       } else {
         // 실패
-        setMessageDialogTitle('삭제 실패');
+        setMessageDialogTitle('삭제 오류');
         setMessageDialogMessage(
           response.message ||
             response.resultMessage ||
@@ -1937,7 +1937,7 @@ export const CmmCodeManagePageView: React.FC = () => {
         setShowMessageDialog(true);
       }
     } catch (err) {
-      console.error('소분류코드 삭제 실패:', err);
+      console.error('소분류코드 삭제 오류:', err);
 
       if (err instanceof ApiError) {
         if (err.status === 401) {
@@ -1949,7 +1949,7 @@ export const CmmCodeManagePageView: React.FC = () => {
             window.location.href = '/adminWeb/login';
           }, 2000);
         } else {
-          setMessageDialogTitle('삭제 실패');
+          setMessageDialogTitle('삭제 오류');
           setMessageDialogMessage(
             err.message || '삭제 중 오류가 발생했습니다.',
           );
@@ -1957,7 +1957,7 @@ export const CmmCodeManagePageView: React.FC = () => {
           setShowMessageDialog(true);
         }
       } else {
-        setMessageDialogTitle('삭제 실패');
+        setMessageDialogTitle('삭제 오류');
         setMessageDialogMessage('소분류코드 삭제 중 오류가 발생했습니다.');
         setMessageDialogType('danger');
         setShowMessageDialog(true);

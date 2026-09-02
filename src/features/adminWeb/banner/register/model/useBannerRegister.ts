@@ -135,7 +135,7 @@ export function useBannerRegister() {
 
       TokenUtils.debugToken();
       if (!TokenUtils.isTokenValid()) {
-        setMessageDialogTitle("등록 실패");
+        setMessageDialogTitle("등록 오류");
         setMessageDialogMessage("로그인이 필요합니다. 다시 로그인해 주세요.");
         setMessageDialogType("danger");
         setShowMessageDialog(true);
@@ -147,7 +147,7 @@ export function useBannerRegister() {
         const payload = buildBannerInsertSaveRequest(formData);
         const res = await BannerService.insertBanner(payload, photoFile);
         if (res.result && res.result !== "00") {
-          setMessageDialogTitle("등록 실패");
+          setMessageDialogTitle("등록 오류");
           setMessageDialogMessage(
             res.message?.trim() || "배너 등록에 실패했습니다.",
           );
@@ -164,7 +164,7 @@ export function useBannerRegister() {
           err instanceof ApiError
             ? err.message
             : "배너 등록 중 오류가 발생했습니다.";
-        setMessageDialogTitle("등록 실패");
+        setMessageDialogTitle("등록 오류");
         setMessageDialogMessage(msg);
         setMessageDialogType("danger");
         setShowMessageDialog(true);

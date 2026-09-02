@@ -543,7 +543,7 @@ export function useArticleDetail(articleId: string, bbsId: string) {
         setMessageDialogType("success");
         setShowMessageDialog(true);
       } else {
-        setMessageDialogTitle("파일 삭제 실패");
+        setMessageDialogTitle("파일 삭제 오류");
         setMessageDialogMessage(
           response.message || "파일을 삭제하는 중 오류가 발생했습니다.",
         );
@@ -551,8 +551,8 @@ export function useArticleDetail(articleId: string, bbsId: string) {
         setShowMessageDialog(true);
       }
     } catch (err) {
-      console.error("첨부파일 삭제 실패:", err);
-      setMessageDialogTitle("파일 삭제 실패");
+      console.error("첨부파일 삭제 오류:", err);
+      setMessageDialogTitle("파일 삭제 오류");
       setMessageDialogMessage(
         err instanceof Error
           ? err.message
@@ -770,7 +770,7 @@ export function useArticleDetail(articleId: string, bbsId: string) {
             window.location.href = "/adminWeb/login";
           }, 2000);
         } else {
-          setMessageDialogTitle("수정 실패");
+          setMessageDialogTitle("수정 오류");
           setMessageDialogMessage(
             err.message || "게시글 수정 중 오류가 발생했습니다.",
           );
@@ -778,7 +778,7 @@ export function useArticleDetail(articleId: string, bbsId: string) {
           setShowMessageDialog(true);
         }
       } else {
-        setMessageDialogTitle("수정 실패");
+        setMessageDialogTitle("수정 오류");
         setMessageDialogMessage(
           err instanceof Error
             ? err.message
@@ -908,7 +908,7 @@ export function useArticleDetail(articleId: string, bbsId: string) {
       fallbackFileName?: string,
     ) => {
       if (fileId === "" || fileId == null || seq === "" || seq == null) {
-        setMessageDialogTitle("다운로드 실패");
+        setMessageDialogTitle("다운로드 오류");
         setMessageDialogMessage("파일 정보가 올바르지 않습니다.");
         setMessageDialogType("danger");
         setShowMessageDialog(true);
@@ -917,7 +917,7 @@ export function useArticleDetail(articleId: string, bbsId: string) {
       try {
         await downloadWaterbAttachment(fileId, seq, fallbackFileName);
       } catch (err) {
-        setMessageDialogTitle("다운로드 실패");
+        setMessageDialogTitle("다운로드 오류");
         setMessageDialogMessage(
           err instanceof Error
             ? err.message

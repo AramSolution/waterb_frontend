@@ -393,7 +393,7 @@ export function useBoardDetail(bbsid: string) {
           }
         }
       } else {
-        setMessageDialogTitle("수정 실패");
+        setMessageDialogTitle("수정 오류");
         setMessageDialogMessage(
           response.message || "게시판 수정 중 오류가 발생했습니다.",
         );
@@ -403,13 +403,13 @@ export function useBoardDetail(bbsid: string) {
     } catch (err) {
       console.error("게시판 수정 오류:", err);
       if (err instanceof ApiError) {
-        setMessageDialogTitle("수정 실패");
+        setMessageDialogTitle("수정 오류");
         setMessageDialogMessage(
           err.message || "게시판 수정 중 오류가 발생했습니다.",
         );
         setMessageDialogType("danger");
       } else {
-        setMessageDialogTitle("수정 실패");
+        setMessageDialogTitle("수정 오류");
         setMessageDialogMessage(
           "게시판 수정 중 알 수 없는 오류가 발생했습니다.",
         );

@@ -295,7 +295,7 @@ export class ArticleService {
       }
       throw new ApiError(
         0,
-        error instanceof Error ? error.message : "첨부파일 삭제 실패",
+        error instanceof Error ? error.message : "첨부파일 삭제 오류",
       );
     }
   }
@@ -558,7 +558,7 @@ export class ArticleService {
       }
       throw new ApiError(
         0,
-        error instanceof Error ? error.message : "게시글 삭제 실패",
+        error instanceof Error ? error.message : "게시글 삭제 오류",
       );
     }
   }

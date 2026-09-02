@@ -145,7 +145,7 @@ export function useProgramRegister() {
         setShowMessageDialog(true);
       } else {
         // 01, 03 또는 기타 코드는 모두 실패로 처리
-        setMessageDialogTitle('등록 실패');
+        setMessageDialogTitle('등록 오류');
         setMessageDialogMessage(
           response.resultMessage || '프로그램 등록 중 오류가 발생했습니다.',
         );
@@ -155,13 +155,13 @@ export function useProgramRegister() {
     } catch (err) {
       console.error('프로그램 등록 오류:', err);
       if (err instanceof ApiError) {
-        setMessageDialogTitle('등록 실패');
+        setMessageDialogTitle('등록 오류');
         setMessageDialogMessage(
           err.message || '프로그램 등록 중 오류가 발생했습니다.',
         );
         setMessageDialogType('danger');
       } else {
-        setMessageDialogTitle('등록 실패');
+        setMessageDialogTitle('등록 오류');
         setMessageDialogMessage(
           '프로그램 등록 중 알 수 없는 오류가 발생했습니다.',
         );

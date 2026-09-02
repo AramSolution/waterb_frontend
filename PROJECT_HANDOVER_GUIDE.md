@@ -487,7 +487,7 @@ catch (err) {
   console.error("등록 오류:", err);
   
   if (err instanceof ApiError) {
-    setMessageDialogTitle("등록 실패");
+    setMessageDialogTitle("등록 오류");
     setMessageDialogMessage(
       err.message || "등록 중 오류가 발생했습니다."
     );

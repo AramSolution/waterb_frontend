@@ -280,7 +280,7 @@ export function useArticleList() {
     }
 
     if (!bbsId) {
-      setMessageDialogTitle('삭제 실패');
+      setMessageDialogTitle('삭제 오류');
       setMessageDialogMessage('게시판 ID가 없습니다.');
       setMessageDialogType('danger');
       setShowMessageDialog(true);
@@ -325,8 +325,8 @@ export function useArticleList() {
         // 목록 다시 불러오기
         await fetchArticlesRef.current();
       } else {
-        // 삭제 실패 (API 응답이 "01"인 경우)
-        setMessageDialogTitle('삭제 실패');
+        // 삭제 오류 (API 응답이 "01"인 경우)
+        setMessageDialogTitle('삭제 오류');
         setMessageDialogMessage(
           response.message || '게시글 삭제 중 오류가 발생했습니다.',
         );
@@ -341,7 +341,7 @@ export function useArticleList() {
       // API 통신 에러는 ConfirmDialog로 표시
       if (err instanceof ApiError) {
         if (err.status === 401) {
-          setMessageDialogTitle('인증 실패');
+          setMessageDialogTitle('인증 오류');
           setMessageDialogMessage(
             '인증이 만료되었습니다. 다시 로그인해주세요.',
           );
@@ -351,7 +351,7 @@ export function useArticleList() {
             window.location.href = '/adminWeb/login';
           }, 2000);
         } else {
-          setMessageDialogTitle('삭제 실패');
+          setMessageDialogTitle('삭제 오류');
           setMessageDialogMessage(
             err.message || '게시글 삭제 중 오류가 발생했습니다.',
           );
@@ -359,7 +359,7 @@ export function useArticleList() {
           setShowMessageDialog(true);
         }
       } else {
-        setMessageDialogTitle('삭제 실패');
+        setMessageDialogTitle('삭제 오류');
         setMessageDialogMessage(
           '게시글 삭제 중 알 수 없는 오류가 발생했습니다.',
         );

@@ -372,7 +372,7 @@ export function usePurposeManage() {
         setShowDeleteConfirmDialog(false);
         setPendingDelete(null);
         showDialog(
-          "삭제 실패",
+          "삭제 오류",
           res.message?.trim() || "삭제에 실패했습니다.",
           "danger",
         );
@@ -394,7 +394,7 @@ export function usePurposeManage() {
         e instanceof ApiError
           ? e.message
           : "삭제 중 오류가 발생했습니다.";
-      showDialog("삭제 실패", msg, "danger");
+      showDialog("삭제 오류", msg, "danger");
     } finally {
       setDeleteLoading(false);
     }
@@ -454,7 +454,7 @@ export function usePurposeManage() {
       return { ...next, ...errors };
     });
     if (!ok) {
-      showDialog("저장 실패", "입력값을 확인해주세요.", "danger");
+      showDialog("저장 오류", "입력값을 확인해주세요.", "danger");
       return;
     }
 
@@ -466,7 +466,7 @@ export function usePurposeManage() {
       if (!isArmbuildApiSuccess(res.result)) {
         await refetchList();
         showDialog(
-          "저장 실패",
+          "저장 오류",
           res.message?.trim() || "등록에 실패했습니다.",
           "danger",
         );
@@ -480,7 +480,7 @@ export function usePurposeManage() {
         e instanceof ApiError
           ? e.message
           : "저장 중 오류가 발생했습니다.";
-      showDialog("저장 실패", msg, "danger");
+      showDialog("저장 오류", msg, "danger");
     } finally {
       setSaveLoading(false);
     }
