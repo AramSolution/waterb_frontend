@@ -225,34 +225,7 @@ export function useSupportList() {
 
   useResizableColumns(tableRef);
 
-  // URL 파라미터와 상태 동기화
-  useEffect(() => {
-    if (ignoreNextUrlSyncRef.current) {
-      ignoreNextUrlSyncRef.current = false;
-      return;
-    }
-    if (urlStartDate !== null) {
-      setStartDate(urlStartDate || "");
-    }
-    if (urlEndDate !== null) {
-      setEndDate(urlEndDate || "");
-    }
-    if (urlPage !== null) {
-      const pageNum = parseInt(urlPage, 10);
-      if (!isNaN(pageNum) && pageNum > 0) {
-        setCurrentPage(pageNum);
-      }
-    }
-    if (urlApplicantNm !== null) {
-      setApplicantNm(urlApplicantNm);
-    }
-    if (urlAddr !== null) {
-      setAddr(urlAddr);
-    }
-    if (urlPaySta !== null) {
-      setPaySta(urlPaySta);
-    }
-  }, [urlStartDate, urlEndDate, urlPage, urlApplicantNm, urlAddr, urlPaySta]);
+  // URL 파라미터와 상태 동기화는 조회 함수 정의 이후에 처리한다.
 
   // 지원사업 목록 조회 (서버 사이드 페이징)
   const fetchSupports = useCallback(async () => {
@@ -365,6 +338,77 @@ export function useSupportList() {
   useEffect(() => {
     fetchSupportsRef.current = fetchSupports;
   }, [fetchSupports]);
+
+  const listQueryMountedRef = useRef(false);
+
+  // 사이드바에서 쿼리 없는 목록으로 들어오면 조회조건을 기본값으로 되돌리고 다시 조회한다.
+  useEffect(() => {
+    const isFirst = !listQueryMountedRef.current;
+    listQueryMountedRef.current = true;
+    if (ignoreNextUrlSyncRef.current) {
+      ignoreNextUrlSyncRef.current = false;
+      return;
+    }
+    if (isFirst) return;
+
+    const hasListQuery =
+      urlStartDate !== null ||
+      urlEndDate !== null ||
+      urlPage !== null ||
+      urlApplicantNm !== null ||
+      urlAddr !== null ||
+      urlPaySta !== null;
+
+    if (hasListQuery) {
+      if (urlStartDate !== null) {
+        startDateRef.current = urlStartDate;
+        setStartDate(urlStartDate);
+      }
+      if (urlEndDate !== null) {
+        endDateRef.current = urlEndDate;
+        setEndDate(urlEndDate);
+      }
+      if (urlApplicantNm !== null) {
+        applicantNmRef.current = urlApplicantNm;
+        setApplicantNm(urlApplicantNm);
+      }
+      if (urlAddr !== null) {
+        addrRef.current = urlAddr;
+        setAddr(urlAddr);
+      }
+      if (urlPaySta !== null) {
+        payStaRef.current = urlPaySta;
+        setPaySta(urlPaySta);
+      }
+      if (urlPage !== null) {
+        const pageNum = parseInt(urlPage, 10);
+        if (!isNaN(pageNum) && pageNum > 0) {
+          currentPageRef.current = pageNum;
+          setCurrentPage(pageNum);
+        }
+      }
+      return;
+    }
+
+    const nextStart = getDefaultNotifyStartDate();
+    const nextEnd = getDefaultNotifyEndDate();
+    startDateRef.current = nextStart;
+    endDateRef.current = nextEnd;
+    applicantNmRef.current = "";
+    addrRef.current = "";
+    payStaRef.current = "";
+    currentPageRef.current = 1;
+    setStartDate(nextStart);
+    setEndDate(nextEnd);
+    setApplicantNm("");
+    setAddr("");
+    setPaySta("");
+    setCurrentPage(1);
+    isSearchingRef.current = true;
+    void fetchSupportsRef.current().finally(() => {
+      isSearchingRef.current = false;
+    });
+  }, [urlStartDate, urlEndDate, urlPage, urlApplicantNm, urlAddr, urlPaySta]);
 
   // 초기 로드
   useEffect(() => {
