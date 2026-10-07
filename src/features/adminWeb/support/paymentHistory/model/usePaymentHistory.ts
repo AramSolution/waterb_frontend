@@ -17,6 +17,7 @@ import { formatPaymentAmountFromNumber } from "../lib/paymentHistoryNumericForma
 import { decodeDisplayText } from "@/shared/lib";
 import { formatPhoneWithHyphen, numericOnly } from "@/shared/lib/inputValidation";
 import type { CauserPaymentEntry } from "./useCauserPaymentHistorySection";
+import { supportListPathFromSearchParams } from "@/features/adminWeb/support/lib/supportListQuery";
 import { ApiError } from "@/shared/lib/apiClient";
 
 /** `addr` 한 덩어리 → 등록화면 3필드 배치(선행 5자리 우편번호가 있을 때만 분리) */
@@ -120,8 +121,8 @@ export function usePaymentHistory() {
   }, [loadPaymentDetail]);
 
   const handleBack = useCallback(() => {
-    router.push("/adminWeb/support/list");
-  }, [router]);
+    router.push(supportListPathFromSearchParams(searchParams));
+  }, [router, searchParams]);
 
   const handleSave = useCallback(async () => {
     if (!found) return;

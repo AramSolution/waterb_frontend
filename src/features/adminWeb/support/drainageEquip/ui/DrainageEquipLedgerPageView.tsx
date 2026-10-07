@@ -10,6 +10,7 @@ import {
 import { FormDatePicker } from "@/shared/ui/adminWeb/form";
 import { decodeDisplayText } from "@/shared/lib";
 import { feePayBadgeClassName } from "@/features/adminWeb/support/lib/feePayStatusUi";
+import { SupportListAddressText } from "@/features/adminWeb/support/lib/SupportListAddressText";
 import type { DrainageEquipListRow } from "@/entities/adminWeb/support/api/drainageEquipManageApi";
 import { useDrainageEquipList } from "../model";
 import "@/shared/styles/admin/mobile-table.css";
@@ -159,11 +160,8 @@ export const DrainageEquipLedgerPageView: React.FC = () => {
             </div>
             <div className="mobile-card-row">
               <span className="mobile-card-label">주소</span>
-              <span
-                className="mobile-card-value block truncate min-w-0"
-                title={f.addr || undefined}
-              >
-                {f.addr || "-"}
+              <span className="mobile-card-value block min-w-0">
+                <SupportListAddressText text={f.addr} />
               </span>
             </div>
             <div className="mobile-card-row">
@@ -248,13 +246,8 @@ export const DrainageEquipLedgerPageView: React.FC = () => {
             {f.name || "-"}
           </span>
         </td>
-        <td className="px-3 py-2 border-r text-left text-[13px] text-gray-900 min-w-0 overflow-hidden align-middle">
-          <span
-            className="block min-w-0 truncate"
-            title={f.addr && f.addr !== "-" ? f.addr : undefined}
-          >
-            {f.addr || "-"}
-          </span>
+        <td className="px-3 py-2 border-r text-left text-[13px] text-gray-900 min-w-0 align-middle">
+          <SupportListAddressText text={f.addr} />
         </td>
         <td className="px-3 py-2 border-r text-center text-[13px] text-gray-900 min-w-0 overflow-hidden align-middle">
           <span
@@ -288,28 +281,28 @@ export const DrainageEquipLedgerPageView: React.FC = () => {
             {payAmtDisp === "-" ? "-" : `${payAmtDisp}원`}
           </span>
         </td>
-        <td className="px-3 py-2 text-center">
-          <div className="flex items-center justify-center flex-wrap gap-1">
+        <td className="px-1 py-2 text-center">
+          <div className="flex items-center justify-center flex-nowrap gap-0.5">
             <button
               type="button"
-              className="px-2 py-1 text-[12px] text-blue-600 border border-blue-600 rounded hover:bg-blue-50 transition-colors whitespace-nowrap"
-              style={{ minWidth: "64px" }}
+              className="px-1.5 py-1 text-[12px] text-blue-600 border border-blue-600 rounded hover:bg-blue-50 transition-colors whitespace-nowrap"
+              style={{ minWidth: "52px" }}
               onClick={() => handlePaymentHistoryClick(f.itemId)}
             >
               납부내역
             </button>
             <button
               type="button"
-              className="px-2 py-1 text-[12px] text-blue-600 border border-blue-600 rounded hover:bg-blue-50 transition-colors whitespace-nowrap"
-              style={{ minWidth: "44px" }}
+              className="px-1.5 py-1 text-[12px] text-blue-600 border border-blue-600 rounded hover:bg-blue-50 transition-colors whitespace-nowrap"
+              style={{ minWidth: "36px" }}
               onClick={() => handleDetailClick(f.itemId)}
             >
               상세
             </button>
             <button
               type="button"
-              className="px-2 py-1 text-[12px] text-red-600 border border-red-600 rounded hover:bg-red-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
-              style={{ minWidth: "44px" }}
+              className="px-1.5 py-1 text-[12px] text-red-600 border border-red-600 rounded hover:bg-red-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+              style={{ minWidth: "36px" }}
               title={paid ? "납부완료 건은 삭제할 수 없습니다." : undefined}
               onClick={() =>
                 handleDeleteClick(
@@ -519,12 +512,12 @@ export const DrainageEquipLedgerPageView: React.FC = () => {
                     <col style={{ width: "5%" }} />
                     <col style={{ width: "8%" }} />
                     <col style={{ width: "9%" }} />
-                    <col style={{ width: "22%" }} />
+                    <col style={{ width: "30%" }} />
                     <col style={{ width: "10%" }} />
                     <col style={{ width: "9%" }} />
                     <col style={{ width: "10%" }} />
                     <col style={{ width: "9%" }} />
-                    <col style={{ width: "18%" }} />
+                    <col style={{ width: "10%" }} />
                   </colgroup>
                   <thead className="bg-gray-100">
                     <tr className="border-t border-b-2">
@@ -552,7 +545,7 @@ export const DrainageEquipLedgerPageView: React.FC = () => {
                       <th className="px-3 py-3 border-r text-center text-[13px] font-bold text-gray-700">
                         납부액
                       </th>
-                      <th className="px-3 py-3 text-center text-[13px] font-bold text-gray-700">
+                      <th className="px-1 py-3 text-center text-[13px] font-bold text-gray-700">
                         관리
                       </th>
                     </tr>

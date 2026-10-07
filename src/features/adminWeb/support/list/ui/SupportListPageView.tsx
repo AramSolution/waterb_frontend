@@ -18,6 +18,8 @@ import "@/shared/styles/admin/resizable-table.css";
 import "@/shared/styles/admin/search-form.css";
 import { decodeDisplayText } from "@/shared/lib";
 import { feePayBadgeClassName } from "@/features/adminWeb/support/lib/feePayStatusUi";
+import { appendSupportListQuery } from "@/features/adminWeb/support/lib/supportListQuery";
+import { SupportListAddressText } from "@/features/adminWeb/support/lib/SupportListAddressText";
 
 function formatFeeCurrency(v: unknown): string {
   if (v === null || v === undefined || v === "") return "-";
@@ -91,6 +93,7 @@ export const SupportListPageView: React.FC = () => {
     setAddr,
     paySta,
     setPaySta,
+    getAppliedListSearchParams,
   } = useSupportList();
 
   const deleteDialogTitle = "삭제하시겠습니까?";
@@ -99,11 +102,17 @@ export const SupportListPageView: React.FC = () => {
   ? `${selectedDeleteTarget.applicantNm} 부과액 : ${selectedDeleteTarget.levyAmtLabel}`
   : "삭제 대상을 확인할 수 없습니다.";
   
+  const pushWithListQuery = (pathWithQuery: string) => {
+    router.push(
+      appendSupportListQuery(pathWithQuery, getAppliedListSearchParams()),
+    );
+  };
+
   // 상세(읽기 전용) — 등록 화면과 동일 격자
   const handleDetailClick = (businessId: string) => {
     const id = businessId.trim();
     if (!id) return;
-    router.push(
+    pushWithListQuery(
       `/adminWeb/support/list/basic-detail?proId=${encodeURIComponent(id)}`,
     );
   };
@@ -111,7 +120,7 @@ export const SupportListPageView: React.FC = () => {
   const handlePaymentHistoryClick = (itemId: string) => {
     const id = itemId.trim();
     if (!id) return;
-    router.push(
+    pushWithListQuery(
       `/adminWeb/support/list/payment-history?itemId=${encodeURIComponent(id)}`,
     );
   };
@@ -268,7 +277,9 @@ export const SupportListPageView: React.FC = () => {
           className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors text-[13px]"
           style={{ minWidth: "100px" }}
           type="button"
-          onClick={() => router.push("/adminWeb/support/list/register")}
+          onClick={() =>
+            pushWithListQuery("/adminWeb/support/list/register")
+          }
         >
           ✏️ 등록
         </button>
@@ -293,14 +304,14 @@ export const SupportListPageView: React.FC = () => {
                 <table className="w-full mb-0" style={{ tableLayout: "fixed" }}>
                   <colgroup>
                     <col style={{ width: "5%" }} />
-                    <col style={{ width: "8%" }} />
+                    <col style={{ width: "10%" }} />
                     <col style={{ width: "9%" }} />
-                    <col style={{ width: "22%" }} />
+                    <col style={{ width: "28%" }} />
                     <col style={{ width: "10%" }} />
                     <col style={{ width: "9%" }} />
                     <col style={{ width: "10%" }} />
                     <col style={{ width: "9%" }} />
-                    <col style={{ width: "18%" }} />
+                    <col style={{ width: "10%" }} />
                   </colgroup>
                   <thead className="bg-gray-50">
                     <tr className="border-b-2">
@@ -328,7 +339,7 @@ export const SupportListPageView: React.FC = () => {
                       <th className="px-3 py-3 border-r text-center text-[13px] font-bold text-gray-700">
                         납부액
                       </th>
-                      <th className="px-3 py-3 text-center text-[13px] font-bold text-gray-700">
+                      <th className="px-1 py-3 text-center text-[13px] font-bold text-gray-700">
                         관리
                       </th>
                     </tr>
@@ -416,14 +427,14 @@ export const SupportListPageView: React.FC = () => {
                 >
                   <colgroup>
                     <col style={{ width: "5%" }} />
-                    <col style={{ width: "8%" }} />
+                    <col style={{ width: "10%" }} />
                     <col style={{ width: "9%" }} />
-                    <col style={{ width: "22%" }} />
+                    <col style={{ width: "28%" }} />
                     <col style={{ width: "10%" }} />
                     <col style={{ width: "9%" }} />
                     <col style={{ width: "10%" }} />
                     <col style={{ width: "9%" }} />
-                    <col style={{ width: "18%" }} />
+                    <col style={{ width: "10%" }} />
                   </colgroup>
                   <thead className="bg-gray-100">
                     <tr className="border-t border-b-2">
@@ -451,7 +462,7 @@ export const SupportListPageView: React.FC = () => {
                       <th className="px-3 py-3 border-r text-center text-[13px] font-bold text-gray-700">
                         납부액
                       </th>
-                      <th className="px-3 py-3 text-center text-[13px] font-bold text-gray-700">
+                      <th className="px-1 py-3 text-center text-[13px] font-bold text-gray-700">
                         관리
                       </th>
                     </tr>
@@ -518,17 +529,8 @@ export const SupportListPageView: React.FC = () => {
                                 {f.name || "-"}
                               </span>
                             </td>
-                            <td className="px-3 py-2 border-r text-left text-[13px] text-gray-900 min-w-0 overflow-hidden align-middle">
-                              <span
-                                className="block min-w-0 truncate"
-                                title={
-                                  f.addr && f.addr !== "-"
-                                    ? f.addr
-                                    : undefined
-                                }
-                              >
-                                {f.addr || "-"}
-                              </span>
+                            <td className="px-3 py-2 border-r text-left text-[13px] text-gray-900 min-w-0 align-middle">
+                              <SupportListAddressText text={f.addr} />
                             </td>
                             <td className="px-3 py-2 border-r text-center text-[13px] text-gray-900 min-w-0 overflow-hidden align-middle">
                               <span
@@ -578,12 +580,12 @@ export const SupportListPageView: React.FC = () => {
                                 {payAmtDisp === "-" ? "-" : `${payAmtDisp}원`}
                               </span>
                             </td>
-                            <td className="px-3 py-2 text-center">
-                              <div className="flex items-center justify-center flex-wrap gap-1">
+                            <td className="px-1 py-2 text-center">
+                              <div className="flex items-center justify-center flex-nowrap gap-0.5">
                                 <button
                                   type="button"
-                                  className="px-2 py-1 text-[12px] text-blue-600 border border-blue-600 rounded hover:bg-blue-50 transition-colors whitespace-nowrap"
-                                  style={{ minWidth: "64px" }}
+                                  className="px-1.5 py-1 text-[12px] text-blue-600 border border-blue-600 rounded hover:bg-blue-50 transition-colors whitespace-nowrap"
+                                  style={{ minWidth: "52px" }}
                                   onClick={() =>
                                     handlePaymentHistoryClick(
                                       itemId || businessId || f.rowKey,
@@ -594,8 +596,8 @@ export const SupportListPageView: React.FC = () => {
                                 </button>
                                 <button
                                   type="button"
-                                  className="px-2 py-1 text-[12px] text-blue-600 border border-blue-600 rounded hover:bg-blue-50 transition-colors whitespace-nowrap"
-                                  style={{ minWidth: "44px" }}
+                                  className="px-1.5 py-1 text-[12px] text-blue-600 border border-blue-600 rounded hover:bg-blue-50 transition-colors whitespace-nowrap"
+                                  style={{ minWidth: "36px" }}
                                   onClick={() =>
                                     handleDetailClick(businessId || f.rowKey)
                                   }
@@ -604,8 +606,8 @@ export const SupportListPageView: React.FC = () => {
                                 </button>
                                 <button
                                   type="button"
-                                  className="px-2 py-1 text-[12px] text-red-600 border border-red-600 rounded hover:bg-red-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
-                                  style={{ minWidth: "44px" }}
+                                  className="px-1.5 py-1 text-[12px] text-red-600 border border-red-600 rounded hover:bg-red-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                                  style={{ minWidth: "36px" }}
                                   title={
                                     f.paid ? "납부완료 건은 삭제할 수 없습니다." : undefined
                                   }
@@ -695,11 +697,8 @@ export const SupportListPageView: React.FC = () => {
                           </div>
                           <div className="mobile-card-row">
                             <span className="mobile-card-label">주소</span>
-                            <span
-                              className="mobile-card-value block truncate min-w-0"
-                              title={f.addr || undefined}
-                            >
-                              {f.addr || "-"}
+                            <span className="mobile-card-value block min-w-0">
+                              <SupportListAddressText text={f.addr} />
                             </span>
                           </div>
                           <div className="mobile-card-row">

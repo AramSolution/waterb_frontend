@@ -10,6 +10,7 @@ import {
   isFeePayerListRowPaid,
 } from "@/entities/adminWeb/support/api";
 import { downloadFeePayerListExcel } from "@/entities/adminWeb/support/lib";
+import { buildSupportListSearchParams } from "@/features/adminWeb/support/lib/supportListQuery";
 import { ApiError, TokenUtils } from "@/shared/lib";
 import { useResizableColumns } from "@/shared/hooks";
 import { FEE_LIST_MOCK } from "./feeListMockData";
@@ -116,12 +117,12 @@ export function useSupportList() {
     return `${year}-12-31`;
   };
 
-  // 통지일 구간 (URL 파라미터가 있으면 사용, 없으면 해당 연도 전체)
+  // 통지일 구간 (URL 키가 있으면 빈 값도 유지, 없으면 해당 연도 전체)
   const [startDate, setStartDate] = useState<string>(
-    urlStartDate || getDefaultNotifyStartDate(),
+    urlStartDate ?? getDefaultNotifyStartDate(),
   );
   const [endDate, setEndDate] = useState<string>(
-    urlEndDate || getDefaultNotifyEndDate(),
+    urlEndDate ?? getDefaultNotifyEndDate(),
   );
 
   const [applicantNm, setApplicantNm] = useState<string>(
@@ -138,6 +139,17 @@ export function useSupportList() {
   const currentPageRef = useRef(currentPage);
   const isSearchingRef = useRef(false); // 조회 버튼 클릭 중인지 추적
   const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null); // 중복 호출 방지용
+  /** 목록이 스스로 주소를 바꿀 때는 입력 중인 조회조건을 URL로 덮어쓰지 않음 */
+  const ignoreNextUrlSyncRef = useRef(false);
+  /** 마지막 조회에 실제로 사용한 조건. 상세 이동 시 이 값만 복원한다 */
+  const queriedListRef = useRef({
+    startDate,
+    endDate,
+    applicantNm,
+    addr,
+    paySta,
+    page: currentPage,
+  });
 
   useEffect(() => {
     startDateRef.current = startDate;
@@ -163,6 +175,44 @@ export function useSupportList() {
     currentPageRef.current = currentPage;
   }, [currentPage]);
 
+  const rememberQueriedList = useCallback(() => {
+    queriedListRef.current = {
+      startDate: startDateRef.current,
+      endDate: endDateRef.current,
+      applicantNm: applicantNmRef.current,
+      addr: addrRef.current,
+      paySta: payStaRef.current,
+      page: currentPageRef.current,
+    };
+  }, []);
+
+  const appliedListSearchParams = useCallback((page: number): URLSearchParams => {
+    const queried = queriedListRef.current;
+    return buildSupportListSearchParams({
+      startDate: queried.startDate,
+      endDate: queried.endDate,
+      applicantNm: queried.applicantNm,
+      addr: queried.addr,
+      paySta: queried.paySta,
+      page,
+    });
+  }, []);
+
+  const replaceListUrl = useCallback(
+    (page: number) => {
+      ignoreNextUrlSyncRef.current = true;
+      const params = appliedListSearchParams(page);
+      router.replace(`/adminWeb/support/list?${params.toString()}`, {
+        scroll: false,
+      });
+    },
+    [appliedListSearchParams, router],
+  );
+
+  const getAppliedListSearchParams = useCallback((): URLSearchParams => {
+    return buildSupportListSearchParams(queriedListRef.current);
+  }, []);
+
   const [sortConfig, setSortConfig] = useState<{
     key: string;
     direction: "asc" | "desc" | null;
@@ -177,6 +227,10 @@ export function useSupportList() {
 
   // URL 파라미터와 상태 동기화
   useEffect(() => {
+    if (ignoreNextUrlSyncRef.current) {
+      ignoreNextUrlSyncRef.current = false;
+      return;
+    }
     if (urlStartDate !== null) {
       setStartDate(urlStartDate || "");
     }
@@ -242,6 +296,8 @@ export function useSupportList() {
       const payStaFilter =
         payStaRef.current.trim() !== "" ? payStaRef.current.trim() : undefined;
 
+      rememberQueriedList();
+
       if (USE_FEE_LIST_MOCK_DATA) {
         const filtered = filterFeeMockRows(
           FEE_LIST_MOCK,
@@ -268,16 +324,15 @@ export function useSupportList() {
         userNm: nm,
         address,
         paySta: payStaFilter,
+        startIndex: requestStart,
+        lengthPage: requestLength,
       });
       const feeRes = await postFeePayerList(feeBody);
       const feeRaw = Array.isArray(feeRes.data) ? feeRes.data : [];
       const feeMapped = feeRaw.map(mapFeePayerListItemToSupport);
-      const feeTotal = feeMapped.length;
-      const feeSlice = feeMapped.slice(
-        requestStart,
-        requestStart + requestLength,
-      );
-      setSupports(feeSlice);
+      const feeTotal =
+        Number(feeRes.recordsTotal) || Number(feeRes.recordsFiltered) || 0;
+      setSupports(feeMapped);
       setTotalElements(feeTotal);
       setTotalPages(Math.max(1, Math.ceil(feeTotal / pageSize)));
     } catch (err) {
@@ -301,7 +356,7 @@ export function useSupportList() {
       setLoading(false);
       setIsInitialLoad(false);
     }
-  }, [currentPage, pageSize]); // startDate, endDate, filters를 dependency에서 제거
+  }, [currentPage, pageSize, rememberQueriedList]); // startDate, endDate, filters를 dependency에서 제거
 
   // fetchSupports의 최신 함수를 참조하기 위한 ref 추가
   const fetchSupportsRef = useRef(fetchSupports);
@@ -344,7 +399,10 @@ export function useSupportList() {
   // }, [startDate, endDate, isInitialLoad]);
 
   const handlePageChange = (page: number) => {
+    currentPageRef.current = page;
+    rememberQueriedList();
     setCurrentPage(page);
+    replaceListUrl(page);
   };
 
   const handleDeleteClick = (
@@ -497,6 +555,8 @@ export function useSupportList() {
       addrRef.current = addr;
       payStaRef.current = paySta;
       currentPageRef.current = 1;
+      rememberQueriedList();
+      replaceListUrl(1);
       console.log(
         "📅 ref 동기화 후:",
         `통지일 ${startDateRef.current}~${endDateRef.current}, 상태=${payStaRef.current}, 성명=${applicantNmRef.current}, 주소=${addrRef.current}, page=${currentPageRef.current}`,
@@ -631,6 +691,7 @@ export function useSupportList() {
     handleSort,
     handleSearch,
     handleExcelDownload,
+    getAppliedListSearchParams,
     setStartDate,
     setEndDate,
     applicantNm,

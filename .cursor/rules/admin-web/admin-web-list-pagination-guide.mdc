@@ -18,9 +18,10 @@ alwaysApply: false
 
 ## 🧱 오수 원인자부담금 관리 목록 (`SupportListPageView`, `POST /api/admin/support/fee-payer/list`)
 - **부과액:** API `waterCost`만 표시·엑셀 반영. `waterVal`은 목록 부과액에 쓰지 않는다.
-- **주소 표시:** `formatFeePayerAddressLine` — `zip` 제외, `adresLot`·`adres`·`detailAdres` 연결.
+- **주소 표시:** `formatFeePayerAddressLine` — 1행 도로명(`adres`)+상세주소, 2행 `(지번) adresLot`(글자색 `#5D5D5D`). 한쪽만 있으면 그 줄만 표시. 배수설비 목록도 동일.
 - **상태 배지:** `paySta`만 사용 (`min-w-[72px]`, `text-[13px]`)
-- **페이징:** 클라이언트 페이징. mock: `NEXT_PUBLIC_FEE_PAYER_LIST_MOCK=true`
+- **페이징:** 서버 페이징. 요청 `start`/`length`(또는 `startIndex`/`lengthPage`), 건수·페이지 수는 `recordsTotal`(없으면 `recordsFiltered`). mock: `NEXT_PUBLIC_FEE_PAYER_LIST_MOCK=true` 일 때만 클라이언트 페이징.
+- **목록 복원:** 조회·페이지 변경 시 `startDate`, `endDate`, `applicantNm`, `addr`, `paySta`, `page`를 목록 주소에 남긴다. 등록·상세·납부내역으로 이동할 때 같은 쿼리를 붙이고, 돌아올 때 그 쿼리로 목록을 연다.
 
 ---
 

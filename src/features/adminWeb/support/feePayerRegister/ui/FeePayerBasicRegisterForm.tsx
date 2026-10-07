@@ -28,6 +28,7 @@ export const FeePayerBasicRegisterForm: React.FC<
     telNo,
     zipCode,
     adres,
+    adresLot,
     detailAdres,
     errors,
     loading,
@@ -191,7 +192,7 @@ export const FeePayerBasicRegisterForm: React.FC<
                       <FormInput
                         type="text"
                         name="adres"
-                        value={adres}
+                        value={adres || adresLot}
                         onChange={noopInputChange}
                         readOnly
                         placeholder="주소"

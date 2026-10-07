@@ -12,6 +12,7 @@ export interface DrainageEquipBasicFormFromApi {
   telNo: string;
   zipCode: string;
   adres: string;
+  adresLot: string;
   detailAdres: string;
   detailEntries: DrainageEquipDetailEntry[];
 }
@@ -44,6 +45,7 @@ export function mapDrainageEquipDetailDtoToForm(
       telDigits && telRaw !== "-" ? formatPhoneWithHyphen(telDigits) : "",
     zipCode: String(data.zip ?? "").trim(),
     adres: String(data.adres ?? "").trim(),
+    adresLot: String(data.adresLot ?? "").trim(),
     detailAdres: String(data.detailAdres ?? "").trim(),
     detailEntries,
   };

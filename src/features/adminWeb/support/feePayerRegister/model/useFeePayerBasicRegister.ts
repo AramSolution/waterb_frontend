@@ -8,7 +8,7 @@ import {
   type FormEvent,
   type MutableRefObject,
 } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   openDaumPostcode,
   type DaumPostcodeData,
@@ -24,6 +24,7 @@ import {
   type SupportFeePayerDetailDataDto,
   type SupportFeePayerRegisterRequest,
 } from "@/entities/adminWeb/support/api/feePayerManageApi";
+import { supportListPathFromSearchParams } from "@/features/adminWeb/support/lib/supportListQuery";
 import { ApiError } from "@/shared/lib/apiClient";
 import { mapFeePayerDetailDtoToInitialForm } from "./useFeePayerBasicDetail";
 import type { SewageEstimateEntry } from "./useFeePayerSewageVolumeEstimate";
@@ -52,6 +53,7 @@ export function useFeePayerBasicRegister(
 ) {
   const { seedProId, persistRequestBuilderRef } = options;
   const router = useRouter();
+  const searchParams = useSearchParams();
   const internalPersistRef = useRef<
     (() => SupportFeePayerRegisterRequest | null) | null
   >(null);
@@ -68,6 +70,7 @@ export function useFeePayerBasicRegister(
   const [telNo, setTelNo] = useState("");
   const [zipCode, setZipCode] = useState("");
   const [adres, setAdres] = useState("");
+  const [adresLot, setAdresLot] = useState("");
   const [detailAdres, setDetailAdres] = useState("");
   const [errors, setErrors] = useState<FeePayerBasicErrors>({});
   const [loading, setLoading] = useState(false);
@@ -113,6 +116,7 @@ export function useFeePayerBasicRegister(
       setTelNo(telDigits ? formatPhoneWithHyphen(telDigits) : "");
       setZipCode(b.zipCode);
       setAdres(b.adres);
+      setAdresLot(b.adresLot);
       setDetailAdres(b.detailAdres);
       setErrors({});
       setFeePayerDetailEntries(
@@ -215,12 +219,19 @@ export function useFeePayerBasicRegister(
 
   const applyDaumPostcodeResult = useCallback(
     (data: DaumPostcodeData) => {
+      const extra = data as DaumPostcodeData & {
+        autoRoadAddress?: string;
+        autoJibunAddress?: string;
+      };
+      const road = String(
+        data.roadAddress || extra.autoRoadAddress || "",
+      ).trim();
+      const lot = String(
+        data.jibunAddress || extra.autoJibunAddress || "",
+      ).trim();
       setZipCode((data.zonecode || "").trim());
-      const useJibun = data.userSelectedType === "J";
-      const line = useJibun
-        ? (data.jibunAddress || "").trim()
-        : (data.roadAddress || "").trim();
-      setAdres(line);
+      setAdres(road);
+      setAdresLot(lot);
       clearAddressErrors();
     },
     [clearAddressErrors],
@@ -235,21 +246,23 @@ export function useFeePayerBasicRegister(
   const getBasicInfoBody =
     useCallback((): SupportFeePayerBasicInfoRequest | null => {
       const telDigits = numericOnly(telNo);
-      if (!applicantNm.trim() || !adres.trim()) {
+      const road = adres.trim();
+      const lot = adresLot.trim();
+      if (!applicantNm.trim() || (!road && !lot)) {
         return null;
       }
       const body: SupportFeePayerBasicInfoRequest = {
         userNm: applicantNm.trim(),
         zip: zipCode.trim(),
-        adresLot: "",
-        adres: adres.trim(),
+        adresLot: lot,
+        adres: road || lot,
         detailAdres: detailAdres.trim(),
       };
       if (telDigits.length > 0) {
         body.usrTelno = telDigits;
       }
       return body;
-    }, [applicantNm, telNo, zipCode, adres, detailAdres]);
+    }, [applicantNm, telNo, zipCode, adres, adresLot, detailAdres]);
 
   const validate = useCallback((): boolean => {
     const next: FeePayerBasicErrors = {};
@@ -266,12 +279,12 @@ export function useFeePayerBasicRegister(
     if (!zipCode.trim()) {
       next.zipCode = "우편번호를 입력하거나 주소 검색을 이용해주세요.";
     }
-    if (!adres.trim()) {
+    if (!adres.trim() && !adresLot.trim()) {
       next.adres = "주소를 입력하거나 주소 검색을 이용해주세요.";
     }
     setErrors(next);
     return Object.keys(next).length === 0;
-  }, [applicantNm, telNo, zipCode, adres]);
+  }, [applicantNm, telNo, zipCode, adres, adresLot]);
 
   const handleSubmit = useCallback(
     async (e: FormEvent<HTMLFormElement>) => {
@@ -338,22 +351,23 @@ export function useFeePayerBasicRegister(
   );
 
   const handleCancel = useCallback(() => {
-    router.push("/adminWeb/support/list");
-  }, [router]);
+    router.push(supportListPathFromSearchParams(searchParams));
+  }, [router, searchParams]);
 
   const handleInfoDialogClose = useCallback(() => {
     setShowInfoDialog(false);
     if (navigateToListAfterInfoCloseRef.current) {
       navigateToListAfterInfoCloseRef.current = false;
-      router.push("/adminWeb/support/list");
+      router.push(supportListPathFromSearchParams(searchParams));
     }
-  }, [router]);
+  }, [router, searchParams]);
 
   return {
     applicantNm,
     telNo,
     zipCode,
     adres,
+    adresLot,
     detailAdres,
     errors,
     loading,

@@ -231,6 +231,10 @@ export interface SupportFeePayerListRequest {
   address?: string;
   /** `01` 미납, `02` 완납. 생략 또는 `00`이면 전체 */
   paySta?: string;
+  startIndex?: number;
+  lengthPage?: number;
+  start?: number;
+  length?: number;
 }
 
 /** 목록 1건 — `SupportFeePayerListItemResponse` */
@@ -255,6 +259,8 @@ export interface SupportFeePayerListItemDto {
 export interface SupportFeePayerListResponse {
   result?: string;
   message?: string;
+  recordsFiltered?: number;
+  recordsTotal?: number;
   data?: SupportFeePayerListItemDto[];
 }
 
@@ -284,17 +290,32 @@ export interface SupportFeePayerExcelListResponse {
 }
 
 /**
- * 목록·상세 등 **표시용** 주소 한 줄 — **우편번호(`zip`) 제외**
- * (검색 `address`는 백엔드에서 ZIP 포함 통합 검색 유지)
+ * 목록 표시용 주소.
+ * 1행: 도로명(`adres`) + 상세주소
+ * 2행: `(지번) ` + 지번(`adresLot`)
+ * 한쪽만 있으면 그 줄만 보여 준다.
  */
 export function formatFeePayerAddressLine(
   row: Pick<SupportFeePayerListItemDto, "adresLot" | "adres" | "detailAdres"> &
     Partial<Pick<SupportFeePayerListItemDto, "zip">>,
 ): string {
-  return [row.adresLot, row.adres, row.detailAdres]
-    .filter((x) => x != null && String(x).trim() !== "")
-    .map((x) => String(x).trim())
-    .join(" ");
+  const lot = String(row.adresLot ?? "").trim();
+  const road = String(row.adres ?? "").trim();
+  const detail = String(row.detailAdres ?? "").trim();
+  const lines: string[] = [];
+  if (road) {
+    lines.push([road, detail].filter((part) => part !== "").join(" "));
+  }
+  if (lot) {
+    const lotBody = road
+      ? lot
+      : [lot, detail].filter((part) => part !== "").join(" ");
+    lines.push(`(지번) ${lotBody}`);
+  }
+  if (lines.length === 0 && detail) {
+    lines.push(detail);
+  }
+  return lines.join("\n");
 }
 
 /** 목록 API 행 → 기존 `Support` 목록 UI(`feeListRowFields`) 호환 */
@@ -348,6 +369,8 @@ export function buildSupportFeePayerListBody(input: {
   userNm?: string;
   address?: string;
   paySta?: string;
+  startIndex?: number;
+  lengthPage?: number;
 }): SupportFeePayerListRequest {
   const body: SupportFeePayerListRequest = {};
   const from = (input.reqDateFrom ?? "").trim();
@@ -360,6 +383,14 @@ export function buildSupportFeePayerListBody(input: {
   if (nm) body.userNm = nm;
   if (addr) body.address = addr;
   if (sta === "01" || sta === "02") body.paySta = sta;
+  if (input.startIndex != null && input.startIndex >= 0) {
+    body.startIndex = input.startIndex;
+    body.start = input.startIndex;
+  }
+  if (input.lengthPage != null && input.lengthPage > 0) {
+    body.lengthPage = input.lengthPage;
+    body.length = input.lengthPage;
+  }
   return body;
 }
 

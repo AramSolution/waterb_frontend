@@ -228,6 +228,7 @@ export interface FeePayerDetailMappedInitial {
     telNo: string;
     zipCode: string;
     adres: string;
+    adresLot: string;
     detailAdres: string;
   };
   entries: SewageEstimateEntry[];
@@ -248,9 +249,8 @@ export function mapFeePayerDetailDtoToInitialForm(
       ? ""
       : formatPhoneWithHyphen(telDigits);
   const zipCode = String(data.zip ?? "").trim();
-  const road = String(data.adres ?? "").trim();
-  const lot = String(data.adresLot ?? "").trim();
-  const adres = road || lot;
+  const adres = String(data.adres ?? "").trim();
+  const adresLot = String(data.adresLot ?? "").trim();
   const detailAdres = String(data.detailAdres ?? "").trim();
 
   const blocks = [...(data.details ?? [])].sort(
@@ -337,6 +337,7 @@ export function mapFeePayerDetailDtoToInitialForm(
       telNo: telDisplay,
       zipCode,
       adres,
+      adresLot,
       detailAdres,
     },
     entries,

@@ -52,6 +52,7 @@ function applyDetailFormToState(
     setTelNo: (v: string) => void;
     setZipCode: (v: string) => void;
     setAdres: (v: string) => void;
+    setAdresLot: (v: string) => void;
     setDetailAdres: (v: string) => void;
     setItemId: (v: string | undefined) => void;
     setDetailEntries: (v: DrainageEquipDetailEntry[] | undefined) => void;
@@ -62,6 +63,7 @@ function applyDetailFormToState(
   setters.setTelNo(mapped.telNo);
   setters.setZipCode(mapped.zipCode);
   setters.setAdres(mapped.adres);
+  setters.setAdresLot(mapped.adresLot);
   setters.setDetailAdres(mapped.detailAdres);
   setters.setItemId(mapped.itemId);
   setters.setDetailEntries(
@@ -87,6 +89,7 @@ export function useDrainageEquipBasicRegister(
   const [telNo, setTelNo] = useState("");
   const [zipCode, setZipCode] = useState("");
   const [adres, setAdres] = useState("");
+  const [adresLot, setAdresLot] = useState("");
   const [detailAdres, setDetailAdres] = useState("");
   const [errors, setErrors] = useState<DrainageEquipBasicErrors>({});
   const [loading, setLoading] = useState(false);
@@ -137,6 +140,7 @@ export function useDrainageEquipBasicRegister(
         setTelNo,
         setZipCode,
         setAdres,
+        setAdresLot,
         setDetailAdres,
         setItemId,
         setDetailEntries,
@@ -210,12 +214,19 @@ export function useDrainageEquipBasicRegister(
 
   const applyDaumPostcodeResult = useCallback(
     (data: DaumPostcodeData) => {
+      const extra = data as DaumPostcodeData & {
+        autoRoadAddress?: string;
+        autoJibunAddress?: string;
+      };
+      const road = String(
+        data.roadAddress || extra.autoRoadAddress || "",
+      ).trim();
+      const lot = String(
+        data.jibunAddress || extra.autoJibunAddress || "",
+      ).trim();
       setZipCode((data.zonecode || "").trim());
-      const useJibun = data.userSelectedType === "J";
-      const line = useJibun
-        ? (data.jibunAddress || "").trim()
-        : (data.roadAddress || "").trim();
-      setAdres(line);
+      setAdres(road);
+      setAdresLot(lot);
       clearAddressErrors();
     },
     [clearAddressErrors],
@@ -229,20 +240,22 @@ export function useDrainageEquipBasicRegister(
 
   const buildBasicInfoBody =
     useCallback((): SupportDrainageEquipBasicInfoRequest | null => {
-      if (!userNm.trim() || !adres.trim()) {
+      const road = adres.trim();
+      const lot = adresLot.trim();
+      if (!userNm.trim() || (!road && !lot)) {
         return null;
       }
       const telDigits = numericOnly(telNo);
       const body: SupportDrainageEquipBasicInfoRequest = {
         userNm: userNm.trim(),
         zip: zipCode.trim(),
-        adresLot: "",
-        adres: adres.trim(),
+        adresLot: lot,
+        adres: road || lot,
         detailAdres: detailAdres.trim(),
         usrTelno: telDigits.length > 0 ? telDigits : "",
       };
       return body;
-    }, [userNm, telNo, zipCode, adres, detailAdres]);
+    }, [userNm, telNo, zipCode, adres, adresLot, detailAdres]);
 
   const validate = useCallback((): boolean => {
     const next: DrainageEquipBasicErrors = {};
@@ -259,12 +272,12 @@ export function useDrainageEquipBasicRegister(
     if (!zipCode.trim()) {
       next.zipCode = "우편번호를 입력하거나 주소 검색을 이용해주세요.";
     }
-    if (!adres.trim()) {
+    if (!adres.trim() && !adresLot.trim()) {
       next.adres = "주소를 입력하거나 주소 검색을 이용해주세요.";
     }
     setErrors(next);
     return Object.keys(next).length === 0;
-  }, [userNm, telNo, zipCode, adres]);
+  }, [userNm, telNo, zipCode, adres, adresLot]);
 
   const sewageInitialEntries = useMemo(() => {
     if (!seedItemId?.trim()) return undefined;
@@ -370,6 +383,7 @@ export function useDrainageEquipBasicRegister(
     telNo,
     zipCode,
     adres,
+    adresLot,
     detailAdres,
     errors,
     loading,
